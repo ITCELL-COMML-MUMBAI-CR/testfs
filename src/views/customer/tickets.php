@@ -1,0 +1,589 @@
+
+<?php
+// Capture the content
+ob_start();
+?>
+
+<!-- Customer Tickets -->
+<section class="py-apple-6">
+    <div class="container-xl">
+        
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                    <div>
+                        <h1 class="display-3 mb-2">My Support Tickets</h1>
+                        <p class="text-muted mb-0">View and manage your freight support requests</p>
+                    </div>
+                    <div class="mt-3 mt-md-0">
+                        <a href="<?= Config::APP_URL ?>/customer/tickets/create" class="btn btn-apple-primary">
+                            <i class="fas fa-plus me-2"></i>Create New Ticket
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filters Card -->
+        <div class="card-apple-glass mb-4">
+            <div class="card-body">
+                <form id="filterForm" method="GET" action="<?= Config::APP_URL ?>/customer/tickets">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-2">
+                            <label for="status" class="form-label-apple small">Status</label>
+                            <select class="form-control form-control-apple" id="status" name="status">
+                                <option value="">All Status</option>
+                                <?php foreach ($status_options as $key => $label): ?>
+                                    <?php if ($key !== 'closed'): // Don't show closed by default ?>
+                                        <option value="<?= $key ?>" <?= $filters['status'] === $key ? 'selected' : '' ?>>
+                                            <?= $label ?>
+                                        </option>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label for="priority" class="form-label-apple small">Priority</label>
+                            <select class="form-control form-control-apple" id="priority" name="priority">
+                                <option value="">All Priority</option>
+                                <?php foreach ($priority_options as $key => $label): ?>
+                                    <option value="<?= $key ?>" <?= $filters['priority'] === $key ? 'selected' : '' ?>>
+                                        <?= $label ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label for="date_from" class="form-label-apple small">From Date</label>
+                            <input type="date" 
+                                   class="form-control form-control-apple" 
+                                   id="date_from" 
+                                   name="date_from" 
+                                   value="<?= htmlspecialchars($filters['date_from']) ?>">
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <label for="date_to" class="form-label-apple small">To Date</label>
+                            <input type="date" 
+                                   class="form-control form-control-apple" 
+                                   id="date_to" 
+                                   name="date_to" 
+                                   value="<?= htmlspecialchars($filters['date_to']) ?>">
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-apple-primary w-100">
+                                <i class="fas fa-filter me-1"></i>Filter
+                            </button>
+                        </div>
+                        
+                        <div class="col-md-2">
+                            <a href="<?= Config::APP_URL ?>/customer/tickets" class="btn btn-apple-glass w-100">
+                                <i class="fas fa-times me-1"></i>Clear
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Tickets Table -->
+        <div class="card-apple">
+            <div class="card-body">
+                <?php if (!empty($tickets['data'])): ?>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">
+                            Showing <?= count($tickets['data']) ?> of <?= $tickets['total'] ?> tickets
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-apple-glass btn-sm" onclick="exportTickets('pdf')">
+                                <i class="fas fa-file-pdf me-1"></i>PDF
+                            </button>
+                            <button class="btn btn-apple-glass btn-sm" onclick="exportTickets('excel')">
+                                <i class="fas fa-file-excel me-1"></i>Excel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="ticketsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Ticket ID</th>
+                                    <th>Subject</th>
+                                    <th>Shed</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th>Created</th>
+                                    <th>Last Updated</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($tickets['data'] as $ticket): ?>
+                                    <tr data-ticket-id="<?= $ticket['complaint_id'] ?>">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <code class="text-apple-blue me-2">#<?= htmlspecialchars($ticket['complaint_id']) ?></code>
+                                                <button class="btn btn-link btn-sm p-0" 
+                                                        onclick="copyTicketId('<?= $ticket['complaint_id'] ?>')"
+                                                        title="Copy Ticket ID">
+                                                    <i class="fas fa-copy text-muted"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div class="fw-medium"><?= htmlspecialchars($ticket['category']) ?></div>
+                                                <small class="text-muted"><?= htmlspecialchars($ticket['type']) ?> - <?= htmlspecialchars($ticket['subtype']) ?></small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div class="fw-medium"><?= htmlspecialchars($ticket['shed_name']) ?></div>
+                                                <small class="text-muted"><?= htmlspecialchars($ticket['shed_code']) ?></small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-apple status-<?= str_replace('_', '-', $ticket['status']) ?>">
+                                                <?= ucwords(str_replace('_', ' ', $ticket['status'])) ?>
+                                            </span>
+                                            
+                                            <?php if ($ticket['status'] === 'awaiting_feedback' && $ticket['days_since_revert'] >= 2): ?>
+                                                <div class="mt-1">
+                                                    <small class="text-danger">
+                                                        <i class="fas fa-exclamation-triangle"></i>
+                                                        Auto-closes in <?= 3 - $ticket['days_since_revert'] ?> day(s)
+                                                    </small>
+                                                </div>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-priority-<?= $ticket['priority'] ?>">
+                                                <?= ucfirst($ticket['priority']) ?>
+                                            </span>
+                                            
+                                            <?php if ($ticket['priority'] === 'critical' || $ticket['priority'] === 'high'): ?>
+                                                <div class="mt-1">
+                                                    <small class="text-muted">
+                                                        <?= $ticket['hours_elapsed'] ?>h elapsed
+                                                    </small>
+                                                </div>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <div><?= date('M d, Y', strtotime($ticket['created_at'])) ?></div>
+                                            <small class="text-muted"><?= date('H:i', strtotime($ticket['created_at'])) ?></small>
+                                        </td>
+                                        <td>
+                                            <div><?= date('M d, Y', strtotime($ticket['updated_at'])) ?></div>
+                                            <small class="text-muted"><?= date('H:i', strtotime($ticket['updated_at'])) ?></small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="<?= Config::APP_URL ?>/customer/tickets/<?= $ticket['complaint_id'] ?>" 
+                                                   class="btn btn-apple-glass btn-sm"
+                                                   title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                
+                                                <?php if ($ticket['status'] === 'awaiting_feedback'): ?>
+                                                    <button class="btn btn-warning btn-sm" 
+                                                            onclick="provideFeedback('<?= $ticket['complaint_id'] ?>')"
+                                                            title="Provide Feedback">
+                                                        <i class="fas fa-star"></i>
+                                                    </button>
+                                                <?php endif; ?>
+                                                
+                                                <div class="dropdown">
+                                                    <button class="btn btn-apple-glass btn-sm dropdown-toggle" 
+                                                            type="button" 
+                                                            data-bs-toggle="dropdown">
+                                                        <i class="fas fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li>
+                                                            <a class="dropdown-item" 
+                                                               href="<?= Config::APP_URL ?>/customer/tickets/<?= $ticket['complaint_id'] ?>">
+                                                                <i class="fas fa-eye me-2"></i>View Details
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <button class="dropdown-item" 
+                                                                    onclick="shareTicket('<?= $ticket['complaint_id'] ?>')">
+                                                                <i class="fas fa-share me-2"></i>Share Ticket
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <button class="dropdown-item" 
+                                                                    onclick="printTicket('<?= $ticket['complaint_id'] ?>')">
+                                                                <i class="fas fa-print me-2"></i>Print
+                                                            </button>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <?php if ($tickets['total_pages'] > 1): ?>
+                        <nav aria-label="Tickets pagination" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                <?php if ($tickets['has_prev']): ?>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<?= $tickets['page'] - 1 ?>&<?= http_build_query($filters) ?>">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                <?php endif; ?>
+                                
+                                <?php for ($i = max(1, $tickets['page'] - 2); $i <= min($tickets['total_pages'], $tickets['page'] + 2); $i++): ?>
+                                    <li class="page-item <?= $i === $tickets['page'] ? 'active' : '' ?>">
+                                        <a class="page-link" href="?page=<?= $i ?>&<?= http_build_query($filters) ?>">
+                                            <?= $i ?>
+                                        </a>
+                                    </li>
+                                <?php endfor; ?>
+                                
+                                <?php if ($tickets['has_next']): ?>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=<?= $tickets['page'] + 1 ?>&<?= http_build_query($filters) ?>">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                <?php endif; ?>
+                            </ul>
+                        </nav>
+                    <?php endif; ?>
+                    
+                <?php else: ?>
+                    <!-- Empty State -->
+                    <div class="text-center py-5">
+                        <i class="fas fa-ticket-alt text-muted mb-3" style="font-size: 4rem;"></i>
+                        <h4 class="text-muted mb-3">No Tickets Found</h4>
+                        
+                        <?php if (!empty(array_filter($filters))): ?>
+                            <p class="text-muted mb-4">No tickets match your current filters. Try adjusting your search criteria.</p>
+                            <a href="<?= Config::APP_URL ?>/customer/tickets" class="btn btn-apple-glass me-2">
+                                <i class="fas fa-times me-1"></i>Clear Filters
+                            </a>
+                        <?php else: ?>
+                            <p class="text-muted mb-4">You haven't created any support tickets yet. Get started by creating your first ticket.</p>
+                        <?php endif; ?>
+                        
+                        <a href="<?= Config::APP_URL ?>/customer/tickets/create" class="btn btn-apple-primary">
+                            <i class="fas fa-plus me-2"></i>Create New Ticket
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        
+        <!-- Help Section -->
+        <div class="card-apple-glass mt-4">
+            <div class="card-body py-3">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6 class="mb-1">
+                            <i class="fas fa-info-circle text-apple-blue me-2"></i>
+                            Understanding Ticket Status
+                        </h6>
+                        <div class="d-flex flex-wrap gap-3 mt-2">
+                            <small><span class="badge status-pending me-1">Pending</span> Under review</small>
+                            <small><span class="badge status-awaiting-feedback me-1">Awaiting Feedback</span> Your response needed</small>
+                            <small><span class="badge status-awaiting-info me-1">Awaiting Info</span> Additional details required</small>
+                            <small><span class="badge status-awaiting-approval me-1">Awaiting Approval</span> Solution pending approval</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                        <a href="<?= Config::APP_URL ?>/help" class="btn btn-apple-glass btn-sm">
+                            <i class="fas fa-question-circle me-1"></i>More Help
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit filter form on change
+    document.querySelectorAll('#filterForm select, #filterForm input').forEach(field => {
+        field.addEventListener('change', function() {
+            if (this.type !== 'date' || this.value) {
+                document.getElementById('filterForm').submit();
+            }
+        });
+    });
+});
+
+function copyTicketId(ticketId) {
+    window.SAMPARK.utils.copyToClipboard('#' + ticketId)
+        .then(() => {
+            window.SAMPARK.ui.showToast('Ticket ID copied to clipboard', 'success');
+        })
+        .catch(err => {
+            window.SAMPARK.ui.showToast('Failed to copy ticket ID', 'error');
+        });
+}
+
+function provideFeedback(ticketId) {
+    Swal.fire({
+        title: 'Provide Feedback',
+        html: `
+            <div class="text-start">
+                <p class="mb-3">Please rate the resolution provided for your ticket and share your feedback.</p>
+                
+                <div class="mb-3">
+                    <label class="form-label">Rating</label>
+                    <div class="rating-buttons">
+                        <input type="radio" name="rating" value="excellent" id="excellent">
+                        <label for="excellent" class="btn btn-outline-success">
+                            <i class="fas fa-smile me-1"></i>Excellent
+                        </label>
+                        
+                        <input type="radio" name="rating" value="satisfactory" id="satisfactory">
+                        <label for="satisfactory" class="btn btn-outline-warning">
+                            <i class="fas fa-meh me-1"></i>Satisfactory
+                        </label>
+                        
+                        <input type="radio" name="rating" value="unsatisfactory" id="unsatisfactory">
+                        <label for="unsatisfactory" class="btn btn-outline-danger">
+                            <i class="fas fa-frown me-1"></i>Unsatisfactory
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="feedbackRemarks" class="form-label">Additional Comments (Optional)</label>
+                    <textarea class="form-control" id="feedbackRemarks" rows="3" 
+                              placeholder="Share your experience or suggestions..."></textarea>
+                    <small class="text-muted">Required if rating is unsatisfactory</small>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Submit Feedback',
+        confirmButtonClass: 'btn btn-apple-primary',
+        cancelButtonClass: 'btn btn-apple-glass',
+        width: '600px',
+        preConfirm: () => {
+            const rating = document.querySelector('input[name="rating"]:checked');
+            const remarks = document.getElementById('feedbackRemarks').value.trim();
+            
+            if (!rating) {
+                Swal.showValidationMessage('Please select a rating');
+                return false;
+            }
+            
+            if (rating.value === 'unsatisfactory' && !remarks) {
+                Swal.showValidationMessage('Please provide comments for unsatisfactory rating');
+                return false;
+            }
+            
+            return {
+                rating: rating.value,
+                remarks: remarks
+            };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitFeedback(ticketId, result.value);
+        }
+    });
+}
+
+function submitFeedback(ticketId, feedback) {
+    const formData = new FormData();
+    formData.append('csrf_token', CSRF_TOKEN);
+    formData.append('rating', feedback.rating);
+    formData.append('remarks', feedback.remarks);
+    
+    fetch(APP_URL + '/customer/tickets/' + ticketId + '/feedback', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.SAMPARK.ui.showSuccess('Feedback Submitted', data.message);
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            window.SAMPARK.ui.showError('Submission Failed', data.message);
+        }
+    })
+    .catch(error => {
+        window.SAMPARK.ui.showError('Error', 'Failed to submit feedback. Please try again.');
+    });
+}
+
+function shareTicket(ticketId) {
+    const shareUrl = window.location.origin + APP_URL + '/customer/tickets/' + ticketId;
+    
+    Swal.fire({
+        title: 'Share Ticket',
+        html: `
+            <div class="text-start">
+                <p class="mb-3">Share this ticket with colleagues or support team:</p>
+                <div class="input-group">
+                    <input type="text" class="form-control" value="${shareUrl}" id="shareUrl" readonly>
+                    <button class="btn btn-outline-secondary" type="button" onclick="copyShareUrl()">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <div class="mt-3">
+                    <strong>Ticket ID:</strong> #${ticketId}
+                </div>
+            </div>
+        `,
+        showConfirmButton: false,
+        showCloseButton: true
+    });
+}
+
+function copyShareUrl() {
+    const shareUrl = document.getElementById('shareUrl');
+    shareUrl.select();
+    document.execCommand('copy');
+    window.SAMPARK.ui.showToast('Share URL copied to clipboard', 'success');
+}
+
+function printTicket(ticketId) {
+    window.open(APP_URL + '/customer/tickets/' + ticketId + '?print=1', '_blank');
+}
+
+function exportTickets(format) {
+    const currentUrl = new URL(window.location);
+    currentUrl.searchParams.set('export', format);
+    window.open(currentUrl.toString(), '_blank');
+}
+
+// Real-time updates (WebSocket or polling)
+function startRealTimeUpdates() {
+    setInterval(() => {
+        // Check for ticket status updates
+        fetch(APP_URL + '/api/tickets/updates')
+            .then(response => response.json())
+            .then(data => {
+                data.updates.forEach(update => {
+                    updateTicketStatus(update.ticket_id, update.status);
+                });
+            })
+            .catch(error => console.log('Update check failed'));
+    }, 30000); // Check every 30 seconds
+}
+
+// Start real-time updates
+startRealTimeUpdates();
+</script>
+
+<style>
+/* Table enhancements */
+.table th {
+    background-color: var(--apple-off-white);
+    border-bottom: 2px solid rgba(151, 151, 151, 0.1);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.table td {
+    border-color: rgba(151, 151, 151, 0.05);
+    padding: 1rem 0.75rem;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(238, 238, 238, 0.3);
+}
+
+/* Status badges */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.375em 0.75em;
+    border-radius: var(--apple-radius-small);
+}
+
+/* Rating buttons */
+.rating-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.rating-buttons input[type="radio"] {
+    display: none;
+}
+
+.rating-buttons label {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.rating-buttons input[type="radio"]:checked + label {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Pagination */
+.pagination .page-link {
+    border: 1px solid rgba(151, 151, 151, 0.2);
+    color: var(--apple-black);
+    background: var(--apple-white);
+    border-radius: var(--apple-radius-small);
+    margin: 0 2px;
+}
+
+.pagination .page-link:hover {
+    background: var(--apple-off-white);
+    border-color: var(--apple-blue);
+    color: var(--apple-blue);
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--apple-blue);
+    border-color: var(--apple-blue);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.8rem;
+    }
+    
+    .btn-group .btn {
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .rating-buttons {
+        flex-direction: column;
+    }
+    
+    .rating-buttons label {
+        text-align: center;
+    }
+}
+
+/* Auto-close warning animation */
+@keyframes urgent-pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.text-danger {
+    animation: urgent-pulse 2s infinite;
+}
+</style>
+
+<?php
+$content = ob_get_clean();
+include '../src/views/layouts/app.php';
+?>

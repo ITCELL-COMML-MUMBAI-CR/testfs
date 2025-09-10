@@ -1,0 +1,213 @@
+/**
+ * Professional Fonts Collection
+ * Using CDN for optimal performance and reliability
+ * Includes: Inter, Roboto, Open Sans, Source Sans Pro, Montserrat, Lato
+ */
+
+/* Import Professional Fonts from Google Fonts CDN */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200;300;400;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@200;300;400;500;600;700;800;900&display=swap');
+
+/* Professional Font Stack Variables */
+:root {
+    /* Primary Font Stack - Inter as primary with excellent fallbacks */
+    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    
+    /* Secondary Font Stack - Roboto for variety */
+    --font-secondary: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    
+    /* Display Font Stack - Montserrat for headings */
+    --font-display: 'Montserrat', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    
+    /* Body Font Stack - Open Sans for body text */
+    --font-body: 'Open Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    
+    /* Modern Font Stack - Poppins for contemporary design */
+    --font-modern: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    
+    /* Friendly Font Stack - Nunito for approachable design */
+    --font-friendly: 'Nunito', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    
+    /* Classic Font Stack - Lato for traditional professional look */
+    --font-classic: 'Lato', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    
+    /* Code Font Stack - Source Sans Pro for monospace */
+    --font-code: 'Source Sans Pro', 'Inter', 'Roboto', 'Monaco', 'Menlo', 'Consolas', 'Liberation Mono', 'Courier New', monospace;
+}
+
+/* Font Utility Classes */
+.font-primary { font-family: var(--font-primary); }
+.font-secondary { font-family: var(--font-secondary); }
+.font-display { font-family: var(--font-display); }
+.font-body { font-family: var(--font-body); }
+.font-modern { font-family: var(--font-modern); }
+.font-friendly { font-family: var(--font-friendly); }
+.font-classic { font-family: var(--font-classic); }
+.font-code { font-family: var(--font-code); }
+
+/* Weight Utilities */
+.font-thin { font-weight: 100; }
+.font-extralight { font-weight: 200; }
+.font-light { font-weight: 300; }
+.font-normal { font-weight: 400; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.font-bold { font-weight: 700; }
+.font-extrabold { font-weight: 800; }
+.font-black { font-weight: 900; }
+
+/* Professional Typography Scale */
+.text-xs { font-size: 0.75rem; line-height: 1rem; }
+.text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+.text-base { font-size: 1rem; line-height: 1.5rem; }
+.text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+.text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+.text-2xl { font-size: 1.5rem; line-height: 2rem; }
+.text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+.text-4xl { font-size: 2.25rem; line-height: 2.5rem; }
+.text-5xl { font-size: 3rem; line-height: 1; }
+.text-6xl { font-size: 3.75rem; line-height: 1; }
+.text-7xl { font-size: 4.5rem; line-height: 1; }
+.text-8xl { font-size: 6rem; line-height: 1; }
+.text-9xl { font-size: 8rem; line-height: 1; }
+
+/* Professional Heading Styles */
+.heading-1 {
+    font-family: var(--font-display);
+    font-size: 3.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+}
+
+.heading-2 {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+}
+
+.heading-3 {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.025em;
+}
+
+.heading-4 {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.heading-5 {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+.heading-6 {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.5;
+}
+
+/* Body Text Styles */
+.body-large {
+    font-family: var(--font-body);
+    font-size: 1.125rem;
+    font-weight: 400;
+    line-height: 1.7;
+}
+
+.body-regular {
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.6;
+}
+
+.body-small {
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+/* Professional Button Typography */
+.btn-text {
+    font-family: var(--font-primary);
+    font-weight: 500;
+    letter-spacing: 0.025em;
+}
+
+/* Professional Form Typography */
+.form-label {
+    font-family: var(--font-primary);
+    font-weight: 500;
+    font-size: 0.875rem;
+    letter-spacing: 0.025em;
+}
+
+.form-input {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 1rem;
+}
+
+/* Professional Table Typography */
+.table-header {
+    font-family: var(--font-primary);
+    font-weight: 600;
+    font-size: 0.875rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.table-cell {
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 0.875rem;
+}
+
+/* Professional Code Typography */
+.code-inline {
+    font-family: var(--font-code);
+    font-size: 0.875em;
+    font-weight: 500;
+}
+
+.code-block {
+    font-family: var(--font-code);
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+    .heading-1 { font-size: 2.5rem; }
+    .heading-2 { font-size: 2rem; }
+    .heading-3 { font-size: 1.75rem; }
+    .heading-4 { font-size: 1.25rem; }
+    
+    .body-large { font-size: 1rem; }
+    .body-regular { font-size: 0.875rem; }
+}
+
+@media (max-width: 480px) {
+    .heading-1 { font-size: 2rem; }
+    .heading-2 { font-size: 1.75rem; }
+    .heading-3 { font-size: 1.5rem; }
+}
