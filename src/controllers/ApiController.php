@@ -88,7 +88,7 @@ class ApiController extends BaseController {
         try {
             $sql = "SELECT category_id, category, type, subtype 
                     FROM complaint_categories 
-                    WHERE type = ? AND is_active = 1 
+                    WHERE type = ? AND (is_active IS NULL OR is_active = 1)
                     ORDER BY subtype ASC";
             
             $subtypes = $this->db->fetchAll($sql, [$categoryType]);
@@ -656,6 +656,116 @@ class ApiController extends BaseController {
                 'error' => 'Health check failed',
                 'timestamp' => date('Y-m-d H:i:s')
             ], 500);
+        }
+    }
+    
+    /**
+     * Get ticket statistics for controller dashboard
+     */
+    public function getTicketStats() {
+        $this->requireAuth();
+        $this->requireRole(['controller', 'controller_nodal', 'admin', 'superadmin']);
+        
+        try {
+            $user = $this->getCurrentUser();
+            
+            // Build conditions based on user role
+            $conditions = [];
+            $params = [];
+            
+            if (in_array($user['role'], ['controller', 'controller_nodal'])) {
+                $conditions[] = "(assigned_to_user_id = ? OR division = ?)";
+                $params[] = $user['id'];
+                $params[] = $user['division'] ?? '';
+            }
+            
+            $whereClause = empty($conditions) ? '' : 'WHERE ' . implode(' AND ', $conditions);
+            
+            // Get basic stats
+            $stats = [
+                'pending' => 0,
+                'in_progress' => 0,
+                'awaiting_feedback' => 0,
+                'closed' => 0,
+                'total' => 0
+            ];
+            
+            $sql = "SELECT 
+                        status,
+                        COUNT(*) as count
+                    FROM complaints 
+                    {$whereClause}
+                    GROUP BY status";
+            
+            $results = $this->db->fetchAll($sql, $params);
+            
+            foreach ($results as $row) {
+                $status = $row['status'];
+                $count = (int)$row['count'];
+                
+                if (isset($stats[$status])) {
+                    $stats[$status] = $count;
+                }
+                $stats['total'] += $count;
+            }
+            
+            // Get today's stats
+            $todayConditions = $conditions;
+            $todayParams = $params;
+            $todayConditions[] = "DATE(created_at) = CURDATE()";
+            
+            $todayWhereClause = 'WHERE ' . implode(' AND ', $todayConditions);
+            
+            $todaySql = "SELECT COUNT(*) as count FROM complaints {$todayWhereClause}";
+            $todayResult = $this->db->fetch($todaySql, $todayParams);
+            $stats['today'] = (int)($todayResult['count'] ?? 0);
+            
+            // Get average response time (in hours)
+            $responseSql = "SELECT 
+                               AVG(TIMESTAMPDIFF(HOUR, created_at, updated_at)) as avg_response_time
+                           FROM complaints 
+                           {$whereClause}
+                           AND status != 'pending' 
+                           AND updated_at > created_at";
+            
+            $responseResult = $this->db->fetch($responseSql, $params);
+            $stats['avg_response_time'] = round((float)($responseResult['avg_response_time'] ?? 0), 1);
+            
+            // Get priority breakdown
+            $prioritySql = "SELECT 
+                               priority,
+                               COUNT(*) as count
+                           FROM complaints 
+                           {$whereClause}
+                           AND status IN ('pending', 'in_progress', 'awaiting_feedback')
+                           GROUP BY priority";
+            
+            $priorityResults = $this->db->fetchAll($prioritySql, $params);
+            $stats['priority'] = [
+                'critical' => 0,
+                'high' => 0,
+                'medium' => 0,
+                'normal' => 0
+            ];
+            
+            foreach ($priorityResults as $row) {
+                $priority = $row['priority'];
+                $count = (int)$row['count'];
+                
+                if (isset($stats['priority'][$priority])) {
+                    $stats['priority'][$priority] = $count;
+                }
+            }
+            
+            $this->json([
+                'success' => true,
+                'stats' => $stats,
+                'timestamp' => date('Y-m-d H:i:s')
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Ticket stats error: " . $e->getMessage());
+            $this->json(['error' => 'Failed to fetch ticket statistics'], 500);
         }
     }
     

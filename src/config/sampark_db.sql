@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 09, 2025 at 01:11 PM
+-- Generation Time: Sep 10, 2025 at 03:41 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -51,43 +51,6 @@ DELIMITER ;
 -- (See below for the actual view)
 --
 CREATE TABLE `active_tickets` (
-`complaint_id` varchar(20)
-,`category_id` int(11)
-,`date` date
-,`time` time
-,`shed_id` int(11)
-,`wagon_id` int(11)
-,`rating` enum('excellent','satisfactory','unsatisfactory')
-,`rating_remarks` text
-,`description` text
-,`action_taken` text
-,`status` enum('pending','awaiting_feedback','awaiting_info','awaiting_approval','closed')
-,`department` varchar(100)
-,`division` varchar(100)
-,`zone` varchar(100)
-,`customer_id` varchar(20)
-,`fnr_number` varchar(50)
-,`gstin_number` varchar(15)
-,`e_indent_number` varchar(50)
-,`assigned_to_user_id` int(11)
-,`assigned_to_department` varchar(100)
-,`forwarded_flag` tinyint(1)
-,`priority` enum('normal','medium','high','critical')
-,`sla_deadline` timestamp
-,`created_at` timestamp
-,`updated_at` timestamp
-,`closed_at` timestamp
-,`escalated_at` timestamp
-,`category` varchar(100)
-,`type` varchar(100)
-,`subtype` varchar(100)
-,`shed_name` varchar(200)
-,`shed_code` varchar(10)
-,`customer_name` varchar(100)
-,`customer_email` varchar(100)
-,`customer_mobile` varchar(15)
-,`company_name` varchar(150)
-,`assigned_user_name` varchar(100)
 );
 
 -- --------------------------------------------------------
@@ -121,7 +84,23 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `customer_id`, `user_role`, `actio
 (5, 3, NULL, 'admin', 'customer_approved', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-09 07:43:32'),
 (6, 3, NULL, 'admin', 'logout', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-09 07:44:20'),
 (7, 3, NULL, 'admin', 'user_login', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-09 08:05:35'),
-(8, 3, NULL, 'admin', 'logout', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-09 08:07:02');
+(8, 3, NULL, 'admin', 'logout', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-09 08:07:02'),
+(15, 3, NULL, 'admin', 'user_login', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 10:40:56'),
+(16, 3, NULL, 'admin', 'user_password_reset', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 10:45:14'),
+(17, 3, NULL, 'admin', 'logout', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 10:45:20'),
+(18, NULL, NULL, NULL, 'failed_login', 'Failed login attempt for user: CN003', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 10:45:35'),
+(19, 7, NULL, 'controller_nodal', 'user_login', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 10:46:20'),
+(20, 7, NULL, 'controller_nodal', 'user_login', '{\"user_id\":7,\"role\":\"controller_nodal\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 12:31:13'),
+(21, 7, NULL, 'controller_nodal', 'logout', '{\"previous_role\":\"controller_nodal\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 13:26:50'),
+(22, NULL, NULL, NULL, 'failed_login', 'Failed login attempt for customer: test@gmail.com', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 13:27:07'),
+(23, NULL, 'CUST2025090001', 'customer', 'customer_login', '{\"customer_id\":\"CUST2025090001\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 13:27:23'),
+(24, NULL, 'CUST2025090001', 'customer', 'logout', '{\"previous_role\":\"customer\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 13:31:10'),
+(25, 7, NULL, 'controller_nodal', 'user_login', '{\"user_id\":7,\"role\":\"controller_nodal\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 13:31:24'),
+(26, 7, NULL, 'controller_nodal', 'logout', '{\"previous_role\":\"controller_nodal\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 13:35:44'),
+(27, NULL, 'CUST2025090001', 'customer', 'customer_login', '{\"customer_id\":\"CUST2025090001\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 13:35:53'),
+(28, NULL, 'CUST2025090001', 'customer', 'logout', '{\"previous_role\":\"customer\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 13:36:19'),
+(29, NULL, NULL, NULL, 'failed_login', 'Failed login attempt for customer: CN0032', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 13:36:48'),
+(30, 16, NULL, 'controller_nodal', 'user_login', '{\"user_id\":16,\"role\":\"controller_nodal\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-10 13:36:58');
 
 -- --------------------------------------------------------
 
@@ -146,7 +125,6 @@ CREATE TABLE `complaints` (
   `zone` varchar(100) NOT NULL,
   `customer_id` varchar(20) NOT NULL,
   `fnr_number` varchar(50) DEFAULT NULL,
-  `gstin_number` varchar(15) DEFAULT NULL,
   `e_indent_number` varchar(50) DEFAULT NULL,
   `assigned_to_user_id` int(11) DEFAULT NULL,
   `assigned_to_department` varchar(100) DEFAULT NULL,
@@ -158,6 +136,19 @@ CREATE TABLE `complaints` (
   `closed_at` timestamp NULL DEFAULT NULL,
   `escalated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `complaints`
+--
+
+INSERT INTO `complaints` (`complaint_id`, `category_id`, `date`, `time`, `shed_id`, `wagon_id`, `rating`, `rating_remarks`, `description`, `action_taken`, `status`, `department`, `division`, `zone`, `customer_id`, `fnr_number`, `e_indent_number`, `assigned_to_user_id`, `assigned_to_department`, `forwarded_flag`, `priority`, `sla_deadline`, `created_at`, `updated_at`, `closed_at`, `escalated_at`) VALUES
+('202509090001', 3, '2025-09-09', '17:33:03', 210, 1012, 'excellent', 'Good', '12dad d aafaf   eewqewq qqj hgig iy78aaa7 a9 9dy adihd', NULL, 'awaiting_feedback', NULL, 'CSMT', 'CR', 'CUST2025090001', '', '', NULL, 'Commercial', 0, 'normal', NULL, '2025-09-09 12:03:03', '2025-09-10 11:14:38', '2025-09-10 10:33:58', NULL),
+('202509100001', 6, '2025-09-10', '11:59:14', 266, 1024, NULL, NULL, 'qwqwqwqwqwqqwqwqqwwqwwqw', NULL, 'awaiting_info', NULL, 'CSMT', 'CR', 'CUST2025090001', '', '', NULL, 'Commercial', 0, 'normal', NULL, '2025-09-10 06:29:14', '2025-09-10 10:32:54', NULL, NULL),
+('202509100002', 9, '2025-09-10', '12:00:21', 97, 1012, NULL, NULL, '21212addad ad dq 2e23sda', NULL, 'pending', NULL, 'CSMT', 'CR', 'CUST2025090001', '12', '12', NULL, 'Commercial', 0, 'normal', NULL, '2025-09-10 06:30:21', '2025-09-10 06:30:21', NULL, NULL),
+('202509100003', 56, '2025-09-10', '13:25:20', 164, 1028, NULL, NULL, '12qw qwqwq q qwqw q qwqw2', NULL, 'pending', NULL, 'CSMT', 'CR', 'CUST2025090001', '12', '', NULL, 'Commercial', 0, 'normal', NULL, '2025-09-10 07:55:20', '2025-09-10 07:55:20', NULL, NULL),
+('202509100004', 15, '2025-09-10', '15:01:35', 61, NULL, NULL, NULL, '12121  wsdsdss 1212 sssdewsss', NULL, 'pending', NULL, 'CSMT', 'CR', 'CUST2025090001', '11222', '', NULL, 'Commercial', 0, 'normal', NULL, '2025-09-10 09:31:35', '2025-09-10 09:31:35', NULL, NULL),
+('202509100005', 6, '2025-09-10', '19:00:59', 30, 1026, NULL, NULL, '121212 1 121212 121212', NULL, 'pending', NULL, 'CSMT', 'CR', 'CUST2025090001', '12', '12', 7, 'Commercial', 0, 'normal', NULL, '2025-09-10 13:30:59', '2025-09-10 13:30:59', NULL, NULL),
+('202509100006', 20, '2025-09-10', '19:06:15', 210, 1012, NULL, NULL, '1212121212 1 12 1212 1', NULL, 'pending', NULL, 'CSMT', 'CR', 'CUST2025090001', '12', '12', 7, 'Commercial', 0, 'normal', NULL, '2025-09-10 13:36:15', '2025-09-10 13:36:15', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -278,7 +269,7 @@ INSERT INTO `customers` (`customer_id`, `password`, `name`, `email`, `mobile`, `
 ('CUST20250105', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Sanjay Gupta', 'sanjay.gupta@jkltransport.com', '9123456784', 'JKL Transport Corporation', 'Senior Executive', '27EEEEE4444E5V1', 'individual', 'customer', 'approved', 'Howrah', 'Eastern', '2025-09-03 11:52:21', '2', '2025-09-03 11:52:21'),
 ('CUST20250106', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Neha Joshi', 'neha.joshi@mnoexport.com', '9123456785', 'MNO Export House', 'Export Manager', '14FFFFF5555F6U0', 'individual', 'customer', 'pending', 'Mumbai Central', 'Western', '2025-09-03 11:52:21', '3', '2025-09-03 11:52:21'),
 ('CUST20250107', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Rajesh Kumar', 'rajesh.kumar@pqrimpex.com', '9123456786', 'PQR Impex Limited', 'Managing Director', '', 'individual', 'customer', 'rejected', 'Sealdah', 'Eastern', '2025-09-03 11:52:21', '2', '2025-09-03 11:52:21'),
-('CUST2025090001', '$2y$10$rn9ldknOIypiqK1sPHiYYuogBjtR6fLyXS7SLA03Of1xQqtFObWNC', 'DINESH NARENDRA KURKURE', 'dineshkurkure.dk@gmail.com', '7738193914', 'IT CELL', 'Sr CCTC', NULL, 'individual', 'customer', 'approved', 'Mumbai', 'Central', '2025-09-08 07:08:17', NULL, '2025-09-09 09:26:52');
+('CUST2025090001', '$2y$10$rn9ldknOIypiqK1sPHiYYuogBjtR6fLyXS7SLA03Of1xQqtFObWNC', 'TEST', 'test@gmail.com', '9876543210', 'IT CELL', 'Sr CCTC', NULL, 'individual', 'customer', 'approved', 'Mumbai', 'Central', '2025-09-08 07:08:17', NULL, '2025-09-10 13:35:53');
 
 -- --------------------------------------------------------
 
@@ -317,16 +308,61 @@ INSERT INTO `email_templates` (`template_id`, `template_name`, `template_code`, 
 CREATE TABLE `evidence` (
   `id` int(11) NOT NULL,
   `complaint_id` varchar(20) NOT NULL,
-  `file_name` varchar(255) NOT NULL,
-  `original_name` varchar(255) NOT NULL,
-  `file_size` int(11) NOT NULL,
-  `file_type` varchar(50) NOT NULL,
-  `file_path` varchar(500) NOT NULL,
-  `compressed_size` int(11) DEFAULT NULL,
+  `file_name_1` varchar(255) DEFAULT NULL,
+  `file_name_2` varchar(255) DEFAULT NULL,
+  `file_name_3` varchar(255) DEFAULT NULL,
+  `file_type_1` varchar(50) DEFAULT NULL,
+  `file_type_2` varchar(50) DEFAULT NULL,
+  `file_type_3` varchar(50) DEFAULT NULL,
+  `file_path_1` varchar(500) DEFAULT NULL,
+  `file_path_2` varchar(500) DEFAULT NULL,
+  `file_path_3` varchar(500) DEFAULT NULL,
+  `compressed_size_1` int(11) DEFAULT NULL,
+  `compressed_size_2` int(11) DEFAULT NULL,
+  `compressed_size_3` int(11) DEFAULT NULL,
   `uploaded_by_type` enum('customer','user') NOT NULL,
   `uploaded_by_id` varchar(50) NOT NULL,
   `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `evidence`
+--
+
+INSERT INTO `evidence` (`id`, `complaint_id`, `file_name_1`, `file_name_2`, `file_name_3`, `file_type_1`, `file_type_2`, `file_type_3`, `file_path_1`, `file_path_2`, `file_path_3`, `compressed_size_1`, `compressed_size_2`, `compressed_size_3`, `uploaded_by_type`, `uploaded_by_id`, `uploaded_at`) VALUES
+(1, '202509100003', '202509100003_file1.jpeg', '202509100003_file2.jpg', '202509100003_file3.png', 'jpeg', 'jpg', 'png', '202509100003_file1.jpeg', '202509100003_file2.jpg', '202509100003_file3.png', 580831, 83040, 542911, 'customer', 'CUST2025090001', '2025-09-10 07:55:20'),
+(2, '202509100004', '202509100004_file1.jpeg', NULL, NULL, 'jpeg', NULL, NULL, '202509100004_file1.jpeg', NULL, NULL, 580831, NULL, NULL, 'customer', 'CUST2025090001', '2025-09-10 09:31:35'),
+(3, '202509100005', '202509100005_file1.jpg', '202509100005_file2.jpg', NULL, 'jpg', 'jpg', NULL, '202509100005_file1.jpg', '202509100005_file2.jpg', NULL, 1407242, 1847928, NULL, 'customer', 'CUST2025090001', '2025-09-10 13:30:59'),
+(4, '202509100006', '202509100006_file1.jpeg', NULL, NULL, 'jpeg', NULL, NULL, '202509100006_file1.jpeg', NULL, NULL, 580831, NULL, NULL, 'customer', 'CUST2025090001', '2025-09-10 13:36:15');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `evidence_backup`
+--
+
+CREATE TABLE `evidence_backup` (
+  `id` int(11) NOT NULL DEFAULT 0,
+  `complaint_id` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `original_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_size` int(11) NOT NULL,
+  `file_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `compressed_size` int(11) DEFAULT NULL,
+  `uploaded_by_type` enum('customer','user') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `uploaded_by_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `uploaded_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `evidence_backup`
+--
+
+INSERT INTO `evidence_backup` (`id`, `complaint_id`, `file_name`, `original_name`, `file_size`, `file_type`, `file_path`, `compressed_size`, `uploaded_by_type`, `uploaded_by_id`, `uploaded_at`) VALUES
+(1, '202509100001', '202509100001_file1.jpeg', 'WhatsApp Image 2025-09-08 at 1.31.32 PM.jpeg', 580831, 'jpeg', '202509100001_file1.jpeg', 580831, 'customer', 'CUST2025090001', '2025-09-10 06:29:15'),
+(2, '202509100002', '202509100002_file1.jpeg', 'WhatsApp Image 2025-09-08 at 1.31.32 PM.jpeg', 580831, 'jpeg', '202509100002_file1.jpeg', 580831, 'customer', 'CUST2025090001', '2025-09-10 06:30:21'),
+(3, '202509100002', '202509100002_file2.png', 'Gemini_Generated_Image_3uj403uj403uj403-removebg-preview.png', 542911, 'png', '202509100002_file2.png', 542911, 'customer', 'CUST2025090001', '2025-09-10 06:30:21');
 
 -- --------------------------------------------------------
 
@@ -1018,6 +1054,20 @@ CREATE TABLE `transactions` (
   `sms_sent` tinyint(1) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `transactions`
+--
+
+INSERT INTO `transactions` (`transaction_id`, `complaint_id`, `remarks`, `internal_remarks`, `transaction_type`, `from_user_id`, `to_user_id`, `from_customer_id`, `to_customer_id`, `from_department`, `to_department`, `from_division`, `to_division`, `created_by_id`, `created_by_customer_id`, `created_by_type`, `created_by_role`, `created_at`, `attachment_path`, `email_sent`, `sms_sent`) VALUES
+(1, '202509090001', NULL, NULL, 'created', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CUST2025090001', 'customer', 'customer', '2025-09-09 12:03:03', NULL, 0, 0),
+(5, '202509100001', NULL, NULL, 'created', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CUST2025090001', 'customer', 'customer', '2025-09-10 06:29:14', NULL, 0, 0),
+(7, '202509100002', NULL, NULL, 'created', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CUST2025090001', 'customer', 'customer', '2025-09-10 06:30:21', NULL, 0, 0),
+(8, '202509100003', NULL, NULL, 'created', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CUST2025090001', 'customer', 'customer', '2025-09-10 07:55:20', NULL, 0, 0),
+(9, '202509100004', NULL, NULL, 'created', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CUST2025090001', 'customer', 'customer', '2025-09-10 09:31:35', NULL, 0, 0),
+(10, '202509090001', 'Rating: Excellent\nRemarks: Good', NULL, 'feedback_submitted', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CUST2025090001', 'customer', 'customer', '2025-09-10 10:33:58', NULL, 0, 0),
+(11, '202509100005', 'Ticket created by customer', NULL, 'created', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CUST2025090001', 'customer', 'customer', '2025-09-10 13:30:59', NULL, 0, 0),
+(12, '202509100006', 'Ticket created by customer', NULL, 'created', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CUST2025090001', 'customer', 'customer', '2025-09-10 13:36:15', NULL, 0, 0);
+
 -- --------------------------------------------------------
 
 --
@@ -1048,18 +1098,19 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `login_id`, `password`, `role`, `department`, `division`, `zone`, `name`, `email`, `mobile`, `status`, `created_at`, `created_by`, `updated_at`) VALUES
 (1, 'SA001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'superadmin', 'IT', 'Headquarters', 'All Zones', 'System Administrator', 'admin@sampark.railway.gov.in', '9999999999', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
 (2, 'AD001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Administration', 'Sealdah', 'Eastern', 'Rajesh Kumar', 'admin.sealdah@railway.gov.in', '9876543210', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
-(3, 'AD002', '$2y$10$lAVN0r4PQ3MexAV3o9lx7ubhPC8UDaTb07h9E4tZ.r.Fu9KdKzZkK', 'admin', 'Administration', 'Mumbai', 'Central', 'Priya Sharma', 'admin.mumbai@railway.gov.in', '9876543211', 'active', '2025-09-03 11:52:21', 1, '2025-09-09 08:05:35'),
+(3, 'AD002', '$2y$10$lAVN0r4PQ3MexAV3o9lx7ubhPC8UDaTb07h9E4tZ.r.Fu9KdKzZkK', 'admin', 'Administration', 'Mumbai', 'Central', 'Priya Sharma', 'admin.mumbai@railway.gov.in', '9876543211', 'active', '2025-09-03 11:52:21', 1, '2025-09-10 10:40:56'),
 (4, 'AD003', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Administration', 'Delhi', 'Northern', 'Amit Singh', 'admin.delhi@railway.gov.in', '9876543212', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
 (5, 'CN001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'controller_nodal', 'Commercial', 'Sealdah', 'Eastern', 'Suresh Chandraa', 'commercial.sealdah@railway.gov.in', '9876543220', 'active', '2025-09-03 11:52:21', 1, '2025-09-08 11:56:08'),
 (6, 'CN002', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'controller_nodal', 'Commercial', 'Howrah', 'Eastern', 'Meera Patel', 'commercial.howrah@railway.gov.in', '9876543221', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
-(7, 'CN003', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'controller_nodal', 'Commercial', 'Mumbai', 'Central', 'Ravi Gupta', 'commercial.mumbai@railway.gov.in', '9876543222', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
+(7, 'CN003', '$2y$10$vk7Sui.A5oRAYH6MFBezlONS.iTf2PrSoh2/jo70zLU788JzvuDzS', 'controller_nodal', 'Commercial', 'CSMT', 'CR', 'Ravi Gupta', 'commercial.mumbai@railway.gov.in', '9876543222', 'active', '2025-09-03 11:52:21', 1, '2025-09-10 13:31:24'),
 (8, 'CN004', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'controller_nodal', 'Commercial', 'Delhi', 'Northern', 'Sunita Devi', 'commercial.delhi@railway.gov.in', '9876543223', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
 (9, 'CN005', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'controller_nodal', 'Commercial', 'Chennai', 'Southern', 'Karthik Raman', 'commercial.chennai@railway.gov.in', '9876543224', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
 (10, 'CT001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'controller', 'Mechanical', 'Sealdah', 'Eastern', 'Anand Kumar', 'mechanical.sealdah@railway.gov.in', '9876543230', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
 (11, 'CT002', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'controller', 'Electrical', 'Sealdah', 'Eastern', 'Deepika Singh', 'electrical.sealdah@railway.gov.in', '9876543231', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
 (12, 'CT003', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'controller', 'Operating', 'Mumbai', 'Central', 'Vikash Jain', 'operating.mumbai@railway.gov.in', '9876543232', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
 (13, 'CT004', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'controller', 'Engineering', 'Delhi', 'Northern', 'Pooja Agarwal', 'engineering.delhi@railway.gov.in', '9876543233', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
-(14, 'CT005', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'controller', 'Security', 'Chennai', 'Southern', 'Ramesh Babu', 'security.chennai@railway.gov.in', '9876543234', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21');
+(14, 'CT005', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'controller', 'Security', 'Chennai', 'Southern', 'Ramesh Babu', 'security.chennai@railway.gov.in', '9876543234', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
+(16, 'CN0032', '$2y$10$vk7Sui.A5oRAYH6MFBezlONS.iTf2PrSoh2/jo70zLU788JzvuDzS', 'controller_nodal', 'Commercial', 'CSMT', 'CR', 'TEST 2', 'commercial2.mumbai@railway.gov.in', '9876543000', 'active', '2025-09-03 11:52:21', 1, '2025-09-10 13:36:58');
 
 -- --------------------------------------------------------
 
@@ -1585,8 +1636,9 @@ ALTER TABLE `email_templates`
 --
 ALTER TABLE `evidence`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_complaint` (`complaint_id`),
-  ADD KEY `idx_uploaded_by` (`uploaded_by_id`);
+  ADD KEY `idx_complaint_id` (`complaint_id`),
+  ADD KEY `idx_uploaded_by` (`uploaded_by_type`,`uploaded_by_id`),
+  ADD KEY `idx_evidence_complaint_uploaded` (`complaint_id`,`uploaded_by_type`,`uploaded_by_id`);
 
 --
 -- Indexes for table `news`
@@ -1694,7 +1746,7 @@ ALTER TABLE `wagon_details`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `complaint_categories`
@@ -1712,7 +1764,7 @@ ALTER TABLE `email_templates`
 -- AUTO_INCREMENT for table `evidence`
 --
 ALTER TABLE `evidence`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `news`
@@ -1754,13 +1806,13 @@ ALTER TABLE `system_settings`
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `wagon_details`
@@ -1788,12 +1840,6 @@ ALTER TABLE `complaints`
   ADD CONSTRAINT `complaints_ibfk_2` FOREIGN KEY (`assigned_to_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `complaints_ibfk_3` FOREIGN KEY (`category_id`) REFERENCES `complaint_categories` (`category_id`),
   ADD CONSTRAINT `complaints_ibfk_4` FOREIGN KEY (`shed_id`) REFERENCES `shed` (`shed_id`);
-
---
--- Constraints for table `evidence`
---
-ALTER TABLE `evidence`
-  ADD CONSTRAINT `evidence_ibfk_1` FOREIGN KEY (`complaint_id`) REFERENCES `complaints` (`complaint_id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `news`

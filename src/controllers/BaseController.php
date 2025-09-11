@@ -245,4 +245,23 @@ class BaseController {
     protected function getFlashMessages() {
         return $this->session->getFlash();
     }
+    
+    /**
+     * Get transaction icon based on transaction type
+     */
+    protected function getTransactionIcon($transactionType) {
+        $icons = [
+            'created' => 'fa-plus-circle',
+            'forwarded' => 'fa-share',
+            'replied' => 'fa-reply',
+            'approved' => 'fa-check-circle',
+            'rejected' => 'fa-times-circle',
+            'reverted' => 'fa-undo',
+            'escalated' => 'fa-exclamation-triangle',
+            'closed' => 'fa-check',
+            'reopened' => 'fa-folder-open'
+        ];
+        
+        return $icons[$transactionType] ?? 'fa-circle';
+    }
 }

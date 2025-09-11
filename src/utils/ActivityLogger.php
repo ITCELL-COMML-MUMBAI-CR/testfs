@@ -22,9 +22,25 @@ class ActivityLogger {
                 complaint_id, ip_address, user_agent, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
             
+            // Fix: Ensure customer_id goes to customer_id field, not user_id
+            $userId = null;
+            $customerId = null;
+            
+            if (isset($data['user_id']) && !empty($data['user_id'])) {
+                if ($data['user_role'] === 'customer' || strpos($data['user_id'], 'CUST') === 0) {
+                    $customerId = $data['user_id'];
+                } else {
+                    $userId = $data['user_id'];
+                }
+            }
+            
+            if (isset($data['customer_id']) && !empty($data['customer_id'])) {
+                $customerId = $data['customer_id'];
+            }
+            
             $params = [
-                $data['user_id'] ?? null,
-                $data['customer_id'] ?? null,
+                $userId,
+                $customerId,
                 $data['user_role'] ?? null,
                 $data['action'],
                 $data['description'] ?? null,

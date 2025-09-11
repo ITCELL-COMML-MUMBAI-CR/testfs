@@ -84,6 +84,7 @@ $router->get('/admin/reports', 'Admin@reports', ['auth', 'role:admin,superadmin'
 // API Routes
 $router->get('/api/sheds/search', 'Api@searchSheds');
 $router->get('/api/categories/{type}/subtypes', 'Api@getSubtypes');
+$router->get('/api/tickets/stats', 'Api@getTicketStats', ['auth']);
 $router->post('/api/tickets/{id}/upload', 'Api@uploadEvidence', ['auth']);
 $router->get('/api/tickets/{id}/evidence/{file}', 'Api@getEvidence', ['auth']);
 $router->get('/api/tickets/updates', 'Api@getTicketUpdates', ['auth']);

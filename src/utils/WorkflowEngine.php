@@ -175,11 +175,11 @@ class WorkflowEngine {
         try {
             $escalatedTickets = [];
             
-            // Get tickets that need priority escalation
+            // Get tickets that need priority escalation (per requirements)
             $priorityRules = [
-                'normal' => ['hours' => 48, 'escalate_to' => 'medium'],
-                'medium' => ['hours' => 24, 'escalate_to' => 'high'],
-                'high' => ['hours' => 12, 'escalate_to' => 'critical']
+                'normal' => ['hours' => 3, 'escalate_to' => 'medium'],
+                'medium' => ['hours' => 12, 'escalate_to' => 'high'],
+                'high' => ['hours' => 24, 'escalate_to' => 'critical']
             ];
             
             foreach ($priorityRules as $currentPriority => $rule) {

@@ -44,19 +44,14 @@ class ControllerController extends BaseController {
         $dateTo = $_GET['date_to'] ?? '';
         $division = $_GET['division'] ?? '';
         
-        // Build query conditions based on user role
+        // Build query conditions based on user role and department access
         $conditions = [];
         $params = [];
         
-        if ($user['role'] === 'controller') {
-            // Regular controllers only see tickets assigned to them
-            $conditions[] = 'c.assigned_to_user_id = ?';
-            $params[] = $user['id'];
-        } else {
-            // Nodal controllers see all tickets in their division
-            $conditions[] = 'c.division = ?';
-            $params[] = $user['division'];
-        }
+        // All controller_nodals in Commercial department can see tickets in their division/zone
+        $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
+        $params[] = $user['division'];
+        $params[] = $user['department'];
         
         // Add filters
         if ($status) {
@@ -91,7 +86,6 @@ class ControllerController extends BaseController {
                        s.name as shed_name, s.shed_code,
                        cust.name as customer_name, cust.email as customer_email,
                        cust.company_name, cust.mobile as customer_mobile,
-                       u.name as assigned_user_name,
                        TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
                        CASE 
                            WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
@@ -101,7 +95,6 @@ class ControllerController extends BaseController {
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
                 LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                LEFT JOIN users u ON c.assigned_to_user_id = u.id
                 WHERE {$whereClause}
                 ORDER BY 
                     CASE WHEN c.priority = 'critical' THEN 1
@@ -136,15 +129,13 @@ class ControllerController extends BaseController {
     public function viewTicket($ticketId) {
         $user = $this->getCurrentUser();
         
-        // Get ticket details with access control
+        // Get ticket details with department/division access control
         $sql = "SELECT c.*, 
                        cat.category, cat.type, cat.subtype,
                        s.name as shed_name, s.shed_code, s.division, s.zone,
                        w.wagon_code, w.type as wagon_type,
                        cust.name as customer_name, cust.email as customer_email, 
                        cust.mobile as customer_mobile, cust.company_name,
-                       assigned_u.name as assigned_user_name,
-                       assigned_u.role as assigned_user_role,
                        TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
                        CASE 
                            WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
@@ -155,19 +146,9 @@ class ControllerController extends BaseController {
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
                 LEFT JOIN wagon_details w ON c.wagon_id = w.wagon_id
                 LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                LEFT JOIN users assigned_u ON c.assigned_to_user_id = assigned_u.id
-                WHERE c.complaint_id = ?";
+                WHERE c.complaint_id = ? AND c.division = ? AND c.assigned_to_department = ?";
         
-        $params = [$ticketId];
-        
-        // Add access control
-        if ($user['role'] === 'controller') {
-            $sql .= " AND c.assigned_to_user_id = ?";
-            $params[] = $user['id'];
-        } else {
-            $sql .= " AND c.division = ?";
-            $params[] = $user['division'];
-        }
+        $params = [$ticketId, $user['division'], $user['department']];
         
         $ticket = $this->db->fetch($sql, $params);
         
@@ -239,7 +220,8 @@ class ControllerController extends BaseController {
         
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
-            'to_user_id' => 'required|exists:users,id',
+            'to_division' => 'required',
+            'to_department' => 'required',
             'remarks' => 'required|min:10|max:1000',
             'priority' => 'required|in:normal,medium,high,critical'
         ]);
@@ -266,47 +248,41 @@ class ControllerController extends BaseController {
                 return;
             }
             
-            // Get target user info
-            $targetUser = $this->db->fetch(
-                "SELECT * FROM users WHERE id = ? AND status = 'active'",
-                [$_POST['to_user_id']]
-            );
-            
-            if (!$targetUser) {
-                $this->json(['success' => false, 'message' => 'Invalid target user'], 400);
-                return;
+            // Update ticket - Reset priority to normal when forwarded to another division  
+            $newPriority = $_POST['priority'];
+            if ($_POST['to_division'] !== $ticket['division']) {
+                $newPriority = 'normal'; // Priority resets when forwarded to another division
             }
             
-            // Update ticket
             $sql = "UPDATE complaints SET 
-                    assigned_to_user_id = ?,
                     assigned_to_department = ?,
+                    division = ?,
                     priority = ?,
                     forwarded_flag = 1,
                     updated_at = NOW()
                     WHERE complaint_id = ?";
             
             $this->db->query($sql, [
-                $targetUser['id'],
-                $targetUser['department'],
-                $_POST['priority'],
+                $_POST['to_department'],
+                $_POST['to_division'],
+                $newPriority,
                 $ticketId
             ]);
             
             // Update SLA deadline based on new priority
-            $this->updateSLADeadline($ticketId, $_POST['priority']);
+            $this->updateSLADeadline($ticketId, $newPriority);
             
             // Create transaction record
-            $this->createTransaction($ticketId, 'forwarded', $_POST['remarks'], $user['id'], $targetUser['id']);
+            $this->createTransaction($ticketId, 'forwarded', $_POST['remarks'], $user['id']);
             
-            // Send notifications
-            $this->sendForwardNotifications($ticketId, $ticket, $user, $targetUser, $_POST['remarks']);
+            // Send notifications to target department
+            $this->sendForwardNotifications($ticketId, $ticket, $user, $_POST['to_division'], $_POST['to_department'], $_POST['remarks']);
             
             $this->db->commit();
             
             $this->json([
                 'success' => true,
-                'message' => 'Ticket forwarded successfully to ' . $targetUser['name']
+                'message' => 'Ticket forwarded successfully to ' . $_POST['to_department'] . ' department in ' . $_POST['to_division'] . ' division'
             ]);
             
         } catch (Exception $e) {

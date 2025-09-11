@@ -227,16 +227,12 @@ class CustomerController extends BaseController {
             $currentDate = date('Y-m-d');
             $currentTime = date('H:i:s');
             
-            // Insert complaint
+            // Insert complaint - routing by department/division/zone instead of specific user
             $sql = "INSERT INTO complaints (
                 complaint_id, category_id, date, time, shed_id, wagon_id,
                 description, customer_id, fnr_number, e_indent_number,
-                division, zone, status, priority, assigned_to_user_id, 
-                assigned_to_department, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'normal', ?, 'Commercial', NOW())";
-            
-            // Find nodal controller for the division
-            $nodalController = $this->findNodalController($shedInfo['division']);
+                division, zone, status, priority, assigned_to_department, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'normal', 'Commercial', NOW())";
             
             $params = [
                 $complaintId,
@@ -250,14 +246,13 @@ class CustomerController extends BaseController {
                 $_POST['fnr_number'] ?? null,
                 $_POST['e_indent_number'] ?? null,
                 $shedInfo['division'],
-                $shedInfo['zone'],
-                $nodalController['user_id'] ?? null
+                $shedInfo['zone']
             ];
             
             $this->db->query($sql, $params);
             
             // Create initial transaction
-            $this->createTransaction($complaintId, 'created', null, $customer['customer_id'], 'customer');
+            $this->createTransaction($complaintId, 'created', 'Ticket created by customer', $customer['customer_id'], 'customer');
             
             // Handle file uploads
             if (!empty($_FILES['evidence'])) {
@@ -272,8 +267,8 @@ class CustomerController extends BaseController {
                 }
             }
             
-            // Send notifications
-            $this->sendTicketCreatedNotifications($complaintId, $customer, $nodalController);
+            // Send notifications to department
+            $this->sendTicketCreatedNotifications($complaintId, $customer, $shedInfo);
             
             $this->db->commit();
             
@@ -603,15 +598,6 @@ class CustomerController extends BaseController {
         return $default ? $default['wagon_id'] : null;
     }
     
-    private function findNodalController($division) {
-        $sql = "SELECT id as user_id FROM users 
-                WHERE role = 'controller_nodal' 
-                  AND division = ? 
-                  AND status = 'active' 
-                LIMIT 1";
-        
-        return $this->db->fetch($sql, [$division]);
-    }
     
     /**
      * Transform evidence data from new table structure to display format
@@ -669,9 +655,10 @@ class CustomerController extends BaseController {
         return $uploader->uploadEvidence($complaintId, $files, 'customer', $this->getCurrentUser()['customer_id']);
     }
     
-    private function sendTicketCreatedNotifications($complaintId, $customer, $nodalController) {
+    private function sendTicketCreatedNotifications($complaintId, $customer, $shedInfo) {
+        // Send notifications to all controller_nodals in Commercial dept of the division
         // Implementation for sending email/SMS notifications
-        // This would use the notification service
+        // This would use the notification service to notify all relevant users
     }
     
     public function changePassword() {
