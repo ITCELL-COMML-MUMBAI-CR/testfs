@@ -333,9 +333,9 @@ class ApiController extends BaseController {
                 $conditions[] = "customer_id = ?";
                 $params[] = $user['customer_id'];
             } else {
-                $conditions[] = "(assigned_to_user_id = ? OR division = ?)";
-                $params[] = $user['id'];
-                $params[] = $user['division'];
+                $conditions[] = "(division = ? AND assigned_to_department = ?)";
+                $params[] = $user['division'] ?? '';
+                $params[] = $user['department'] ?? 'Commercial';
             }
             
             $whereClause = implode(' AND ', $conditions);
@@ -436,8 +436,24 @@ class ApiController extends BaseController {
      */
     public function getDivisions() {
         try {
-            $sql = "SELECT DISTINCT division FROM shed WHERE is_active = 1 ORDER BY division";
-            $divisions = $this->db->fetchAll($sql);
+            $zone = $_GET['zone'] ?? '';
+            
+            $conditions = ["d.is_active = 1"];
+            $params = [];
+            
+            if ($zone) {
+                $conditions[] = "d.zone_code = ?";
+                $params[] = $zone;
+            }
+            
+            $whereClause = implode(' AND ', $conditions);
+            
+            $sql = "SELECT d.division_code as division, d.division_name, d.zone_code as zone, z.zone_name 
+                    FROM divisions d 
+                    JOIN zones z ON d.zone_code = z.zone_code 
+                    WHERE {$whereClause} 
+                    ORDER BY d.division_name";
+            $divisions = $this->db->fetchAll($sql, $params);
             
             $this->json([
                 'success' => true,
@@ -455,20 +471,11 @@ class ApiController extends BaseController {
      */
     public function getZones() {
         try {
-            $division = $_GET['division'] ?? '';
-            
-            $conditions = ["is_active = 1"];
-            $params = [];
-            
-            if ($division) {
-                $conditions[] = "division = ?";
-                $params[] = $division;
-            }
-            
-            $whereClause = implode(' AND ', $conditions);
-            
-            $sql = "SELECT DISTINCT zone FROM shed WHERE {$whereClause} ORDER BY zone";
-            $zones = $this->db->fetchAll($sql, $params);
+            $sql = "SELECT zone_code as zone, zone_name, zone_full_name, headquarters 
+                    FROM zones 
+                    WHERE is_active = 1 
+                    ORDER BY zone_name";
+            $zones = $this->db->fetchAll($sql);
             
             $this->json([
                 'success' => true,
@@ -478,6 +485,28 @@ class ApiController extends BaseController {
         } catch (Exception $e) {
             error_log("Zones fetch error: " . $e->getMessage());
             $this->json(['error' => 'Failed to fetch zones'], 500);
+        }
+    }
+    
+    /**
+     * Get departments list
+     */
+    public function getDepartments() {
+        try {
+            $sql = "SELECT department_code, department_name, description 
+                    FROM departments 
+                    WHERE is_active = 1 
+                    ORDER BY department_name";
+            $departments = $this->db->fetchAll($sql);
+            
+            $this->json([
+                'success' => true,
+                'departments' => $departments
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Departments fetch error: " . $e->getMessage());
+            $this->json(['error' => 'Failed to fetch departments'], 500);
         }
     }
     
@@ -532,9 +561,9 @@ class ApiController extends BaseController {
                 $conditions[] = "customer_id = ?";
                 $params[] = $user['customer_id'];
             } else {
-                $conditions[] = "(assigned_to_user_id = ? OR division = ?)";
-                $params[] = $user['id'];
-                $params[] = $user['division'];
+                $conditions[] = "(division = ? AND assigned_to_department = ?)";
+                $params[] = $user['division'] ?? '';
+                $params[] = $user['department'] ?? 'Commercial';
             }
             
             $whereClause = implode(' AND ', $conditions);
@@ -636,9 +665,9 @@ class ApiController extends BaseController {
             $params = [];
             
             if (in_array($user['role'], ['controller', 'controller_nodal'])) {
-                $conditions[] = "(assigned_to_user_id = ? OR division = ?)";
-                $params[] = $user['id'];
+                $conditions[] = "(division = ? AND assigned_to_department = ?)";
                 $params[] = $user['division'] ?? '';
+                $params[] = $user['department'] ?? 'Commercial';
             }
             
             $whereClause = empty($conditions) ? '' : 'WHERE ' . implode(' AND ', $conditions);
@@ -1027,8 +1056,8 @@ class ApiController extends BaseController {
         $user = $this->db->fetch("SELECT * FROM users WHERE id = ?", [$userId]);
         
         if ($userRole === 'controller') {
-            $condition = 'assigned_to_user_id = ?';
-            $param = $userId;
+            $condition = 'division = ? AND assigned_to_department = ?';
+            $param = [$user['division'], $user['department']];
         } else {
             $condition = 'division = ? AND assigned_to_department = ?';
             $param = [$user['division'], $user['department']];

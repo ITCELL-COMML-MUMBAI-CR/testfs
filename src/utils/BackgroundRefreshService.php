@@ -242,16 +242,10 @@ class BackgroundRefreshService {
         $conditions = [];
         $params = [];
         
-        if ($userRole === 'controller') {
-            // Regular controllers see only assigned tickets
-            $conditions[] = 'c.assigned_to_user_id = ?';
-            $params[] = $userId;
-        } else {
-            // Nodal controllers see all tickets in their division/department
-            $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
-            $params[] = $user['division'];
-            $params[] = $user['department'];
-        }
+        // Both controller and controller_nodal see tickets in their division/department
+        $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
+        $params[] = $user['division'];
+        $params[] = $user['department'];
         
         $this->applyFilters($conditions, $params, $filters);
         
@@ -260,8 +254,11 @@ class BackgroundRefreshService {
                        s.name as shed_name, s.shed_code,
                        cust.name as customer_name, cust.email as customer_email,
                        cust.company_name, cust.mobile as customer_mobile,
-                       u.name as assigned_user_name,
                        TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
+                       CASE 
+                           WHEN c.status = 'awaiting_feedback' THEN TIMESTAMPDIFF(DAY, c.updated_at, NOW())
+                           ELSE 0
+                       END as days_since_revert,
                        CASE 
                            WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
                            ELSE 0
@@ -270,7 +267,6 @@ class BackgroundRefreshService {
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
                 LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                LEFT JOIN users u ON c.assigned_to_user_id = u.id
                 WHERE " . implode(' AND ', $conditions) . "
                 ORDER BY 
                     CASE WHEN c.priority = 'critical' THEN 1
@@ -296,8 +292,11 @@ class BackgroundRefreshService {
                        cat.category, cat.type, cat.subtype,
                        s.name as shed_name, s.shed_code,
                        cust.name as customer_name, cust.company_name,
-                       u.name as assigned_user_name,
                        TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
+                       CASE 
+                           WHEN c.status = 'awaiting_feedback' THEN TIMESTAMPDIFF(DAY, c.updated_at, NOW())
+                           ELSE 0
+                       END as days_since_revert,
                        CASE 
                            WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
                            ELSE 0
@@ -306,7 +305,6 @@ class BackgroundRefreshService {
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
                 LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                LEFT JOIN users u ON c.assigned_to_user_id = u.id
                 WHERE " . implode(' AND ', $conditions) . "
                 ORDER BY 
                     CASE WHEN c.priority = 'critical' THEN 1

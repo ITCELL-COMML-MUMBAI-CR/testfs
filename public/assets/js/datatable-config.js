@@ -230,67 +230,107 @@ function initializeControllerTicketsTable(tableId = 'controllerTicketsTable') {
             {
                 data: 'complaint_id',
                 title: 'Ticket ID',
+                width: '120px',
                 render: function(data, type, row) {
                     if (type === 'display') {
                         const urgentClass = row.is_urgent ? 'text-danger font-weight-bold' : '';
-                        return `<a href="${window.APP_URL || ''}/controller/tickets/${data}" class="ticket-link ${urgentClass}">${data}</a>`;
+                        return `<a href="${window.APP_URL || ''}/controller/tickets/${data}" class="fw-semibold text-decoration-none text-primary ${urgentClass}">#${data}</a>`;
                     }
                     return data;
+                }
+            },
+            {
+                data: 'priority',
+                title: 'Priority',
+                width: '100px',
+                className: 'text-center',
+                render: function(data, type, row) {
+                    const priorityClass = {
+                        'critical': 'danger',
+                        'high': 'warning', 
+                        'medium': 'info',
+                        'normal': 'secondary'
+                    }[data] || 'secondary';
+                    
+                    const priorityIcon = {
+                        'critical': 'exclamation-circle',
+                        'high': 'exclamation-triangle',
+                        'medium': 'info-circle',
+                        'normal': 'circle'
+                    }[data] || 'circle';
+                    
+                    return `<span class="badge bg-${priorityClass} px-2 py-1">
+                                <i class="fas fa-${priorityIcon} me-1"></i>${data.charAt(0).toUpperCase() + data.slice(1)}
+                            </span>`;
                 }
             },
             {
                 data: 'customer_name',
                 title: 'Customer',
+                width: '240px',
                 render: function(data, type, row) {
-                    return `<strong>${data}</strong><br><small class="text-muted">${row.company_name || ''}</small>`;
+                    let html = `<div class="text-truncate"><div class="fw-semibold text-truncate" style="max-width: 220px;" title="${data || 'N/A'}">${data || 'N/A'}</div>`;
+                    if (row.company_name) {
+                        html += `<small class="text-muted text-truncate d-block" style="max-width: 220px;" title="${row.company_name}">${row.company_name}</small>`;
+                    }
+                    html += '</div>';
+                    return html;
                 }
             },
             {
                 data: 'category',
                 title: 'Category',
+                width: '220px',
                 render: function(data, type, row) {
-                    return `<span class="category-label">${data}</span><br><small class="text-muted">${row.type}</small><br><small class="text-info">${row.subtype || 'N/A'}</small>`;
+                    let html = `<div><span class="fw-semibold text-truncate d-block" style="max-width: 200px;" title="${data || 'N/A'}">${data || 'N/A'}</span>`;
+                    if (row.type) {
+                        html += `<small class="text-primary text-truncate d-block" style="max-width: 200px;" title="${row.type}">${row.type}</small>`;
+                    }
+                    if (row.subtype) {
+                        html += `<small class="text-muted text-truncate d-block" style="max-width: 200px;" title="${row.subtype}">${row.subtype}</small>`;
+                    }
+                    html += '</div>';
+                    return html;
                 }
             },
             {
                 data: 'status',
                 title: 'Status',
+                width: '140px',
+                className: 'text-center',
                 render: function(data, type, row) {
-                    const statusBadgeClass = getStatusBadgeClass(data);
-                    let statusText = formatStatus(data);
+                    const statusClass = {
+                        'pending': 'warning',
+                        'awaiting_info': 'info', 
+                        'awaiting_approval': 'primary',
+                        'awaiting_feedback': 'success',
+                        'closed': 'dark'
+                    }[data] || 'secondary';
                     
-                    if (row.assigned_user_name && data === 'pending') {
-                        statusText += `<br><small>Assigned to: ${row.assigned_user_name}</small>`;
-                    }
-                    
-                    return `<span class="badge ${statusBadgeClass}">${statusText}</span>`;
+                    return `<span class="badge bg-${statusClass} px-2 py-1">${data.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>`;
                 }
             },
             {
-                data: 'assigned_user_name',
+                data: 'assigned_to_department',
                 title: 'Assigned To',
+                width: '160px',
                 render: function(data, type, row) {
-                    return data || 'Unassigned';
-                }
-            },
-            {
-                data: 'created_at',
-                title: 'Date',
-                render: function(data, type, row) {
-                    if (type === 'display') {
-                        const date = new Date(data);
-                        return date.toLocaleDateString();
+                    if (row.assigned_user_name) {
+                        return `<div class="text-truncate"><div class="fw-semibold text-truncate" style="max-width: 140px;" title="${row.assigned_user_name}">${row.assigned_user_name}</div></div>`;
                     }
-                    return data;
+                    return `<span class="text-muted text-truncate d-block" style="max-width: 140px;" title="${data || 'N/A'}">${data || 'N/A'}</span>`;
                 }
             },
             {
                 data: 'created_at',
-                title: 'Time',
+                title: 'Created',
+                width: '120px',
                 render: function(data, type, row) {
                     if (type === 'display') {
                         const date = new Date(data);
-                        return date.toLocaleTimeString();
+                        const dateStr = date.toLocaleDateString('en-US', {month: 'short', day: '2-digit'});
+                        const timeStr = date.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: false});
+                        return `<div class="text-nowrap"><div class="fw-semibold">${dateStr}</div><small class="text-muted">${timeStr}</small></div>`;
                     }
                     return data;
                 }
@@ -298,38 +338,44 @@ function initializeControllerTicketsTable(tableId = 'controllerTicketsTable') {
             {
                 data: 'description',
                 title: 'Description',
+                width: '300px',
                 render: function(data, type, row) {
                     if (type === 'display') {
-                        const truncated = data && data.length > 50 ? data.substring(0, 50) + '...' : (data || 'N/A');
-                        return `<span title="${data || ''}">${truncated}</span>`;
+                        const truncated = data && data.length > 70 ? data.substring(0, 70) + '...' : (data || 'N/A');
+                        return `<div class="text-truncate" style="max-width: 280px;"><span class="text-muted" title="${data || ''}">${truncated}</span></div>`;
                     }
                     return data;
                 }
             },
             {
-                data: 'sla_status',
+                data: 'is_sla_violated',
                 title: 'SLA',
+                width: '100px',
+                className: 'text-center',
                 render: function(data, type, row) {
                     if (row.is_sla_violated) {
-                        return `<span class="text-danger font-weight-bold"><i class="fas fa-exclamation-triangle"></i> Violated</span>`;
-                    } else if (data === 'warning') {
-                        return `<span class="text-warning"><i class="fas fa-clock"></i> Warning</span>`;
-                    } else if (data === 'ok') {
-                        return `<span class="text-success"><i class="fas fa-check"></i> OK</span>`;
+                        return `<div><span class="badge bg-danger px-2 py-1"><i class="fas fa-clock me-1"></i>Overdue</span><div><small class="text-danger fw-semibold">${row.hours_elapsed}h</small></div></div>`;
+                    } else {
+                        return `<div><span class="badge bg-success px-2 py-1"><i class="fas fa-check me-1"></i>On Time</span><div><small class="text-muted">${row.hours_elapsed}h</small></div></div>`;
                     }
-                    return 'N/A';
                 }
             },
             {
                 data: null,
                 title: 'Actions',
+                width: '100px',
                 orderable: false,
                 render: function(data, type, row) {
-                    return `<a href="${window.APP_URL || ''}/controller/tickets/${row.complaint_id}" class="btn btn-sm btn-primary">Manage</a>`;
+                    return `<div class="btn-group" role="group">
+                                <a href="${window.APP_URL || ''}/controller/tickets/${row.complaint_id}" 
+                                   class="btn btn-sm btn-apple-primary" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>`;
                 }
             }
         ],
-        order: [[5, 'desc']], // Order by created date
+        order: [[1, 'desc'], [6, 'desc']], // Order by priority, then by created date
         rowCallback: function(row, data) {
             // Add visual indicators
             if (data.is_urgent) {

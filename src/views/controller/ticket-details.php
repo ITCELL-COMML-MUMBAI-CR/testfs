@@ -516,26 +516,38 @@ $page_title = 'Ticket Details - SAMPARK';
             </div>
             <form id="forwardForm">
                 <div class="modal-body">
+                    <?php if ($user['role'] === 'controller_nodal'): ?>
                     <div class="mb-3">
-                        <label class="form-label-apple">Assign To User *</label>
-                        <select class="form-control-apple" name="to_user_id" required>
-                            <option value="">Select User...</option>
-                            <?php foreach ($available_users as $availableUser): ?>
-                            <option value="<?= $availableUser['id'] ?>">
-                                <?= htmlspecialchars($availableUser['name']) ?> (<?= ucfirst($availableUser['role']) ?>)
-                            </option>
-                            <?php endforeach; ?>
+                        <label class="form-label-apple">Forward To Zone *</label>
+                        <select class="form-control-apple" name="zone" id="forwardZone" required>
+                            <option value="">Select Zone...</option>
+                            <!-- Zones will be loaded dynamically -->
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label-apple">Priority *</label>
-                        <select class="form-control-apple" name="priority" required>
-                            <option value="normal" <?= $ticket['priority'] === 'normal' ? 'selected' : '' ?>>Normal</option>
-                            <option value="medium" <?= $ticket['priority'] === 'medium' ? 'selected' : '' ?>>Medium</option>
-                            <option value="high" <?= $ticket['priority'] === 'high' ? 'selected' : '' ?>>High</option>
-                            <option value="critical" <?= $ticket['priority'] === 'critical' ? 'selected' : '' ?>>Critical</option>
+                        <label class="form-label-apple">Forward To Division *</label>
+                        <select class="form-control-apple" name="division" id="forwardDivision" required>
+                            <option value="">Select Division...</option>
+                            <!-- Divisions will be loaded dynamically -->
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label-apple">Forward To Department *</label>
+                        <select class="form-control-apple" name="department" id="forwardDepartment" required>
+                            <option value="">Select Department...</option>
+                            <!-- Departments will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <?php else: ?>
+                    <div class="mb-3">
+                        <label class="form-label-apple">Forward To Department *</label>
+                        <select class="form-control-apple" name="department" id="forwardDepartmentController" required>
+                            <option value="">Select Department...</option>
+                            <!-- Departments will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <?php endif; ?>
+                    <!-- Priority will be auto-reset by system -->
                     <div class="mb-3">
                         <label class="form-label-apple">Forwarding Remarks *</label>
                         <textarea class="form-control-apple" name="remarks" rows="4" required 
@@ -593,7 +605,180 @@ function showReplyModal() {
 }
 
 function showForwardModal() {
-    new bootstrap.Modal(document.getElementById('forwardModal')).show();
+    // Load zones and divisions for nodal controllers
+    if (document.getElementById('forwardZone')) {
+        loadZonesAndDivisions().then(() => {
+            new bootstrap.Modal(document.getElementById('forwardModal')).show();
+        });
+    } else {
+        new bootstrap.Modal(document.getElementById('forwardModal')).show();
+    }
+}
+
+async function loadZonesAndDivisions() {
+    try {
+        // Get current user data (from PHP)
+        const userZone = '<?= $user['zone'] ?? '' ?>';
+        const userDivision = '<?= $user['division'] ?? '' ?>';
+        
+        // Load zones
+        const zonesResponse = await fetch(`${APP_URL}/api/zones`);
+        const zonesData = await zonesResponse.json();
+        
+        const zoneSelect = document.getElementById('forwardZone');
+        if (zoneSelect && zonesData.success) {
+            zoneSelect.innerHTML = '<option value="">Select Zone...</option>';
+            zonesData.zones.forEach(zone => {
+                const option = document.createElement('option');
+                option.value = zone.zone;
+                option.textContent = `${zone.zone} - ${zone.zone_name}`;
+                // Pre-select user's zone
+                if (zone.zone === userZone) {
+                    option.selected = true;
+                }
+                zoneSelect.appendChild(option);
+            });
+        }
+        
+        // Load divisions based on selected/user's zone
+        await loadDivisionsForZone(userZone || '');
+        
+        // Load departments for all users
+        await loadDepartments();
+        
+        // Set up zone change handler to filter divisions
+        if (zoneSelect) {
+            zoneSelect.addEventListener('change', async function() {
+                const selectedZone = this.value;
+                await loadDivisionsForZone(selectedZone);
+            });
+        }
+        
+        // Set up division change handler to update department visibility
+        const divisionSelect = document.getElementById('forwardDivision');
+        if (divisionSelect) {
+            divisionSelect.addEventListener('change', function() {
+                updateDepartmentVisibility();
+            });
+        }
+    } catch (error) {
+        console.error('Error loading zones and divisions:', error);
+    }
+}
+
+async function loadDivisionsForZone(zoneCode) {
+    try {
+        const divisionSelect = document.getElementById('forwardDivision');
+        if (!divisionSelect) return;
+        
+        const userDivision = '<?= $user['division'] ?? '' ?>';
+        
+        divisionSelect.innerHTML = '<option value="">Select Division...</option>';
+        
+        if (zoneCode) {
+            const response = await fetch(`${APP_URL}/api/divisions?zone=${zoneCode}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                data.divisions.forEach(division => {
+                    const option = document.createElement('option');
+                    option.value = division.division;
+                    option.textContent = `${division.division} - ${division.division_name}`;
+                    // Pre-select user's division
+                    if (division.division === userDivision) {
+                        option.selected = true;
+                    }
+                    divisionSelect.appendChild(option);
+                });
+                
+                // Update department visibility after divisions are loaded
+                setTimeout(() => updateDepartmentVisibility(), 100);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading divisions for zone:', error);
+    }
+}
+
+// Store all departments globally for filtering
+let allDepartments = [];
+
+async function loadDepartments() {
+    try {
+        const response = await fetch(`${APP_URL}/api/departments`);
+        const data = await response.json();
+        
+        if (data.success) {
+            allDepartments = data.departments; // Store for filtering
+            
+            // Load departments for nodal controller
+            const nodalDeptSelect = document.getElementById('forwardDepartment');
+            if (nodalDeptSelect) {
+                populateDepartmentSelect(nodalDeptSelect, allDepartments);
+            }
+            
+            // Load departments for regular controller
+            const controllerDeptSelect = document.getElementById('forwardDepartmentController');
+            if (controllerDeptSelect) {
+                populateDepartmentSelect(controllerDeptSelect, allDepartments);
+            }
+            
+            // Initial department visibility update
+            updateDepartmentVisibility();
+        }
+    } catch (error) {
+        console.error('Error loading departments:', error);
+    }
+}
+
+function populateDepartmentSelect(selectElement, departments) {
+    selectElement.innerHTML = '<option value="">Select Department...</option>';
+    departments.forEach(dept => {
+        const option = document.createElement('option');
+        option.value = dept.department_code;
+        option.textContent = dept.department_name;
+        option.dataset.departmentCode = dept.department_code;
+        selectElement.appendChild(option);
+    });
+}
+
+function updateDepartmentVisibility() {
+    const userDivision = '<?= $user['division'] ?? '' ?>';
+    const selectedDivision = document.getElementById('forwardDivision')?.value || userDivision;
+    const nodalDeptSelect = document.getElementById('forwardDepartment');
+    
+    console.log('updateDepartmentVisibility called:', {
+        userDivision,
+        selectedDivision,
+        allDepartments: allDepartments.length,
+        nodalDeptSelect: !!nodalDeptSelect
+    });
+    
+    if (nodalDeptSelect) {
+        // For controller_nodal: if forwarding outside their division, only show Commercial
+        if (selectedDivision && selectedDivision !== userDivision && selectedDivision !== '') {
+            // Forwarding outside division - only Commercial
+            console.log('Forwarding outside division, filtering for Commercial departments');
+            const commercialDepts = allDepartments.filter(dept => {
+                // Check multiple possible codes for Commercial department
+                return dept.department_code === 'CML' || 
+                       dept.department_code === 'Commercial' || 
+                       dept.department_name.toLowerCase().includes('commercial');
+            });
+            console.log('Found commercial departments:', commercialDepts);
+            
+            if (commercialDepts.length === 0) {
+                // Fallback: if no commercial dept found, show a manual option
+                nodalDeptSelect.innerHTML = '<option value="">Select Department...</option><option value="CML">Commercial</option>';
+            } else {
+                populateDepartmentSelect(nodalDeptSelect, commercialDepts);
+            }
+        } else {
+            // Forwarding within division - all departments
+            console.log('Forwarding within division, showing all departments');
+            populateDepartmentSelect(nodalDeptSelect, allDepartments);
+        }
+    }
 }
 
 function showRejectModal() {

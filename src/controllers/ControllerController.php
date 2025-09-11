@@ -212,19 +212,26 @@ class ControllerController extends BaseController {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
         
-        // Only nodal controllers can forward
-        if ($user['role'] !== 'controller_nodal') {
+        // Both controllers and nodal controllers can forward
+        if (!in_array($user['role'], ['controller', 'controller_nodal'])) {
             $this->json(['success' => false, 'message' => 'Access denied'], 403);
             return;
         }
         
+        // Set up validation rules based on user role
+        $validationRules = [
+            'department' => 'required',
+            'remarks' => 'required|min:10|max:1000'
+        ];
+        
+        // Nodal controllers need zone and division
+        if ($user['role'] === 'controller_nodal') {
+            $validationRules['zone'] = 'required';
+            $validationRules['division'] = 'required';
+        }
+        
         $validator = new Validator();
-        $isValid = $validator->validate($_POST, [
-            'to_division' => 'required',
-            'to_department' => 'required',
-            'remarks' => 'required|min:10|max:1000',
-            'priority' => 'required|in:normal,medium,high,critical'
-        ]);
+        $isValid = $validator->validate($_POST, $validationRules);
         
         if (!$isValid) {
             $this->json([
@@ -238,37 +245,61 @@ class ControllerController extends BaseController {
             $this->db->beginTransaction();
             
             // Verify ticket access and status
-            $ticket = $this->db->fetch(
-                "SELECT * FROM complaints WHERE complaint_id = ? AND division = ? AND status IN ('pending', 'awaiting_info')",
-                [$ticketId, $user['division']]
-            );
+            $accessConditions = "complaint_id = ? AND status IN ('pending', 'awaiting_info')";
+            $accessParams = [$ticketId];
+            
+            // Regular controllers can only forward within their division
+            if ($user['role'] === 'controller') {
+                $accessConditions .= " AND division = ? AND assigned_to_department = ?";
+                $accessParams[] = $user['division'];
+                $accessParams[] = $user['department'];
+            } else {
+                // Nodal controllers can forward from their division
+                $accessConditions .= " AND division = ?";
+                $accessParams[] = $user['division'];
+            }
+            
+            $ticket = $this->db->fetch("SELECT * FROM complaints WHERE {$accessConditions}", $accessParams);
             
             if (!$ticket) {
                 $this->json(['success' => false, 'message' => 'Invalid ticket or cannot forward'], 400);
                 return;
             }
             
-            // Update ticket - Reset priority to normal when forwarded to another division (per requirements)
-            $newPriority = $_POST['priority'];
-            $resetEscalation = false;
+            // Determine target division and zone
+            $targetDivision = $user['role'] === 'controller_nodal' ? $_POST['division'] : $user['division'];
+            $targetZone = $user['role'] === 'controller_nodal' ? $_POST['zone'] : $user['zone'];
             
-            if ($_POST['to_division'] !== $ticket['division']) {
-                $newPriority = 'normal'; // Priority resets when forwarded to another division
-                $resetEscalation = true;
+            // RBAC: Validate department selection for controller_nodal
+            if ($user['role'] === 'controller_nodal' && $targetDivision !== $user['division']) {
+                // Forwarding outside division - only Commercial department allowed
+                if ($_POST['department'] !== 'COMM') {
+                    $this->json(['success' => false, 'message' => 'When forwarding outside your division, you can only forward to Commercial department'], 400);
+                    return;
+                }
             }
+            
+            // Priority is ALWAYS reset to normal when forwarding (no user control)
+            $newPriority = 'normal';
+            $resetEscalation = true;
             
             $sql = "UPDATE complaints SET 
                     assigned_to_department = ?,
                     division = ?,
+                    zone = ?,
                     priority = ?,
                     forwarded_flag = 1,
                     " . ($resetEscalation ? "escalated_at = NULL," : "") . "
                     updated_at = NOW()
                     WHERE complaint_id = ?";
             
+            // Handle department field (could be department_code from new system)
+            $departmentValue = $_POST['department'];
+            
             $this->db->query($sql, [
-                $_POST['to_department'],
-                $_POST['to_division'],
+                $departmentValue,
+                $targetDivision,
+                $targetZone,
                 $newPriority,
                 $ticketId
             ]);
@@ -280,13 +311,17 @@ class ControllerController extends BaseController {
             $this->createTransaction($ticketId, 'forwarded', $_POST['remarks'], $user['id']);
             
             // Send notifications to target department
-            $this->sendForwardNotifications($ticketId, $ticket, $user, $_POST['to_division'], $_POST['to_department'], $_POST['remarks']);
+            $this->sendForwardNotifications($ticketId, $ticket, $user, $targetDivision, $_POST['department'], $_POST['remarks']);
             
             $this->db->commit();
             
+            $forwardMessage = $user['role'] === 'controller_nodal' 
+                ? 'Ticket forwarded successfully to ' . $_POST['department'] . ' department in ' . $targetDivision . ' division'
+                : 'Ticket forwarded successfully to ' . $_POST['department'] . ' department';
+            
             $this->json([
                 'success' => true,
-                'message' => 'Ticket forwarded successfully to ' . $_POST['to_department'] . ' department in ' . $_POST['to_division'] . ' division'
+                'message' => $forwardMessage
             ]);
             
         } catch (Exception $e) {

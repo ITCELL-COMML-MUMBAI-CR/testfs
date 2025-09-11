@@ -16,7 +16,7 @@ $additional_css = [
 $page_title = 'Support Hub - SAMPARK';
 ?>
 
-<div class="container-xl py-4">
+<div class="container-fluid px-4 py-4" style="max-width: 95%;">
     <!-- Page Header -->
     <div class="row align-items-center mb-4">
         <div class="col">
@@ -54,7 +54,7 @@ $page_title = 'Support Hub - SAMPARK';
                         <div>
                             <div class="text-muted small">Pending</div>
                             <div class="h4 mb-0 fw-semibold" id="pendingCount">
-                                <?= $tickets['pagination']['total_results'] ?? 0 ?>
+                                <?= $tickets['total'] ?? 0 ?>
                             </div>
                         </div>
                     </div>
@@ -179,8 +179,8 @@ $page_title = 'Support Hub - SAMPARK';
                     </div>
 
                     <div class="row mt-3">
-                        <div class="col">
-                            <!-- Search Bar -->
+                        <!--  <div class="col">
+                            Search Bar
                             <div class="input-group input-group-apple">
                                 <input type="text" class="form-control" placeholder="Search by ticket ID, customer name, or description..." 
                                        name="search" id="searchInput" value="<?= $_GET['search'] ?? '' ?>">
@@ -188,7 +188,7 @@ $page_title = 'Support Hub - SAMPARK';
                                     <i class="fas fa-search"></i>
                                 </button>
                             </div>
-                        </div>
+                        </div>-->
                         <div class="col-auto">
                             <button type="button" class="btn btn-apple-secondary" onclick="clearFilters()">
                                 <i class="fas fa-times me-2"></i>Clear
@@ -206,7 +206,7 @@ $page_title = 'Support Hub - SAMPARK';
             <h5 class="mb-0">
                 <i class="fas fa-list me-2"></i>Support Tickets
                 <span class="badge bg-apple-blue ms-2" id="ticketCount">
-                    <?= $tickets['pagination']['total_results'] ?? 0 ?>
+                    <?= $tickets['total'] ?? 0 ?>
                 </span>
             </h5>
             <div class="d-flex gap-2">
@@ -221,9 +221,6 @@ $page_title = 'Support Hub - SAMPARK';
                         <li><a class="dropdown-item" href="#" onclick="sortTickets('sla_deadline')">SLA Deadline</a></li>
                     </ul>
                 </div>
-                <button class="btn btn-sm btn-apple-secondary" onclick="toggleView()" id="viewToggle">
-                    <i class="fas fa-th-large me-2"></i>Card View
-                </button>
             </div>
         </div>
         <div class="card-body p-0">
@@ -239,19 +236,16 @@ $page_title = 'Support Hub - SAMPARK';
                 <table class="table table-hover mb-0" id="controllerTicketsTable">
                     <thead class="table-light">
                         <tr>
-                            <th class="border-0">
-                                <input type="checkbox" class="form-check-input" id="selectAll" onchange="toggleSelectAll()">
-                            </th>
-                            <th class="border-0">Ticket ID</th>
-                            <th class="border-0">Customer</th>
-                            <th class="border-0">Category</th>
-                            <th class="border-0">Status</th>
-                            <th class="border-0">Assigned To</th>
-                            <th class="border-0">Date</th>
-                            <th class="border-0">Time</th>
-                            <th class="border-0">Description</th>
-                            <th class="border-0">SLA</th>
-                            <th class="border-0">Actions</th>
+                            <th class="border-0" style="width: 120px;">Ticket ID</th>
+                            <th class="border-0" style="width: 100px;">Priority</th>
+                            <th class="border-0" style="width: 240px;">Customer</th>
+                            <th class="border-0" style="width: 220px;">Category</th>
+                            <th class="border-0" style="width: 140px;">Status</th>
+                            <th class="border-0" style="width: 160px;">Assigned To</th>
+                            <th class="border-0" style="width: 120px;">Created</th>
+                            <th class="border-0" style="width: 300px;">Description</th>
+                            <th class="border-0" style="width: 100px;">SLA</th>
+                            <th class="border-0" style="width: 100px;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -269,16 +263,12 @@ $page_title = 'Support Hub - SAMPARK';
                             <?php foreach ($tickets['data'] as $ticket): ?>
                             <tr class="ticket-row" data-ticket-id="<?= $ticket['complaint_id'] ?>">
                                 <td>
-                                    <input type="checkbox" class="form-check-input ticket-checkbox" 
-                                           value="<?= $ticket['complaint_id'] ?>">
-                                </td>
-                                <td>
                                     <a href="<?= Config::getAppUrl() ?>/controller/tickets/<?= $ticket['complaint_id'] ?>" 
-                                       class="fw-semibold text-decoration-none">
+                                       class="fw-semibold text-decoration-none text-primary">
                                         #<?= $ticket['complaint_id'] ?>
                                     </a>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <?php
                                     $priorityClass = [
                                         'critical' => 'danger',
@@ -286,31 +276,57 @@ $page_title = 'Support Hub - SAMPARK';
                                         'medium' => 'info',
                                         'normal' => 'secondary'
                                     ][$ticket['priority']] ?? 'secondary';
+                                    
+                                    $priorityIcon = [
+                                        'critical' => 'exclamation-circle',
+                                        'high' => 'exclamation-triangle',
+                                        'medium' => 'info-circle',
+                                        'normal' => 'circle'
+                                    ][$ticket['priority']] ?? 'circle';
                                     ?>
-                                    <span class="badge bg-<?= $priorityClass ?>">
-                                        <i class="fas fa-<?= $ticket['priority'] === 'critical' ? 'exclamation-circle' : 
-                                                          ($ticket['priority'] === 'high' ? 'exclamation-triangle' : 
-                                                           ($ticket['priority'] === 'medium' ? 'info-circle' : 'circle')) ?>"></i>
-                                        <?= ucfirst($ticket['priority']) ?>
+                                    <span class="badge bg-<?= $priorityClass ?> px-2 py-1">
+                                        <i class="fas fa-<?= $priorityIcon ?> me-1"></i><?= ucfirst($ticket['priority']) ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <div>
-                                        <div class="fw-semibold"><?= htmlspecialchars($ticket['customer_name'] ?? 'N/A') ?></div>
+                                    <div class="text-truncate">
+                                        <div class="fw-semibold text-truncate" style="max-width: 220px;" 
+                                             title="<?= htmlspecialchars($ticket['customer_name'] ?? 'N/A') ?>">
+                                            <?= htmlspecialchars($ticket['customer_name'] ?? 'N/A') ?>
+                                        </div>
                                         <?php if ($ticket['company_name']): ?>
-                                        <small class="text-muted"><?= htmlspecialchars($ticket['company_name']) ?></small>
+                                        <small class="text-muted text-truncate d-block" 
+                                               style="max-width: 220px;" 
+                                               title="<?= htmlspecialchars($ticket['company_name']) ?>">
+                                            <?= htmlspecialchars($ticket['company_name']) ?>
+                                        </small>
                                         <?php endif; ?>
                                     </div>
                                 </td>
                                 <td>
                                     <div>
-                                        <div class="fw-semibold"><?= htmlspecialchars($ticket['category'] ?? 'N/A') ?></div>
+                                        <span class="fw-semibold text-truncate d-block" 
+                                              style="max-width: 200px;" 
+                                              title="<?= htmlspecialchars($ticket['category'] ?? 'N/A') ?>">
+                                            <?= htmlspecialchars($ticket['category'] ?? 'N/A') ?>
+                                        </span>
+                                        <?php if ($ticket['type']): ?>
+                                        <small class="text-primary text-truncate d-block" 
+                                               style="max-width: 200px;" 
+                                               title="<?= htmlspecialchars($ticket['type']) ?>">
+                                            <?= htmlspecialchars($ticket['type']) ?>
+                                        </small>
+                                        <?php endif; ?>
                                         <?php if ($ticket['subtype']): ?>
-                                        <small class="text-muted"><?= htmlspecialchars($ticket['subtype']) ?></small>
+                                        <small class="text-muted text-truncate d-block" 
+                                               style="max-width: 200px;" 
+                                               title="<?= htmlspecialchars($ticket['subtype']) ?>">
+                                            <?= htmlspecialchars($ticket['subtype']) ?>
+                                        </small>
                                         <?php endif; ?>
                                     </div>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     <?php
                                     $statusClass = [
                                         'pending' => 'warning',
@@ -320,36 +336,60 @@ $page_title = 'Support Hub - SAMPARK';
                                         'closed' => 'dark'
                                     ][$ticket['status']] ?? 'secondary';
                                     ?>
-                                    <span class="badge bg-<?= $statusClass ?>">
+                                    <span class="badge bg-<?= $statusClass ?> px-2 py-1">
                                         <?= ucwords(str_replace('_', ' ', $ticket['status'])) ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <?php if ($ticket['assigned_user_name']): ?>
-                                        <div class="fw-semibold"><?= htmlspecialchars($ticket['assigned_user_name']) ?></div>
-                                    <?php else: ?>
-                                        <span class="text-muted">Unassigned</span>
-                                    <?php endif; ?>
+                                    <div class="text-truncate">
+                                        <?php if (isset($ticket['assigned_user_name']) && $ticket['assigned_user_name']): ?>
+                                            <div class="fw-semibold text-truncate" style="max-width: 140px;" 
+                                                 title="<?= htmlspecialchars($ticket['assigned_user_name']) ?>">
+                                                <?= htmlspecialchars($ticket['assigned_user_name']) ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <span class="text-muted text-truncate d-block" 
+                                                  style="max-width: 140px;" 
+                                                  title="<?= htmlspecialchars($ticket['assigned_to_department'] ?? 'N/A') ?>">
+                                                <?= htmlspecialchars($ticket['assigned_to_department'] ?? 'N/A') ?>
+                                            </span>
+                                        <?php endif; ?>
+                                    </div>
                                 </td>
                                 <td>
-                                    <div>
-                                        <div><?= date('M d, Y', strtotime($ticket['created_at'])) ?></div>
+                                    <div class="text-nowrap">
+                                        <div class="fw-semibold"><?= date('M d', strtotime($ticket['created_at'])) ?></div>
                                         <small class="text-muted"><?= date('H:i', strtotime($ticket['created_at'])) ?></small>
                                     </div>
                                 </td>
                                 <td>
+                                    <div class="text-truncate" style="max-width: 280px;">
+                                        <span class="text-muted" title="<?= htmlspecialchars($ticket['description'] ?? 'N/A') ?>">
+                                            <?= htmlspecialchars(strlen($ticket['description'] ?? '') > 70 ? 
+                                                 substr($ticket['description'], 0, 70) . '...' : 
+                                                 ($ticket['description'] ?? 'N/A')) ?>
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="text-center">
                                     <?php if ($ticket['is_sla_violated']): ?>
-                                        <span class="badge bg-danger">
-                                            <i class="fas fa-clock me-1"></i>Overdue
-                                        </span>
-                                        <br>
-                                        <small class="text-danger"><?= $ticket['hours_elapsed'] ?>h</small>
+                                        <div>
+                                            <span class="badge bg-danger px-2 py-1">
+                                                <i class="fas fa-clock me-1"></i>Overdue
+                                            </span>
+                                            <div>
+                                                <small class="text-danger fw-semibold"><?= $ticket['hours_elapsed'] ?>h</small>
+                                            </div>
+                                        </div>
                                     <?php else: ?>
-                                        <span class="badge bg-success">
-                                            <i class="fas fa-check me-1"></i>On Time
-                                        </span>
-                                        <br>
-                                        <small class="text-muted"><?= $ticket['hours_elapsed'] ?>h</small>
+                                        <div>
+                                            <span class="badge bg-success px-2 py-1">
+                                                <i class="fas fa-check me-1"></i>On Time
+                                            </span>
+                                            <div>
+                                                <small class="text-muted"><?= $ticket['hours_elapsed'] ?>h</small>
+                                            </div>
+                                        </div>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -364,7 +404,7 @@ $page_title = 'Support Hub - SAMPARK';
                                             <i class="fas fa-reply"></i>
                                         </button>
                                         <?php endif; ?>
-                                        <?php if ($user['role'] === 'controller_nodal' && in_array($ticket['status'], ['pending', 'awaiting_info'])): ?>
+                                        <?php if (in_array($user['role'], ['controller_nodal', 'controller']) && in_array($ticket['status'], ['pending', 'awaiting_info'])): ?>
                                         <button class="btn btn-sm btn-apple-warning" 
                                                 onclick="forwardTicket(<?= $ticket['complaint_id'] ?>)" title="Forward">
                                             <i class="fas fa-share"></i>
@@ -381,37 +421,37 @@ $page_title = 'Support Hub - SAMPARK';
         </div>
         
         <!-- Pagination -->
-        <?php if (!empty($tickets['data']) && $tickets['pagination']['total_pages'] > 1): ?>
+        <?php if (!empty($tickets['data']) && $tickets['total_pages'] > 1): ?>
         <div class="card-footer">
             <div class="d-flex justify-content-between align-items-center">
                 <div class="text-muted small">
-                    Showing <?= $tickets['pagination']['start'] ?? 1 ?> to 
-                    <?= $tickets['pagination']['end'] ?? count($tickets['data']) ?> of 
-                    <?= $tickets['pagination']['total_results'] ?? count($tickets['data']) ?> entries
+                    Showing <?= (($tickets['page'] - 1) * $tickets['per_page']) + 1 ?> to 
+                    <?= min($tickets['page'] * $tickets['per_page'], $tickets['total']) ?> of 
+                    <?= $tickets['total'] ?> entries
                 </div>
                 <nav>
                     <ul class="pagination pagination-sm mb-0">
-                        <?php if ($tickets['pagination']['current_page'] > 1): ?>
+                        <?php if ($tickets['has_prev']): ?>
                         <li class="page-item">
-                            <a class="page-link" href="?page=<?= $tickets['pagination']['current_page'] - 1 ?><?= http_build_query(array_filter($_GET, fn($k) => $k !== 'page'), '&', '&') ?>">
+                            <a class="page-link" href="?page=<?= $tickets['page'] - 1 ?>&<?= http_build_query(array_filter($_GET, fn($k) => $k !== 'page')) ?>">
                                 <i class="fas fa-chevron-left"></i>
                             </a>
                         </li>
                         <?php endif; ?>
                         
-                        <?php for ($i = max(1, $tickets['pagination']['current_page'] - 2); 
-                                   $i <= min($tickets['pagination']['total_pages'], $tickets['pagination']['current_page'] + 2); 
+                        <?php for ($i = max(1, $tickets['page'] - 2); 
+                                   $i <= min($tickets['total_pages'], $tickets['page'] + 2); 
                                    $i++): ?>
-                        <li class="page-item <?= $i === $tickets['pagination']['current_page'] ? 'active' : '' ?>">
-                            <a class="page-link" href="?page=<?= $i ?><?= http_build_query(array_filter($_GET, fn($k) => $k !== 'page'), '&', '&') ?>">
+                        <li class="page-item <?= $i === $tickets['page'] ? 'active' : '' ?>">
+                            <a class="page-link" href="?page=<?= $i ?>&<?= http_build_query(array_filter($_GET, fn($k) => $k !== 'page')) ?>">
                                 <?= $i ?>
                             </a>
                         </li>
                         <?php endfor; ?>
                         
-                        <?php if ($tickets['pagination']['current_page'] < $tickets['pagination']['total_pages']): ?>
+                        <?php if ($tickets['has_next']): ?>
                         <li class="page-item">
-                            <a class="page-link" href="?page=<?= $tickets['pagination']['current_page'] + 1 ?><?= http_build_query(array_filter($_GET, fn($k) => $k !== 'page'), '&', '&') ?>">
+                            <a class="page-link" href="?page=<?= $tickets['page'] + 1 ?>&<?= http_build_query(array_filter($_GET, fn($k) => $k !== 'page')) ?>">
                                 <i class="fas fa-chevron-right"></i>
                             </a>
                         </li>
@@ -423,29 +463,6 @@ $page_title = 'Support Hub - SAMPARK';
         <?php endif; ?>
     </div>
 
-    <!-- Bulk Actions Bar (hidden by default) -->
-    <div class="fixed-bottom bg-white border-top shadow-lg p-3 d-none" id="bulkActionsBar">
-        <div class="container-xl">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <span id="selectedCount">0</span> tickets selected
-                </div>
-                <div class="btn-group">
-                    <?php if ($user['role'] === 'controller_nodal'): ?>
-                    <button class="btn btn-apple-primary" onclick="bulkForward()">
-                        <i class="fas fa-share me-2"></i>Forward Selected
-                    </button>
-                    <?php endif; ?>
-                    <button class="btn btn-apple-secondary" onclick="bulkExport()">
-                        <i class="fas fa-download me-2"></i>Export Selected
-                    </button>
-                    <button class="btn btn-apple-secondary" onclick="clearSelection()">
-                        <i class="fas fa-times me-2"></i>Clear Selection
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Quick Reply Modal -->
@@ -491,7 +508,7 @@ $page_title = 'Support Hub - SAMPARK';
 </div>
 
 <!-- Forward Ticket Modal -->
-<?php if ($user['role'] === 'controller_nodal'): ?>
+<?php if ($user['role'] === 'controller_nodal' || $user['role'] === 'controller'): ?>
 <div class="modal fade" id="forwardModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -501,22 +518,38 @@ $page_title = 'Support Hub - SAMPARK';
             </div>
             <form id="forwardForm">
                 <div class="modal-body">
+                    <?php if ($user['role'] === 'controller_nodal'): ?>
                     <div class="mb-3">
-                        <label class="form-label-apple">Assign To User</label>
-                        <select class="form-control-apple" name="to_user_id" required>
-                            <option value="">Select User...</option>
-                            <!-- Users will be loaded dynamically -->
+                        <label class="form-label-apple">Forward To Zone</label>
+                        <select class="form-control-apple" name="zone" id="forwardZone" required>
+                            <option value="">Select Zone...</option>
+                            <!-- Zones will be loaded dynamically -->
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label-apple">Priority</label>
-                        <select class="form-control-apple" name="priority" required>
-                            <option value="normal">Normal</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                            <option value="critical">Critical</option>
+                        <label class="form-label-apple">Forward To Division</label>
+                        <select class="form-control-apple" name="division" id="forwardDivision" required>
+                            <option value="">Select Division...</option>
+                            <!-- Divisions will be loaded dynamically -->
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label-apple">Forward To Department</label>
+                        <select class="form-control-apple" name="department" id="forwardDepartment" required>
+                            <option value="">Select Department...</option>
+                            <!-- Departments will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <?php else: ?>
+                    <div class="mb-3">
+                        <label class="form-label-apple">Forward To Department</label>
+                        <select class="form-control-apple" name="department" id="forwardDepartmentController" required>
+                            <option value="">Select Department...</option>
+                            <!-- Departments will be loaded dynamically -->
+                        </select>
+                    </div>
+                    <?php endif; ?>
+                    <!-- Priority will be auto-reset by system -->
                     <div class="mb-3">
                         <label class="form-label-apple">Remarks</label>
                         <textarea class="form-control-apple" name="remarks" rows="4" required 
@@ -536,8 +569,7 @@ $page_title = 'Support Hub - SAMPARK';
 <?php endif; ?>
 
 <script>
-// Tickets management JavaScript
-let selectedTickets = new Set();
+// Tickets management JavaScript  
 let currentView = 'table';
 
 // Initialize page
@@ -681,57 +713,7 @@ function toggleView() {
     }
 }
 
-// Selection functions
-function toggleSelectAll() {
-    const selectAll = document.getElementById('selectAll');
-    const checkboxes = document.querySelectorAll('.ticket-checkbox');
-    
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = selectAll.checked;
-        if (selectAll.checked) {
-            selectedTickets.add(parseInt(checkbox.value));
-        } else {
-            selectedTickets.delete(parseInt(checkbox.value));
-        }
-    });
-    
-    updateBulkActionsBar();
-}
-
-function updateSelection(checkbox) {
-    if (checkbox.checked) {
-        selectedTickets.add(parseInt(checkbox.value));
-    } else {
-        selectedTickets.delete(parseInt(checkbox.value));
-    }
-    
-    // Update select all checkbox
-    const selectAll = document.getElementById('selectAll');
-    const checkboxes = document.querySelectorAll('.ticket-checkbox');
-    selectAll.checked = Array.from(checkboxes).every(cb => cb.checked);
-    selectAll.indeterminate = selectedTickets.size > 0 && selectedTickets.size < checkboxes.length;
-    
-    updateBulkActionsBar();
-}
-
-function updateBulkActionsBar() {
-    const bulkBar = document.getElementById('bulkActionsBar');
-    const countSpan = document.getElementById('selectedCount');
-    
-    if (selectedTickets.size > 0) {
-        bulkBar.classList.remove('d-none');
-        countSpan.textContent = selectedTickets.size;
-    } else {
-        bulkBar.classList.add('d-none');
-    }
-}
-
-function clearSelection() {
-    selectedTickets.clear();
-    document.querySelectorAll('.ticket-checkbox').forEach(cb => cb.checked = false);
-    document.getElementById('selectAll').checked = false;
-    updateBulkActionsBar();
-}
+// Removed checkbox selection functions - no longer needed
 
 // Quick actions
 function quickReply(ticketId) {
@@ -744,28 +726,179 @@ function forwardTicket(ticketId) {
     document.getElementById('forwardTicketId').textContent = ticketId;
     document.getElementById('forwardForm').dataset.ticketId = ticketId;
     
-    // Load available users for this division
-    loadAvailableUsers().then(() => {
+    // Load zones and divisions for nodal controllers
+    if (document.getElementById('forwardZone')) {
+        loadZonesAndDivisions().then(() => {
+            new bootstrap.Modal(document.getElementById('forwardModal')).show();
+        });
+    } else {
         new bootstrap.Modal(document.getElementById('forwardModal')).show();
+    }
+}
+
+async function loadZonesAndDivisions() {
+    try {
+        // Get current user data (from PHP)
+        const userZone = '<?= $user['zone'] ?? '' ?>';
+        const userDivision = '<?= $user['division'] ?? '' ?>';
+        
+        // Load zones
+        const zonesResponse = await fetch(`${APP_URL}/api/zones`);
+        const zonesData = await zonesResponse.json();
+        
+        const zoneSelect = document.getElementById('forwardZone');
+        if (zoneSelect && zonesData.success) {
+            zoneSelect.innerHTML = '<option value="">Select Zone...</option>';
+            zonesData.zones.forEach(zone => {
+                const option = document.createElement('option');
+                option.value = zone.zone;
+                option.textContent = `${zone.zone} - ${zone.zone_name}`;
+                // Pre-select user's zone
+                if (zone.zone === userZone) {
+                    option.selected = true;
+                }
+                zoneSelect.appendChild(option);
+            });
+        }
+        
+        // Load divisions based on selected/user's zone
+        await loadDivisionsForZone(userZone || '');
+        
+        // Load departments for all users
+        await loadDepartments();
+        
+        // Set up zone change handler to filter divisions
+        if (zoneSelect) {
+            zoneSelect.addEventListener('change', async function() {
+                const selectedZone = this.value;
+                await loadDivisionsForZone(selectedZone);
+            });
+        }
+        
+        // Set up division change handler to update department visibility
+        const divisionSelect = document.getElementById('forwardDivision');
+        if (divisionSelect) {
+            divisionSelect.addEventListener('change', function() {
+                updateDepartmentVisibility();
+            });
+        }
+    } catch (error) {
+        console.error('Error loading zones and divisions:', error);
+    }
+}
+
+async function loadDivisionsForZone(zoneCode) {
+    try {
+        const divisionSelect = document.getElementById('forwardDivision');
+        if (!divisionSelect) return;
+        
+        const userDivision = '<?= $user['division'] ?? '' ?>';
+        
+        divisionSelect.innerHTML = '<option value="">Select Division...</option>';
+        
+        if (zoneCode) {
+            const response = await fetch(`${APP_URL}/api/divisions?zone=${zoneCode}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                data.divisions.forEach(division => {
+                    const option = document.createElement('option');
+                    option.value = division.division;
+                    option.textContent = `${division.division} - ${division.division_name}`;
+                    // Pre-select user's division
+                    if (division.division === userDivision) {
+                        option.selected = true;
+                    }
+                    divisionSelect.appendChild(option);
+                });
+                
+                // Update department visibility after divisions are loaded
+                setTimeout(() => updateDepartmentVisibility(), 100);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading divisions for zone:', error);
+    }
+}
+
+// Store all departments globally for filtering
+let allDepartments = [];
+
+async function loadDepartments() {
+    try {
+        const response = await fetch(`${APP_URL}/api/departments`);
+        const data = await response.json();
+        
+        if (data.success) {
+            allDepartments = data.departments; // Store for filtering
+            
+            // Load departments for nodal controller
+            const nodalDeptSelect = document.getElementById('forwardDepartment');
+            if (nodalDeptSelect) {
+                populateDepartmentSelect(nodalDeptSelect, allDepartments);
+            }
+            
+            // Load departments for regular controller
+            const controllerDeptSelect = document.getElementById('forwardDepartmentController');
+            if (controllerDeptSelect) {
+                populateDepartmentSelect(controllerDeptSelect, allDepartments);
+            }
+            
+            // Initial department visibility update
+            updateDepartmentVisibility();
+        }
+    } catch (error) {
+        console.error('Error loading departments:', error);
+    }
+}
+
+function populateDepartmentSelect(selectElement, departments) {
+    selectElement.innerHTML = '<option value="">Select Department...</option>';
+    departments.forEach(dept => {
+        const option = document.createElement('option');
+        option.value = dept.department_code;
+        option.textContent = dept.department_name;
+        option.dataset.departmentCode = dept.department_code;
+        selectElement.appendChild(option);
     });
 }
 
-async function loadAvailableUsers() {
-    try {
-        const response = await fetch(`${APP_URL}/api/users/available`);
-        const users = await response.json();
-        
-        const select = document.querySelector('#forwardModal select[name="to_user_id"]');
-        select.innerHTML = '<option value="">Select User...</option>';
-        
-        users.forEach(user => {
-            const option = document.createElement('option');
-            option.value = user.id;
-            option.textContent = `${user.name} (${user.role})`;
-            select.appendChild(option);
-        });
-    } catch (error) {
-        console.error('Error loading users:', error);
+function updateDepartmentVisibility() {
+    const userDivision = '<?= $user['division'] ?? '' ?>';
+    const selectedDivision = document.getElementById('forwardDivision')?.value || userDivision;
+    const nodalDeptSelect = document.getElementById('forwardDepartment');
+    
+    console.log('updateDepartmentVisibility called:', {
+        userDivision,
+        selectedDivision,
+        allDepartments: allDepartments.length,
+        nodalDeptSelect: !!nodalDeptSelect
+    });
+    
+    if (nodalDeptSelect) {
+        // For controller_nodal: if forwarding outside their division, only show Commercial
+        if (selectedDivision && selectedDivision !== userDivision && selectedDivision !== '') {
+            // Forwarding outside division - only Commercial
+            console.log('Forwarding outside division, filtering for Commercial departments');
+            const commercialDepts = allDepartments.filter(dept => {
+                // Check multiple possible codes for Commercial department
+                return dept.department_code === 'CML' || 
+                       dept.department_code === 'Commercial' || 
+                       dept.department_name.toLowerCase().includes('commercial');
+            });
+            console.log('Found commercial departments:', commercialDepts);
+            
+            if (commercialDepts.length === 0) {
+                // Fallback: if no commercial dept found, show a manual option
+                nodalDeptSelect.innerHTML = '<option value="">Select Department...</option><option value="CML">Commercial</option>';
+            } else {
+                populateDepartmentSelect(nodalDeptSelect, commercialDepts);
+            }
+        } else {
+            // Forwarding within division - all departments
+            console.log('Forwarding within division, showing all departments');
+            populateDepartmentSelect(nodalDeptSelect, allDepartments);
+        }
     }
 }
 
@@ -799,7 +932,7 @@ document.getElementById('quickReplyForm').addEventListener('submit', async funct
     bootstrap.Modal.getInstance(document.getElementById('quickReplyModal')).hide();
 });
 
-<?php if ($user['role'] === 'controller_nodal'): ?>
+<?php if ($user['role'] === 'controller_nodal' || $user['role'] === 'controller'): ?>
 document.getElementById('forwardForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -844,39 +977,9 @@ function updateStats() {
 }
 
 // Bulk actions
-function bulkForward() {
-    if (selectedTickets.size === 0) return;
-    
-    // Implement bulk forward functionality
-    Swal.fire({
-        title: 'Forward Selected Tickets',
-        text: `Forward ${selectedTickets.size} selected tickets?`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Forward'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Implement bulk forward API call
-        }
-    });
-}
+// Removed bulk action functions - no longer needed
 
-function bulkExport() {
-    if (selectedTickets.size === 0) return;
-    
-    const params = new URLSearchParams();
-    params.append('export', '1');
-    params.append('tickets', Array.from(selectedTickets).join(','));
-    
-    window.location.href = `${APP_URL}/controller/tickets/export?` + params.toString();
-}
-
-// Add event listeners to checkboxes
-document.querySelectorAll('.ticket-checkbox').forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-        updateSelection(this);
-    });
-});
+// Removed checkbox event listeners - no longer needed
 </script>
 
 <style>
@@ -887,15 +990,92 @@ document.querySelectorAll('.ticket-checkbox').forEach(checkbox => {
 
 .badge {
     font-size: 0.75em;
+    font-weight: 500;
 }
 
 .card-apple {
     transition: all 0.2s ease;
+    border: 1px solid #e3e6f0;
 }
 
 .card-apple:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--apple-shadow-medium);
+    transform: translateY(-1px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+}
+
+/* DataTable Improvements */
+#controllerTicketsTable {
+    font-size: 0.875rem;
+}
+
+#controllerTicketsTable th {
+    background-color: #f8f9fc;
+    border-bottom: 2px solid #e3e6f0;
+    color: #5a5c69;
+    font-weight: 600;
+    padding: 0.75rem 0.5rem;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+#controllerTicketsTable td {
+    padding: 0.75rem 0.5rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+#controllerTicketsTable tbody tr {
+    transition: all 0.15s ease;
+}
+
+#controllerTicketsTable tbody tr:hover {
+    background-color: #f8f9fc;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+/* Priority badges */
+.badge.bg-danger { background-color: #e74a3b !important; animation: pulse-danger 2s infinite; }
+.badge.bg-warning { background-color: #f39c12 !important; }
+.badge.bg-info { background-color: #3498db !important; }
+.badge.bg-secondary { background-color: #95a5a6 !important; }
+.badge.bg-success { background-color: #27ae60 !important; }
+.badge.bg-primary { background-color: #3498db !important; }
+.badge.bg-dark { background-color: #2c3e50 !important; }
+
+@keyframes pulse-danger {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+/* Text truncation improvements */
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Compact table styling */
+.table-hover tbody tr:hover td {
+    background-color: #f8f9fc;
+}
+
+/* Better spacing for badges and content */
+.badge {
+    line-height: 1.3;
+    padding: 0.375rem 0.75rem;
+}
+
+/* Responsive improvements */
+@media (max-width: 1200px) {
+    #controllerTicketsTable {
+        font-size: 0.8rem;
+    }
+    
+    #controllerTicketsTable th,
+    #controllerTicketsTable td {
+        padding: 0.5rem 0.25rem;
+    }
 }
 
 .btn-group .btn {

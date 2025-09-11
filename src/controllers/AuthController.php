@@ -292,7 +292,7 @@ class AuthController extends BaseController {
                 break;
             case 'controller':
             case 'controller_nodal':
-                $this->redirect(Config::getAppUrl() . '/controller/dashboard');
+                $this->redirect(Config::getAppUrl() . '/controller/tickets');
                 break;
             case 'admin':
             case 'superadmin':

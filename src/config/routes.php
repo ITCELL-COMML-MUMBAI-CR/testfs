@@ -89,6 +89,9 @@ $router->get('/admin/reports', 'Admin@reports', ['auth', 'role:admin,superadmin'
 // API Routes
 $router->get('/api/sheds/search', 'Api@searchSheds');
 $router->get('/api/categories/{type}/subtypes', 'Api@getSubtypes');
+$router->get('/api/zones', 'Api@getZones', ['auth']);
+$router->get('/api/divisions', 'Api@getDivisions', ['auth']);
+$router->get('/api/departments', 'Api@getDepartments', ['auth']);
 $router->get('/api/tickets/stats', 'Api@getTicketStats', ['auth']);
 $router->get('/api/customer/stats', 'Api@getCustomerStats', ['auth']);
 $router->get('/api/customer/export-data', 'Api@exportCustomerData', ['auth']);
