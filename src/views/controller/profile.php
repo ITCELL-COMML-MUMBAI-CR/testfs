@@ -22,7 +22,7 @@ $page_title = 'Profile - SAMPARK';
         <div class="col">
             <div class="d-flex align-items-center">
                 <div class="bg-apple-blue rounded-3 p-3 me-3">
-                    <i class="fas fa-user-circle text-white fa-lg"></i>
+                    <i class="fas fa-user-circle text-dark fa-lg"></i>
                 </div>
                 <div>
                     <h1 class="h3 mb-1 fw-semibold">My Profile</h1>
@@ -234,7 +234,7 @@ $page_title = 'Profile - SAMPARK';
                 <div class="card-body text-center">
                     <div class="bg-apple-blue rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
                          style="width: 80px; height: 80px;">
-                        <i class="fas fa-user text-white fa-2x"></i>
+                        <i class="fas fa-user text-dark fa-2x"></i>
                     </div>
                     <h5 class="fw-semibold"><?= htmlspecialchars($user_details['name'] ?? 'User') ?></h5>
                     <div class="text-muted mb-3">

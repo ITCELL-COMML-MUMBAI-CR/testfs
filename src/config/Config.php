@@ -44,6 +44,15 @@ class Config {
     const SESSION_NAME = 'SAMPARK_SESSION';
     const CSRF_TOKEN_EXPIRY = 3600; // 1 hour
     
+    // Background Refresh Settings
+    const BACKGROUND_REFRESH_INTERVAL = 30000; // 30 seconds in milliseconds
+    const HEARTBEAT_INTERVAL = 60000; // 1 minute in milliseconds
+    const AUTOMATION_INTERVAL = 30; // 30 seconds for automation tasks
+    
+    // Cache Settings
+    const CACHE_DURATION = 300; // 5 minutes in seconds
+    const STATS_CACHE_DURATION = 60; // 1 minute for stats
+    
     // Security Settings
     const PASSWORD_MIN_LENGTH = 8;
     const PASSWORD_REQUIRE_SPECIAL_CHARS = true;

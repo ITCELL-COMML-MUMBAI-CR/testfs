@@ -331,6 +331,23 @@
     <script src="<?= Config::APP_URL ?>/libs/sweetalert2/sweetalert2.min.js"></script>
     <link href="<?= Config::APP_URL ?>/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet">
     
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+    
+    <!-- Background Refresh CSS -->
+    <link rel="stylesheet" href="<?= Config::APP_URL ?>/assets/css/background-refresh.css">
+    
+    <!-- DataTables JavaScript -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+    
+    <!-- Background Refresh System -->
+    <script src="<?= Config::APP_URL ?>/assets/js/background-refresh.js"></script>
+    <script src="<?= Config::APP_URL ?>/assets/js/datatable-config.js"></script>
+    
     <!-- Global JavaScript Variables -->
     <script>
         const APP_URL = '<?= Config::APP_URL ?>';

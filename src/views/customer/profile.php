@@ -182,7 +182,7 @@ ob_start();
                         <div class="mb-3">
                             <div class="bg-apple-blue rounded-circle d-inline-flex align-items-center justify-content-center" 
                                  style="width: 80px; height: 80px;">
-                                <i class="fas fa-user text-white fa-2x"></i>
+                                <i class="fas fa-user fa-2x"></i>
                             </div>
                         </div>
                         <h6 class="fw-semibold mb-1"><?= htmlspecialchars($customer_details['name']) ?></h6>

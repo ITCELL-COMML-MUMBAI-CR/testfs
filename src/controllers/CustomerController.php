@@ -227,12 +227,15 @@ class CustomerController extends BaseController {
             $currentDate = date('Y-m-d');
             $currentTime = date('H:i:s');
             
-            // Insert complaint - routing by department/division/zone instead of specific user
+            // Find controller_nodal in Commercial department for this division (per requirements)
+            $controllerNodal = $this->findControllerNodalForDivision($shedInfo['division'], 'Commercial');
+            
+            // Insert complaint - MUST route to controller_nodal as per requirements
             $sql = "INSERT INTO complaints (
                 complaint_id, category_id, date, time, shed_id, wagon_id,
                 description, customer_id, fnr_number, e_indent_number,
-                division, zone, status, priority, assigned_to_department, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'normal', 'Commercial', NOW())";
+                division, zone, status, priority, assigned_to_department, assigned_to_user_id, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'normal', 'Commercial', ?, NOW())";
             
             $params = [
                 $complaintId,
@@ -246,7 +249,8 @@ class CustomerController extends BaseController {
                 $_POST['fnr_number'] ?? null,
                 $_POST['e_indent_number'] ?? null,
                 $shedInfo['division'],
-                $shedInfo['zone']
+                $shedInfo['zone'],
+                $controllerNodal
             ];
             
             $this->db->query($sql, $params);
@@ -659,6 +663,41 @@ class CustomerController extends BaseController {
         // Send notifications to all controller_nodals in Commercial dept of the division
         // Implementation for sending email/SMS notifications
         // This would use the notification service to notify all relevant users
+    }
+    
+    /**
+     * Find controller_nodal for initial ticket assignment (per requirements)
+     */
+    private function findControllerNodalForDivision($division, $department = 'Commercial') {
+        // Per requirements: All tickets must initially flow through controller_nodal (Commercial Department)
+        $sql = "SELECT id FROM users 
+                WHERE role = 'controller_nodal' 
+                  AND division = ? 
+                  AND department = ?
+                  AND status = 'active'
+                ORDER BY id ASC
+                LIMIT 1";
+        
+        $user = $this->db->fetch($sql, [$division, $department]);
+        
+        if (!$user) {
+            // Fallback: Find any controller_nodal in the division if no Commercial one exists
+            $fallback = $this->db->fetch(
+                "SELECT id FROM users WHERE role = 'controller_nodal' AND division = ? AND status = 'active' LIMIT 1",
+                [$division]
+            );
+            
+            if ($fallback) {
+                error_log("Warning: No Commercial controller_nodal found for division {$division}, using fallback user {$fallback['id']}");
+                return $fallback['id'];
+            }
+            
+            // Critical error: No controller_nodal found
+            error_log("Critical: No controller_nodal found for division {$division}");
+            throw new Exception("No controller_nodal available for ticket assignment in division {$division}");
+        }
+        
+        return $user['id'];
     }
     
     public function changePassword() {

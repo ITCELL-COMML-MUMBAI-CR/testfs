@@ -236,7 +236,7 @@ ob_start();
             <div class="col-12 col-md-6 col-lg-3">
                 <div class="text-center">
                     <div class="bg-apple-blue rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fas fa-user-plus text-white fs-3"></i>
+                        <i class="fas fa-user-plus fs-3"></i>
                     </div>
                     <h5 class="fw-semibold mb-2">1. Register</h5>
                     <p class="text-muted">Create your customer account with company details for approval</p>
@@ -246,7 +246,7 @@ ob_start();
             <div class="col-12 col-md-6 col-lg-3">
                 <div class="text-center">
                     <div class="bg-apple-blue rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fas fa-ticket-alt text-white fs-3"></i>
+                        <i class="fas fa-ticket-alt fs-3"></i>
                     </div>
                     <h5 class="fw-semibold mb-2">2. Submit Ticket</h5>
                     <p class="text-muted">Raise your freight support ticket with detailed information and evidence</p>
@@ -256,7 +256,7 @@ ob_start();
             <div class="col-12 col-md-6 col-lg-3">
                 <div class="text-center">
                     <div class="bg-apple-blue rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fas fa-cogs text-white fs-3"></i>
+                        <i class="fas fa-cogs fs-3"></i>
                     </div>
                     <h5 class="fw-semibold mb-2">3. Processing</h5>
                     <p class="text-muted">Our team reviews and processes your ticket through appropriate channels</p>
@@ -266,7 +266,7 @@ ob_start();
             <div class="col-12 col-md-6 col-lg-3">
                 <div class="text-center">
                     <div class="bg-apple-blue rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fas fa-check-circle text-white fs-3"></i>
+                        <i class="fas fa-check-circle fs-3"></i>
                     </div>
                     <h5 class="fw-semibold mb-2">4. Resolution</h5>
                     <p class="text-muted">Get timely resolution with complete transparency and feedback</p>

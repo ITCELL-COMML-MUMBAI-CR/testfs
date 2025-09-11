@@ -22,7 +22,7 @@ $page_title = 'Support Hub - SAMPARK';
         <div class="col">
             <div class="d-flex align-items-center">
                 <div class="bg-apple-blue rounded-3 p-3 me-3">
-                    <i class="fas fa-ticket-alt text-white fa-lg"></i>
+                    <i class="fas fa-ticket-alt text-dark fa-lg"></i>
                 </div>
                 <div>
                     <h1 class="h3 mb-1 fw-semibold">Support Hub</h1>
@@ -35,7 +35,7 @@ $page_title = 'Support Hub - SAMPARK';
                 <button class="btn btn-apple-secondary" onclick="exportTickets()">
                     <i class="fas fa-download me-2"></i>Export
                 </button>
-                <button class="btn btn-apple-primary" onclick="refreshTickets()">
+                <button class="btn btn-apple-primary" onclick="forceRefresh()">
                     <i class="fas fa-sync-alt me-2"></i>Refresh
                 </button>
             </div>
@@ -228,7 +228,15 @@ $page_title = 'Support Hub - SAMPARK';
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0" id="ticketsTable">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Support Tickets</h5>
+                    <div class="d-flex align-items-center">
+                        <small class="text-muted last-refresh-time me-3">Last updated: --</small>
+                        <span class="badge bg-primary" id="autoRefreshStatus">Auto-refresh: ON</span>
+                    </div>
+                </div>
+                
+                <table class="table table-hover mb-0" id="controllerTicketsTable">
                     <thead class="table-light">
                         <tr>
                             <th class="border-0">
@@ -533,26 +541,47 @@ let currentView = 'table';
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize controller tickets table with auto-refresh
+    if (typeof initializeControllerTicketsTable === 'function') {
+        const controllerTable = initializeControllerTicketsTable('controllerTicketsTable');
+        console.log('Controller tickets table initialized with background refresh');
+    } else {
+        console.warn('DataTable configuration not loaded - using fallback');
+        initializeBasicTable();
+    }
+    
     updateStats();
     setupEventListeners();
 });
 
 function setupEventListeners() {
-    // Auto-submit filters on change
+    // Update filter behavior for DataTables
     document.querySelectorAll('#filtersForm select, #filtersForm input[type="date"]').forEach(element => {
         element.addEventListener('change', function() {
-            applyFilters();
+            if (window.backgroundRefreshManager) {
+                // Force immediate refresh when user changes filters
+                window.backgroundRefreshManager.forceRefresh();
+            } else {
+                applyFilters();
+            }
         });
     });
     
-    // Search with debounce
+    // Search with debounce for DataTables
     let searchTimeout;
-    document.getElementById('searchInput').addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-            applyFilters();
-        }, 500);
-    });
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (window.backgroundRefreshManager) {
+                    window.backgroundRefreshManager.forceRefresh();
+                } else {
+                    applyFilters();
+                }
+            }, 500);
+        });
+    }
 }
 
 function applyFilters(event) {
@@ -587,9 +616,34 @@ function clearFilters() {
     window.location.href = window.location.pathname;
 }
 
+function forceRefresh() {
+    if (window.backgroundRefreshManager) {
+        window.backgroundRefreshManager.forceRefresh();
+        
+        // Show brief confirmation
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Refreshing...';
+        button.disabled = true;
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }, 2000);
+    } else {
+        showLoading();
+        window.location.reload();
+    }
+}
+
+function initializeBasicTable() {
+    // Fallback initialization if DataTables config is not available
+    console.log('Using basic table without auto-refresh');
+}
+
+// Legacy function for backward compatibility
 function refreshTickets() {
-    showLoading();
-    window.location.reload();
+    forceRefresh();
 }
 
 function exportTickets() {

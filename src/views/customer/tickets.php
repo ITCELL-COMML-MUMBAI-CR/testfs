@@ -108,179 +108,44 @@ ob_start();
                         </div>
                     </div>
                     
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0">Support Tickets</h5>
+                        <div class="d-flex align-items-center">
+                            <small class="text-muted last-refresh-time me-3">Last updated: --</small>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="forceRefresh()">
+                                <i class="fas fa-sync-alt me-1"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+                    
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle" id="ticketsTable">
+                        <table class="table table-hover align-middle" id="customerTicketsTable">
                             <thead class="table-light">
                                 <tr>
                                     <th>Ticket ID</th>
-                                    <th>Subject</th>
-                                    <th>Shed</th>
-                                    <th>Status</th>
+                                    <th>Category</th>
                                     <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Location</th>
                                     <th>Created</th>
-                                    <th>Last Updated</th>
+                                    <th>Age</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($tickets['data'] as $ticket): ?>
-                                    <tr data-ticket-id="<?= $ticket['complaint_id'] ?>">
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <code class="text-apple-blue me-2">#<?= htmlspecialchars($ticket['complaint_id']) ?></code>
-                                                <button class="btn btn-link btn-sm p-0" 
-                                                        onclick="copyTicketId('<?= $ticket['complaint_id'] ?>')"
-                                                        title="Copy Ticket ID">
-                                                    <i class="fas fa-copy text-muted"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div>
-                                                <div class="fw-medium"><?= htmlspecialchars($ticket['category']) ?></div>
-                                                <small class="text-muted"><?= htmlspecialchars($ticket['type']) ?> - <?= htmlspecialchars($ticket['subtype']) ?></small>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div>
-                                                <div class="fw-medium"><?= htmlspecialchars($ticket['shed_name']) ?></div>
-                                                <small class="text-muted"><?= htmlspecialchars($ticket['shed_code']) ?></small>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-apple status-<?= str_replace('_', '-', $ticket['status']) ?>">
-                                                <?= ucwords(str_replace('_', ' ', $ticket['status'])) ?>
-                                            </span>
-                                            
-                                            <?php if ($ticket['status'] === 'awaiting_feedback' && $ticket['days_since_revert'] >= 2): ?>
-                                                <div class="mt-1">
-                                                    <small class="text-danger">
-                                                        <i class="fas fa-exclamation-triangle"></i>
-                                                        Auto-closes in <?= 3 - $ticket['days_since_revert'] ?> day(s)
-                                                    </small>
-                                                </div>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-priority-<?= $ticket['priority'] ?>">
-                                                <?= ucfirst($ticket['priority']) ?>
-                                            </span>
-                                            
-                                            <?php if ($ticket['priority'] === 'critical' || $ticket['priority'] === 'high'): ?>
-                                                <div class="mt-1">
-                                                    <small class="text-muted">
-                                                        <?= $ticket['hours_elapsed'] ?>h elapsed
-                                                    </small>
-                                                </div>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td>
-                                            <div><?= date('M d, Y', strtotime($ticket['created_at'])) ?></div>
-                                            <small class="text-muted"><?= date('H:i', strtotime($ticket['created_at'])) ?></small>
-                                        </td>
-                                        <td>
-                                            <div><?= date('M d, Y', strtotime($ticket['updated_at'])) ?></div>
-                                            <small class="text-muted"><?= date('H:i', strtotime($ticket['updated_at'])) ?></small>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="<?= Config::APP_URL ?>/customer/tickets/<?= $ticket['complaint_id'] ?>" 
-                                                   class="btn btn-apple-glass btn-sm"
-                                                   title="View Details">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                
-                                                <?php if ($ticket['status'] === 'awaiting_feedback'): ?>
-                                                    <button class="btn btn-warning btn-sm" 
-                                                            onclick="provideFeedback('<?= $ticket['complaint_id'] ?>')"
-                                                            title="Provide Feedback">
-                                                        <i class="fas fa-star"></i>
-                                                    </button>
-                                                <?php endif; ?>
-                                                
-                                                <div class="dropdown">
-                                                    <button class="btn btn-apple-glass btn-sm dropdown-toggle" 
-                                                            type="button" 
-                                                            data-bs-toggle="dropdown">
-                                                        <i class="fas fa-ellipsis-v"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu dropdown-menu-end">
-                                                        <li>
-                                                            <a class="dropdown-item" 
-                                                               href="<?= Config::APP_URL ?>/customer/tickets/<?= $ticket['complaint_id'] ?>">
-                                                                <i class="fas fa-eye me-2"></i>View Details
-                                                            </a>
-                                                        </li>
-                                                        <li>
-                                                            <button class="dropdown-item" 
-                                                                    onclick="shareTicket('<?= $ticket['complaint_id'] ?>')">
-                                                                <i class="fas fa-share me-2"></i>Share Ticket
-                                                            </button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="dropdown-item" 
-                                                                    onclick="printTicket('<?= $ticket['complaint_id'] ?>')">
-                                                                <i class="fas fa-print me-2"></i>Print
-                                                            </button>
-                                                        </li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
+                                <!-- Data will be populated by DataTables AJAX -->
                             </tbody>
                         </table>
                     </div>
-                    
-                    <!-- Pagination -->
-                    <?php if ($tickets['total_pages'] > 1): ?>
-                        <nav aria-label="Tickets pagination" class="mt-4">
-                            <ul class="pagination justify-content-center">
-                                <?php if ($tickets['has_prev']): ?>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page=<?= $tickets['page'] - 1 ?>&<?= http_build_query($filters) ?>">
-                                            <i class="fas fa-chevron-left"></i>
-                                        </a>
-                                    </li>
-                                <?php endif; ?>
-                                
-                                <?php for ($i = max(1, $tickets['page'] - 2); $i <= min($tickets['total_pages'], $tickets['page'] + 2); $i++): ?>
-                                    <li class="page-item <?= $i === $tickets['page'] ? 'active' : '' ?>">
-                                        <a class="page-link" href="?page=<?= $i ?>&<?= http_build_query($filters) ?>">
-                                            <?= $i ?>
-                                        </a>
-                                    </li>
-                                <?php endfor; ?>
-                                
-                                <?php if ($tickets['has_next']): ?>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page=<?= $tickets['page'] + 1 ?>&<?= http_build_query($filters) ?>">
-                                            <i class="fas fa-chevron-right"></i>
-                                        </a>
-                                    </li>
-                                <?php endif; ?>
-                            </ul>
-                        </nav>
-                    <?php endif; ?>
-                    
                 <?php else: ?>
-                    <!-- Empty State -->
                     <div class="text-center py-5">
-                        <i class="fas fa-ticket-alt text-muted mb-3" style="font-size: 4rem;"></i>
-                        <h4 class="text-muted mb-3">No Tickets Found</h4>
-                        
-                        <?php if (!empty(array_filter($filters))): ?>
-                            <p class="text-muted mb-4">No tickets match your current filters. Try adjusting your search criteria.</p>
-                            <a href="<?= Config::APP_URL ?>/customer/tickets" class="btn btn-apple-glass me-2">
-                                <i class="fas fa-times me-1"></i>Clear Filters
-                            </a>
-                        <?php else: ?>
-                            <p class="text-muted mb-4">You haven't created any support tickets yet. Get started by creating your first ticket.</p>
-                        <?php endif; ?>
-                        
+                        <div class="mb-4">
+                            <i class="fas fa-ticket-alt text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5 class="text-muted mb-2">No tickets found</h5>
+                        <p class="text-muted mb-4">You don't have any support tickets matching your current filters.</p>
                         <a href="<?= Config::APP_URL ?>/customer/tickets/create" class="btn btn-apple-primary">
-                            <i class="fas fa-plus me-2"></i>Create New Ticket
+                            <i class="fas fa-plus me-2"></i>Create Your First Ticket
                         </a>
                     </div>
                 <?php endif; ?>
@@ -315,25 +180,65 @@ ob_start();
 </section>
 
 <script>
+// Background refresh scripts
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-submit filter form on change
+    // Initialize customer tickets table with auto-refresh
+    if (typeof initializeCustomerTicketsTable === 'function') {
+        const customerTable = initializeCustomerTicketsTable('customerTicketsTable');
+        console.log('Customer tickets table initialized with background refresh');
+    } else {
+        console.warn('DataTable configuration not loaded - fallback to basic table');
+        initializeBasicTable();
+    }
+    
+    // Update filter behavior for DataTables
     document.querySelectorAll('#filterForm select, #filterForm input').forEach(field => {
         field.addEventListener('change', function() {
-            if (this.type !== 'date' || this.value) {
-                document.getElementById('filterForm').submit();
+            if (window.backgroundRefreshManager) {
+                // Force immediate refresh when user changes filters
+                window.backgroundRefreshManager.forceRefresh();
             }
         });
     });
 });
 
+function forceRefresh() {
+    if (window.backgroundRefreshManager) {
+        window.backgroundRefreshManager.forceRefresh();
+        
+        // Show brief confirmation
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Refreshing...';
+        button.disabled = true;
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }, 2000);
+    }
+}
+
+function initializeBasicTable() {
+    // Fallback initialization if DataTables config is not available
+    console.log('Using basic table without auto-refresh');
+}
+
 function copyTicketId(ticketId) {
-    window.SAMPARK.utils.copyToClipboard('#' + ticketId)
-        .then(() => {
-            window.SAMPARK.ui.showToast('Ticket ID copied to clipboard', 'success');
-        })
-        .catch(err => {
-            window.SAMPARK.ui.showToast('Failed to copy ticket ID', 'error');
+    if (window.SAMPARK && window.SAMPARK.utils) {
+        window.SAMPARK.utils.copyToClipboard('#' + ticketId)
+            .then(() => {
+                window.SAMPARK.ui.showToast('Ticket ID copied to clipboard', 'success');
+            })
+            .catch(err => {
+                window.SAMPARK.ui.showToast('Failed to copy ticket ID', 'error');
+            });
+    } else {
+        // Fallback copy method
+        navigator.clipboard.writeText('#' + ticketId).then(() => {
+            alert('Ticket ID copied to clipboard');
         });
+    }
 }
 
 function provideFeedback(ticketId) {
@@ -467,23 +372,39 @@ function exportTickets(format) {
     window.open(currentUrl.toString(), '_blank');
 }
 
-// Real-time updates (WebSocket or polling)
-function startRealTimeUpdates() {
-    setInterval(() => {
-        // Check for ticket status updates
-        fetch(APP_URL + '/api/tickets/updates')
-            .then(response => response.json())
-            .then(data => {
-                data.updates.forEach(update => {
-                    updateTicketStatus(update.ticket_id, update.status);
-                });
-            })
-            .catch(error => console.log('Update check failed'));
-    }, 30000); // Check every 30 seconds
-}
+// Real-time updates are now handled by the background refresh manager
+// The old startRealTimeUpdates function is replaced by the new system
 
-// Start real-time updates
-startRealTimeUpdates();
+// Submit feedback updated to work with DataTables refresh
+function submitFeedbackUpdated(ticketId, feedback) {
+    const formData = new FormData();
+    formData.append('csrf_token', CSRF_TOKEN);
+    formData.append('rating', feedback.rating);
+    formData.append('remarks', feedback.remarks);
+    
+    fetch(APP_URL + '/customer/tickets/' + ticketId + '/feedback', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.SAMPARK.ui.showSuccess('Feedback Submitted', data.message);
+            
+            // Force refresh instead of page reload
+            if (window.backgroundRefreshManager) {
+                window.backgroundRefreshManager.forceRefresh();
+            } else {
+                setTimeout(() => location.reload(), 1500);
+            }
+        } else {
+            window.SAMPARK.ui.showError('Submission Failed', data.message);
+        }
+    })
+    .catch(error => {
+        window.SAMPARK.ui.showError('Error', 'Failed to submit feedback. Please try again.');
+    });
+}
 </script>
 
 <style>
@@ -586,4 +507,4 @@ startRealTimeUpdates();
 <?php
 $content = ob_get_clean();
 include '../src/views/layouts/app.php';
-?>
+?>  

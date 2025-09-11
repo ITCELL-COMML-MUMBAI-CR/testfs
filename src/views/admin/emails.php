@@ -31,7 +31,7 @@
                 <!-- Email Statistics -->
                 <div class="row mb-4">
                     <div class="col-md-3">
-                        <div class="card border-0 bg-primary text-white">
+                        <div class="card border-0 bg-primary">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <div class="me-3">
@@ -47,7 +47,7 @@
                     </div>
                     
                     <div class="col-md-3">
-                        <div class="card border-0 bg-success text-white">
+                        <div class="card border-0 bg-success">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <div class="me-3">
@@ -63,7 +63,7 @@
                     </div>
                     
                     <div class="col-md-3">
-                        <div class="card border-0 bg-danger text-white">
+                        <div class="card border-0 bg-danger">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <div class="me-3">
@@ -79,7 +79,7 @@
                     </div>
                     
                     <div class="col-md-3">
-                        <div class="card border-0 bg-warning text-white">
+                        <div class="card border-0 bg-warning">
                             <div class="card-body">
                                 <div class="d-flex align-items-center">
                                     <div class="me-3">

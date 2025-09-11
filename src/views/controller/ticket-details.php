@@ -37,7 +37,7 @@ $page_title = 'Ticket Details - SAMPARK';
         <div class="col">
             <div class="d-flex align-items-center">
                 <div class="bg-apple-blue rounded-3 p-3 me-3">
-                    <i class="fas fa-ticket-alt text-white fa-lg"></i>
+                    <i class="fas fa-ticket-alt text-dark fa-lg"></i>
                 </div>
                 <div>
                     <div class="d-flex align-items-center gap-2">

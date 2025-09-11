@@ -100,7 +100,7 @@
 /* ===== TICKETS VIEW ===== */
 .tickets-header {
     background: linear-gradient(135deg, var(--apple-blue) 0%, #0077b3 100%);
-    color: var(--apple-white);
+    color: var(--apple-black);
     border-radius: var(--apple-radius-large) var(--apple-radius-large) 0 0;
     padding: var(--apple-space-4);
     margin-bottom: 0;
@@ -115,7 +115,7 @@
 
 .filter-chip {
     background: var(--apple-blue);
-    color: var(--apple-white);
+    color: var(--apple-black);
     border-radius: var(--apple-radius-xlarge);
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
@@ -183,7 +183,7 @@
 /* Priority Badges */
 .priority-critical {
     background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
-    color: white !important;
+    color: #000 !important;
     font-weight: var(--apple-font-semibold);
     animation: priority-pulse 1.5s infinite;
 }
@@ -196,12 +196,12 @@
 
 .priority-medium {
     background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
-    color: white !important;
+    color: #000 !important;
 }
 
 .priority-normal {
     background: linear-gradient(135deg, #6c757d 0%, #545b62 100%) !important;
-    color: white !important;
+    color: #000 !important;
 }
 
 @keyframes priority-pulse {
@@ -217,22 +217,22 @@
 
 .status-awaiting-info {
     background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
-    color: white !important;
+    color: #000 !important;
 }
 
 .status-awaiting-approval {
     background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%) !important;
-    color: white !important;
+    color: #000 !important;
 }
 
 .status-awaiting-feedback {
     background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
-    color: white !important;
+    color: #000 !important;
 }
 
 .status-closed {
     background: linear-gradient(135deg, #343a40 0%, #23272b 100%) !important;
-    color: white !important;
+    color: #000 !important;
 }
 
 /* Bulk Actions Bar */
@@ -526,7 +526,7 @@
     width: 2.5rem;
     height: 2.5rem;
     background: var(--apple-blue);
-    color: var(--apple-white);
+    color: var(--apple-black);
     border-radius: var(--apple-radius-medium);
     display: flex;
     align-items: center;

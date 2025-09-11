@@ -92,6 +92,12 @@ $router->get('/api/notifications', 'Api@getNotifications', ['auth']);
 $router->post('/api/notifications/{id}/mark-read', 'Api@markNotificationRead', ['auth']);
 $router->post('/api/compress-file', 'FileCompression@compressFile', ['auth']);
 
+// Background automation and refresh endpoints
+$router->post('/api/background-automation', 'Api@processBackgroundAutomation', ['auth']);
+$router->get('/api/tickets/refresh', 'Api@getRefreshedTickets', ['auth']);
+$router->get('/api/heartbeat', 'Api@heartbeat'); // No auth for heartbeat
+$router->get('/api/system-stats', 'Api@getSystemStats', ['auth']);
+
 // File serving
 $router->get('/uploads/evidence/{file}', 'FileController@serveEvidence', ['auth']);
 

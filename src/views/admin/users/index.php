@@ -114,7 +114,7 @@ ob_start();
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="bg-<?= $user['status'] === 'active' ? 'success' : 'secondary' ?> rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                                    <i class="fas fa-user text-white"></i>
+                                                    <i class="fas fa-user"></i>
                                                 </div>
                                                 <div>
                                                     <div class="fw-medium"><?= htmlspecialchars($user['name']) ?></div>

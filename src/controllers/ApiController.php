@@ -5,6 +5,7 @@
  */
 
 require_once 'BaseController.php';
+require_once __DIR__ . '/../utils/BackgroundRefreshService.php';
 
 class ApiController extends BaseController {
     
@@ -786,5 +787,230 @@ class ApiController extends BaseController {
         } catch (Exception $e) {
             return $default;
         }
+    }
+    
+    /**
+     * Background automation and refresh endpoint
+     * Runs automated tasks silently and returns updated data
+     */
+    public function processBackgroundAutomation() {
+        try {
+            $this->requireAuth();
+            
+            $backgroundService = new BackgroundRefreshService();
+            
+            // Run automation tasks
+            $automationResult = $backgroundService->processAutomationTasks();
+            
+            $this->json([
+                'success' => true,
+                'automation_result' => $automationResult,
+                'timestamp' => date('c')
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Background automation error: " . $e->getMessage());
+            $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Get refreshed ticket data for DataTables
+     */
+    public function getRefreshedTickets() {
+        try {
+            $this->requireAuth();
+            
+            $user = $this->getCurrentUser();
+            $filters = $_GET; // Get all GET parameters as filters
+            
+            $backgroundService = new BackgroundRefreshService();
+            $result = $backgroundService->getUpdatedTicketData(
+                $user['role'], 
+                $user['id'], 
+                $filters
+            );
+            
+            if ($result['success']) {
+                $this->json([
+                    'draw' => intval($_GET['draw'] ?? 1),
+                    'recordsTotal' => $result['recordsTotal'],
+                    'recordsFiltered' => $result['recordsFiltered'],
+                    'data' => $result['data'],
+                    'updated_at' => $result['updated_at']
+                ]);
+            } else {
+                $this->json(['error' => $result['error']], 500);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Refresh tickets error: " . $e->getMessage());
+            $this->json(['error' => 'Failed to refresh ticket data'], 500);
+        }
+    }
+    
+    /**
+     * Heartbeat endpoint for silent automation
+     * Called periodically to trigger background processes
+     */
+    public function heartbeat() {
+        try {
+            // No auth required for heartbeat - it's called silently
+            
+            $backgroundService = new BackgroundRefreshService();
+            
+            // Check if automation is needed (every 30 seconds)
+            $lastRun = $this->db->fetch(
+                "SELECT cache_data FROM system_cache WHERE cache_key = 'last_heartbeat'"
+            );
+            
+            $shouldRun = true;
+            if ($lastRun) {
+                $lastRunData = json_decode($lastRun['cache_data'], true);
+                $timeDiff = time() - strtotime($lastRunData['timestamp']);
+                $shouldRun = $timeDiff >= 30; // 30 seconds
+            }
+            
+            if ($shouldRun) {
+                // Run light automation tasks
+                $automationResult = $backgroundService->processAutomationTasks();
+                
+                // Update heartbeat timestamp
+                $this->db->query(
+                    "INSERT INTO system_cache (cache_key, cache_data, updated_at) VALUES ('last_heartbeat', ?, NOW()) 
+                     ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), updated_at = VALUES(updated_at)",
+                    [json_encode(['timestamp' => date('Y-m-d H:i:s')])]
+                );
+                
+                $this->json([
+                    'success' => true,
+                    'processed' => true,
+                    'automation_result' => $automationResult
+                ]);
+            } else {
+                $this->json([
+                    'success' => true,
+                    'processed' => false,
+                    'message' => 'Automation not needed yet'
+                ]);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Heartbeat error: " . $e->getMessage());
+            $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Get system statistics for dashboard updates
+     */
+    public function getSystemStats() {
+        try {
+            $this->requireAuth();
+            
+            $user = $this->getCurrentUser();
+            $userRole = $user['role'];
+            $userId = $user['id'];
+            
+            $stats = [];
+            
+            // Get role-specific stats
+            switch ($userRole) {
+                case 'customer':
+                    $stats = $this->getCustomerStatsById($user['customer_id']);
+                    break;
+                    
+                case 'controller':
+                case 'controller_nodal':
+                    $stats = $this->getControllerStats($userId, $userRole);
+                    break;
+                    
+                case 'admin':
+                case 'superadmin':
+                    $stats = $this->getAdminStats();
+                    break;
+            }
+            
+            $this->json([
+                'success' => true,
+                'stats' => $stats,
+                'updated_at' => date('c')
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("System stats error: " . $e->getMessage());
+            $this->json(['error' => 'Failed to get system stats'], 500);
+        }
+    }
+    
+    /**
+     * Get customer statistics by customer ID
+     */
+    private function getCustomerStatsById($customerId) {
+        $sql = "SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                    SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
+                    SUM(CASE WHEN status = 'awaiting_info' THEN 1 ELSE 0 END) as awaiting_info,
+                    SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed,
+                    SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority,
+                    SUM(CASE WHEN status = 'awaiting_feedback' AND TIMESTAMPDIFF(DAY, updated_at, NOW()) >= 2 THEN 1 ELSE 0 END) as pending_feedback_urgent
+                FROM complaints 
+                WHERE customer_id = ?";
+        
+        return $this->db->fetch($sql, [$customerId]);
+    }
+    
+    /**
+     * Get controller statistics
+     */
+    private function getControllerStats($userId, $userRole) {
+        $user = $this->db->fetch("SELECT * FROM users WHERE id = ?", [$userId]);
+        
+        if ($userRole === 'controller') {
+            $condition = 'assigned_to_user_id = ?';
+            $param = $userId;
+        } else {
+            $condition = 'division = ? AND assigned_to_department = ?';
+            $param = [$user['division'], $user['department']];
+        }
+        
+        $sql = "SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                    SUM(CASE WHEN status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
+                    SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
+                    SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed,
+                    SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority,
+                    SUM(CASE WHEN sla_deadline IS NOT NULL AND NOW() > sla_deadline AND status != 'closed' THEN 1 ELSE 0 END) as sla_violations
+                FROM complaints 
+                WHERE {$condition}";
+        
+        $params = is_array($param) ? $param : [$param];
+        return $this->db->fetch($sql, $params);
+    }
+    
+    /**
+     * Get admin statistics
+     */
+    private function getAdminStats() {
+        $sql = "SELECT 
+                    COUNT(*) as total,
+                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                    SUM(CASE WHEN status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
+                    SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
+                    SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed,
+                    SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority,
+                    SUM(CASE WHEN sla_deadline IS NOT NULL AND NOW() > sla_deadline AND status != 'closed' THEN 1 ELSE 0 END) as sla_violations,
+                    SUM(CASE WHEN escalated_at IS NOT NULL AND status != 'closed' THEN 1 ELSE 0 END) as escalated
+                FROM complaints";
+        
+        return $this->db->fetch($sql);
     }
 }

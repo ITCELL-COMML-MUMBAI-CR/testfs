@@ -135,7 +135,7 @@
                                              style="height: 120px; object-fit: cover;">
                                         <div class="position-absolute top-50 start-50 translate-middle">
                                             <div class="bg-primary bg-opacity-75 rounded-circle p-2">
-                                                <i class="fas fa-play text-white"></i>
+                                                <i class="fas fa-play"></i>
                                             </div>
                                         </div>
                                         <span class="badge bg-dark position-absolute bottom-0 end-0 m-2">

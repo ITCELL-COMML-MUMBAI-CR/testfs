@@ -171,7 +171,7 @@ ob_start();
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="bg-<?= getStatusColor($customer['status'] ?? 'pending') ?> rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                                    <i class="fas fa-building text-white"></i>
+                                                    <i class="fas fa-building"></i>
                                                 </div>
                                                 <div>
                                                     <div class="fw-medium"><?= htmlspecialchars($customer['name'] ?? 'N/A') ?></div>

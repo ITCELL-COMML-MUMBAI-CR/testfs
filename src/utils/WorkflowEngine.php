@@ -191,7 +191,8 @@ class WorkflowEngine {
                         WHERE c.priority = ? 
                           AND c.status NOT IN ('closed', 'awaiting_feedback')
                           AND TIMESTAMPDIFF(HOUR, c.created_at, NOW()) >= ?
-                          AND c.escalated_at IS NULL";
+                          AND c.escalated_at IS NULL
+                          AND (c.escalation_stopped IS NULL OR c.escalation_stopped = 0)";
                 
                 $tickets = $this->db->fetchAll($sql, [$currentPriority, $rule['hours']]);
                 
@@ -331,19 +332,29 @@ class WorkflowEngine {
      * Forward ticket to another user/department
      */
     private function forwardTicket($ticket, $forwardTo, $remarks, $forwardedBy) {
+        // Check if forwarding to different division - priority resets per requirements
+        $targetUser = $this->db->fetch("SELECT division FROM users WHERE id = ?", [$forwardTo]);
+        $resetPriority = $targetUser && $targetUser['division'] !== $ticket['division'];
+        
         $sql = "UPDATE complaints SET 
                 assigned_to_user_id = ?,
                 forwarded_flag = 1,
                 status = 'pending',
+                " . ($resetPriority ? "priority = 'normal', escalated_at = NULL," : "") . "
                 updated_at = NOW()
                 WHERE complaint_id = ?";
         
         $this->db->query($sql, [$forwardTo, $ticket['complaint_id']]);
         
+        $updates = ['assigned_to_user_id' => $forwardTo, 'forwarded_flag' => 1];
+        if ($resetPriority) {
+            $updates['priority'] = 'normal';
+        }
+        
         return [
             'success' => true,
             'new_status' => 'pending',
-            'updates' => ['assigned_to_user_id' => $forwardTo, 'forwarded_flag' => 1],
+            'updates' => $updates,
             'message' => 'Ticket forwarded successfully'
         ];
     }
@@ -375,8 +386,10 @@ class WorkflowEngine {
      * Approve reply
      */
     private function approveReply($ticket, $remarks, $approvedBy) {
+        // Per requirements: Priority escalation stops permanently once reply/action is approved by controller_nodal
         $sql = "UPDATE complaints SET 
                 status = 'awaiting_feedback',
+                escalation_stopped = 1,
                 updated_at = NOW()
                 WHERE complaint_id = ?";
         
@@ -385,7 +398,7 @@ class WorkflowEngine {
         return [
             'success' => true,
             'new_status' => 'awaiting_feedback',
-            'updates' => [],
+            'updates' => ['escalation_stopped' => 1],
             'message' => 'Reply approved and sent to customer'
         ];
     }
@@ -435,9 +448,12 @@ class WorkflowEngine {
      * Revert ticket for additional information
      */
     private function revertTicket($ticket, $reason, $revertedBy) {
+        // Per requirements: Priority resets to "Normal" when ticket is reverted to customer
         $sql = "UPDATE complaints SET 
                 status = 'awaiting_info',
+                priority = 'normal',
                 closed_at = NULL,
+                escalated_at = NULL,
                 updated_at = NOW()
                 WHERE complaint_id = ?";
         
@@ -446,7 +462,7 @@ class WorkflowEngine {
         return [
             'success' => true,
             'new_status' => 'awaiting_info',
-            'updates' => [],
+            'updates' => ['priority' => 'normal'],
             'message' => 'Ticket reverted for additional information'
         ];
     }

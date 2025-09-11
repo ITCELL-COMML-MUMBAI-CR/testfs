@@ -22,7 +22,7 @@ $page_title = 'Help & Support - SAMPARK';
         <div class="col">
             <div class="d-flex align-items-center">
                 <div class="bg-apple-blue rounded-3 p-3 me-3">
-                    <i class="fas fa-question-circle text-white fa-lg"></i>
+                    <i class="fas fa-question-circle text-dark fa-lg"></i>
                 </div>
                 <div>
                     <h1 class="h3 mb-1 fw-semibold">Help & Support</h1>

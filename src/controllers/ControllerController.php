@@ -248,10 +248,13 @@ class ControllerController extends BaseController {
                 return;
             }
             
-            // Update ticket - Reset priority to normal when forwarded to another division  
+            // Update ticket - Reset priority to normal when forwarded to another division (per requirements)
             $newPriority = $_POST['priority'];
+            $resetEscalation = false;
+            
             if ($_POST['to_division'] !== $ticket['division']) {
                 $newPriority = 'normal'; // Priority resets when forwarded to another division
+                $resetEscalation = true;
             }
             
             $sql = "UPDATE complaints SET 
@@ -259,6 +262,7 @@ class ControllerController extends BaseController {
                     division = ?,
                     priority = ?,
                     forwarded_flag = 1,
+                    " . ($resetEscalation ? "escalated_at = NULL," : "") . "
                     updated_at = NOW()
                     WHERE complaint_id = ?";
             
@@ -303,8 +307,10 @@ class ControllerController extends BaseController {
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'reply' => 'required|min:20|max:2000',
-            'action_taken' => 'required|min:10|max:1000',
-            'needs_approval' => 'boolean'
+            'action_taken' => 'max:1000',
+            'needs_approval' => 'boolean',
+            'is_interim_reply' => 'boolean',
+            'officer_remarks' => 'max:1000'
         ]);
         
         if (!$isValid) {
@@ -333,24 +339,43 @@ class ControllerController extends BaseController {
                 return;
             }
             
-            $needsApproval = isset($_POST['needs_approval']) && $_POST['needs_approval'] && $user['role'] === 'controller';
-            $newStatus = $needsApproval ? 'awaiting_approval' : 'awaiting_feedback';
+            $isInterimReply = isset($_POST['is_interim_reply']) && $_POST['is_interim_reply'];
+            $officerRemarks = isset($_POST['officer_remarks']) ? trim($_POST['officer_remarks']) : '';
             
-            // Update ticket
-            $sql = "UPDATE complaints SET 
-                    action_taken = ?,
-                    status = ?,
-                    updated_at = NOW()
-                    WHERE complaint_id = ?";
+            // Determine status based on reply type
+            if ($isInterimReply) {
+                // Interim replies don't change status - just acknowledge receipt
+                $newStatus = $ticket['status']; // Keep current status
+            } else {
+                $needsApproval = isset($_POST['needs_approval']) && $_POST['needs_approval'] && $user['role'] === 'controller';
+                $newStatus = $needsApproval ? 'awaiting_approval' : 'awaiting_feedback';
+            }
             
-            $this->db->query($sql, [
-                trim($_POST['action_taken']),
-                $newStatus,
-                $ticketId
-            ]);
+            // Update ticket only if it's a final reply (not interim)
+            if (!$isInterimReply && !empty($_POST['action_taken'])) {
+                $sql = "UPDATE complaints SET 
+                        action_taken = ?,
+                        status = ?,
+                        updated_at = NOW()
+                        WHERE complaint_id = ?";
+                
+                $this->db->query($sql, [
+                    trim($_POST['action_taken']),
+                    $newStatus,
+                    $ticketId
+                ]);
+            }
             
-            // Create transaction record
-            $this->createTransaction($ticketId, 'replied', $_POST['reply'], $user['id']);
+            // Create transaction record based on reply type
+            $transactionType = $isInterimReply ? 'interim_reply' : 'replied';
+            $transactionRemarks = $_POST['reply'];
+            
+            // Add officer remarks if provided
+            if (!empty($officerRemarks)) {
+                $transactionRemarks .= "\n\nOfficer Remarks: " . $officerRemarks;
+            }
+            
+            $this->createTransaction($ticketId, $transactionType, $transactionRemarks, $user['id']);
             
             // Handle file uploads if any
             if (!empty($_FILES['attachments']['name'][0])) {
@@ -362,9 +387,9 @@ class ControllerController extends BaseController {
             
             $this->db->commit();
             
-            $message = $needsApproval ? 
-                'Reply submitted for approval' : 
-                'Reply sent to customer successfully';
+            $message = $isInterimReply ? 
+                'Interim reply sent to customer - ticket remains in current status' : 
+                ($newStatus === 'awaiting_approval' ? 'Reply submitted for approval' : 'Reply sent to customer successfully');
             
             $this->json([
                 'success' => true,

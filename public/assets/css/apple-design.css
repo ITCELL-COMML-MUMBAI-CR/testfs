@@ -183,7 +183,7 @@ body {
   border-radius: var(--apple-radius-medium);
   padding: var(--apple-space-2) var(--apple-space-4);
   font-weight: var(--apple-font-medium);
-  color: var(--apple-white);
+  color: var(--apple-black);
   min-height: 44px;
   font-size: 1rem;
   transition: all var(--apple-transition-fast);
@@ -198,7 +198,7 @@ body {
   background: #0077b3;
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(0,136,204,0.3);
-  color: var(--apple-white);
+  color: var(--apple-black);
 }
 
 .btn-apple-primary:active {
@@ -518,7 +518,7 @@ html {
   background: var(--apple-blue);
   border-radius: 50%;
   border: none;
-  color: var(--apple-white);
+  color: var(--apple-black);
   font-size: 1.5rem;
   box-shadow: var(--apple-shadow-medium);
   transition: all var(--apple-transition-fast);
@@ -551,7 +551,7 @@ html {
 /* Marquee styling */
 .marquee-container {
   background: var(--apple-blue);
-  color: var(--apple-white);
+  color: var(--apple-black);
   padding: var(--apple-space-2) 0;
   overflow: hidden;
   white-space: nowrap;
@@ -697,7 +697,7 @@ html {
 
 .pagination-apple .page-link:hover {
     background: var(--apple-blue);
-    color: var(--apple-white);
+    color: var(--apple-black);
     border-color: var(--apple-blue);
     transform: translateY(-1px);
 }
@@ -705,7 +705,7 @@ html {
 .pagination-apple .page-item.active .page-link {
     background: var(--apple-blue);
     border-color: var(--apple-blue);
-    color: var(--apple-white);
+    color: var(--apple-black);
 }
 
 .pagination-apple .page-item.disabled .page-link {
@@ -801,7 +801,7 @@ html {
 
 .list-group-apple .list-group-item.active {
     background: var(--apple-blue);
-    color: var(--apple-white);
+    color: var(--apple-black);
     border-color: var(--apple-blue);
 }
 
@@ -862,7 +862,7 @@ html {
 
 .accordion-apple .accordion-header .accordion-button:not(.collapsed) {
     background: var(--apple-blue);
-    color: var(--apple-white);
+    color: var(--apple-black);
 }
 
 .accordion-apple .accordion-header .accordion-button:focus {
@@ -954,7 +954,7 @@ html {
 /* Apple Tooltip */
 .tooltip-apple .tooltip-inner {
     background: var(--apple-black);
-    color: var(--apple-white);
+    color: var(--apple-black);
     border-radius: var(--apple-radius-small);
     font-weight: var(--apple-font-medium);
     padding: var(--apple-space-2) var(--apple-space-3);
@@ -1046,5 +1046,228 @@ html {
     .display-1, .display-2, .display-3 {
         font-size: 18pt;
         font-weight: bold;
+    }
+}
+
+/* ===== VISIBILITY FIXES FOR WHITE TEXT ON COLORED BACKGROUNDS ===== */
+
+/* Ensure Bootstrap background colors work properly with white text */
+.bg-primary {
+    background-color: #0d6efd !important;
+    color: #ffffff !important;
+}
+
+.bg-primary.text-white,
+.bg-primary .text-white {
+    color: #ffffff !important;
+}
+
+.bg-success {
+    background-color: #198754 !important;
+    color: #ffffff !important;
+}
+
+.bg-success.text-white,
+.bg-success .text-white {
+    color: #ffffff !important;
+}
+
+.bg-danger {
+    background-color: #dc3545 !important;
+    color: #ffffff !important;
+}
+
+.bg-danger.text-white,
+.bg-danger .text-white {
+    color: #ffffff !important;
+}
+
+.bg-warning {
+    background-color: #ffc107 !important;
+    color: #000000 !important; /* Warning background needs dark text */
+}
+
+.bg-warning.text-white,
+.bg-warning .text-white {
+    color: #000000 !important; /* Override white text on warning background */
+}
+
+.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #000000 !important; /* Info background needs dark text */
+}
+
+.bg-info.text-white,
+.bg-info .text-white {
+    color: #000000 !important; /* Override white text on info background */
+}
+
+.bg-secondary {
+    background-color: #6c757d !important;
+    color: #ffffff !important;
+}
+
+.bg-secondary.text-white,
+.bg-secondary .text-white {
+    color: #ffffff !important;
+}
+
+/* Fix for cards with colored backgrounds */
+.card.bg-primary,
+.card.bg-success,
+.card.bg-danger,
+.card.bg-secondary {
+    border: none !important;
+}
+
+.card.bg-primary .card-body,
+.card.bg-success .card-body,
+.card.bg-danger .card-body,
+.card.bg-secondary .card-body {
+    color: inherit !important;
+}
+
+.card.bg-warning .card-body,
+.card.bg-info .card-body {
+    color: #000000 !important;
+}
+
+/* Fix for icons in colored backgrounds */
+.bg-primary i,
+.bg-success i,
+.bg-danger i,
+.bg-secondary i {
+    color: #ffffff !important;
+}
+
+.bg-warning i,
+.bg-info i {
+    color: #000000 !important;
+}
+
+/* Fix for text-white class when used with colored backgrounds */
+.text-white {
+    color: #ffffff !important;
+}
+
+/* Override text-white on warning and info backgrounds */
+.bg-warning .text-white,
+.bg-info .text-white {
+    color: #000000 !important;
+}
+
+/* Ensure proper contrast for all text elements */
+.bg-primary h1, .bg-primary h2, .bg-primary h3, .bg-primary h4, .bg-primary h5, .bg-primary h6,
+.bg-success h1, .bg-success h2, .bg-success h3, .bg-success h4, .bg-success h5, .bg-success h6,
+.bg-danger h1, .bg-danger h2, .bg-danger h3, .bg-danger h4, .bg-danger h5, .bg-danger h6,
+.bg-secondary h1, .bg-secondary h2, .bg-secondary h3, .bg-secondary h4, .bg-secondary h5, .bg-secondary h6 {
+    color: #ffffff !important;
+}
+
+.bg-warning h1, .bg-warning h2, .bg-warning h3, .bg-warning h4, .bg-warning h5, .bg-warning h6,
+.bg-info h1, .bg-info h2, .bg-info h3, .bg-info h4, .bg-info h5, .bg-info h6 {
+    color: #000000 !important;
+}
+
+/* Fix for small text elements */
+.bg-primary small,
+.bg-success small,
+.bg-danger small,
+.bg-secondary small {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.bg-warning small,
+.bg-info small {
+    color: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Fix for card titles and text */
+.card.bg-primary .card-title,
+.card.bg-success .card-title,
+.card.bg-danger .card-title,
+.card.bg-secondary .card-title {
+    color: #ffffff !important;
+}
+
+.card.bg-warning .card-title,
+.card.bg-info .card-title {
+    color: #000000 !important;
+}
+
+/* Fix for badges in colored backgrounds */
+.bg-primary .badge,
+.bg-success .badge,
+.bg-danger .badge,
+.bg-secondary .badge {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+}
+
+.bg-warning .badge,
+.bg-info .badge {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+    color: #000000 !important;
+}
+
+/* High contrast mode support for colored backgrounds */
+@media (prefers-contrast: high) {
+    .bg-primary,
+    .bg-success,
+    .bg-danger,
+    .bg-secondary {
+        border: 2px solid #000000 !important;
+    }
+    
+    .bg-warning,
+    .bg-info {
+        border: 2px solid #000000 !important;
+        background-color: #ffffff !important;
+        color: #000000 !important;
+    }
+}
+
+/* Fix for custom Apple blue background */
+.bg-apple-blue {
+    background-color: var(--apple-blue) !important;
+    color: #ffffff !important;
+}
+
+.bg-apple-blue i,
+.bg-apple-blue .text-white {
+    color: #ffffff !important;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .bg-primary {
+        background-color: #0a58ca !important;
+    }
+    
+    .bg-success {
+        background-color: #146c43 !important;
+    }
+    
+    .bg-danger {
+        background-color: #b02a37 !important;
+    }
+    
+    .bg-warning {
+        background-color: #ffcd39 !important;
+        color: #000000 !important;
+    }
+    
+    .bg-info {
+        background-color: #3dd5f3 !important;
+        color: #000000 !important;
+    }
+    
+    .bg-secondary {
+        background-color: #495057 !important;
+    }
+    
+    .bg-apple-blue {
+        background-color: #0077b3 !important;
+        color: #ffffff !important;
     }
 }
