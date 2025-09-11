@@ -691,14 +691,14 @@ class ControllerController extends BaseController {
         
         $sql = "SELECT 
                     COUNT(*) as total,
-                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
-                    SUM(CASE WHEN status = 'awaiting_info' THEN 1 ELSE 0 END) as awaiting_info,
-                    SUM(CASE WHEN status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
-                    SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
-                    SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed,
-                    SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority_count,
-                    SUM(CASE WHEN sla_deadline IS NOT NULL AND NOW() > sla_deadline AND status != 'closed' THEN 1 ELSE 0 END) as sla_violations
-                FROM complaints 
+                    SUM(CASE WHEN c.status = 'pending' THEN 1 ELSE 0 END) as pending,
+                    SUM(CASE WHEN c.status = 'awaiting_info' THEN 1 ELSE 0 END) as awaiting_info,
+                    SUM(CASE WHEN c.status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
+                    SUM(CASE WHEN c.status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
+                    SUM(CASE WHEN c.status = 'closed' THEN 1 ELSE 0 END) as closed,
+                    SUM(CASE WHEN c.priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority_count,
+                    SUM(CASE WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline AND c.status != 'closed' THEN 1 ELSE 0 END) as sla_violations
+                FROM complaints c
                 WHERE {$condition}";
         
         return $this->db->fetch($sql, [$param]);
@@ -793,13 +793,13 @@ class ControllerController extends BaseController {
         
         $sql = "SELECT 
                     COUNT(*) as total_handled,
-                    AVG(TIMESTAMPDIFF(HOUR, created_at, COALESCE(closed_at, NOW()))) as avg_resolution_hours,
-                    SUM(CASE WHEN status = 'closed' AND rating = 'excellent' THEN 1 ELSE 0 END) as excellent_ratings,
-                    SUM(CASE WHEN status = 'closed' AND rating = 'satisfactory' THEN 1 ELSE 0 END) as satisfactory_ratings,
-                    SUM(CASE WHEN status = 'closed' AND rating = 'unsatisfactory' THEN 1 ELSE 0 END) as unsatisfactory_ratings
-                FROM complaints 
+                    AVG(TIMESTAMPDIFF(HOUR, c.created_at, COALESCE(c.closed_at, NOW()))) as avg_resolution_hours,
+                    SUM(CASE WHEN c.status = 'closed' AND c.rating = 'excellent' THEN 1 ELSE 0 END) as excellent_ratings,
+                    SUM(CASE WHEN c.status = 'closed' AND c.rating = 'satisfactory' THEN 1 ELSE 0 END) as satisfactory_ratings,
+                    SUM(CASE WHEN c.status = 'closed' AND c.rating = 'unsatisfactory' THEN 1 ELSE 0 END) as unsatisfactory_ratings
+                FROM complaints c
                 WHERE {$condition} 
-                  AND created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+                  AND c.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
         
         return $this->db->fetch($sql, [$param]);
     }
