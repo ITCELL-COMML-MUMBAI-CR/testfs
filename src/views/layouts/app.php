@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="SAMPARK - Support and Mediation Portal for All Rail Cargo. Streamlined freight customer support system for Indian Railways.">
     <meta name="keywords" content="railway, freight, cargo, support, tickets, complaints, Indian Railways">
-    <meta name="author" content="Indian Railways">
+    <meta name="author" content="Central Railways">
     <meta name="robots" content="index, follow">
     <meta name="csrf-token" content="<?= $csrf_token ?? '' ?>">
     <meta name="app-url" content="<?= Config::getAppUrl() ?>">
@@ -89,7 +89,6 @@
                     <img src="<?= Config::getAppUrl() ?>/assets/images/railway-logo-left.png" alt="Indian Railways" class="me-2">
                     <div class="d-flex flex-column">
                         <span class="fw-semibold">SAMPARK</span>
-                        <small class="text-muted d-none d-md-block" style="font-size: 0.7rem; line-height: 1;">Support Portal</small>
                     </div>
                     <img src="<?= Config::getAppUrl() ?>/assets/images/railway-logo-right.png" alt="" class="ms-2">
                 </div>
@@ -271,7 +270,7 @@
     <!-- Footer -->
     <footer class="bg-light mt-auto py-4">
         <div class="container-xl">
-            <div class="row">
+            <!-- <div class="row">
                 <div class="col-lg-8">
                     <div class="row">
                         <div class="col-md-6">
@@ -297,7 +296,7 @@
                         <p><i class="fas fa-clock me-2"></i>Mon-Fri: 9:00 AM - 6:00 PM</p>
                     </div>
                 </div>
-            </div>
+            </div> -->
             <hr class="my-4">
             <div class="row align-items-center">
                 <div class="col-md-8">
@@ -315,9 +314,7 @@
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="d-none">
         <div class="loading-spinner">
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+            <div class="loader"></div>
         </div>
     </div>
     
@@ -339,7 +336,10 @@
     <link rel="stylesheet" href="<?= Config::getAppUrl() ?>/assets/css/background-refresh.css">
     
     <!-- DataTable Fixes CSS -->
-    <link rel="stylesheet" href="<?= Config::getAppUrl() ?>/assets/css/datatable-fixes.css">
+    <!-- <link rel="stylesheet" href="<?= Config::getAppUrl() ?>/assets/css/datatable-fixes.css"> -->
+    
+    <!-- Custom Loader CSS -->
+    <link rel="stylesheet" href="<?= Config::getAppUrl() ?>/assets/css/loader.css">
     
     <!-- DataTables JavaScript -->
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>

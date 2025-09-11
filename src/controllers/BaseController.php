@@ -16,14 +16,6 @@ class BaseController {
         $this->session = new Session();
         $this->activityLogger = new ActivityLogger();
         
-        // Check for remember me token on every page load
-        // Only if not already logged in and not on login/logout pages
-        $currentPath = $_SERVER['REQUEST_URI'] ?? '';
-        $isAuthPage = strpos($currentPath, '/login') !== false || strpos($currentPath, '/logout') !== false;
-        
-        if (!$this->session->isLoggedIn() && !$isAuthPage) {
-            $this->session->checkRememberMe();
-        }
     }
     
     /**

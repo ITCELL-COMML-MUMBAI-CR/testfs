@@ -315,45 +315,6 @@ class ApiController extends BaseController {
         }
     }
     
-    /**
-     * Get customer statistics
-     */
-    public function getCustomerStats() {
-        $this->requireAuth();
-        $this->requireRole('customer');
-        
-        try {
-            $user = $this->getCurrentUser();
-            
-            $sql = "SELECT 
-                        COUNT(*) as total,
-                        SUM(CASE WHEN status != 'closed' THEN 1 ELSE 0 END) as active,
-                        SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as resolved,
-                        ROUND(
-                            AVG(
-                                CASE 
-                                    WHEN rating = 'excellent' THEN 100
-                                    WHEN rating = 'satisfactory' THEN 75
-                                    WHEN rating = 'unsatisfactory' THEN 25
-                                    ELSE NULL
-                                END
-                            ), 0
-                        ) as satisfaction_rate
-                    FROM complaints 
-                    WHERE customer_id = ?";
-            
-            $stats = $this->db->fetch($sql, [$user['customer_id']]);
-            
-            $this->json([
-                'success' => true,
-                'stats' => $stats
-            ]);
-            
-        } catch (Exception $e) {
-            error_log("Customer stats error: " . $e->getMessage());
-            $this->json(['error' => 'Failed to fetch statistics'], 500);
-        }
-    }
     
     /**
      * Get ticket updates (for real-time polling)
@@ -771,6 +732,76 @@ class ApiController extends BaseController {
     }
     
     /**
+     * Get customer statistics for customer profile
+     */
+    public function getCustomerStats() {
+        $this->requireAuth();
+        $this->requireRole(['customer']);
+        
+        try {
+            $user = $this->getCurrentUser();
+            $customerId = $user['customer_id'];
+            
+            if (!$customerId) {
+                $this->json(['error' => 'Customer ID not found'], 400);
+                return;
+            }
+            
+            // Get basic stats for this customer
+            $stats = [
+                'total' => 0,
+                'active' => 0,
+                'resolved' => 0,
+                'satisfaction_rate' => 0
+            ];
+            
+            // Get total tickets count
+            $totalSql = "SELECT COUNT(*) as count FROM complaints WHERE customer_id = ?";
+            $totalResult = $this->db->fetch($totalSql, [$customerId]);
+            $stats['total'] = (int)($totalResult['count'] ?? 0);
+            
+            // Get active tickets (pending, awaiting_feedback, awaiting_info, awaiting_approval)
+            $activeSql = "SELECT COUNT(*) as count FROM complaints 
+                         WHERE customer_id = ? 
+                         AND status IN ('pending', 'awaiting_feedback', 'awaiting_info', 'awaiting_approval')";
+            $activeResult = $this->db->fetch($activeSql, [$customerId]);
+            $stats['active'] = (int)($activeResult['count'] ?? 0);
+            
+            // Get resolved tickets (closed)
+            $resolvedSql = "SELECT COUNT(*) as count FROM complaints 
+                           WHERE customer_id = ? AND status = 'closed'";
+            $resolvedResult = $this->db->fetch($resolvedSql, [$customerId]);
+            $stats['resolved'] = (int)($resolvedResult['count'] ?? 0);
+            
+            // Calculate satisfaction rate from feedback
+            if ($stats['resolved'] > 0) {
+                $satisfactionSql = "SELECT AVG(CASE 
+                                          WHEN rating >= 4 THEN 100
+                                          WHEN rating >= 3 THEN 75
+                                          WHEN rating >= 2 THEN 50
+                                          WHEN rating >= 1 THEN 25
+                                          ELSE 0
+                                        END) as satisfaction_rate
+                                  FROM complaint_feedback cf
+                                  JOIN complaints c ON cf.complaint_id = c.complaint_id
+                                  WHERE c.customer_id = ? AND cf.rating IS NOT NULL";
+                $satisfactionResult = $this->db->fetch($satisfactionSql, [$customerId]);
+                $stats['satisfaction_rate'] = round((float)($satisfactionResult['satisfaction_rate'] ?? 0), 0);
+            }
+            
+            $this->json([
+                'success' => true,
+                'stats' => $stats,
+                'timestamp' => date('Y-m-d H:i:s')
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Customer stats error: " . $e->getMessage());
+            $this->json(['error' => 'Failed to fetch customer statistics'], 500);
+        }
+    }
+    
+    /**
      * Get system setting
      */
     private function getSetting($key, $default = false) {
@@ -857,8 +888,13 @@ class ApiController extends BaseController {
      * Called periodically to trigger background processes
      */
     public function heartbeat() {
+        // Start output buffering to catch any unwanted output
+        ob_start();
+        
         try {
             // No auth required for heartbeat - it's called silently
+            // Suppress any PHP errors/warnings that might generate HTML
+            $originalErrorLevel = error_reporting(E_ERROR);
             
             $backgroundService = new BackgroundRefreshService();
             
@@ -885,12 +921,20 @@ class ApiController extends BaseController {
                     [json_encode(['timestamp' => date('Y-m-d H:i:s')])]
                 );
                 
+                // Clean any unwanted output and restore error reporting
+                ob_clean();
+                error_reporting($originalErrorLevel);
+                
                 $this->json([
                     'success' => true,
                     'processed' => true,
                     'automation_result' => $automationResult
                 ]);
             } else {
+                // Clean any unwanted output and restore error reporting
+                ob_clean();
+                error_reporting($originalErrorLevel);
+                
                 $this->json([
                     'success' => true,
                     'processed' => false,
@@ -899,11 +943,20 @@ class ApiController extends BaseController {
             }
             
         } catch (Exception $e) {
+            // Clean any unwanted output and restore error reporting
+            ob_clean();
+            error_reporting($originalErrorLevel ?? null);
+            
             error_log("Heartbeat error: " . $e->getMessage());
             $this->json([
                 'success' => false,
-                'error' => $e->getMessage()
+                'error' => 'Heartbeat service error'
             ], 500);
+        } finally {
+            // Make sure we end output buffering
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
         }
     }
     
@@ -959,7 +1012,7 @@ class ApiController extends BaseController {
                     SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
                     SUM(CASE WHEN status = 'awaiting_info' THEN 1 ELSE 0 END) as awaiting_info,
                     SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed,
-                    SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority,
+                    SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as `high_priority`,
                     SUM(CASE WHEN status = 'awaiting_feedback' AND TIMESTAMPDIFF(DAY, updated_at, NOW()) >= 2 THEN 1 ELSE 0 END) as pending_feedback_urgent
                 FROM complaints 
                 WHERE customer_id = ?";
@@ -987,7 +1040,7 @@ class ApiController extends BaseController {
                     SUM(CASE WHEN status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
                     SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
                     SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed,
-                    SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority,
+                    SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as `high_priority`,
                     SUM(CASE WHEN sla_deadline IS NOT NULL AND NOW() > sla_deadline AND status != 'closed' THEN 1 ELSE 0 END) as sla_violations
                 FROM complaints 
                 WHERE {$condition}";
@@ -1006,7 +1059,7 @@ class ApiController extends BaseController {
                     SUM(CASE WHEN status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
                     SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
                     SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed,
-                    SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority,
+                    SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as `high_priority`,
                     SUM(CASE WHEN sla_deadline IS NOT NULL AND NOW() > sla_deadline AND status != 'closed' THEN 1 ELSE 0 END) as sla_violations,
                     SUM(CASE WHEN escalated_at IS NOT NULL AND status != 'closed' THEN 1 ELSE 0 END) as escalated
                 FROM complaints";

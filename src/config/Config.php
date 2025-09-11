@@ -255,8 +255,11 @@ class Config {
      * Get base path for URL routing (dynamic based on environment)
      */
     public static function getBasePath() {
-        // Auto-detect based on script name
+        // Auto-detect based on script name and server configuration
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
+        
+        // Extract the directory part of the script name
         $basePath = dirname($scriptName);
         
         // If running in document root, return empty
@@ -264,7 +267,16 @@ class Config {
             return '';
         }
         
-        // For subdirectory installations like /testfs/public
+        // Auto-detect project folder name from script path
+        if (preg_match('#/([^/]+)/public/?#', $scriptName, $matches)) {
+            $projectFolder = $matches[1]; // testfs or sampark
+            return "/{$projectFolder}/public";
+        } elseif (strpos($documentRoot, '/public') !== false && strpos($documentRoot, 'sampark') !== false) {
+            // Production: document root ends with sampark/public
+            return '';
+        }
+        
+        // Fallback: return the detected base path
         return $basePath;
     }
     
@@ -274,7 +286,12 @@ class Config {
     public static function getAppUrl() {
         // Check if running from command line
         if (php_sapi_name() === 'cli') {
-            return 'http://localhost/testfs/public'; // Default for CLI
+            $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+            if (preg_match('#/([^/]+)/public/?#', $scriptName, $matches)) {
+                $projectFolder = $matches[1]; // testfs or sampark
+                return "http://localhost/{$projectFolder}"; // XAMPP/localhost CLI (clean URL)
+            }
+            return 'http://localhost'; // Production CLI
         }
         
         // Auto-detect protocol
@@ -283,10 +300,36 @@ class Config {
         // Get host
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
         
-        // Get base path
-        $basePath = self::getBasePath();
+        // Get clean base path (without /public for user-facing URLs)
+        $basePath = self::getCleanBasePath();
         
         return $protocol . '://' . $host . $basePath;
+    }
+    
+    /**
+     * Get clean base path for user-facing URLs (without /public)
+     */
+    public static function getCleanBasePath() {
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        $documentRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
+        
+        // Auto-detect project folder name from script path
+        if (preg_match('#/([^/]+)/public/?#', $scriptName, $matches)) {
+            $projectFolder = $matches[1]; // testfs or sampark
+            return "/{$projectFolder}"; // Return clean path without /public
+        } elseif (strpos($documentRoot, '/public') !== false && strpos($documentRoot, 'sampark') !== false) {
+            // Production: document root ends with sampark/public
+            return '';
+        }
+        
+        // Fallback
+        $basePath = dirname($scriptName);
+        if ($basePath === '/' || $basePath === '\\') {
+            return '';
+        }
+        
+        // Remove /public if present
+        return str_replace('/public', '', $basePath);
     }
     
     /**

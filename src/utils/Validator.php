@@ -97,13 +97,14 @@ class Validator {
                 break;
                 
             case 'unique':
-                // Format: unique:table,column,except_id
+                // Format: unique:table,column,except_id,primary_key_column
                 $tableParts = explode(',', $parameter);
                 $table = $tableParts[0];
                 $column = $tableParts[1] ?? $field;
                 $exceptId = $tableParts[2] ?? null;
+                $primaryKeyColumn = $tableParts[3] ?? 'id';
                 
-                if (!empty($value) && !$this->isUnique($table, $column, $value, $exceptId)) {
+                if (!empty($value) && !$this->isUnique($table, $column, $value, $exceptId, $primaryKeyColumn)) {
                     $this->addError($field, ucfirst($field) . ' already exists');
                 }
                 break;
@@ -176,14 +177,14 @@ class Validator {
         return true;
     }
     
-    private function isUnique($table, $column, $value, $exceptId = null) {
+    private function isUnique($table, $column, $value, $exceptId = null, $primaryKeyColumn = 'id') {
         $db = Database::getInstance();
         
         $sql = "SELECT COUNT(*) as count FROM {$table} WHERE {$column} = ?";
         $params = [$value];
         
         if ($exceptId) {
-            $sql .= " AND id != ?";
+            $sql .= " AND {$primaryKeyColumn} != ?";
             $params[] = $exceptId;
         }
         

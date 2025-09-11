@@ -89,14 +89,6 @@ ob_start();
                                     </div>
                                 </div>
                                 
-                                <div class="mb-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me">
-                                        <label class="form-check-label" for="rememberMe">
-                                            Remember me
-                                        </label>
-                                    </div>
-                                </div>
                             </div>
                             
                             <!-- Staff Login Fields -->
@@ -130,14 +122,6 @@ ob_start();
                                     </div>
                                 </div>
                                 
-                                <div class="mb-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="rememberMeStaff" name="remember_me">
-                                        <label class="form-check-label" for="rememberMeStaff">
-                                            Remember me
-                                        </label>
-                                    </div>
-                                </div>
                             </div>
                             
                             <!-- Submit Button -->
@@ -161,12 +145,7 @@ ob_start();
                             </div>
                             
                             <div id="staffLinks" style="display: none;">
-                                <p class="mb-0">
-                                    <a href="#" class="text-decoration-none text-apple-blue" onclick="showForgotPassword('staff')">
-                                        <i class="fas fa-key me-1"></i>Forgot Password?
-                                    </a>
-                                </p>
-                                <p class="text-muted small mt-2">
+                                <p class="text-muted small">
                                     For staff account issues, contact your administrator
                                 </p>
                             </div>
@@ -233,10 +212,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Enable customer fields, disable staff fields
             document.getElementById('customerEmailOrPhone').disabled = false;
             document.getElementById('customerPassword').disabled = false;
-            document.getElementById('rememberMe').disabled = false;
             document.getElementById('staffLoginId').disabled = true;
             document.getElementById('staffPassword').disabled = true;
-            document.getElementById('rememberMeStaff').disabled = true;
             
             // Focus on customer email field
             setTimeout(() => document.getElementById('customerEmailOrPhone').focus(), 100);
@@ -251,10 +228,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Enable staff fields, disable customer fields
             document.getElementById('customerEmailOrPhone').disabled = true;
             document.getElementById('customerPassword').disabled = true;
-            document.getElementById('rememberMe').disabled = true;
             document.getElementById('staffLoginId').disabled = false;
             document.getElementById('staffPassword').disabled = false;
-            document.getElementById('rememberMeStaff').disabled = false;
             
             // Focus on staff login ID field
             setTimeout(() => document.getElementById('staffLoginId').focus(), 100);
@@ -354,31 +329,33 @@ function togglePassword(fieldId) {
     }
 }
 
-function showForgotPassword(type) {
+function showForgotPassword() {
     Swal.fire({
         title: 'Forgot Password',
         html: `
-            <div class="text-start">
-                <p class="mb-3">Enter your ${type === 'customer' ? 'email address' : 'login ID'} to receive password reset instructions.</p>
+<div class="text-start">
+                <p class="mb-3">Enter your email address to receive password reset instructions.</p>
                 <div class="mb-3">
                     <label for="resetEmail" class="form-label">
-                        ${type === 'customer' ? 'Email Address' : 'Login ID'}
+                        Email Address
                     </label>
-                    <input type="${type === 'customer' ? 'email' : 'text'}" 
+                    <input type="email" 
                            class="form-control form-control-apple" 
                            id="resetEmail" 
-                           placeholder="Enter your ${type === 'customer' ? 'email address' : 'login ID'}">
+                           placeholder="Enter your email address">
                 </div>
             </div>
         `,
         showCancelButton: true,
         confirmButtonText: 'Send Reset Link',
-        confirmButtonClass: 'btn btn-apple-primary',
-        cancelButtonClass: 'btn btn-apple-glass',
+        customClass: {
+            confirmButton: 'btn btn-apple-primary',
+            cancelButton: 'btn btn-apple-glass'
+        },
         preConfirm: () => {
             const email = document.getElementById('resetEmail').value;
             if (!email) {
-                Swal.showValidationMessage('Please enter your ' + (type === 'customer' ? 'email address' : 'login ID'));
+                Swal.showValidationMessage('Please enter your email address');
                 return false;
             }
             return email;
@@ -389,7 +366,7 @@ function showForgotPassword(type) {
             Swal.fire({
                 icon: 'success',
                 title: 'Reset Link Sent',
-                text: 'If an account with that ' + (type === 'customer' ? 'email' : 'login ID') + ' exists, you will receive password reset instructions shortly.'
+                text: 'If an account with that email exists, you will receive password reset instructions shortly.'
             });
         }
     });

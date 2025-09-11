@@ -194,8 +194,10 @@ window.SAMPARK = {
                 showCancelButton: true,
                 confirmButtonText: confirmText,
                 cancelButtonText: cancelText,
-                confirmButtonClass: 'btn btn-apple-primary',
-                cancelButtonClass: 'btn btn-apple-glass'
+                customClass: {
+                    confirmButton: 'btn btn-apple-primary',
+                    cancelButton: 'btn btn-apple-glass'
+                }
             });
         },
         
@@ -205,7 +207,9 @@ window.SAMPARK = {
                 icon: 'success',
                 title: title,
                 text: text,
-                confirmButtonClass: 'btn btn-apple-primary'
+                customClass: {
+                    confirmButton: 'btn btn-apple-primary'
+                }
             });
         },
         
@@ -215,7 +219,9 @@ window.SAMPARK = {
                 icon: 'error',
                 title: title,
                 text: text,
-                confirmButtonClass: 'btn btn-apple-primary'
+                customClass: {
+                    confirmButton: 'btn btn-apple-primary'
+                }
             });
         },
         
@@ -225,7 +231,9 @@ window.SAMPARK = {
                 icon: 'info',
                 title: title,
                 text: text,
-                confirmButtonClass: 'btn btn-apple-primary'
+                customClass: {
+                    confirmButton: 'btn btn-apple-primary'
+                }
             });
         },
         
@@ -457,8 +465,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Smooth scrolling for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
+            const href = this.getAttribute('href');
+            // Skip if href is just "#" (not a valid selector)
+            if (href === '#') {
+                return;
+            }
+            
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
+            const target = document.querySelector(href);
             if (target) {
                 target.scrollIntoView({
                     behavior: 'smooth',

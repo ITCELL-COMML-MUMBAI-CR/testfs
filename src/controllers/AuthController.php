@@ -10,12 +10,6 @@ require_once __DIR__ . '/../utils/Validator.php';
 class AuthController extends BaseController {
     
     public function showLogin() {
-        // Check for remember me token first
-        if ($this->session->checkRememberMe()) {
-            $this->redirectToDashboard();
-            return;
-        }
-        
         // If already logged in, redirect to appropriate dashboard
         if ($this->session->isLoggedIn()) {
             $this->redirectToDashboard();
@@ -71,11 +65,9 @@ class AuthController extends BaseController {
         
         $emailOrPhone = trim($_POST['email_or_phone']);
         $password = $_POST['password'];
-        $rememberMe = isset($_POST['remember_me']);
         
         Config::logInfo('Customer login attempt', [
-            'email_or_phone' => $emailOrPhone,
-            'remember_me' => $rememberMe
+            'email_or_phone' => $emailOrPhone
         ]);
         
         // Check if input is email or phone
@@ -107,8 +99,7 @@ class AuthController extends BaseController {
         // Login successful
         Config::logInfo('Customer login successful', [
             'customer_id' => $customer['customer_id'],
-            'email' => $customer['email'],
-            'remember_me' => $rememberMe
+            'email' => $customer['email']
         ]);
         
         $this->session->login('customer', [
@@ -119,7 +110,7 @@ class AuthController extends BaseController {
             'email' => $customer['email'],
             'mobile' => $customer['mobile'],
             'company_name' => $customer['company_name']
-        ], $rememberMe);
+        ]);
         
         // Update last login
         $this->updateLastLogin('customers', 'customer_id', $customer['customer_id']);
@@ -146,7 +137,6 @@ class AuthController extends BaseController {
         
         $loginId = trim($_POST['login_id']);
         $password = $_POST['password'];
-        $rememberMe = isset($_POST['remember_me']);
         
         $sql = "SELECT * FROM users WHERE login_id = ? AND status = 'active'";
         $user = $this->db->fetch($sql, [$loginId]);
@@ -176,7 +166,7 @@ class AuthController extends BaseController {
             'department' => $user['department'],
             'division' => $user['division'],
             'zone' => $user['zone']
-        ], $rememberMe);
+        ]);
         
         // Update last login
         $this->updateLastLogin('users', 'id', $user['id']);

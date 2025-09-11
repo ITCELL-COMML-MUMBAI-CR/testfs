@@ -37,14 +37,26 @@ class Router {
         $requestMethod = $_SERVER['REQUEST_METHOD'];
         $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         
-        // Remove base path if running in subdirectory
+        // Get base path and script name for environment detection
         $basePath = Config::getBasePath();
+        $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+        
+        // Handle different routing scenarios
         if (!empty($basePath) && strpos($requestUri, $basePath) === 0) {
+            // Direct access to public folder: /testfs/public/... or /sampark/public/...
             $requestUri = substr($requestUri, strlen($basePath));
+        } elseif (preg_match('#/([^/]+)/public/#', $scriptName, $matches) && strpos($requestUri, "/{$matches[1]}/") === 0) {
+            // Root redirect scenario: URI=/testfs/customer/tickets/123, SCRIPT=/testfs/public/index.php
+            // Or: URI=/sampark/customer/tickets/123, SCRIPT=/sampark/public/index.php
+            $projectFolder = $matches[1];
+            $requestUri = substr($requestUri, strlen("/{$projectFolder}"));
         }
         
+        // Ensure we have a clean URI starting with /
         if (empty($requestUri) || $requestUri === '/') {
             $requestUri = '/';
+        } elseif ($requestUri[0] !== '/') {
+            $requestUri = '/' . $requestUri;
         }
         
         foreach ($this->routes as $route) {

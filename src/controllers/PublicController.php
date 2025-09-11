@@ -68,17 +68,22 @@ class PublicController extends BaseController {
      */
     public function help() {
         $data = [
-            'title' => 'Help & FAQ - SAMPARK',
-            'meta_description' => 'Get help and find answers to frequently asked questions about SAMPARK',
-            'faqs' => $this->getFAQData(),
-            'contact_info' => [
-                'email' => 'support@railway.gov.in',
-                'phone' => '1800-111-321',
-                'hours' => '24/7 Support Available'
-            ]
+            'title' => 'Help & User Manual - SAMPARK',
+            'meta_description' => 'Complete user manual and help guide for all SAMPARK roles',
+            'page_title' => 'Help & User Manual - SAMPARK'
         ];
         
-        return $this->view('public/help', $data);
+        return $this->view('help/help', $data);
+    }
+    
+    /**
+     * Display standalone help page (no login required)
+     */
+    public function helpStandalone() {
+        // This method will directly include the standalone help page
+        // No need for layout wrapper since it's a complete HTML page
+        include __DIR__ . '/../views/help/help_standalone.php';
+        exit;
     }
     
     /**

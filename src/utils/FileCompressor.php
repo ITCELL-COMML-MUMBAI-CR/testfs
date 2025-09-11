@@ -209,11 +209,15 @@ function compressWithZip($inputFile, $outputFile, $maxSizeBytes) {
     ];
     
     $originalName = basename($inputFile);
+    $firstIteration = true;
     
     foreach ($compressionLevels as $method => $levels) {
         foreach ($levels as $level) {
-            // Clear the archive
-            $zip->close();
+            // Clear the archive (skip on first iteration)
+            if (!$firstIteration) {
+                $zip->close();
+            }
+            $firstIteration = false;
             $zip->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE);
             
             // Add file with current compression settings

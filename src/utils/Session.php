@@ -83,7 +83,7 @@ class Session {
         }
     }
     
-    public function login($userType, $userData, $rememberMe = false) {
+    public function login($userType, $userData) {
         // Regenerate session ID on login
         $this->regenerateId();
         
@@ -107,20 +107,12 @@ class Session {
         }
         
         $_SESSION['login_time'] = time();
-        $_SESSION['remember_me'] = $rememberMe;
-        
-        // Handle remember me functionality
-        if ($rememberMe) {
-            $this->setRememberMeCookie($userType, $userData['id']);
-        }
         
         // Generate CSRF token
         $this->generateCSRFToken();
     }
     
     public function logout() {
-        // Clear remember me cookie if it exists
-        $this->clearRememberMeCookie();
         $this->destroy();
     }
     
@@ -205,186 +197,4 @@ class Session {
         ];
     }
     
-    /**
-     * Set remember me cookie
-     */
-    private function setRememberMeCookie($userType, $userId) {
-        // Generate a secure random token
-        $token = bin2hex(random_bytes(32));
-        $selector = bin2hex(random_bytes(16));
-        
-        // Store token hash in database (would need a remember_tokens table)
-        $tokenHash = hash('sha256', $token);
-        $expiry = time() + (30 * 24 * 60 * 60); // 30 days
-        
-        try {
-            $db = Database::getInstance();
-            
-            // Create remember_tokens table if it doesn't exist
-            $createTableSql = "CREATE TABLE IF NOT EXISTS remember_tokens (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                selector VARCHAR(32) NOT NULL UNIQUE,
-                token_hash VARCHAR(64) NOT NULL,
-                user_type ENUM('customer', 'user') NOT NULL,
-                user_id VARCHAR(50) NOT NULL,
-                expires_at DATETIME NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                INDEX idx_selector (selector),
-                INDEX idx_user (user_type, user_id),
-                INDEX idx_expires (expires_at)
-            )";
-            $db->query($createTableSql);
-            
-            // Clear any existing tokens for this user
-            $db->query(
-                "DELETE FROM remember_tokens WHERE user_type = ? AND user_id = ?",
-                [$userType, $userId]
-            );
-            
-            // Insert new remember token
-            $db->query(
-                "INSERT INTO remember_tokens (selector, token_hash, user_type, user_id, expires_at) VALUES (?, ?, ?, ?, ?)",
-                [$selector, $tokenHash, $userType, $userId, date('Y-m-d H:i:s', $expiry)]
-            );
-            
-            // Set cookie
-            $cookieValue = $selector . ':' . $token;
-            setcookie(
-                'remember_me',
-                $cookieValue,
-                $expiry,
-                '/',
-                '',
-                isset($_SERVER['HTTPS']),
-                true // HttpOnly
-            );
-            
-        } catch (Exception $e) {
-            error_log("Remember me cookie error: " . $e->getMessage());
-        }
-    }
-    
-    /**
-     * Clear remember me cookie
-     */
-    private function clearRememberMeCookie() {
-        if (isset($_COOKIE['remember_me'])) {
-            // Parse cookie to get selector
-            $parts = explode(':', $_COOKIE['remember_me'], 2);
-            if (count($parts) === 2) {
-                $selector = $parts[0];
-                
-                try {
-                    $db = Database::getInstance();
-                    $db->query("DELETE FROM remember_tokens WHERE selector = ?", [$selector]);
-                } catch (Exception $e) {
-                    error_log("Error clearing remember token: " . $e->getMessage());
-                }
-            }
-            
-            // Clear cookie
-            setcookie(
-                'remember_me',
-                '',
-                time() - 3600,
-                '/',
-                '',
-                isset($_SERVER['HTTPS']),
-                true
-            );
-        }
-    }
-    
-    /**
-     * Check and process remember me cookie
-     */
-    public function checkRememberMe() {
-        if (!$this->isLoggedIn() && isset($_COOKIE['remember_me'])) {
-            $parts = explode(':', $_COOKIE['remember_me'], 2);
-            
-            if (count($parts) === 2) {
-                $selector = $parts[0];
-                $token = $parts[1];
-                
-                try {
-                    $db = Database::getInstance();
-                    
-                    // Get remember token from database
-                    $rememberToken = $db->fetch(
-                        "SELECT * FROM remember_tokens WHERE selector = ? AND expires_at > NOW()",
-                        [$selector]
-                    );
-                    
-                    if ($rememberToken && hash_equals($rememberToken['token_hash'], hash('sha256', $token))) {
-                        // Valid remember token, auto-login user
-                        $userType = $rememberToken['user_type'];
-                        $userId = $rememberToken['user_id'];
-                        
-                        if ($userType === 'customer') {
-                            $user = $db->fetch(
-                                "SELECT * FROM customers WHERE customer_id = ? AND status = 'approved'",
-                                [$userId]
-                            );
-                            
-                            if ($user) {
-                                $userData = [
-                                    'id' => $user['customer_id'],
-                                    'customer_id' => $user['customer_id'],
-                                    'role' => 'customer',
-                                    'name' => $user['name'],
-                                    'email' => $user['email'],
-                                    'mobile' => $user['mobile'],
-                                    'company_name' => $user['company_name']
-                                ];
-                                
-                                // Log the user in
-                                $this->login($userType, $userData, true);
-                                
-                                // Update last login
-                                $db->query("UPDATE customers SET updated_at = NOW() WHERE customer_id = ?", [$userId]);
-                                
-                                return true;
-                            }
-                        } else {
-                            $user = $db->fetch(
-                                "SELECT * FROM users WHERE id = ? AND status = 'active'",
-                                [$userId]
-                            );
-                            
-                            if ($user) {
-                                $userData = [
-                                    'id' => $user['id'],
-                                    'login_id' => $user['login_id'],
-                                    'role' => $user['role'],
-                                    'name' => $user['name'],
-                                    'email' => $user['email'],
-                                    'mobile' => $user['mobile'],
-                                    'department' => $user['department'],
-                                    'division' => $user['division'],
-                                    'zone' => $user['zone']
-                                ];
-                                
-                                // Log the user in
-                                $this->login($userType, $userData, true);
-                                
-                                // Update last login
-                                $db->query("UPDATE users SET updated_at = NOW() WHERE id = ?", [$userId]);
-                                
-                                return true;
-                            }
-                        }
-                    }
-                    
-                    // Invalid or expired token, clear it
-                    $this->clearRememberMeCookie();
-                    
-                } catch (Exception $e) {
-                    error_log("Remember me check error: " . $e->getMessage());
-                    $this->clearRememberMeCookie();
-                }
-            }
-        }
-        
-        return false;
-    }
 }

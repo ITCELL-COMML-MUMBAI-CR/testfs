@@ -1,0 +1,25 @@
+# Apache configuration for SAMPARK root directory
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # For XAMPP/localhost development - Update folder name as needed (testfs for dev, sampark for production)
+    RewriteBase /testfs/
+    
+    # For production/main server (document root) - Comment/Uncomment this line
+    # RewriteBase /
+    
+    # Redirect all requests to public folder
+    RewriteRule ^(?!public/)(.*)$ public/$1 [L,QSA]
+</IfModule>
+
+# Prevent direct access to src, logs, and other sensitive directories
+<FilesMatch "\.(md|log|sql|json|lock)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Prevent access to sensitive directories
+<FilesMatch "^(src|logs|scripts|docs)">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>

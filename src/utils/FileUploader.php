@@ -376,4 +376,45 @@ class FileUploader {
         }
     }
     
+    /**
+     * Upload single evidence file for a ticket
+     */
+    public function uploadSingleEvidence($file, $complaintId) {
+        // Validate file
+        $validation = $this->validateFile($file);
+        if (!$validation['valid']) {
+            return [
+                'success' => false,
+                'message' => implode(', ', $validation['errors'])
+            ];
+        }
+        
+        try {
+            // Process the file (includes compression)
+            $result = $this->processFile($file, $complaintId, 1);
+            
+            if ($result['success']) {
+                return [
+                    'success' => true,
+                    'original_name' => $file['name'],
+                    'file_name' => $result['filename'],
+                    'file_size' => $result['compressed_size'],
+                    'file_type' => $result['file_type']
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => $result['error']
+                ];
+            }
+            
+        } catch (Exception $e) {
+            error_log("File upload error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Failed to process file upload'
+            ];
+        }
+    }
+    
 }

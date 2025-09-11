@@ -18,7 +18,7 @@ const DATATABLE_DEFAULTS = {
     // Ensure proper styling
     className: 'table table-striped table-hover',
     language: {
-        processing: '<div class="d-flex justify-content-center"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div></div>',
+        processing: '<div class="d-flex justify-content-center"><div class="loader"></div></div>',
         emptyTable: 'No tickets found',
         info: 'Showing _START_ to _END_ of _TOTAL_ tickets',
         infoEmpty: 'Showing 0 to 0 of 0 tickets',
@@ -112,7 +112,7 @@ function initializeCustomerTicketsTable(tableId = 'customerTicketsTable') {
                 render: function(data, type, row) {
                     if (type === 'display') {
                         const urgentClass = row.is_urgent ? 'text-danger font-weight-bold' : '';
-                        return `<a href="/customer/tickets/${data}" class="ticket-link ${urgentClass}">${data}</a>`;
+                        return `<a href="${window.APP_URL || ''}/customer/tickets/${data}" class="ticket-link ${urgentClass}">${data}</a>`;
                     }
                     return data;
                 }
@@ -121,23 +121,15 @@ function initializeCustomerTicketsTable(tableId = 'customerTicketsTable') {
                 data: 'category',
                 title: 'Category',
                 render: function(data, type, row) {
-                    return `<span class="category-label">${data}</span><br><small class="text-muted">${row.type}</small>`;
-                }
-            },
-            {
-                data: 'priority',
-                title: 'Priority',
-                render: function(data, type, row) {
-                    const badgeClass = row.priority_class || 'badge-secondary';
-                    return `<span class="badge priority-badge ${badgeClass}">${data.toUpperCase()}</span>`;
+                    return `<span class="category-label">${data}</span><br><small class="text-muted">${row.type}</small><br><small class="text-info">${row.subtype || 'N/A'}</small>`;
                 }
             },
             {
                 data: 'status',
                 title: 'Status',
                 render: function(data, type, row) {
-                    const badgeClass = row.status_class || 'badge-secondary';
-                    return `<span class="badge status-badge ${badgeClass}">${formatStatus(data)}</span>`;
+                    const statusBadgeClass = getStatusBadgeClass(data);
+                    return `<span class="badge ${statusBadgeClass}">${formatStatus(data)}</span>`;
                 }
             },
             {
@@ -149,19 +141,35 @@ function initializeCustomerTicketsTable(tableId = 'customerTicketsTable') {
             },
             {
                 data: 'created_at',
-                title: 'Created',
+                title: 'Date',
                 render: function(data, type, row) {
                     if (type === 'display') {
-                        return `<span data-bs-toggle="tooltip" title="${formatDateTime(data)}">${formatRelativeTime(data)}</span>`;
+                        const date = new Date(data);
+                        return date.toLocaleDateString();
                     }
                     return data;
                 }
             },
             {
-                data: 'hours_elapsed',
-                title: 'Age',
+                data: 'created_at',
+                title: 'Time',
                 render: function(data, type, row) {
-                    return formatDuration(data);
+                    if (type === 'display') {
+                        const date = new Date(data);
+                        return date.toLocaleTimeString();
+                    }
+                    return data;
+                }
+            },
+            {
+                data: 'description',
+                title: 'Description',
+                render: function(data, type, row) {
+                    if (type === 'display') {
+                        const truncated = data && data.length > 50 ? data.substring(0, 50) + '...' : (data || 'N/A');
+                        return `<span title="${data || ''}">${truncated}</span>`;
+                    }
+                    return data;
                 }
             },
             {
@@ -169,17 +177,21 @@ function initializeCustomerTicketsTable(tableId = 'customerTicketsTable') {
                 title: 'Actions',
                 orderable: false,
                 render: function(data, type, row) {
-                    let actions = `<a href="/customer/tickets/${row.complaint_id}" class="btn btn-sm btn-primary">View</a>`;
+                    let actions = `<a href="${window.APP_URL || ''}/customer/tickets/${row.complaint_id}" class="btn btn-sm btn-primary text-white">View</a>`;
                     
                     if (row.status === 'awaiting_feedback') {
-                        actions += ` <button class="btn btn-sm btn-success" onclick="submitFeedback('${row.complaint_id}')">Feedback</button>`;
+                        actions += ` <button class="btn btn-sm btn-success text-white" onclick="provideFeedback('${row.complaint_id}')">Feedback</button>`;
+                    }
+                    
+                    if (row.status === 'awaiting_info') {
+                        actions += ` <button class="btn btn-sm btn-info text-white" onclick="provideAdditionalInfo('${row.complaint_id}')">Provide Info</button>`;
                     }
                     
                     return actions;
                 }
             }
         ],
-        order: [[5, 'desc']], // Order by created date
+        order: [[4, 'desc']], // Order by created date
         rowCallback: function(row, data) {
             // Add visual indicators for urgent tickets
             if (data.is_urgent) {
@@ -221,7 +233,7 @@ function initializeControllerTicketsTable(tableId = 'controllerTicketsTable') {
                 render: function(data, type, row) {
                     if (type === 'display') {
                         const urgentClass = row.is_urgent ? 'text-danger font-weight-bold' : '';
-                        return `<a href="/controller/tickets/${data}" class="ticket-link ${urgentClass}">${data}</a>`;
+                        return `<a href="${window.APP_URL || ''}/controller/tickets/${data}" class="ticket-link ${urgentClass}">${data}</a>`;
                     }
                     return data;
                 }
@@ -235,51 +247,77 @@ function initializeControllerTicketsTable(tableId = 'controllerTicketsTable') {
             },
             {
                 data: 'category',
-                title: 'Issue',
+                title: 'Category',
                 render: function(data, type, row) {
-                    return `${data} - ${row.subtype}`;
-                }
-            },
-            {
-                data: 'priority',
-                title: 'Priority',
-                render: function(data, type, row) {
-                    const badgeClass = row.priority_class || 'badge-secondary';
-                    return `<span class="badge priority-badge ${badgeClass}">${data.toUpperCase()}</span>`;
+                    return `<span class="category-label">${data}</span><br><small class="text-muted">${row.type}</small><br><small class="text-info">${row.subtype || 'N/A'}</small>`;
                 }
             },
             {
                 data: 'status',
                 title: 'Status',
                 render: function(data, type, row) {
-                    const badgeClass = row.status_class || 'badge-secondary';
+                    const statusBadgeClass = getStatusBadgeClass(data);
                     let statusText = formatStatus(data);
                     
                     if (row.assigned_user_name && data === 'pending') {
                         statusText += `<br><small>Assigned to: ${row.assigned_user_name}</small>`;
                     }
                     
-                    return `<span class="badge status-badge ${badgeClass}">${statusText}</span>`;
+                    return `<span class="badge ${statusBadgeClass}">${statusText}</span>`;
                 }
             },
             {
-                data: 'shed_name',
-                title: 'Location',
+                data: 'assigned_user_name',
+                title: 'Assigned To',
                 render: function(data, type, row) {
-                    return `${data}<br><small class="text-muted">${row.shed_code}</small>`;
+                    return data || 'Unassigned';
                 }
             },
             {
-                data: 'hours_elapsed',
-                title: 'Age',
+                data: 'created_at',
+                title: 'Date',
                 render: function(data, type, row) {
-                    const duration = formatDuration(data);
-                    
-                    if (row.is_sla_violated) {
-                        return `<span class="text-danger font-weight-bold">${duration} <i class="fas fa-exclamation-triangle"></i></span>`;
+                    if (type === 'display') {
+                        const date = new Date(data);
+                        return date.toLocaleDateString();
                     }
-                    
-                    return duration;
+                    return data;
+                }
+            },
+            {
+                data: 'created_at',
+                title: 'Time',
+                render: function(data, type, row) {
+                    if (type === 'display') {
+                        const date = new Date(data);
+                        return date.toLocaleTimeString();
+                    }
+                    return data;
+                }
+            },
+            {
+                data: 'description',
+                title: 'Description',
+                render: function(data, type, row) {
+                    if (type === 'display') {
+                        const truncated = data && data.length > 50 ? data.substring(0, 50) + '...' : (data || 'N/A');
+                        return `<span title="${data || ''}">${truncated}</span>`;
+                    }
+                    return data;
+                }
+            },
+            {
+                data: 'sla_status',
+                title: 'SLA',
+                render: function(data, type, row) {
+                    if (row.is_sla_violated) {
+                        return `<span class="text-danger font-weight-bold"><i class="fas fa-exclamation-triangle"></i> Violated</span>`;
+                    } else if (data === 'warning') {
+                        return `<span class="text-warning"><i class="fas fa-clock"></i> Warning</span>`;
+                    } else if (data === 'ok') {
+                        return `<span class="text-success"><i class="fas fa-check"></i> OK</span>`;
+                    }
+                    return 'N/A';
                 }
             },
             {
@@ -287,11 +325,11 @@ function initializeControllerTicketsTable(tableId = 'controllerTicketsTable') {
                 title: 'Actions',
                 orderable: false,
                 render: function(data, type, row) {
-                    return `<a href="/controller/tickets/${row.complaint_id}" class="btn btn-sm btn-primary">Manage</a>`;
+                    return `<a href="${window.APP_URL || ''}/controller/tickets/${row.complaint_id}" class="btn btn-sm btn-primary">Manage</a>`;
                 }
             }
         ],
-        order: [[3, 'desc'], [6, 'asc']], // Priority desc, then age asc
+        order: [[5, 'desc']], // Order by created date
         rowCallback: function(row, data) {
             // Add visual indicators
             if (data.is_urgent) {
@@ -344,6 +382,21 @@ function formatStatus(status) {
     };
     
     return statusLabels[status] || status;
+}
+
+/**
+ * Get status badge class for proper coloring
+ */
+function getStatusBadgeClass(status) {
+    const statusClasses = {
+        'pending': 'status-pending',
+        'awaiting_feedback': 'status-awaiting-feedback',
+        'awaiting_info': 'status-awaiting-info',
+        'awaiting_approval': 'status-awaiting-approval',
+        'closed': 'status-closed'
+    };
+    
+    return statusClasses[status] || 'badge-secondary';
 }
 
 /**

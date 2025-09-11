@@ -243,12 +243,13 @@ $page_title = 'Support Hub - SAMPARK';
                                 <input type="checkbox" class="form-check-input" id="selectAll" onchange="toggleSelectAll()">
                             </th>
                             <th class="border-0">Ticket ID</th>
-                            <th class="border-0">Priority</th>
                             <th class="border-0">Customer</th>
                             <th class="border-0">Category</th>
                             <th class="border-0">Status</th>
                             <th class="border-0">Assigned To</th>
-                            <th class="border-0">Created</th>
+                            <th class="border-0">Date</th>
+                            <th class="border-0">Time</th>
+                            <th class="border-0">Description</th>
                             <th class="border-0">SLA</th>
                             <th class="border-0">Actions</th>
                         </tr>

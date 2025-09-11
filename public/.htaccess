@@ -2,14 +2,11 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
     
-    # For localhost development (XAMPP) - Comment/Uncomment this line
+    # For localhost development (XAMPP) - Update folder name as needed (testfs for dev, sampark for production)
     RewriteBase /testfs/public/
     
-    # For production/other servers (document root) - Comment/Uncomment this line
+    # For production/main server (document root is [project]/public) - Comment/Uncomment this line
     # RewriteBase /
-    
-    # For production/other servers (subdirectory) - Uncomment and modify as needed
-    # RewriteBase /your-app-folder/
     
     # Handle Front Controller pattern
     RewriteCond %{REQUEST_FILENAME} !-d

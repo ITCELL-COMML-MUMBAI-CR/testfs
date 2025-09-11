@@ -12,6 +12,8 @@ $router->get('/signup', 'Auth@showSignup');
 $router->post('/signup', 'Auth@signup');
 $router->get('/logout', 'Auth@logout');
 $router->get('/privacy-policy', 'Public@privacyPolicy');
+$router->get('/help', 'Public@help');
+$router->get('/help-standalone', 'Public@helpStandalone');
 
 // Customer Routes
 $router->get('/customer/dashboard', 'Customer@dashboard', ['auth', 'role:customer']);
@@ -20,6 +22,9 @@ $router->get('/customer/tickets/create', 'Customer@createTicket', ['auth', 'role
 $router->post('/customer/tickets/create', 'Customer@storeTicket', ['auth', 'role:customer']);
 $router->get('/customer/tickets/{id}', 'Customer@viewTicket', ['auth', 'role:customer']);
 $router->post('/customer/tickets/{id}/feedback', 'Customer@submitFeedback', ['auth', 'role:customer']);
+$router->post('/customer/tickets/{id}/provide-info', 'Customer@provideAdditionalInfo', ['auth', 'role:customer']);
+$router->post('/customer/tickets/{id}/evidence', 'Customer@uploadEvidence', ['auth', 'role:customer']);
+$router->delete('/customer/tickets/{id}/evidence/{evidenceId}', 'Customer@deleteEvidence', ['auth', 'role:customer']);
 $router->get('/customer/profile', 'Customer@profile', ['auth', 'role:customer']);
 $router->post('/customer/profile', 'Customer@updateProfile', ['auth', 'role:customer']);
 $router->post('/customer/change-password', 'Customer@changePassword', ['auth', 'role:customer']);
@@ -85,6 +90,8 @@ $router->get('/admin/reports', 'Admin@reports', ['auth', 'role:admin,superadmin'
 $router->get('/api/sheds/search', 'Api@searchSheds');
 $router->get('/api/categories/{type}/subtypes', 'Api@getSubtypes');
 $router->get('/api/tickets/stats', 'Api@getTicketStats', ['auth']);
+$router->get('/api/customer/stats', 'Api@getCustomerStats', ['auth']);
+$router->get('/api/customer/export-data', 'Api@exportCustomerData', ['auth']);
 $router->post('/api/tickets/{id}/upload', 'Api@uploadEvidence', ['auth']);
 $router->get('/api/tickets/{id}/evidence/{file}', 'Api@getEvidence', ['auth']);
 $router->get('/api/tickets/updates', 'Api@getTicketUpdates', ['auth']);

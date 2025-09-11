@@ -241,7 +241,9 @@
                     icon: 'warning',
                     title: 'Auto-retry Disabled',
                     text: 'Maximum retry attempts reached. Please try manually or contact support.',
-                    confirmButtonClass: 'btn btn-apple-primary'
+                    customClass: {
+                        confirmButton: 'btn btn-apple-primary'
+                    }
                 });
             }
         }
@@ -319,7 +321,9 @@
                             <p class="small text-muted mb-0">Our team is working to resolve the issues. Estimated fix time: 15-30 minutes.</p>
                         </div>
                     `,
-                    confirmButtonClass: 'btn btn-apple-primary'
+                    customClass: {
+                        confirmButton: 'btn btn-apple-primary'
+                    }
                 });
             }, 2000);
         }
@@ -347,8 +351,10 @@
                 `,
                 showCancelButton: true,
                 confirmButtonText: 'Send Report',
-                confirmButtonClass: 'btn btn-apple-primary',
-                cancelButtonClass: 'btn btn-apple-glass',
+                customClass: {
+                    confirmButton: 'btn btn-apple-primary',
+                    cancelButton: 'btn btn-apple-glass'
+                },
                 preConfirm: () => {
                     const description = document.getElementById('issueDescription').value;
                     if (!description.trim()) {
@@ -368,7 +374,9 @@
                         icon: 'success',
                         title: 'Report Sent',
                         text: 'Thank you for your report. Our team will investigate this issue.',
-                        confirmButtonClass: 'btn btn-apple-primary'
+                        customClass: {
+                        confirmButton: 'btn btn-apple-primary'
+                    }
                     });
                 }
             });

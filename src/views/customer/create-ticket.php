@@ -8,17 +8,17 @@ ob_start();
     <div class="container-xl">
         
         <!-- Page Header -->
-        <div class="row mb-4">
+        <div class="row mb-4 text-center">
             <div class="col-12">
                 <h1 class="display-3 mb-2">Create Support Ticket</h1>
                 <p class="text-muted">Submit your freight support request with detailed information</p>
             </div>
         </div>
         
-        <div class="row g-4">
+        <div class="row g-4 justify-content-center">
             
             <!-- Main Form -->
-            <div class="col-12 col-lg-8">
+            <div class="col-12 col-lg-10 col-xl-8">
                 
                 <!-- Customer Details Card -->
                 <div class="card-apple mb-4">
@@ -190,7 +190,7 @@ ob_start();
                             
                             <!-- File Upload Section -->
                             <div class="mb-4">
-                                <label class="form-label-apple">Evidence Files</label>
+                                <label class="form-label-apple">Supporting Documents</label>
                                 
                                 <!-- Hidden file input -->
                                 <input type="file" class="d-none" id="fileInput" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.txt,.xls,.xlsx" multiple>
@@ -199,7 +199,7 @@ ob_start();
                                 <div class="upload-zone border-2 border-dashed rounded p-4 text-center" id="uploadZone">
                                     <div class="upload-placeholder">
                                         <i class="fas fa-cloud-upload-alt text-muted mb-3" style="font-size: 3rem;"></i>
-                                        <h5 class="mb-3">Upload Evidence Files</h5>
+                                        <h5 class="mb-3">Upload Supporting Documents</h5>
                                         <button type="button" class="btn btn-apple-primary btn-lg mb-3" onclick="selectFiles()">
                                             <i class="fas fa-folder-open me-2"></i>Browse Files
                                         </button>
@@ -216,9 +216,7 @@ ob_start();
                                     <!-- Compression Progress -->
                                     <div class="compression-progress d-none mt-3" id="compressionProgress">
                                         <div class="d-flex align-items-center">
-                                            <div class="spinner-border spinner-border-sm text-apple-blue me-2" role="status">
-                                                <span class="visually-hidden">Compressing...</span>
-                                            </div>
+                                            <div class="loader me-2" style="width: 20px; height: 20px;"></div>
                                             <span class="text-muted">Compressing files...</span>
                                         </div>
                                         <div class="progress mt-2" style="height: 4px;">
@@ -254,107 +252,7 @@ ob_start();
                 </div>
             </div>
             
-            <!-- Guidelines Sidebar -->
-            <div class="col-12 col-lg-4">
-                
-                <!-- Before Submission -->
-                <div class="card-apple-glass mb-4">
-                    <div class="card-body">
-                        <h6 class="card-title">
-                            <i class="fas fa-clipboard-check text-apple-blue me-2"></i>
-                            Before Submission
-                        </h6>
-                        
-                        <div class="checklist">
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="check1">
-                                <label class="form-check-label small" for="check1">
-                                    All required fields are completed
-                                </label>
-                            </div>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="check2">
-                                <label class="form-check-label small" for="check2">
-                                    Accurate location details provided
-                                </label>
-                            </div>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="check3">
-                                <label class="form-check-label small" for="check3">
-                                    Date and time of incident included
-                                </label>
-                            </div>
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="check4">
-                                <label class="form-check-label small" for="check4">
-                                    Supporting documents attached (if available)
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="check5">
-                                <label class="form-check-label small" for="check5">
-                                    Wagon details are accurate
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- After Submission -->
-                <div class="card-apple mb-4">
-                    <div class="card-body">
-                        <h6 class="card-title">
-                            <i class="fas fa-info-circle text-apple-blue me-2"></i>
-                            After Submission
-                        </h6>
-                        
-                        <ul class="list-unstyled small">
-                            <li class="mb-2">
-                                <i class="fas fa-check text-success me-2"></i>
-                                Unique ticket ID generated
-                            </li>
-                            <li class="mb-2">
-                                <i class="fas fa-envelope text-info me-2"></i>
-                                Email confirmation sent
-                            </li>
-                            <li class="mb-2">
-                                <i class="fas fa-clock text-warning me-2"></i>
-                                Response within 24-48 hours
-                            </li>
-                            <li class="mb-2">
-                                <i class="fas fa-bell text-primary me-2"></i>
-                                SMS/Email updates on progress
-                            </li>
-                            <li>
-                                <i class="fas fa-eye text-secondary me-2"></i>
-                                Track status in "My Tickets"
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <!-- Help Section -->
-                <div class="card-apple-glass">
-                    <div class="card-body">
-                        <h6 class="card-title">
-                            <i class="fas fa-question-circle text-apple-blue me-2"></i>
-                            Need Help?
-                        </h6>
-                        
-                        <div class="d-grid gap-2">
-                            <a href="<?= Config::getAppUrl() ?>/help" class="btn btn-apple-glass btn-sm">
-                                <i class="fas fa-book me-1"></i>Help Guide
-                            </a>
-                            <button class="btn btn-apple-glass btn-sm" onclick="showContactSupport()">
-                                <i class="fas fa-headset me-1"></i>Contact Support
-                            </button>
-                            <button class="btn btn-apple-glass btn-sm" onclick="showSampleTicket()">
-                                <i class="fas fa-eye me-1"></i>Sample Ticket
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            
         </div>
     </div>
 </section>
@@ -1022,7 +920,9 @@ function showSampleTicket() {
                 <p><strong>Reference:</strong> FNR: FNR123456789, e-Indent: IND789456</p>
             </div>
         `,
-        confirmButtonClass: 'btn btn-apple-primary',
+        customClass: {
+            confirmButton: 'btn btn-apple-primary'
+        },
         confirmButtonText: 'Got it!'
     });
 }

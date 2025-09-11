@@ -7,6 +7,7 @@
 require_once 'BaseController.php';
 require_once __DIR__ . '/../utils/Validator.php';
 require_once __DIR__ . '/../utils/FileUploader.php';
+require_once __DIR__ . '/../utils/WorkflowEngine.php';
 
 class CustomerController extends BaseController {
     
@@ -389,13 +390,14 @@ class CustomerController extends BaseController {
     }
     
     public function updateProfile() {
-        $this->validateCSRF();
-        $customer = $this->getCurrentUser();
-        
-        $validator = new Validator();
+        try {
+            $this->validateCSRF();
+            $customer = $this->getCurrentUser();
+            
+            $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'name' => 'required|min:2|max:100',
-            'mobile' => 'required|phone|unique:customers,mobile,' . $customer['customer_id'],
+            'mobile' => 'required|phone|unique:customers,mobile,' . $customer['customer_id'] . ',customer_id',
             'company_name' => 'required|min:2|max:150',
             'designation' => 'max:100'
         ]);
@@ -441,6 +443,14 @@ class CustomerController extends BaseController {
             $this->json([
                 'success' => false,
                 'message' => 'Failed to update profile. Please try again.'
+            ], 500);
+        }
+        } catch (Exception $e) {
+            error_log("Critical profile update error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+            
+            $this->json([
+                'success' => false,
+                'message' => 'System error occurred while updating profile.'
             ], 500);
         }
     }
@@ -802,11 +812,11 @@ class CustomerController extends BaseController {
             'Getting Started' => [
                 [
                     'question' => 'How do I create my first support ticket?',
-                    'answer' => 'Navigate to "Create New Ticket" from your dashboard, select the appropriate category and subcategory, fill in all required details including location and wagon information, describe your issue clearly, and upload any supporting evidence files.'
+                    'answer' => 'Navigate to "Create New Ticket" from your dashboard, select the appropriate category and subcategory, fill in all required details including location and wagon information, describe your issue clearly, and upload any supporting documents.'
                 ],
                 [
                     'question' => 'What information should I include in my ticket?',
-                    'answer' => 'Include detailed information about the issue location (shed/terminal), affected wagon numbers, specific problem description, time of occurrence, and any relevant documentation or photos as evidence.'
+                    'answer' => 'Include detailed information about the issue location (shed/terminal), affected wagon numbers, specific problem description, time of occurrence, and any relevant documentation or photos as supporting documents.'
                 ],
                 [
                     'question' => 'How long does it take to get a response?',
@@ -820,7 +830,7 @@ class CustomerController extends BaseController {
                 ],
                 [
                     'question' => 'Can I add more information to my ticket after submission?',
-                    'answer' => 'Yes, you can respond to your ticket with additional information, clarifications, or new evidence files. Railway staff may also request additional information.'
+                    'answer' => 'Yes, you can respond to your ticket with additional information, clarifications, or new supporting documents. Railway staff may also request additional information.'
                 ],
                 [
                     'question' => 'What do the different ticket statuses mean?',
@@ -843,7 +853,7 @@ class CustomerController extends BaseController {
             ],
             'Technical Issues' => [
                 [
-                    'question' => 'What file types can I upload as evidence?',
+                    'question' => 'What file types can I upload as supporting documents?',
                     'answer' => 'Supported formats: Images (JPG, PNG, GIF), Documents (PDF, DOC, DOCX), Spreadsheets (XLS, XLSX). Maximum file size is 10MB per file, maximum 5 files per ticket.'
                 ],
                 [
@@ -927,7 +937,7 @@ class CustomerController extends BaseController {
                 'description' => 'Learn how to monitor your ticket status and responses'
             ],
             [
-                'title' => 'Uploading Evidence Files',
+                'title' => 'Uploading Supporting Documents',
                 'duration' => '2:15',
                 'thumbnail' => '/assets/images/tutorials/upload-evidence-thumb.jpg',
                 'url' => '/help/videos/upload-evidence',
@@ -1024,6 +1034,307 @@ class CustomerController extends BaseController {
             return is_dir($uploadsDir) && is_writable($uploadsDir);
         } catch (Exception $e) {
             return false;
+        }
+    }
+    
+    public function provideAdditionalInfo($ticketId) {
+        $this->validateCSRF();
+        $customer = $this->getCurrentUser();
+        
+        // Verify ticket belongs to customer and is awaiting info or pending
+        $ticket = $this->db->fetch(
+            "SELECT * FROM complaints WHERE complaint_id = ? AND customer_id = ? AND status IN ('awaiting_info', 'pending')",
+            [$ticketId, $customer['id']]
+        );
+        
+        if (!$ticket) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ticket not found or not available for additional information.'
+            ], 404);
+        }
+        
+        $additionalInfo = trim($_POST['additional_info'] ?? '');
+        
+        if (empty($additionalInfo)) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Additional information is required.'
+            ], 400);
+        }
+        
+        try {
+            $this->db->beginTransaction();
+            
+            // Append additional info to existing description with separator
+            $currentDescription = $ticket['description'];
+            $updatedDescription = $currentDescription . "\n\n--- Additional Info ---\n" . $additionalInfo;
+            
+            // Handle supporting files if any
+            $uploadedFiles = [];
+            if (!empty($_FILES['supporting_files'])) {
+                $fileUploader = new FileUploader();
+                
+                // Handle multiple files uploaded via supporting_files array
+                $files = $_FILES['supporting_files'];
+                if (isset($files['name']) && is_array($files['name'])) {
+                    // Multiple files format
+                    for ($i = 0; $i < count($files['name']); $i++) {
+                        if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                            $singleFile = [
+                                'name' => $files['name'][$i],
+                                'type' => $files['type'][$i],
+                                'tmp_name' => $files['tmp_name'][$i],
+                                'size' => $files['size'][$i],
+                                'error' => $files['error'][$i]
+                            ];
+                            
+                            $uploadResult = $fileUploader->uploadSingleEvidence($singleFile, $ticketId);
+                            if ($uploadResult['success']) {
+                                // Insert evidence record
+                                $evidenceId = $this->db->query(
+                                    "INSERT INTO evidence (complaint_id, file_name_1, file_type_1, uploaded_by_type, uploaded_by_id) VALUES (?, ?, ?, ?, ?)",
+                                    [
+                                        $ticketId,
+                                        $uploadResult['file_name'],
+                                        $uploadResult['file_type'],
+                                        'customer',
+                                        $this->session->get('customer_id')
+                                    ]
+                                );
+                                
+                                $uploadedFiles[] = [
+                                    'id' => $evidenceId,
+                                    'original_name' => $uploadResult['original_name'],
+                                    'file_name' => $uploadResult['file_name']
+                                ];
+                            } else {
+                                throw new Exception('File upload failed for ' . $singleFile['name'] . ': ' . $uploadResult['message']);
+                            }
+                        }
+                    }
+                } else {
+                    // Single file format
+                    if ($files['error'] === UPLOAD_ERR_OK) {
+                        $uploadResult = $fileUploader->uploadSingleEvidence($files, $ticketId);
+                        if ($uploadResult['success']) {
+                            // Insert evidence record
+                            $evidenceId = $this->db->query(
+                                "INSERT INTO evidence (complaint_id, original_name, file_name, file_size, file_type, uploaded_at) VALUES (?, ?, ?, ?, ?, NOW())",
+                                [
+                                    $ticketId,
+                                    $uploadResult['original_name'],
+                                    $uploadResult['file_name'],
+                                    $uploadResult['file_size'],
+                                    $uploadResult['file_type']
+                                ]
+                            );
+                            
+                            $uploadedFiles[] = [
+                                'id' => $evidenceId,
+                                'original_name' => $uploadResult['original_name'],
+                                'file_name' => $uploadResult['file_name']
+                            ];
+                        } else {
+                            throw new Exception('File upload failed: ' . $uploadResult['message']);
+                        }
+                    }
+                }
+            }
+            
+            // Update ticket description and status
+            $this->db->query(
+                "UPDATE complaints SET description = ?, status = 'pending', updated_at = NOW() WHERE complaint_id = ?",
+                [$updatedDescription, $ticketId]
+            );
+            
+            // Add transaction log
+            $remarkText = $additionalInfo;
+            if (!empty($uploadedFiles)) {
+                $fileNames = array_column($uploadedFiles, 'original_name');
+                $remarkText .= " (with " . count($fileNames) . " supporting document(s): " . implode(', ', $fileNames) . ")";
+            }
+            
+            $this->db->query(
+                "INSERT INTO transactions (complaint_id, transaction_type, remarks, created_by_type, created_by_id, created_at) VALUES (?, ?, ?, ?, ?, NOW())",
+                [$ticketId, 'info_provided', $remarkText, 'customer', $customer['id']]
+            );
+            
+            // Process workflow
+            $workflowEngine = new WorkflowEngine();
+            $workflowResult = $workflowEngine->processTicketWorkflow(
+                $ticketId,
+                'provide_info',
+                $customer['id'],
+                'customer',
+                ['additional_info' => $additionalInfo],
+                true // Skip transaction since we already started one
+            );
+            
+            if (!$workflowResult['success']) {
+                throw new Exception($workflowResult['error']);
+            }
+            
+            $this->db->commit();
+            
+            return $this->json([
+                'success' => true,
+                'message' => 'Additional information provided successfully. Your ticket is now back under review.'
+            ]);
+            
+        } catch (Exception $e) {
+            $this->db->rollback();
+            error_log("Error providing additional info: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            
+            return $this->json([
+                'success' => false,
+                'message' => 'Failed to submit additional information: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    public function uploadEvidence($ticketId) {
+        $this->validateCSRF();
+        $customer = $this->getCurrentUser();
+        
+        // Verify ticket belongs to customer
+        $ticket = $this->db->fetch(
+            "SELECT * FROM complaints WHERE complaint_id = ? AND customer_id = ?",
+            [$ticketId, $customer['id']]
+        );
+        
+        if (!$ticket) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ticket not found.'
+            ], 404);
+        }
+        
+        // Check current evidence count
+        $result = $this->db->fetch(
+            "SELECT COUNT(*) as count FROM evidence WHERE complaint_id = ?",
+            [$ticketId]
+        );
+        $currentEvidenceCount = $result['count'];
+        
+        if ($currentEvidenceCount >= 3) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Maximum 3 supporting documents allowed per ticket.'
+            ], 400);
+        }
+        
+        if (!isset($_FILES['evidence']) || empty($_FILES['evidence']['tmp_name'])) {
+            return $this->json([
+                'success' => false,
+                'message' => 'No file uploaded.'
+            ], 400);
+        }
+        
+        try {
+            // Process the uploaded file with compression
+            $fileUploader = new FileUploader();
+            $uploadResult = $fileUploader->uploadSingleEvidence($_FILES['evidence'], $ticketId);
+            
+            if (!$uploadResult['success']) {
+                return $this->json([
+                    'success' => false,
+                    'message' => $uploadResult['message']
+                ], 400);
+            }
+            
+            // Insert evidence record
+            $evidenceId = $this->db->query(
+                "INSERT INTO evidence (complaint_id, original_name, file_name, file_size, file_type, uploaded_at) VALUES (?, ?, ?, ?, ?, NOW())",
+                [
+                    $ticketId,
+                    $uploadResult['original_name'],
+                    $uploadResult['file_name'],
+                    $uploadResult['file_size'],
+                    $uploadResult['file_type']
+                ]
+            );
+            
+            // Add transaction log
+            $this->db->query(
+                "INSERT INTO transactions (complaint_id, transaction_type, remarks, created_by_type, created_by_id, created_at) VALUES (?, ?, ?, ?, ?, NOW())",
+                [$ticketId, 'evidence_uploaded', 'New evidence file uploaded: ' . $uploadResult['original_name'], 'customer', $customer['id']]
+            );
+            
+            return $this->json([
+                'success' => true,
+                'message' => 'Supporting document uploaded successfully.',
+                'evidence_id' => $evidenceId,
+                'file_info' => [
+                    'original_name' => $uploadResult['original_name'],
+                    'file_size' => $uploadResult['file_size'],
+                    'file_type' => $uploadResult['file_type']
+                ]
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Error uploading evidence: " . $e->getMessage());
+            
+            return $this->json([
+                'success' => false,
+                'message' => 'Failed to upload supporting document. Please try again.'
+            ], 500);
+        }
+    }
+    
+    public function deleteEvidence($ticketId, $evidenceId) {
+        $this->validateCSRF();
+        $customer = $this->getCurrentUser();
+        
+        // Verify evidence belongs to customer's ticket
+        $evidence = $this->db->fetch(
+            "SELECT e.*, c.customer_id FROM evidence e 
+             JOIN complaints c ON e.complaint_id = c.complaint_id 
+             WHERE e.id = ? AND e.complaint_id = ? AND c.customer_id = ?",
+            [$evidenceId, $ticketId, $customer['id']]
+        );
+        
+        if (!$evidence) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Supporting document not found.'
+            ], 404);
+        }
+        
+        try {
+            $this->db->beginTransaction();
+            
+            // Delete from database
+            $this->db->query("DELETE FROM evidence WHERE id = ?", [$evidenceId]);
+            
+            // Delete physical file
+            $filePath = Config::getUploadPath() . $evidence['file_name'];
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+            
+            // Add transaction log
+            $this->db->query(
+                "INSERT INTO transactions (complaint_id, transaction_type, remarks, created_by_type, created_by_id, created_at) VALUES (?, ?, ?, ?, ?, NOW())",
+                [$ticketId, 'evidence_deleted', 'Evidence file deleted: ' . $evidence['original_name'], 'customer', $customer['id']]
+            );
+            
+            $this->db->commit();
+            
+            return $this->json([
+                'success' => true,
+                'message' => 'Supporting document deleted successfully.'
+            ]);
+            
+        } catch (Exception $e) {
+            $this->db->rollback();
+            error_log("Error deleting evidence: " . $e->getMessage());
+            
+            return $this->json([
+                'success' => false,
+                'message' => 'Failed to delete supporting document. Please try again.'
+            ], 500);
         }
     }
 }

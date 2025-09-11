@@ -1,0 +1,145 @@
+/* Custom styles for the Help & User Manual page - Integrated with Apple Design System */
+
+.help-container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.help-header {
+    background: linear-gradient(135deg, var(--apple-blue), var(--apple-black));
+    color: var(--apple-white);
+    padding: var(--apple-space-6);
+    border-radius: var(--apple-radius-large);
+    text-align: center;
+    margin-bottom: var(--apple-space-8);
+    box-shadow: var(--apple-shadow-medium);
+}
+
+.help-header h1 {
+    font-weight: var(--apple-font-semibold);
+    font-family: var(--apple-font-family);
+}
+
+.role-section {
+    margin-bottom: var(--apple-space-8);
+    padding: var(--apple-space-6);
+    background-color: var(--apple-white);
+    border: 1px solid var(--apple-glass-border);
+    border-radius: var(--apple-radius-large);
+    box-shadow: var(--apple-shadow-soft);
+    backdrop-filter: blur(var(--apple-glass-blur));
+    -webkit-backdrop-filter: blur(var(--apple-glass-blur));
+}
+
+.role-title {
+    font-weight: var(--apple-font-semibold);
+    color: var(--apple-black);
+    border-bottom: 4px solid var(--apple-blue);
+    padding-bottom: var(--apple-space-2);
+    margin-bottom: var(--apple-space-4);
+    display: flex;
+    align-items: center;
+    font-family: var(--apple-font-family);
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 0.6em 0.9em;
+    font-size: 1.1rem;
+    font-weight: var(--apple-font-semibold);
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: var(--apple-radius-small);
+    color: var(--apple-white);
+    margin-right: var(--apple-space-2);
+    font-family: var(--apple-font-family);
+}
+
+.role-customer { background-color: #28a745; }
+.role-controller { background-color: #ffc107; color: var(--apple-black); }
+.role-viewer { background-color: var(--apple-gray); }
+.role-admin { background-color: #dc3545; }
+
+.flowchart-container {
+    background-color: var(--apple-off-white);
+    padding: var(--apple-space-4);
+    border-radius: var(--apple-radius-medium);
+    border: 1px solid var(--apple-glass-border);
+    margin-top: var(--apple-space-4);
+    margin-bottom: var(--apple-space-5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: var(--apple-shadow-soft);
+}
+
+.manual h4 {
+    color: var(--apple-blue);
+    margin-top: var(--apple-space-5);
+    margin-bottom: var(--apple-space-3);
+    font-weight: var(--apple-font-semibold);
+    font-family: var(--apple-font-family);
+}
+
+.manual h5 {
+    color: var(--apple-black);
+    margin-top: var(--apple-space-4);
+    margin-bottom: var(--apple-space-2);
+    font-weight: var(--apple-font-semibold);
+    font-family: var(--apple-font-family);
+}
+
+.manual ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.manual li {
+    margin-bottom: var(--apple-space-2);
+    padding-left: var(--apple-space-5);
+    position: relative;
+    line-height: 1.7;
+    font-family: var(--apple-font-family);
+}
+
+.manual li::before {
+    content: "\f058"; /* FontAwesome check-circle icon */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    position: absolute;
+    left: 0;
+    top: 6px;
+    color: #28a745;
+    font-size: 1.2rem;
+}
+
+/* Mermaid diagram specific styles */
+.mermaid {
+    text-align: center;
+    font-family: var(--apple-font-family);
+}
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+    .help-container {
+        padding: var(--apple-space-2);
+    }
+    
+    .help-header {
+        padding: var(--apple-space-4);
+        margin-bottom: var(--apple-space-6);
+    }
+    
+    .role-section {
+        padding: var(--apple-space-4);
+        margin-bottom: var(--apple-space-6);
+    }
+    
+    .flowchart-container {
+        padding: var(--apple-space-3);
+        margin-top: var(--apple-space-3);
+        margin-bottom: var(--apple-space-4);
+    }
+}

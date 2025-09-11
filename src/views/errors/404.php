@@ -180,7 +180,9 @@
                     icon: 'info',
                     title: 'Search Results',
                     text: `No exact matches found for "${query}". Try the popular links below or contact support.`,
-                    confirmButtonClass: 'btn btn-apple-primary'
+                    customClass: {
+                        confirmButton: 'btn btn-apple-primary'
+                    }
                 });
             }
         }

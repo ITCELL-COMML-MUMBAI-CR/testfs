@@ -103,7 +103,6 @@ Features:
 •	Customer Login Section: 
 o	Email or Phone number (flexible input)
 o	Password field
-o	"Remember Me" option
 o	"Forgot Password" link
 •	Admin/Staff Login Section: 
 o	Login ID field

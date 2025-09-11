@@ -15,10 +15,10 @@ ob_start();
             </div>
         </div>
         
-        <div class="row g-4">
+        <div class="row g-4 justify-content-center">
             
             <!-- Profile Form -->
-            <div class="col-12 col-lg-8">
+            <div class="col-12 col-lg-10 col-xl-8">
                 
                 <!-- Personal Information -->
                 <div class="card-apple mb-4">
@@ -172,101 +172,6 @@ ob_start();
                     </button>
                 </div>
             </div>
-            
-            <!-- Sidebar -->
-            <div class="col-12 col-lg-4">
-                
-                <!-- Profile Summary -->
-                <div class="card-apple mb-4">
-                    <div class="card-body text-center">
-                        <div class="mb-3">
-                            <div class="bg-apple-blue rounded-circle d-inline-flex align-items-center justify-content-center" 
-                                 style="width: 80px; height: 80px;">
-                                <i class="fas fa-user fa-2x"></i>
-                            </div>
-                        </div>
-                        <h6 class="fw-semibold mb-1"><?= htmlspecialchars($customer_details['name']) ?></h6>
-                        <div class="text-muted small mb-2"><?= htmlspecialchars($customer_details['company_name']) ?></div>
-                        <span class="badge badge-apple <?= $customer_details['status'] === 'approved' ? 'bg-success' : 'bg-warning' ?>">
-                            <?= ucfirst($customer_details['status']) ?>
-                        </span>
-                    </div>
-                </div>
-                
-                <!-- Quick Stats -->
-                <div class="card-apple-glass mb-4">
-                    <div class="card-body">
-                        <h6 class="card-title">
-                            <i class="fas fa-chart-line text-apple-blue me-2"></i>
-                            Account Summary
-                        </h6>
-                        
-                        <div class="row g-3 text-center">
-                            <div class="col-6">
-                                <div class="fw-semibold text-apple-blue fs-4" id="totalTickets">-</div>
-                                <small class="text-muted">Total Tickets</small>
-                            </div>
-                            <div class="col-6">
-                                <div class="fw-semibold text-apple-blue fs-4" id="activeTickets">-</div>
-                                <small class="text-muted">Active Tickets</small>
-                            </div>
-                            <div class="col-6">
-                                <div class="fw-semibold text-apple-blue fs-4" id="resolvedTickets">-</div>
-                                <small class="text-muted">Resolved</small>
-                            </div>
-                            <div class="col-6">
-                                <div class="fw-semibold text-success fs-4" id="satisfactionRate">-</div>
-                                <small class="text-muted">Satisfaction</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Security -->
-                <div class="card-apple-glass mb-4">
-                    <div class="card-body">
-                        <h6 class="card-title">
-                            <i class="fas fa-shield-alt text-apple-blue me-2"></i>
-                            Security & Privacy
-                        </h6>
-                        
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-apple-glass btn-sm" onclick="showPasswordChange()">
-                                <i class="fas fa-key me-1"></i>Change Password
-                            </button>
-                            <button class="btn btn-apple-glass btn-sm" onclick="showLoginHistory()">
-                                <i class="fas fa-history me-1"></i>Login History
-                            </button>
-                            <button class="btn btn-apple-glass btn-sm" onclick="downloadData()">
-                                <i class="fas fa-download me-1"></i>Download My Data
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Support -->
-                <div class="card-apple-glass">
-                    <div class="card-body">
-                        <h6 class="card-title">
-                            <i class="fas fa-question-circle text-apple-blue me-2"></i>
-                            Need Help?
-                        </h6>
-                        
-                        <p class="small text-muted mb-3">
-                            Having trouble updating your profile? We're here to help.
-                        </p>
-                        
-                        <div class="d-grid gap-2">
-                            <a href="<?= Config::getAppUrl() ?>/help" class="btn btn-apple-glass btn-sm">
-                                <i class="fas fa-book me-1"></i>Help Center
-                            </a>
-                            <button class="btn btn-apple-glass btn-sm" onclick="contactSupport()">
-                                <i class="fas fa-headset me-1"></i>Contact Support
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </section>
@@ -274,7 +179,6 @@ ob_start();
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     setupFormValidation();
-    loadAccountStats();
     
     // Mobile number formatting
     document.getElementById('mobile').addEventListener('input', function() {
@@ -466,8 +370,10 @@ function showPasswordChange() {
         `,
         showCancelButton: true,
         confirmButtonText: 'Change Password',
-        confirmButtonClass: 'btn btn-apple-primary',
-        cancelButtonClass: 'btn btn-apple-glass',
+        customClass: {
+            confirmButton: 'btn btn-apple-primary',
+            cancelButton: 'btn btn-apple-glass'
+        },
         width: '500px',
         preConfirm: () => {
             const currentPassword = document.getElementById('currentPassword').value;
@@ -593,47 +499,6 @@ function copyCustomerId(customerId) {
         });
 }
 
-function loadAccountStats() {
-    fetch('<?= Config::getAppUrl() ?>/api/customer/stats')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('totalTickets').textContent = data.stats.total || 0;
-                document.getElementById('activeTickets').textContent = data.stats.active || 0;
-                document.getElementById('resolvedTickets').textContent = data.stats.resolved || 0;
-                document.getElementById('satisfactionRate').textContent = (data.stats.satisfaction_rate || 0) + '%';
-            }
-        })
-        .catch(error => {
-            console.log('Failed to load account stats');
-        });
-}
-
-function showLoginHistory() {
-    window.SAMPARK.ui.showInfo('Login History', 'Feature coming soon. You will be able to view your recent login activities and security events.');
-}
-
-function downloadData() {
-    window.SAMPARK.ui.confirm(
-        'Download My Data',
-        'This will generate a comprehensive report of all your data including tickets, communications, and account information. Continue?',
-        'Yes, Download',
-        'Cancel'
-    ).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = '<?= Config::getAppUrl() ?>/api/customer/export-data';
-        }
-    });
-}
-
-function contactSupport() {
-    window.SAMPARK.ui.showInfo('Contact Support', 
-        'Email: support@sampark.railway.gov.in<br>' +
-        'Phone: 1800-XXX-XXXX<br>' +
-        'Hours: Mon-Fri 9:00 AM - 6:00 PM<br><br>' +
-        'Please mention your Customer ID: <?= $customer_details['customer_id'] ?>'
-    );
-}
 </script>
 
 <style>

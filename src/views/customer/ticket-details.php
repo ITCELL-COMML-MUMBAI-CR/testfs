@@ -181,13 +181,13 @@ ob_start();
                     </div>
                 </div>
                 
-                <!-- Evidence Files -->
+                <!-- Supporting Documents -->
                 <?php if (!empty($evidence)): ?>
                     <div class="card-apple mb-4">
                         <div class="card-body">
                             <h5 class="card-title">
                                 <i class="fas fa-paperclip text-apple-blue me-2"></i>
-                                Evidence Files
+                                Supporting Documents
                             </h5>
                             
                             <div class="row g-3">
@@ -202,7 +202,7 @@ ob_start();
                                                 
                                                 <?php if ($isImage): ?>
                                                     <img src="<?= Config::getPublicUploadPath() ?><?= htmlspecialchars($file['file_name']) ?>" 
-                                                         alt="Evidence" 
+                                                         alt="Supporting Document" 
                                                          class="img-thumbnail mb-2" 
                                                          style="max-height: 150px; cursor: pointer;"
                                                          onclick="viewImage('<?= Config::getPublicUploadPath() ?><?= htmlspecialchars($file['file_name']) ?>', '<?= htmlspecialchars($file['original_name']) ?>')">
@@ -223,7 +223,7 @@ ob_start();
                                                     <a href="<?= Config::getPublicUploadPath() ?><?= htmlspecialchars($file['file_name']) ?>" 
                                                        target="_blank" 
                                                        class="btn btn-apple-glass btn-sm">
-                                                        <i class="fas fa-download me-1"></i>Download
+                                                        <i class="fas fa-eye me-1"></i>View
                                                     </a>
                                                 </div>
                                             </div>
@@ -307,6 +307,16 @@ ob_start();
                                     <i class="fas fa-star me-1"></i>Provide Feedback
                                 </button>
                             </div>
+                        <?php elseif ($ticket['status'] === 'awaiting_info'): ?>
+                            <div class="mt-3">
+                                <p class="small text-info mb-2">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Additional information is required for this ticket
+                                </p>
+                                <button class="btn btn-info btn-sm" onclick="provideAdditionalInfo()">
+                                    <i class="fas fa-plus-circle me-1"></i>Provide Additional Info
+                                </button>
+                            </div>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -351,6 +361,12 @@ ob_start();
                             <?php if ($requires_feedback): ?>
                                 <button class="btn btn-warning" onclick="provideFeedback()">
                                     <i class="fas fa-star me-2"></i>Provide Feedback
+                                </button>
+                            <?php endif; ?>
+                            
+                            <?php if ($ticket['status'] === 'awaiting_info'): ?>
+                                <button class="btn btn-info" onclick="provideAdditionalInfo()">
+                                    <i class="fas fa-plus-circle me-2"></i>Provide Additional Info
                                 </button>
                             <?php endif; ?>
                             
@@ -438,8 +454,10 @@ function provideFeedback() {
         `,
         showCancelButton: true,
         confirmButtonText: 'Submit Feedback',
-        confirmButtonClass: 'btn btn-apple-primary',
-        cancelButtonClass: 'btn btn-apple-glass',
+        customClass: {
+            confirmButton: 'btn btn-apple-primary',
+            cancelButton: 'btn btn-apple-glass'
+        },
         width: '600px',
         preConfirm: () => {
             const rating = document.querySelector('input[name="rating"]:checked');
@@ -653,6 +671,69 @@ function contactSupport() {
         'Please mention your ticket ID: #<?= $ticket['complaint_id'] ?>'
     );
 }
+
+function provideAdditionalInfo() {
+    Swal.fire({
+        title: 'Provide Additional Information',
+        html: `
+            <div class="text-start">
+                <p class="mb-3">Please provide the additional information requested for ticket #<?= $ticket['complaint_id'] ?>.</p>
+                
+                <div class="mb-3">
+                    <label for="additionalInfoText" class="form-label">Additional Information</label>
+                    <textarea class="form-control" id="additionalInfoText" rows="5" 
+                              placeholder="Provide the requested information, clarifications, or additional details..."></textarea>
+                    <small class="text-muted">This information will be appended to your original ticket description</small>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Submit Information',
+        customClass: {
+            confirmButton: 'btn btn-info',
+            cancelButton: 'btn btn-secondary'
+        },
+        width: '600px',
+        preConfirm: () => {
+            const additionalInfo = document.getElementById('additionalInfoText').value.trim();
+            
+            if (!additionalInfo) {
+                Swal.showValidationMessage('Please provide the additional information');
+                return false;
+            }
+            
+            return additionalInfo;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitAdditionalInfo(result.value);
+        }
+    });
+}
+
+function submitAdditionalInfo(additionalInfo) {
+    const formData = new FormData();
+    formData.append('csrf_token', '<?= $csrf_token ?>');
+    formData.append('additional_info', additionalInfo);
+    
+    fetch('<?= Config::getAppUrl() ?>/customer/tickets/<?= $ticket['complaint_id'] ?>/provide-info', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.SAMPARK.ui.showSuccess('Information Submitted', data.message);
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            window.SAMPARK.ui.showError('Submission Failed', data.message);
+        }
+    })
+    .catch(error => {
+        window.SAMPARK.ui.showError('Error', 'Failed to submit additional information. Please try again.');
+    });
+}
+
 </script>
 
 <style>

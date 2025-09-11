@@ -25,97 +25,12 @@ ob_start();
             </div>
         </div>
         
-        <!-- Filters Card -->
-        <div class="card-apple-glass mb-4">
-            <div class="card-body">
-                <form id="filterForm" method="GET" action="<?= Config::getAppUrl() ?>/customer/tickets">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-2">
-                            <label for="status" class="form-label-apple small">Status</label>
-                            <select class="form-control form-control-apple" id="status" name="status">
-                                <option value="">All Status</option>
-                                <?php foreach ($status_options as $key => $label): ?>
-                                    <?php if ($key !== 'closed'): // Don't show closed by default ?>
-                                        <option value="<?= $key ?>" <?= $filters['status'] === $key ? 'selected' : '' ?>>
-                                            <?= $label ?>
-                                        </option>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-2">
-                            <label for="priority" class="form-label-apple small">Priority</label>
-                            <select class="form-control form-control-apple" id="priority" name="priority">
-                                <option value="">All Priority</option>
-                                <?php foreach ($priority_options as $key => $label): ?>
-                                    <option value="<?= $key ?>" <?= $filters['priority'] === $key ? 'selected' : '' ?>>
-                                        <?= $label ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-2">
-                            <label for="date_from" class="form-label-apple small">From Date</label>
-                            <input type="date" 
-                                   class="form-control form-control-apple" 
-                                   id="date_from" 
-                                   name="date_from" 
-                                   value="<?= htmlspecialchars($filters['date_from']) ?>">
-                        </div>
-                        
-                        <div class="col-md-2">
-                            <label for="date_to" class="form-label-apple small">To Date</label>
-                            <input type="date" 
-                                   class="form-control form-control-apple" 
-                                   id="date_to" 
-                                   name="date_to" 
-                                   value="<?= htmlspecialchars($filters['date_to']) ?>">
-                        </div>
-                        
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-apple-primary w-100">
-                                <i class="fas fa-filter me-1"></i>Filter
-                            </button>
-                        </div>
-                        
-                        <div class="col-md-2">
-                            <a href="<?= Config::getAppUrl() ?>/customer/tickets" class="btn btn-apple-glass w-100">
-                                <i class="fas fa-times me-1"></i>Clear
-                            </a>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-        
         <!-- Tickets Table -->
         <div class="card-apple">
             <div class="card-body">
-                <?php if (!empty($tickets['data'])): ?>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">
-                            Showing <?= count($tickets['data']) ?> of <?= $tickets['total'] ?> tickets
-                        </h5>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-apple-glass btn-sm" onclick="exportTickets('pdf')">
-                                <i class="fas fa-file-pdf me-1"></i>PDF
-                            </button>
-                            <button class="btn btn-apple-glass btn-sm" onclick="exportTickets('excel')">
-                                <i class="fas fa-file-excel me-1"></i>Excel
-                            </button>
-                        </div>
-                    </div>
-                    
+                <?php if (!empty($tickets['data'])): ?>                    
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="card-title mb-0">Support Tickets</h5>
-                        <div class="d-flex align-items-center">
-                            <small class="text-muted last-refresh-time me-3">Last updated: --</small>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="forceRefresh()">
-                                <i class="fas fa-sync-alt me-1"></i>Refresh
-                            </button>
-                        </div>
                     </div>
                     
                     <div class="table-responsive">
@@ -124,11 +39,11 @@ ob_start();
                                 <tr>
                                     <th>Ticket ID</th>
                                     <th>Category</th>
-                                    <th>Priority</th>
                                     <th>Status</th>
                                     <th>Location</th>
-                                    <th>Created</th>
-                                    <th>Age</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Description</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -241,7 +156,7 @@ function copyTicketId(ticketId) {
     }
 }
 
-function provideFeedback(ticketId) {
+window.provideFeedback = function(ticketId) {
     Swal.fire({
         title: 'Provide Feedback',
         html: `
@@ -278,9 +193,22 @@ function provideFeedback(ticketId) {
         `,
         showCancelButton: true,
         confirmButtonText: 'Submit Feedback',
-        confirmButtonClass: 'btn btn-apple-primary',
-        cancelButtonClass: 'btn btn-apple-glass',
+        customClass: {
+            confirmButton: 'btn btn-apple-primary',
+            cancelButton: 'btn btn-apple-glass'
+        },
         width: '600px',
+        didOpen: () => {
+            // Add click handlers for radio button labels
+            document.querySelectorAll('.rating-buttons label').forEach(label => {
+                label.addEventListener('click', function() {
+                    // Remove active class from all labels
+                    document.querySelectorAll('.rating-buttons label').forEach(l => l.classList.remove('active'));
+                    // Add active class to clicked label
+                    this.classList.add('active');
+                });
+            });
+        },
         preConfirm: () => {
             const rating = document.querySelector('input[name="rating"]:checked');
             const remarks = document.getElementById('feedbackRemarks').value.trim();
@@ -405,6 +333,460 @@ function submitFeedbackUpdated(ticketId, feedback) {
         window.SAMPARK.ui.showError('Error', 'Failed to submit feedback. Please try again.');
     });
 }
+
+// Global function for datatable
+window.provideAdditionalInfo = function(ticketId) {
+    showProvideInfoDialog(ticketId);
+}
+
+function showProvideInfoDialog(ticketId) {
+    Swal.fire({
+        title: 'Provide Additional Information',
+        html: `
+            <div class="text-start">
+                <p class="mb-3">Please provide the additional information requested for ticket #${ticketId}.</p>
+                
+                <div class="mb-3">
+                    <label for="additionalInfoText" class="form-label">Additional Information</label>
+                    <textarea class="form-control" id="additionalInfoText" rows="5" 
+                              placeholder="Provide the requested information, clarifications, or additional details..."></textarea>
+                </div>
+                
+                <!-- File Upload Section -->
+                <div class="mb-3">
+                    <label class="form-label">Supporting Documents (Optional)</label>
+                    <input type="file" class="d-none" id="infoFileInput" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.txt,.xls,.xlsx" multiple>
+                    
+                    <div class="upload-zone border-2 border-dashed rounded p-3 text-center" id="infoUploadZone">
+                        <div class="upload-placeholder">
+                            <i class="fas fa-cloud-upload-alt text-muted mb-2" style="font-size: 2rem;"></i>
+                            <p class="mb-2">Click to select files or drag and drop</p>
+                            <button type="button" class="btn btn-outline-primary btn-sm mb-2">
+                                <i class="fas fa-folder-open me-1"></i>Browse Files
+                            </button>
+                            <small class="text-muted d-block">Maximum 3 files, 2MB each (auto-compressed)</small>
+                        </div>
+                        
+                        <div class="upload-preview mt-3" id="infoUploadPreview"></div>
+                        
+                        <div class="compression-progress d-none mt-3" id="infoCompressionProgress">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="loader me-2" style="width: 20px; height: 20px;"></div>
+                                <span class="text-muted">Compressing files...</span>
+                            </div>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%" id="infoCompressionBar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Submit Information',
+        customClass: {
+            confirmButton: 'btn btn-info',
+            cancelButton: 'btn btn-secondary'
+        },
+        width: '700px',
+        didOpen: () => {
+            setupInfoFileUpload();
+        },
+        preConfirm: () => {
+            const additionalInfo = document.getElementById('additionalInfoText').value.trim();
+            
+            if (!additionalInfo) {
+                Swal.showValidationMessage('Please provide the additional information');
+                return false;
+            }
+            
+            // Check if compression is in progress
+            if (!document.getElementById('infoCompressionProgress').classList.contains('d-none')) {
+                Swal.showValidationMessage('Please wait for file compression to complete');
+                return false;
+            }
+            
+            return {
+                additionalInfo: additionalInfo,
+                files: window.infoCompressedFiles || []
+            };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitAdditionalInfoWithFiles(ticketId, result.value);
+        }
+        // Cleanup
+        window.infoSelectedFiles = [];
+        window.infoCompressedFiles = [];
+    });
+}
+
+// File upload functionality for info dialog (using same system as create-ticket)
+window.infoSelectedFiles = [];
+window.infoCompressedFiles = [];
+
+function setupInfoFileUpload() {
+    const uploadZone = document.getElementById('infoUploadZone');
+    const fileInput = document.getElementById('infoFileInput');
+    
+    // Reset state
+    window.infoSelectedFiles = [];
+    window.infoCompressedFiles = [];
+    
+    // Drag and drop handlers
+    uploadZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('border-primary');
+    });
+    
+    uploadZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('border-primary');
+    });
+    
+    uploadZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('border-primary');
+        
+        const files = Array.from(e.dataTransfer.files);
+        handleInfoFileSelection(files);
+    });
+    
+    // File input change handler
+    fileInput.addEventListener('change', function() {
+        handleInfoFileSelection(Array.from(this.files));
+    });
+    
+    // Click handler for the entire zone
+    uploadZone.addEventListener('click', function(e) {
+        // Prevent double triggering
+        if (e.target.tagName !== 'INPUT') {
+            fileInput.click();
+        }
+    });
+}
+
+function handleInfoFileSelection(files) {
+    // Validate file count
+    if (window.infoSelectedFiles.length + files.length > 3) {
+        Swal.showValidationMessage('Maximum 3 files allowed');
+        return;
+    }
+    
+    // Validate each file
+    const validFiles = [];
+    files.forEach(file => {
+        const validation = validateInfoFile(file);
+        if (validation.valid) {
+            validFiles.push(file);
+        } else {
+            Swal.showValidationMessage(`${file.name}: ${validation.errors.join(', ')}`);
+            return;
+        }
+    });
+    
+    if (validFiles.length === 0) return;
+    
+    // Add to selected files
+    window.infoSelectedFiles = window.infoSelectedFiles.concat(validFiles);
+    
+    // Show compression progress
+    showInfoCompressionProgress();
+    
+    // Compress files
+    compressInfoFiles(validFiles);
+}
+
+function validateInfoFile(file) {
+    const maxSize = 20 * 1024 * 1024; // 20MB (will be compressed to 2MB)
+    const allowedTypes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp',
+        'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    
+    const errors = [];
+    
+    if (file.size > maxSize) {
+        errors.push('File too large (max 20MB before compression)');
+    }
+    
+    if (!allowedTypes.includes(file.type)) {
+        errors.push('File type not supported');
+    }
+    
+    return {
+        valid: errors.length === 0,
+        errors: errors
+    };
+}
+
+function showInfoCompressionProgress() {
+    document.getElementById('infoCompressionProgress').classList.remove('d-none');
+}
+
+function hideInfoCompressionProgress() {
+    document.getElementById('infoCompressionProgress').classList.add('d-none');
+}
+
+function updateInfoCompressionProgress(percent) {
+    const progressBar = document.getElementById('infoCompressionBar');
+    progressBar.style.width = percent + '%';
+}
+
+async function compressInfoFiles(files) {
+    const preview = document.getElementById('infoUploadPreview');
+    let processedCount = 0;
+    
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Create preview immediately
+        createInfoFilePreview(file, preview, 'compressing');
+        
+        try {
+            // Compress file using the same method as create-ticket
+            const compressedFile = await compressFileAsyncInfo(file);
+            window.infoCompressedFiles.push(compressedFile);
+            
+            // Update preview status and show compressed size
+            updateInfoFilePreviewStatus(file.name, 'compressed');
+            updateInfoFilePreviewSize(file.name, compressedFile.size);
+            
+        } catch (error) {
+            console.error('Compression failed for', file.name, error);
+            // Use original file if compression fails (fallback)
+            window.infoCompressedFiles.push(file);
+            updateInfoFilePreviewStatus(file.name, 'ready');
+        }
+        
+        processedCount++;
+        updateInfoCompressionProgress((processedCount / files.length) * 100);
+    }
+    
+    // Hide progress
+    hideInfoCompressionProgress();
+}
+
+function createInfoFilePreview(file, container, status = 'pending') {
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'file-preview mb-2';
+    previewDiv.dataset.fileName = file.name;
+    
+    const fileIcon = getInfoFileIcon(file.type);
+    const fileSize = formatInfoFileSize(file.size);
+    
+    previewDiv.innerHTML = `
+        <div class="d-flex align-items-center p-2 border rounded">
+            <div class="file-icon me-3">
+                <i class="${fileIcon} text-muted"></i>
+            </div>
+            <div class="file-info flex-grow-1">
+                <div class="fw-semibold">${file.name}</div>
+                <div class="text-muted small d-flex align-items-center">
+                    <span id="original-size-${file.name}">${fileSize}</span>
+                    <span id="compressed-size-${file.name}" class="ms-2" style="display: none;"></span>
+                </div>
+            </div>
+            <div class="file-status me-2">
+                <span class="badge badge-${getStatusBadgeClass(status)}" id="status-${file.name}">
+                    ${getStatusText(status)}
+                </span>
+            </div>
+            <div class="file-actions">
+                <button type="button" class="btn btn-link btn-sm text-danger" onclick="removeInfoFile('${file.name}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(previewDiv);
+}
+
+function updateInfoFilePreviewStatus(fileName, status) {
+    const statusElement = document.getElementById(`status-${fileName}`);
+    if (statusElement) {
+        switch(status) {
+            case 'compressed':
+                statusElement.className = 'badge badge-success';
+                statusElement.textContent = 'Ready';
+                break;
+            case 'error':
+                statusElement.className = 'badge badge-danger';
+                statusElement.textContent = 'Error';
+                break;
+            case 'ready':
+                statusElement.className = 'badge badge-success';
+                statusElement.textContent = 'Ready';
+                break;
+        }
+    }
+}
+
+function getInfoFileIcon(mimeType) {
+    if (mimeType.startsWith('image/')) return 'fas fa-image text-primary';
+    if (mimeType === 'application/pdf') return 'fas fa-file-pdf text-danger';
+    if (mimeType.includes('word')) return 'fas fa-file-word text-primary';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fas fa-file-excel text-success';
+    if (mimeType === 'text/plain') return 'fas fa-file-alt text-muted';
+    return 'fas fa-file text-muted';
+}
+
+function formatInfoFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function compressFileAsync(file) {
+    return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('action', 'compress');
+        formData.append('csrf_token', CSRF_TOKEN);
+        
+        fetch(APP_URL + '/api/compress-file', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.compressed_data) {
+                // Convert base64 back to file
+                const binaryString = atob(data.compressed_data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                
+                // Create a new File object from the compressed data
+                const compressedFile = new File([bytes], file.name, {
+                    type: file.type,
+                    lastModified: Date.now()
+                });
+                resolve(compressedFile);
+            } else {
+                reject(new Error(data.message || 'Compression failed'));
+            }
+        })
+        .catch(error => {
+            reject(error);
+        });
+    });
+}
+
+// Additional utility functions (same as create-ticket)
+function updateInfoFilePreviewSize(fileName, compressedSize) {
+    const compressedSizeElement = document.getElementById(`compressed-size-${fileName}`);
+    if (compressedSizeElement) {
+        const compressedSizeText = formatInfoFileSize(compressedSize);
+        compressedSizeElement.innerHTML = `<span class="text-success">→ ${compressedSizeText}</span>`;
+        compressedSizeElement.style.display = 'inline';
+    }
+}
+
+function getStatusBadgeClass(status) {
+    switch (status) {
+        case 'compressing': return 'warning';
+        case 'compressed': return 'success';
+        case 'error': return 'danger';
+        case 'ready': return 'success';
+        default: return 'secondary';
+    }
+}
+
+function getStatusText(status) {
+    switch (status) {
+        case 'compressing': return 'Compressing...';
+        case 'compressed': return 'Ready';
+        case 'error': return 'Error';
+        case 'ready': return 'Ready';
+        default: return 'Pending';
+    }
+}
+
+function removeInfoFile(fileName) {
+    // Remove from selected files
+    window.infoSelectedFiles = window.infoSelectedFiles.filter(file => file.name !== fileName);
+    
+    // Remove from compressed files
+    window.infoCompressedFiles = window.infoCompressedFiles.filter(file => file.name !== fileName);
+    
+    // Remove preview
+    const previewElement = document.querySelector(`[data-file-name="${fileName}"]`);
+    if (previewElement) {
+        previewElement.remove();
+    }
+}
+
+function compressFileAsyncInfo(file) {
+    return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('action', 'compress');
+        formData.append('csrf_token', CSRF_TOKEN);
+        
+        fetch(APP_URL + '/api/compress-file', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.compressed_data) {
+                // Convert base64 back to file
+                const binaryString = atob(data.compressed_data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                
+                // Create a new File object from the compressed data
+                const compressedFile = new File([bytes], file.name, {
+                    type: file.type,
+                    lastModified: Date.now()
+                });
+                resolve(compressedFile);
+            } else {
+                reject(new Error(data.message || 'Compression failed'));
+            }
+        })
+        .catch(error => {
+            reject(error);
+        });
+    });
+}
+
+function submitAdditionalInfoWithFiles(ticketId, data) {
+    const formData = new FormData();
+    formData.append('csrf_token', CSRF_TOKEN);
+    formData.append('additional_info', data.additionalInfo);
+    
+    // Add compressed files
+    data.files.forEach((file, index) => {
+        formData.append(`supporting_files[]`, file);
+    });
+    
+    fetch(APP_URL + '/customer/tickets/' + ticketId + '/provide-info', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(responseData => {
+        if (responseData.success) {
+            window.SAMPARK.ui.showSuccess('Information Submitted', responseData.message);
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            window.SAMPARK.ui.showError('Submission Failed', responseData.message);
+        }
+    })
+    .catch(error => {
+        window.SAMPARK.ui.showError('Error', 'Failed to submit information. Please try again.');
+    });
+}
 </script>
 
 <style>
@@ -448,9 +830,28 @@ function submitFeedbackUpdated(ticketId, feedback) {
     transition: all 0.2s ease;
 }
 
-.rating-buttons input[type="radio"]:checked + label {
+.rating-buttons input[type="radio"]:checked + label,
+.rating-buttons label.active {
     transform: scale(1.05);
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.rating-buttons label.active.btn-outline-success {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.rating-buttons label.active.btn-outline-warning {
+    background-color: #ffc107;
+    color: #212529;
+    border-color: #ffc107;
+}
+
+.rating-buttons label.active.btn-outline-danger {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
 }
 
 /* Pagination */

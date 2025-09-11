@@ -22,9 +22,13 @@ class WorkflowEngine {
     /**
      * Process ticket workflow based on current state and action
      */
-    public function processTicketWorkflow($complaintId, $action, $userId, $userType, $data = []) {
+    public function processTicketWorkflow($complaintId, $action, $userId, $userType, $data = [], $skipTransaction = false) {
         try {
-            $this->db->beginTransaction();
+            $transactionStarted = false;
+            if (!$skipTransaction) {
+                $this->db->beginTransaction();
+                $transactionStarted = true;
+            }
             
             // Get current ticket state
             $ticket = $this->getTicketDetails($complaintId);
@@ -54,7 +58,9 @@ class WorkflowEngine {
                 // Send notifications
                 $this->sendWorkflowNotifications($ticket, $action, $result, $userId, $userType);
                 
-                $this->db->commit();
+                if ($transactionStarted) {
+                    $this->db->commit();
+                }
                 
                 return [
                     'success' => true,
@@ -62,7 +68,9 @@ class WorkflowEngine {
                     'message' => $result['message'] ?? 'Workflow action completed successfully'
                 ];
             } else {
-                $this->db->rollback();
+                if ($transactionStarted) {
+                    $this->db->rollback();
+                }
                 return [
                     'success' => false,
                     'error' => $result['error'] ?? 'Workflow action failed'
@@ -70,7 +78,9 @@ class WorkflowEngine {
             }
             
         } catch (Exception $e) {
-            $this->db->rollback();
+            if ($transactionStarted) {
+                $this->db->rollback();
+            }
             error_log("Workflow error: " . $e->getMessage());
             return [
                 'success' => false,
@@ -90,12 +100,11 @@ class WorkflowEngine {
             $sql = "SELECT c.*, sla.escalation_hours, sla.resolution_hours,
                            cat.category, cat.type, cat.subtype,
                            cust.name as customer_name, cust.email as customer_email,
-                           u.name as assigned_user_name, u.email as assigned_user_email
+                           NULL as assigned_user_name, NULL as assigned_user_email
                     FROM complaints c
                     LEFT JOIN sla_definitions sla ON c.priority = sla.priority_level
                     LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                     LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                    LEFT JOIN users u ON c.assigned_to_user_id = u.id
                     WHERE c.status NOT IN ('closed') 
                       AND c.escalated_at IS NULL
                       AND sla.escalation_hours IS NOT NULL
@@ -184,10 +193,9 @@ class WorkflowEngine {
             
             foreach ($priorityRules as $currentPriority => $rule) {
                 $sql = "SELECT c.*, cust.name as customer_name, cust.email as customer_email,
-                               u.name as assigned_user_name, u.email as assigned_user_email
+                               NULL as assigned_user_name, NULL as assigned_user_email
                         FROM complaints c
                         LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                        LEFT JOIN users u ON c.assigned_to_user_id = u.id
                         WHERE c.priority = ? 
                           AND c.status NOT IN ('closed', 'awaiting_feedback')
                           AND TIMESTAMPDIFF(HOUR, c.created_at, NOW()) >= ?
@@ -232,6 +240,7 @@ class WorkflowEngine {
                 'assign' => ['controller_nodal'],
                 'forward' => ['controller_nodal'],
                 'reply' => ['controller', 'controller_nodal'],
+                'provide_info' => ['customer'],
                 'close' => ['controller_nodal', 'admin']
             ],
             'awaiting_info' => [
@@ -294,6 +303,9 @@ class WorkflowEngine {
             case 'provide_feedback':
                 return $this->provideFeedback($ticket, $data['rating'], $data['remarks'], $userId);
                 
+            case 'provide_info':
+                return $this->provideInfo($ticket, $data['additional_info'], $userId);
+                
             case 'revert':
                 return $this->revertTicket($ticket, $data['reason'], $userId);
                 
@@ -313,7 +325,7 @@ class WorkflowEngine {
      */
     private function assignTicket($ticket, $assignedTo, $assignedBy) {
         $sql = "UPDATE complaints SET 
-                assigned_to_user_id = ?,
+                assigned_to_department = ?,
                 status = 'pending',
                 updated_at = NOW()
                 WHERE complaint_id = ?";
@@ -323,7 +335,7 @@ class WorkflowEngine {
         return [
             'success' => true,
             'new_status' => 'pending',
-            'updates' => ['assigned_to_user_id' => $assignedTo],
+            'updates' => ['assigned_to_department' => $assignedTo],
             'message' => 'Ticket assigned successfully'
         ];
     }
@@ -337,7 +349,7 @@ class WorkflowEngine {
         $resetPriority = $targetUser && $targetUser['division'] !== $ticket['division'];
         
         $sql = "UPDATE complaints SET 
-                assigned_to_user_id = ?,
+                assigned_to_department = ?,
                 forwarded_flag = 1,
                 status = 'pending',
                 " . ($resetPriority ? "priority = 'normal', escalated_at = NULL," : "") . "
@@ -346,7 +358,7 @@ class WorkflowEngine {
         
         $this->db->query($sql, [$forwardTo, $ticket['complaint_id']]);
         
-        $updates = ['assigned_to_user_id' => $forwardTo, 'forwarded_flag' => 1];
+        $updates = ['assigned_to_department' => $forwardTo, 'forwarded_flag' => 1];
         if ($resetPriority) {
             $updates['priority'] = 'normal';
         }
@@ -441,6 +453,26 @@ class WorkflowEngine {
             'new_status' => 'closed',
             'updates' => ['rating' => $rating, 'rating_remarks' => $remarks],
             'message' => 'Thank you for your feedback. Ticket has been closed.'
+        ];
+    }
+    
+    /**
+     * Provide additional information when requested
+     */
+    private function provideInfo($ticket, $additionalInfo, $customerId) {
+        // Status changes from awaiting_info back to pending for review
+        $sql = "UPDATE complaints SET 
+                status = 'pending',
+                updated_at = NOW()
+                WHERE complaint_id = ?";
+        
+        $this->db->query($sql, [$ticket['complaint_id']]);
+        
+        return [
+            'success' => true,
+            'new_status' => 'pending',
+            'updates' => [],
+            'message' => 'Additional information provided. Ticket is now back under review.'
         ];
     }
     
@@ -596,11 +628,10 @@ class WorkflowEngine {
         // Get tickets with SLA violations
         $sql = "SELECT c.*, sla.resolution_hours,
                        cust.name as customer_name, cust.email as customer_email,
-                       u.name as assigned_user_name, u.email as assigned_user_email
+                       NULL as assigned_user_name, NULL as assigned_user_email
                 FROM complaints c
                 LEFT JOIN sla_definitions sla ON c.priority = sla.priority_level
                 LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                LEFT JOIN users u ON c.assigned_to_user_id = u.id
                 WHERE c.status NOT IN ('closed') 
                   AND c.sla_deadline IS NOT NULL
                   AND NOW() > c.sla_deadline";
@@ -623,11 +654,10 @@ class WorkflowEngine {
         $sql = "SELECT c.*, 
                        cat.category, cat.type, cat.subtype,
                        cust.name as customer_name, cust.email as customer_email,
-                       u.name as assigned_user_name, u.email as assigned_user_email
+                       NULL as assigned_user_name, NULL as assigned_user_email
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                LEFT JOIN users u ON c.assigned_to_user_id = u.id
                 WHERE c.complaint_id = ?";
         
         return $this->db->fetch($sql, [$complaintId]);
@@ -685,7 +715,7 @@ class WorkflowEngine {
         }
         
         // Auto-assign based on rules
-        if ($newStatus === 'pending' && empty($ticket['assigned_to_user_id'])) {
+        if ($newStatus === 'pending' && empty($ticket['assigned_to_department'])) {
             $autoAssignment = $this->findAutoAssignment($ticket);
             if ($autoAssignment) {
                 $this->assignTicketAutomatically($ticket['complaint_id'], $autoAssignment);
@@ -704,7 +734,7 @@ class WorkflowEngine {
                 $this->notificationService->sendTicketAssigned(
                     $ticket['complaint_id'],
                     $ticket,
-                    ['user_id' => $result['updates']['assigned_to_user_id']]
+                    ['department' => $result['updates']['assigned_to_department']]
                 );
                 break;
                 
@@ -769,7 +799,7 @@ class WorkflowEngine {
         // Find least loaded user in the division
         $sql = "SELECT u.id, COUNT(c.complaint_id) as active_tickets
                 FROM users u
-                LEFT JOIN complaints c ON u.id = c.assigned_to_user_id AND c.status != 'closed'
+                LEFT JOIN complaints c ON u.department = c.assigned_to_department AND c.status != 'closed'
                 WHERE u.division = ? 
                   AND u.role = 'controller' 
                   AND u.status = 'active'
@@ -786,7 +816,7 @@ class WorkflowEngine {
      */
     private function assignTicketAutomatically($complaintId, $userId) {
         $sql = "UPDATE complaints SET 
-                assigned_to_user_id = ?,
+                assigned_to_department = ?,
                 updated_at = NOW()
                 WHERE complaint_id = ?";
         
@@ -812,7 +842,7 @@ class WorkflowEngine {
         // Add assigned user
         if ($ticket['assigned_user_email']) {
             $recipients[] = [
-                'user_id' => $ticket['assigned_to_user_id'],
+                'department' => $ticket['assigned_to_department'],
                 'email' => $ticket['assigned_user_email'],
                 'name' => $ticket['assigned_user_name']
             ];

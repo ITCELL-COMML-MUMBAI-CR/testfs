@@ -82,7 +82,7 @@ class FileCompressionController extends BaseController {
             $this->json([
                 'success' => true,
                 'message' => 'File compressed successfully',
-                'compressedData' => base64_encode($compressedData),
+                'compressed_data' => base64_encode($compressedData),
                 'originalSize' => $file['size'],
                 'compressedSize' => strlen($compressedData),
                 'compressionRatio' => round((1 - strlen($compressedData) / $file['size']) * 100, 2)

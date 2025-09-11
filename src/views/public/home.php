@@ -41,33 +41,7 @@ ob_start();
                     </div>
                 <?php endif; ?>
                 
-                <!-- Quick Stats -->
-                <div class="row g-4 mt-4">
-                    <div class="col-6 col-md-3">
-                        <div class="text-center">
-                            <div class="display-4 fw-light text-apple-blue">24/7</div>
-                            <div class="small text-muted">Support Available</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="text-center">
-                            <div class="display-4 fw-light text-apple-blue">&lt;48h</div>
-                            <div class="small text-muted">Response Time</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="text-center">
-                            <div class="display-4 fw-light text-apple-blue">100%</div>
-                            <div class="small text-muted">Digital Process</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="text-center">
-                            <div class="display-4 fw-light text-apple-blue">24x7</div>
-                            <div class="small text-muted">Tracking</div>
-                        </div>
-                    </div>
-                </div>
+                
             </div>
         </div>
     </div>
@@ -222,122 +196,7 @@ ob_start();
     </div>
 </section>
 
-<!-- How It Works Section -->
-<section class="py-apple-8 bg-apple-off-white">
-    <div class="container-xl">
-        <div class="row">
-            <div class="col-12 text-center mb-5">
-                <h2 class="display-3 mb-3">How SAMPARK Works</h2>
-                <p class="lead text-muted">Simple steps to get your freight support resolved quickly</p>
-            </div>
-        </div>
-        
-        <div class="row g-4">
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="text-center">
-                    <div class="bg-apple-blue rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fas fa-user-plus fs-3"></i>
-                    </div>
-                    <h5 class="fw-semibold mb-2">1. Register</h5>
-                    <p class="text-muted">Create your customer account with company details for approval</p>
-                </div>
-            </div>
-            
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="text-center">
-                    <div class="bg-apple-blue rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fas fa-ticket-alt fs-3"></i>
-                    </div>
-                    <h5 class="fw-semibold mb-2">2. Submit Ticket</h5>
-                    <p class="text-muted">Raise your freight support ticket with detailed information and evidence</p>
-                </div>
-            </div>
-            
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="text-center">
-                    <div class="bg-apple-blue rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fas fa-cogs fs-3"></i>
-                    </div>
-                    <h5 class="fw-semibold mb-2">3. Processing</h5>
-                    <p class="text-muted">Our team reviews and processes your ticket through appropriate channels</p>
-                </div>
-            </div>
-            
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="text-center">
-                    <div class="bg-apple-blue rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                        <i class="fas fa-check-circle fs-3"></i>
-                    </div>
-                    <h5 class="fw-semibold mb-2">4. Resolution</h5>
-                    <p class="text-muted">Get timely resolution with complete transparency and feedback</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
-<!-- Features Section -->
-<section class="py-apple-8">
-    <div class="container-xl">
-        <div class="row align-items-center">
-            <div class="col-12 col-lg-6 mb-4 mb-lg-0">
-                <h2 class="display-3 mb-4">Built for Excellence</h2>
-                <p class="lead mb-4">SAMPARK brings modern technology to freight support with features designed for efficiency and transparency.</p>
-                
-                <div class="row g-3">
-                    <div class="col-12">
-                        <div class="d-flex align-items-start">
-                            <i class="fas fa-shield-alt text-apple-blue fs-5 me-3 mt-1"></i>
-                            <div>
-                                <h6 class="fw-semibold mb-1">Secure & Reliable</h6>
-                                <p class="text-muted mb-0">Enterprise-grade security with reliable data protection</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="d-flex align-items-start">
-                            <i class="fas fa-mobile-alt text-apple-blue fs-5 me-3 mt-1"></i>
-                            <div>
-                                <h6 class="fw-semibold mb-1">Mobile Responsive</h6>
-                                <p class="text-muted mb-0">Access from any device, anywhere, anytime</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="d-flex align-items-start">
-                            <i class="fas fa-clock text-apple-blue fs-5 me-3 mt-1"></i>
-                            <div>
-                                <h6 class="fw-semibold mb-1">Real-time Tracking</h6>
-                                <p class="text-muted mb-0">Track your ticket status in real-time with notifications</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="d-flex align-items-start">
-                            <i class="fas fa-chart-line text-apple-blue fs-5 me-3 mt-1"></i>
-                            <div>
-                                <h6 class="fw-semibold mb-1">Analytics & Reports</h6>
-                                <p class="text-muted mb-0">Comprehensive reporting for better insights</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-12 col-lg-6">
-                <div class="card-apple-glass p-4">
-                    <div class="text-center">
-                        <i class="fas fa-train text-apple-blue" style="font-size: 120px; opacity: 0.1;"></i>
-                        <div class="mt-n5">
-                            <h4 class="fw-semibold mb-3">Railway Freight Support</h4>
-                            <p class="text-muted">Connecting freight customers with railway administration for seamless cargo operations across India</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <script>
 function showNewsDetails(newsId) {
