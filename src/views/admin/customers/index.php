@@ -16,7 +16,7 @@ ob_start();
                         <p class="text-muted mb-0">Manage registered customers and their information</p>
                     </div>
                     <div class="mt-3 mt-md-0">
-                        <a href="<?= Config::APP_URL ?>/admin/customers/create" class="btn btn-apple-primary">
+                        <a href="<?= Config::getAppUrl() ?>/admin/customers/create" class="btn btn-apple-primary">
                             <i class="fas fa-plus me-2"></i>Add New Customer
                         </a>
                     </div>
@@ -63,7 +63,7 @@ ob_start();
         <!-- Filters Card -->
         <div class="card-apple-glass mb-4">
             <div class="card-body">
-                <form id="filterForm" method="GET" action="<?= Config::APP_URL ?>/admin/customers">
+                <form id="filterForm" method="GET" action="<?= Config::getAppUrl() ?>/admin/customers">
                     <div class="row g-3 align-items-end">
                         <div class="col-md-2">
                             <label for="status" class="form-label-apple small">Status</label>
@@ -112,7 +112,7 @@ ob_start();
                             <button type="submit" class="btn btn-apple-primary flex-grow-1">
                                 <i class="fas fa-search me-1"></i>Filter
                             </button>
-                            <a href="<?= Config::APP_URL ?>/admin/customers" class="btn btn-apple-glass flex-grow-1">
+                            <a href="<?= Config::getAppUrl() ?>/admin/customers" class="btn btn-apple-glass flex-grow-1">
                                 <i class="fas fa-times me-1"></i>Clear
                             </a>
                         </div>
@@ -234,17 +234,17 @@ ob_start();
                                                 </button>
                                                 <ul class="dropdown-menu">
                                                     <li>
-                                                        <a class="dropdown-item" href="<?= Config::APP_URL ?>/admin/customers/<?= $customer['customer_id'] ?>">
+                                                        <a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/customers/<?= $customer['customer_id'] ?>">
                                                             <i class="fas fa-eye me-2"></i>View Details
                                                         </a>
                                                     </li>
                                                     <li>
-                                                        <a class="dropdown-item" href="<?= Config::APP_URL ?>/admin/customers/<?= $customer['customer_id'] ?>/edit">
+                                                        <a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/customers/<?= $customer['customer_id'] ?>/edit">
                                                             <i class="fas fa-edit me-2"></i>Edit Customer
                                                         </a>
                                                     </li>
                                                     <li>
-                                                        <a class="dropdown-item" href="<?= Config::APP_URL ?>/admin/tickets?customer_id=<?= $customer['customer_id'] ?>">
+                                                        <a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/tickets?customer_id=<?= $customer['customer_id'] ?>">
                                                             <i class="fas fa-ticket-alt me-2"></i>View Tickets
                                                         </a>
                                                     </li>
@@ -322,14 +322,14 @@ ob_start();
                         
                         <?php if (!empty(array_filter($filters ?? []))): ?>
                             <p class="text-muted mb-4">No customers match your current filters. Try adjusting your search criteria.</p>
-                            <a href="<?= Config::APP_URL ?>/admin/customers" class="btn btn-apple-glass me-2">
+                            <a href="<?= Config::getAppUrl() ?>/admin/customers" class="btn btn-apple-glass me-2">
                                 <i class="fas fa-times me-1"></i>Clear Filters
                             </a>
                         <?php else: ?>
                             <p class="text-muted mb-4">There are no customers in the system. Start by adding a new customer.</p>
                         <?php endif; ?>
                         
-                        <a href="<?= Config::APP_URL ?>/admin/customers/create" class="btn btn-apple-primary">
+                        <a href="<?= Config::getAppUrl() ?>/admin/customers/create" class="btn btn-apple-primary">
                             <i class="fas fa-plus me-2"></i>Add New Customer
                         </a>
                     </div>
@@ -354,7 +354,7 @@ ob_start();
                         </div>
                     </div>
                     <div class="col-md-4 text-md-end mt-2 mt-md-0">
-                        <a href="<?= Config::APP_URL ?>/help/admin-guide#customer-management" class="btn btn-apple-glass btn-sm">
+                        <a href="<?= Config::getAppUrl() ?>/help/admin-guide#customer-management" class="btn btn-apple-glass btn-sm">
                             <i class="fas fa-question-circle me-1"></i>More Help
                         </a>
                     </div>
@@ -716,12 +716,12 @@ function getCustomerTypeBadgeClass($type) {
 }
 
 $additional_css = [
-    Config::APP_URL . '/libs/datatables/dataTables.bootstrap5.min.css'
+    Config::getAppUrl() . '/libs/datatables/dataTables.bootstrap5.min.css'
 ];
 
 $additional_js = [
-    Config::APP_URL . '/libs/datatables/jquery.dataTables.min.js',
-    Config::APP_URL . '/libs/datatables/dataTables.bootstrap5.min.js'
+    Config::getAppUrl() . '/libs/datatables/jquery.dataTables.min.js',
+    Config::getAppUrl() . '/libs/datatables/dataTables.bootstrap5.min.js'
 ];
 
 $content = ob_get_clean();

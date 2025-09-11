@@ -9,7 +9,7 @@ ob_start();
 
 // Set additional CSS for this view
 $additional_css = [
-    Config::APP_URL . '/assets/css/controller-views.css'
+    Config::getAppUrl() . '/assets/css/controller-views.css'
 ];
 
 // Set page title

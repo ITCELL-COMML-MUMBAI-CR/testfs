@@ -14,8 +14,8 @@ ob_start();
                     <div>
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="<?= Config::APP_URL ?>/admin/customers">Customers</a></li>
-                                <li class="breadcrumb-item"><a href="<?= Config::APP_URL ?>/admin/customers/<?= $customer['customer_id'] ?>"><?= htmlspecialchars($customer['name']) ?></a></li>
+                                <li class="breadcrumb-item"><a href="<?= Config::getAppUrl() ?>/admin/customers">Customers</a></li>
+                                <li class="breadcrumb-item"><a href="<?= Config::getAppUrl() ?>/admin/customers/<?= $customer['customer_id'] ?>"><?= htmlspecialchars($customer['name']) ?></a></li>
                                 <li class="breadcrumb-item active" aria-current="page">Edit</li>
                             </ol>
                         </nav>
@@ -23,10 +23,10 @@ ob_start();
                         <p class="text-muted mb-0">Update customer information and settings</p>
                     </div>
                     <div class="mt-3 mt-md-0">
-                        <a href="<?= Config::APP_URL ?>/admin/customers/<?= $customer['customer_id'] ?>" class="btn btn-apple-glass me-2">
+                        <a href="<?= Config::getAppUrl() ?>/admin/customers/<?= $customer['customer_id'] ?>" class="btn btn-apple-glass me-2">
                             <i class="fas fa-eye me-2"></i>View Details
                         </a>
-                        <a href="<?= Config::APP_URL ?>/admin/customers" class="btn btn-apple-glass">
+                        <a href="<?= Config::getAppUrl() ?>/admin/customers" class="btn btn-apple-glass">
                             <i class="fas fa-arrow-left me-2"></i>Back to List
                         </a>
                     </div>
@@ -43,7 +43,7 @@ ob_start();
                         </h5>
                     </div>
                     <div class="card-body">
-                        <form id="editCustomerForm" method="POST" action="<?= Config::APP_URL ?>/admin/customers/<?= $customer['customer_id'] ?>/update">
+                        <form id="editCustomerForm" method="POST" action="<?= Config::getAppUrl() ?>/admin/customers/<?= $customer['customer_id'] ?>/update">
                             <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
                             
                             <div class="row g-3">
@@ -154,7 +154,7 @@ ob_start();
                             <div class="row mt-4">
                                 <div class="col-12">
                                     <div class="d-flex justify-content-end gap-2">
-                                        <a href="<?= Config::APP_URL ?>/admin/customers/<?= $customer['customer_id'] ?>" class="btn btn-apple-glass">
+                                        <a href="<?= Config::getAppUrl() ?>/admin/customers/<?= $customer['customer_id'] ?>" class="btn btn-apple-glass">
                                             <i class="fas fa-times me-2"></i>Cancel
                                         </a>
                                         <button type="submit" class="btn btn-apple-primary" id="saveBtn">

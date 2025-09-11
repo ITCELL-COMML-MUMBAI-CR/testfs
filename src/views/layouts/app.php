@@ -8,7 +8,7 @@
     <meta name="author" content="Indian Railways">
     <meta name="robots" content="index, follow">
     <meta name="csrf-token" content="<?= $csrf_token ?? '' ?>">
-    <meta name="app-url" content="<?= Config::APP_URL ?>">
+    <meta name="app-url" content="<?= Config::getAppUrl() ?>">
     
     <!-- CSRF Token -->
     <meta name="csrf-token" content="<?= $csrf_token ?? '' ?>">
@@ -16,17 +16,17 @@
     <title><?= htmlspecialchars($page_title ?? 'SAMPARK - Support Portal') ?></title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="<?= Config::APP_URL ?>/assets/images/favicon.ico">
-    <link rel="apple-touch-icon" href="<?= Config::APP_URL ?>/assets/images/apple-touch-icon.png">
+    <link rel="icon" type="image/x-icon" href="<?= Config::getAppUrl() ?>/assets/images/favicon.ico">
+    <link rel="apple-touch-icon" href="<?= Config::getAppUrl() ?>/assets/images/apple-touch-icon.png">
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
     
     <!-- Font Awesome Icons -->
-    <link href="<?= Config::APP_URL ?>/libs/fontawesome/all.min.css" rel="stylesheet">
+    <link href="<?= Config::getAppUrl() ?>/libs/fontawesome/all.min.css" rel="stylesheet">
     
     <!-- Apple Design System CSS -->
-    <link href="<?= Config::APP_URL ?>/assets/css/apple-design.css" rel="stylesheet">
+    <link href="<?= Config::getAppUrl() ?>/assets/css/apple-design.css" rel="stylesheet">
     
     <!-- Additional CSS -->
     <?php if (isset($additional_css)): ?>
@@ -36,8 +36,8 @@
     <?php endif; ?>
     
     <!-- Professional Fonts CSS -->
-    <link href="<?= Config::APP_URL ?>/assets/fonts/professional-fonts.css" rel="stylesheet">
-    <link href="<?= Config::APP_URL ?>/assets/fonts/inter.css" rel="stylesheet">
+    <link href="<?= Config::getAppUrl() ?>/assets/fonts/professional-fonts.css" rel="stylesheet">
+    <link href="<?= Config::getAppUrl() ?>/assets/fonts/inter.css" rel="stylesheet">
     
     <style>
         /* Override Apple font family to use professional fonts */
@@ -84,14 +84,14 @@
     <nav class="navbar navbar-expand-lg fixed-top apple-glass-nav" id="mainNavbar">
         <div class="container-xl">
             <!-- Logo/Brand -->
-            <a class="navbar-brand d-flex align-items-center" href="<?= Config::APP_URL ?>/">
+            <a class="navbar-brand d-flex align-items-center" href="<?= Config::getAppUrl() ?>/">
                 <div class="railway-dual-logo">
-                    <img src="<?= Config::APP_URL ?>/assets/images/railway-logo-left.png" alt="Indian Railways" class="me-2">
+                    <img src="<?= Config::getAppUrl() ?>/assets/images/railway-logo-left.png" alt="Indian Railways" class="me-2">
                     <div class="d-flex flex-column">
                         <span class="fw-semibold">SAMPARK</span>
                         <small class="text-muted d-none d-md-block" style="font-size: 0.7rem; line-height: 1;">Support Portal</small>
                     </div>
-                    <img src="<?= Config::APP_URL ?>/assets/images/railway-logo-right.png" alt="" class="ms-2">
+                    <img src="<?= Config::getAppUrl() ?>/assets/images/railway-logo-right.png" alt="" class="ms-2">
                 </div>
             </a>
             
@@ -107,12 +107,12 @@
                     <?php if (!isset($is_logged_in) || !$is_logged_in): ?>
                         <!-- Guest Navigation -->
                         <li class="nav-item">
-                            <a class="nav-link" href="<?= Config::APP_URL ?>/">
+                            <a class="nav-link" href="<?= Config::getAppUrl() ?>/">
                                 <i class="fas fa-home me-1"></i>Home
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="<?= Config::APP_URL ?>/help">
+                            <a class="nav-link" href="<?= Config::getAppUrl() ?>/help">
                                 <i class="fas fa-question-circle me-1"></i>Help
                             </a>
                         </li>
@@ -121,14 +121,14 @@
                                 <i class="fas fa-user me-1"></i>Account
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-apple">
-                                <li><a class="dropdown-item" href="<?= Config::APP_URL ?>/login">
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/login">
                                     <i class="fas fa-sign-in-alt me-2"></i>Login
                                 </a></li>
-                                <li><a class="dropdown-item" href="<?= Config::APP_URL ?>/signup">
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/signup">
                                     <i class="fas fa-user-plus me-2"></i>Customer Registration
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="<?= Config::APP_URL ?>/login">
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/login">
                                     <i class="fas fa-ticket-alt me-2"></i>Raise Ticket
                                 </a></li>
                             </ul>
@@ -144,41 +144,41 @@
                         <!-- Role-specific navigation -->
                         <?php if ($userRole === 'customer'): ?>
                             <li class="nav-item">
-                                <a class="nav-link" href="<?= Config::APP_URL ?>/">
+                                <a class="nav-link" href="<?= Config::getAppUrl() ?>/">
                                     <i class="fas fa-home me-1"></i>Home
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="<?= Config::APP_URL ?>/customer/tickets">
+                                <a class="nav-link" href="<?= Config::getAppUrl() ?>/customer/tickets">
                                     <i class="fas fa-ticket-alt me-1"></i>My Tickets
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="<?= Config::APP_URL ?>/customer/tickets/create">
+                                <a class="nav-link" href="<?= Config::getAppUrl() ?>/customer/tickets/create">
                                     <i class="fas fa-plus me-1"></i>Raise Ticket
                                 </a>
                             </li>
                             
                         <?php elseif (in_array($userRole, ['controller', 'controller_nodal'])): ?>
                             <li class="nav-item">
-                                <a class="nav-link" href="<?= Config::APP_URL ?>/controller/dashboard">
+                                <a class="nav-link" href="<?= Config::getAppUrl() ?>/controller/dashboard">
                                     <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="<?= Config::APP_URL ?>/controller/tickets">
+                                <a class="nav-link" href="<?= Config::getAppUrl() ?>/controller/tickets">
                                     <i class="fas fa-ticket-alt me-1"></i>Support Hub
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="<?= Config::APP_URL ?>/controller/reports">
+                                <a class="nav-link" href="<?= Config::getAppUrl() ?>/controller/reports">
                                     <i class="fas fa-chart-line me-1"></i>Reports
                                 </a>
                             </li>
                             
                         <?php elseif (in_array($userRole, ['admin', 'superadmin'])): ?>
                             <li class="nav-item">
-                                <a class="nav-link" href="<?= Config::APP_URL ?>/admin/dashboard">
+                                <a class="nav-link" href="<?= Config::getAppUrl() ?>/admin/dashboard">
                                     <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                                 </a>
                             </li>
@@ -187,17 +187,17 @@
                                     <i class="fas fa-cog me-1"></i>Management
                                 </a>
                             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-apple">
-                                <li><a class="dropdown-item" href="<?= Config::APP_URL ?>/admin/users">Users</a></li>
-                                <li><a class="dropdown-item" href="<?= Config::APP_URL ?>/admin/customers">Customers</a></li>
-                                <li><a class="dropdown-item" href="<?= Config::APP_URL ?>/admin/categories">Categories</a></li>
-                                <li><a class="dropdown-item" href="<?= Config::APP_URL ?>/admin/content">Content</a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/users">Users</a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/customers">Customers</a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/categories">Categories</a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/content">Content</a></li>
                             </ul>
                             </li>
                         <?php endif; ?>
                         
                         <!-- Common authenticated links -->
                         <li class="nav-item">
-                            <a class="nav-link" href="<?= Config::APP_URL ?>/help">
+                            <a class="nav-link" href="<?= Config::getAppUrl() ?>/help">
                                 <i class="fas fa-question-circle me-1"></i>Help
                             </a>
                         </li>
@@ -218,7 +218,7 @@
                                     <small class="text-muted"><?= ucfirst($userRole) ?></small>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="<?= Config::APP_URL ?>/<?= $userRole === 'customer' ? 'customer' : ($userRole === 'admin' || $userRole === 'superadmin' ? 'admin' : 'controller') ?>/profile">
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/<?= $userRole === 'customer' ? 'customer' : ($userRole === 'admin' || $userRole === 'superadmin' ? 'admin' : 'controller') ?>/profile">
                                     <i class="fas fa-user-circle me-2"></i>Profile
                                 </a></li>
                                 <li><a class="dropdown-item" href="#" onclick="showNotifications()">
@@ -226,7 +226,7 @@
                                     <span class="badge bg-danger ms-auto" id="notificationCount" style="display: none;">0</span>
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="<?= Config::APP_URL ?>/logout">
+                                <li><a class="dropdown-item text-danger" href="<?= Config::getAppUrl() ?>/logout">
                                     <i class="fas fa-sign-out-alt me-2"></i>Logout
                                 </a></li>
                             </ul>
@@ -281,8 +281,8 @@
                         <div class="col-md-6">
                             <h6 class="fw-semibold mb-3">Quick Links</h6>
                             <ul class="list-unstyled small">
-                                <li><a href="<?= Config::APP_URL ?>/help" class="text-decoration-none">Help & Support</a></li>
-                                <li><a href="<?= Config::APP_URL ?>/privacy-policy" class="text-decoration-none">Privacy Policy</a></li>
+                                <li><a href="<?= Config::getAppUrl() ?>/help" class="text-decoration-none">Help & Support</a></li>
+                                <li><a href="<?= Config::getAppUrl() ?>/privacy-policy" class="text-decoration-none">Privacy Policy</a></li>
                                 <li><a href="#" class="text-decoration-none">Terms of Service</a></li>
                                 <li><a href="#" class="text-decoration-none">Contact Us</a></li>
                             </ul>
@@ -325,18 +325,21 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     
     <!-- jQuery -->
-    <script src="<?= Config::APP_URL ?>/libs/jQuery/jquery-3.7.1.min.js"></script>
+    <script src="<?= Config::getAppUrl() ?>/libs/jQuery/jquery-3.7.1.min.js"></script>
     
     <!-- SweetAlert2 -->
-    <script src="<?= Config::APP_URL ?>/libs/sweetalert2/sweetalert2.min.js"></script>
-    <link href="<?= Config::APP_URL ?>/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet">
+    <script src="<?= Config::getAppUrl() ?>/libs/sweetalert2/sweetalert2.min.js"></script>
+    <link href="<?= Config::getAppUrl() ?>/libs/sweetalert2/sweetalert2.min.css" rel="stylesheet">
     
     <!-- DataTables CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
     
     <!-- Background Refresh CSS -->
-    <link rel="stylesheet" href="<?= Config::APP_URL ?>/assets/css/background-refresh.css">
+    <link rel="stylesheet" href="<?= Config::getAppUrl() ?>/assets/css/background-refresh.css">
+    
+    <!-- DataTable Fixes CSS -->
+    <link rel="stylesheet" href="<?= Config::getAppUrl() ?>/assets/css/datatable-fixes.css">
     
     <!-- DataTables JavaScript -->
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
@@ -345,17 +348,17 @@
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
     
     <!-- Background Refresh System -->
-    <script src="<?= Config::APP_URL ?>/assets/js/background-refresh.js"></script>
-    <script src="<?= Config::APP_URL ?>/assets/js/datatable-config.js"></script>
+    <script src="<?= Config::getAppUrl() ?>/assets/js/background-refresh.js"></script>
+    <script src="<?= Config::getAppUrl() ?>/assets/js/datatable-config.js"></script>
     
     <!-- Global JavaScript Variables -->
     <script>
-        const APP_URL = '<?= Config::APP_URL ?>';
+        const APP_URL = '<?= Config::getAppUrl() ?>';
         const CSRF_TOKEN = '<?= $csrf_token ?? '' ?>';
     </script>
     
     <!-- Common JavaScript -->
-    <script src="<?= Config::APP_URL ?>/assets/js/app.js"></script>
+    <script src="<?= Config::getAppUrl() ?>/assets/js/app.js"></script>
     
     <!-- Page-specific JavaScript -->
     <?php if (isset($additional_js)): ?>
@@ -366,7 +369,7 @@
     
     <script>
         // Global JavaScript variables
-        window.APP_URL = '<?= Config::APP_URL ?>';
+        window.APP_URL = '<?= Config::getAppUrl() ?>';
         window.CSRF_TOKEN = '<?= $csrf_token ?? '' ?>';
         
         // Common functions

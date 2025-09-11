@@ -14,7 +14,7 @@ ob_start();
                     <div>
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb">
-                                <li class="breadcrumb-item"><a href="<?= Config::APP_URL ?>/admin/customers">Customers</a></li>
+                                <li class="breadcrumb-item"><a href="<?= Config::getAppUrl() ?>/admin/customers">Customers</a></li>
                                 <li class="breadcrumb-item active" aria-current="page"><?= htmlspecialchars($customer['name']) ?></li>
                             </ol>
                         </nav>
@@ -22,10 +22,10 @@ ob_start();
                         <p class="text-muted mb-0">View and manage customer information</p>
                     </div>
                     <div class="mt-3 mt-md-0">
-                        <a href="<?= Config::APP_URL ?>/admin/customers/<?= $customer['customer_id'] ?>/edit" class="btn btn-apple-primary me-2">
+                        <a href="<?= Config::getAppUrl() ?>/admin/customers/<?= $customer['customer_id'] ?>/edit" class="btn btn-apple-primary me-2">
                             <i class="fas fa-edit me-2"></i>Edit Customer
                         </a>
-                        <a href="<?= Config::APP_URL ?>/admin/customers" class="btn btn-apple-glass">
+                        <a href="<?= Config::getAppUrl() ?>/admin/customers" class="btn btn-apple-glass">
                             <i class="fas fa-arrow-left me-2"></i>Back to List
                         </a>
                     </div>
@@ -138,7 +138,7 @@ ob_start();
                                         <?php foreach ($recent_tickets as $ticket): ?>
                                             <tr>
                                                 <td>
-                                                    <a href="<?= Config::APP_URL ?>/admin/tickets/<?= $ticket['complaint_id'] ?>" class="text-apple-blue">
+                                                    <a href="<?= Config::getAppUrl() ?>/admin/tickets/<?= $ticket['complaint_id'] ?>" class="text-apple-blue">
                                                         <?= htmlspecialchars($ticket['complaint_id']) ?>
                                                     </a>
                                                 </td>
@@ -241,7 +241,7 @@ ob_start();
                                 </button>
                             <?php endif; ?>
                             
-                            <a href="<?= Config::APP_URL ?>/admin/tickets?customer_id=<?= $customer['customer_id'] ?>" class="btn btn-apple-glass">
+                            <a href="<?= Config::getAppUrl() ?>/admin/tickets?customer_id=<?= $customer['customer_id'] ?>" class="btn btn-apple-glass">
                                 <i class="fas fa-ticket-alt me-2"></i>View All Tickets
                             </a>
                             

@@ -17,7 +17,7 @@ ob_start();
                         <p class="text-muted mb-0">View and manage your freight support requests</p>
                     </div>
                     <div class="mt-3 mt-md-0">
-                        <a href="<?= Config::APP_URL ?>/customer/tickets/create" class="btn btn-apple-primary">
+                        <a href="<?= Config::getAppUrl() ?>/customer/tickets/create" class="btn btn-apple-primary">
                             <i class="fas fa-plus me-2"></i>Create New Ticket
                         </a>
                     </div>
@@ -28,7 +28,7 @@ ob_start();
         <!-- Filters Card -->
         <div class="card-apple-glass mb-4">
             <div class="card-body">
-                <form id="filterForm" method="GET" action="<?= Config::APP_URL ?>/customer/tickets">
+                <form id="filterForm" method="GET" action="<?= Config::getAppUrl() ?>/customer/tickets">
                     <div class="row g-3 align-items-end">
                         <div class="col-md-2">
                             <label for="status" class="form-label-apple small">Status</label>
@@ -81,7 +81,7 @@ ob_start();
                         </div>
                         
                         <div class="col-md-2">
-                            <a href="<?= Config::APP_URL ?>/customer/tickets" class="btn btn-apple-glass w-100">
+                            <a href="<?= Config::getAppUrl() ?>/customer/tickets" class="btn btn-apple-glass w-100">
                                 <i class="fas fa-times me-1"></i>Clear
                             </a>
                         </div>
@@ -144,7 +144,7 @@ ob_start();
                         </div>
                         <h5 class="text-muted mb-2">No tickets found</h5>
                         <p class="text-muted mb-4">You don't have any support tickets matching your current filters.</p>
-                        <a href="<?= Config::APP_URL ?>/customer/tickets/create" class="btn btn-apple-primary">
+                        <a href="<?= Config::getAppUrl() ?>/customer/tickets/create" class="btn btn-apple-primary">
                             <i class="fas fa-plus me-2"></i>Create Your First Ticket
                         </a>
                     </div>
@@ -169,7 +169,7 @@ ob_start();
                         </div>
                     </div>
                     <div class="col-md-4 text-md-end mt-2 mt-md-0">
-                        <a href="<?= Config::APP_URL ?>/help" class="btn btn-apple-glass btn-sm">
+                        <a href="<?= Config::getAppUrl() ?>/help" class="btn btn-apple-glass btn-sm">
                             <i class="fas fa-question-circle me-1"></i>More Help
                         </a>
                     </div>

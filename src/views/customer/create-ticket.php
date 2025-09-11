@@ -60,7 +60,7 @@ ob_start();
                         </div>
                         
                         <div class="mt-3">
-                            <a href="<?= Config::APP_URL ?>/customer/profile" class="btn btn-apple-glass btn-sm">
+                            <a href="<?= Config::getAppUrl() ?>/customer/profile" class="btn btn-apple-glass btn-sm">
                                 <i class="fas fa-edit me-1"></i>Edit Profile
                             </a>
                         </div>
@@ -342,7 +342,7 @@ ob_start();
                         </h6>
                         
                         <div class="d-grid gap-2">
-                            <a href="<?= Config::APP_URL ?>/help" class="btn btn-apple-glass btn-sm">
+                            <a href="<?= Config::getAppUrl() ?>/help" class="btn btn-apple-glass btn-sm">
                                 <i class="fas fa-book me-1"></i>Help Guide
                             </a>
                             <button class="btn btn-apple-glass btn-sm" onclick="showContactSupport()">

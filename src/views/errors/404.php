@@ -6,16 +6,16 @@
     <title>Page Not Found - SAMPARK</title>
     
     <!-- Bootstrap 5 CSS -->
-    <link href="<?= Config::APP_URL ?>/libs/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="<?= Config::getAppUrl() ?>/libs/bootstrap/bootstrap.min.css" rel="stylesheet">
     
     <!-- Font Awesome -->
-    <link href="<?= Config::APP_URL ?>/libs/fontawesome/all.min.css" rel="stylesheet">
+    <link href="<?= Config::getAppUrl() ?>/libs/fontawesome/all.min.css" rel="stylesheet">
     
     <!-- Apple Design CSS -->
-    <link href="<?= Config::APP_URL ?>/assets/css/apple-design.css" rel="stylesheet">
+    <link href="<?= Config::getAppUrl() ?>/assets/css/apple-design.css" rel="stylesheet">
     
     <!-- Inter Font -->
-    <link href="<?= Config::APP_URL ?>/assets/fonts/inter.css" rel="stylesheet">
+    <link href="<?= Config::getAppUrl() ?>/assets/fonts/inter.css" rel="stylesheet">
     
     <style>
         body {
@@ -102,7 +102,7 @@
                     
                     <!-- Quick Actions -->
                     <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center mb-4">
-                        <a href="<?= Config::APP_URL ?>/" class="btn btn-apple-primary">
+                        <a href="<?= Config::getAppUrl() ?>/" class="btn btn-apple-primary">
                             <i class="fas fa-home me-2"></i>Go Home
                         </a>
                         <a href="javascript:history.back()" class="btn btn-apple-glass">
@@ -115,17 +115,17 @@
                         <h6 class="fw-semibold mb-3">Popular Pages</h6>
                         <div class="row g-2">
                             <div class="col-6 col-md-3">
-                                <a href="<?= Config::APP_URL ?>/login" class="btn btn-apple-glass btn-sm w-100">
+                                <a href="<?= Config::getAppUrl() ?>/login" class="btn btn-apple-glass btn-sm w-100">
                                     <i class="fas fa-sign-in-alt me-1"></i>Login
                                 </a>
                             </div>
                             <div class="col-6 col-md-3">
-                                <a href="<?= Config::APP_URL ?>/signup" class="btn btn-apple-glass btn-sm w-100">
+                                <a href="<?= Config::getAppUrl() ?>/signup" class="btn btn-apple-glass btn-sm w-100">
                                     <i class="fas fa-user-plus me-1"></i>Sign Up
                                 </a>
                             </div>
                             <div class="col-6 col-md-3">
-                                <a href="<?= Config::APP_URL ?>/help" class="btn btn-apple-glass btn-sm w-100">
+                                <a href="<?= Config::getAppUrl() ?>/help" class="btn btn-apple-glass btn-sm w-100">
                                     <i class="fas fa-question-circle me-1"></i>Help
                                 </a>
                             </div>
@@ -152,10 +152,10 @@
     </div>
     
     <!-- Bootstrap JS -->
-    <script src="<?= Config::APP_URL ?>/libs/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="<?= Config::getAppUrl() ?>/libs/bootstrap/bootstrap.bundle.min.js"></script>
     
     <!-- SweetAlert2 -->
-    <script src="<?= Config::APP_URL ?>/libs/sweetalert2/sweetalert2.min.js"></script>
+    <script src="<?= Config::getAppUrl() ?>/libs/sweetalert2/sweetalert2.min.js"></script>
     
     <script>
         // Search functionality
@@ -168,13 +168,13 @@
             
             // Simple search redirect - in a real app, you'd implement proper search
             if (query.toLowerCase().includes('login')) {
-                window.location.href = '<?= Config::APP_URL ?>/login';
+                window.location.href = '<?= Config::getAppUrl() ?>/login';
             } else if (query.toLowerCase().includes('signup') || query.toLowerCase().includes('register')) {
-                window.location.href = '<?= Config::APP_URL ?>/signup';
+                window.location.href = '<?= Config::getAppUrl() ?>/signup';
             } else if (query.toLowerCase().includes('help') || query.toLowerCase().includes('support')) {
-                window.location.href = '<?= Config::APP_URL ?>/help';
+                window.location.href = '<?= Config::getAppUrl() ?>/help';
             } else if (query.toLowerCase().includes('ticket')) {
-                window.location.href = '<?= Config::APP_URL ?>/login';
+                window.location.href = '<?= Config::getAppUrl() ?>/login';
             } else {
                 Swal.fire({
                     icon: 'info',

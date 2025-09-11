@@ -15,6 +15,8 @@ const DATATABLE_DEFAULTS = {
     dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
          '<"row"<"col-sm-12"tr>>' +
          '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+    // Ensure proper styling
+    className: 'table table-striped table-hover',
     language: {
         processing: '<div class="d-flex justify-content-center"><div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div></div>',
         emptyTable: 'No tickets found',
@@ -395,6 +397,17 @@ function applyTableEnhancements(table) {
     if (!$wrapper.find('.refreshing-indicator').length) {
         $wrapper.prepend('<div class="refreshing-indicator" style="display: none;"><i class="fas fa-sync-alt fa-spin"></i> Refreshing...</div>');
     }
+    
+    // Ensure proper text colors are applied
+    $wrapper.find('table.dataTable th, table.dataTable td').each(function() {
+        const $this = $(this);
+        if ($this.css('color') === 'rgb(255, 255, 255)' || $this.css('color') === 'white') {
+            $this.css('color', '#212529');
+        }
+    });
+    
+    // Force proper styling on table elements
+    $wrapper.find('table.dataTable').addClass('table table-striped table-hover');
 }
 
 /**
@@ -462,4 +475,15 @@ $(document).ready(function() {
     if ($('.datatable-header').length && !$('.last-refresh-time').length) {
         $('.datatable-header').append('<small class="text-muted last-refresh-time float-right">Last updated: --</small>');
     }
+    
+    // Fix any existing DataTables with white text issues
+    $('.dataTables_wrapper table.dataTable th, .dataTables_wrapper table.dataTable td').each(function() {
+        const $this = $(this);
+        if ($this.css('color') === 'rgb(255, 255, 255)' || $this.css('color') === 'white') {
+            $this.css('color', '#212529');
+        }
+    });
+    
+    // Ensure proper table classes are applied
+    $('.dataTables_wrapper table.dataTable').addClass('table table-striped table-hover');
 });

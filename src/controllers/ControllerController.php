@@ -154,7 +154,7 @@ class ControllerController extends BaseController {
         
         if (!$ticket) {
             $this->setFlash('error', 'Ticket not found or access denied');
-            $this->redirect(Config::APP_URL . '/controller/tickets');
+            $this->redirect(Config::getAppUrl() . '/controller/tickets');
             return;
         }
         
@@ -891,7 +891,7 @@ class ControllerController extends BaseController {
             'message' => "Ticket #{$ticketId} has been assigned to you by {$fromUser['name']}",
             'type' => 'info',
             'complaint_id' => $ticketId,
-            'action_url' => Config::APP_URL . "/controller/tickets/{$ticketId}"
+            'action_url' => Config::getAppUrl() . "/controller/tickets/{$ticketId}"
         ]);
         
         // Send email notification
@@ -909,7 +909,7 @@ class ControllerController extends BaseController {
                 'message' => "Your ticket #{$ticketId} has received a reply",
                 'type' => 'success',
                 'complaint_id' => $ticketId,
-                'action_url' => Config::APP_URL . "/customer/tickets/{$ticketId}"
+                'action_url' => Config::getAppUrl() . "/customer/tickets/{$ticketId}"
             ]);
             
             // Send email to customer
@@ -928,7 +928,7 @@ class ControllerController extends BaseController {
                     'message' => "Ticket #{$ticketId} reply from {$user['name']} is awaiting approval",
                     'type' => 'warning',
                     'complaint_id' => $ticketId,
-                    'action_url' => Config::APP_URL . "/controller/tickets/{$ticketId}"
+                    'action_url' => Config::getAppUrl() . "/controller/tickets/{$ticketId}"
                 ]);
             }
         }
@@ -945,7 +945,7 @@ class ControllerController extends BaseController {
                 'message' => "Your ticket #{$ticketId} has received a reply",
                 'type' => 'success',
                 'complaint_id' => $ticketId,
-                'action_url' => Config::APP_URL . "/customer/tickets/{$ticketId}"
+                'action_url' => Config::getAppUrl() . "/customer/tickets/{$ticketId}"
             ]);
         } else {
             // Notify assigned controller
@@ -956,7 +956,7 @@ class ControllerController extends BaseController {
                     'message' => "Your reply for ticket #{$ticketId} was rejected: {$reason}",
                     'type' => 'error',
                     'complaint_id' => $ticketId,
-                    'action_url' => Config::APP_URL . "/controller/tickets/{$ticketId}"
+                    'action_url' => Config::getAppUrl() . "/controller/tickets/{$ticketId}"
                 ]);
             }
         }
@@ -972,7 +972,7 @@ class ControllerController extends BaseController {
             'message' => "Ticket #{$ticketId} requires additional information: {$reason}",
             'type' => 'info',
             'complaint_id' => $ticketId,
-            'action_url' => Config::APP_URL . "/customer/tickets/{$ticketId}"
+            'action_url' => Config::getAppUrl() . "/customer/tickets/{$ticketId}"
         ]);
         
         // Send email to customer

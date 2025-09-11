@@ -20,7 +20,7 @@ ob_start();
                         </p>
                     </div>
                     <div class="mt-3 mt-md-0">
-                        <a href="<?= Config::APP_URL ?>/admin/reports" class="btn btn-apple-glass">
+                        <a href="<?= Config::getAppUrl() ?>/admin/reports" class="btn btn-apple-glass">
                             <i class="fas fa-download me-2"></i>Download Reports
                         </a>
                     </div>
@@ -138,7 +138,7 @@ ob_start();
                                 <i class="fas fa-ticket-alt text-apple-blue me-2"></i>
                                 Recent Tickets
                             </h4>
-                            <a href="<?= Config::APP_URL ?>/admin/tickets" class="btn btn-apple-glass btn-sm">
+                            <a href="<?= Config::getAppUrl() ?>/admin/tickets" class="btn btn-apple-glass btn-sm">
                                 <i class="fas fa-list me-1"></i>View All Tickets
                             </a>
                         </div>
@@ -198,17 +198,17 @@ ob_start();
                                                     </button>
                                                     <ul class="dropdown-menu">
                                                         <li>
-                                                            <a class="dropdown-item" href="<?= Config::APP_URL ?>/admin/tickets/<?= $ticket['complaint_id'] ?>">
+                                                            <a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/tickets/<?= $ticket['complaint_id'] ?>">
                                                                 <i class="fas fa-eye me-2"></i>View Details
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a class="dropdown-item" href="<?= Config::APP_URL ?>/admin/tickets/<?= $ticket['complaint_id'] ?>/edit">
+                                                            <a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/tickets/<?= $ticket['complaint_id'] ?>/edit">
                                                                 <i class="fas fa-edit me-2"></i>Edit Ticket
                                                             </a>
                                                         </li>
                                                         <li>
-                                                            <a class="dropdown-item" href="<?= Config::APP_URL ?>/admin/tickets/<?= $ticket['complaint_id'] ?>/assign">
+                                                            <a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/tickets/<?= $ticket['complaint_id'] ?>/assign">
                                                                 <i class="fas fa-user-plus me-2"></i>Assign Ticket
                                                             </a>
                                                         </li>
@@ -241,7 +241,7 @@ ob_start();
                         </h4>
                         <div class="row g-3">
                             <div class="col-6 col-sm-4">
-                                <a href="<?= Config::APP_URL ?>/admin/users" class="text-decoration-none">
+                                <a href="<?= Config::getAppUrl() ?>/admin/users" class="text-decoration-none">
                                     <div class="card-apple-glass text-center py-3">
                                         <i class="fas fa-users text-primary mb-2" style="font-size: 1.5rem;"></i>
                                         <h6 class="mb-0">Users</h6>
@@ -249,7 +249,7 @@ ob_start();
                                 </a>
                             </div>
                             <div class="col-6 col-sm-4">
-                                <a href="<?= Config::APP_URL ?>/admin/customers" class="text-decoration-none">
+                                <a href="<?= Config::getAppUrl() ?>/admin/customers" class="text-decoration-none">
                                     <div class="card-apple-glass text-center py-3">
                                         <i class="fas fa-building text-success mb-2" style="font-size: 1.5rem;"></i>
                                         <h6 class="mb-0">Customers</h6>
@@ -257,7 +257,7 @@ ob_start();
                                 </a>
                             </div>
                             <div class="col-6 col-sm-4">
-                                <a href="<?= Config::APP_URL ?>/admin/categories" class="text-decoration-none">
+                                <a href="<?= Config::getAppUrl() ?>/admin/categories" class="text-decoration-none">
                                     <div class="card-apple-glass text-center py-3">
                                         <i class="fas fa-tags text-warning mb-2" style="font-size: 1.5rem;"></i>
                                         <h6 class="mb-0">Categories</h6>
@@ -265,7 +265,7 @@ ob_start();
                                 </a>
                             </div>
                             <div class="col-6 col-sm-4">
-                                <a href="<?= Config::APP_URL ?>/admin/reports" class="text-decoration-none">
+                                <a href="<?= Config::getAppUrl() ?>/admin/reports" class="text-decoration-none">
                                     <div class="card-apple-glass text-center py-3">
                                         <i class="fas fa-chart-bar text-info mb-2" style="font-size: 1.5rem;"></i>
                                         <h6 class="mb-0">Reports</h6>
@@ -273,7 +273,7 @@ ob_start();
                                 </a>
                             </div>
                             <div class="col-6 col-sm-4">
-                                <a href="<?= Config::APP_URL ?>/admin/content" class="text-decoration-none">
+                                <a href="<?= Config::getAppUrl() ?>/admin/content" class="text-decoration-none">
                                     <div class="card-apple-glass text-center py-3">
                                         <i class="fas fa-edit text-secondary mb-2" style="font-size: 1.5rem;"></i>
                                         <h6 class="mb-0">Content</h6>
@@ -281,7 +281,7 @@ ob_start();
                                 </a>
                             </div>
                             <div class="col-6 col-sm-4">
-                                <a href="<?= Config::APP_URL ?>/admin/settings" class="text-decoration-none">
+                                <a href="<?= Config::getAppUrl() ?>/admin/settings" class="text-decoration-none">
                                     <div class="card-apple-glass text-center py-3">
                                         <i class="fas fa-cog text-dark mb-2" style="font-size: 1.5rem;"></i>
                                         <h6 class="mb-0">Settings</h6>
@@ -565,12 +565,12 @@ function refreshSystemHealth() {
 
 <?php
 $additional_css = [
-    Config::APP_URL . '/libs/datatables/dataTables.bootstrap5.min.css'
+    Config::getAppUrl() . '/libs/datatables/dataTables.bootstrap5.min.css'
 ];
 
 $additional_js = [
-    Config::APP_URL . '/libs/datatables/jquery.dataTables.min.js',
-    Config::APP_URL . '/libs/datatables/dataTables.bootstrap5.min.js'
+    Config::getAppUrl() . '/libs/datatables/jquery.dataTables.min.js',
+    Config::getAppUrl() . '/libs/datatables/dataTables.bootstrap5.min.js'
 ];
 
 $content = ob_get_clean();

@@ -9,7 +9,7 @@ ob_start();
 
 // Set additional CSS for this view
 $additional_css = [
-    Config::APP_URL . '/assets/css/controller-views.css'
+    Config::getAppUrl() . '/assets/css/controller-views.css'
 ];
 
 // Set page title
@@ -305,16 +305,16 @@ $page_title = 'Profile - SAMPARK';
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="<?= Config::APP_URL ?>/controller/tickets" class="btn btn-apple-primary btn-sm">
+                        <a href="<?= Config::getAppUrl() ?>/controller/tickets" class="btn btn-apple-primary btn-sm">
                             <i class="fas fa-ticket-alt me-2"></i>My Assigned Tickets
                         </a>
-                        <a href="<?= Config::APP_URL ?>/controller/reports" class="btn btn-apple-secondary btn-sm">
+                        <a href="<?= Config::getAppUrl() ?>/controller/reports" class="btn btn-apple-secondary btn-sm">
                             <i class="fas fa-chart-line me-2"></i>Performance Report
                         </a>
                         <button class="btn btn-apple-secondary btn-sm" onclick="downloadProfile()">
                             <i class="fas fa-download me-2"></i>Download Profile Data
                         </button>
-                        <a href="<?= Config::APP_URL ?>/controller/help" class="btn btn-apple-secondary btn-sm">
+                        <a href="<?= Config::getAppUrl() ?>/controller/help" class="btn btn-apple-secondary btn-sm">
                             <i class="fas fa-question-circle me-2"></i>Help & Support
                         </a>
                     </div>

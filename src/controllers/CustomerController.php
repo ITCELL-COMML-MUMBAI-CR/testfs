@@ -123,7 +123,7 @@ class CustomerController extends BaseController {
         
         if (!$ticket) {
             $this->setFlash('error', 'Ticket not found or access denied');
-            $this->redirect(Config::APP_URL . '/customer/tickets');
+            $this->redirect(Config::getAppUrl() . '/customer/tickets');
             return;
         }
         
@@ -280,7 +280,7 @@ class CustomerController extends BaseController {
                 'success' => true,
                 'message' => 'Support ticket created successfully',
                 'ticket_id' => $complaintId,
-                'redirect' => Config::APP_URL . '/customer/tickets/' . $complaintId
+                'redirect' => Config::getAppUrl() . '/customer/tickets/' . $complaintId
             ]);
             
         } catch (Exception $e) {

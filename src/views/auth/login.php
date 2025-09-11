@@ -54,7 +54,7 @@ ob_start();
                         </div>
                         
                         <!-- Login Form -->
-                        <form id="loginForm" method="POST" action="<?= Config::APP_URL ?>/login">
+                        <form id="loginForm" method="POST" action="<?= Config::getAppUrl() ?>/login">
                             <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
                             <input type="hidden" name="login_type" id="loginTypeInput" value="customer">
                             
@@ -154,7 +154,7 @@ ob_start();
                             <div id="customerLinks">
                                 <p class="text-muted">
                                     Don't have an account? 
-                                    <a href="<?= Config::APP_URL ?>/signup" class="text-decoration-none text-apple-blue fw-medium">
+                                    <a href="<?= Config::getAppUrl() ?>/signup" class="text-decoration-none text-apple-blue fw-medium">
                                         Sign up here
                                     </a>
                                 </p>
@@ -186,7 +186,7 @@ ob_start();
                         </p>
                         <div class="row g-2">
                             <div class="col-6">
-                                <a href="<?= Config::APP_URL ?>/help" class="btn btn-apple-glass btn-sm w-100">
+                                <a href="<?= Config::getAppUrl() ?>/help" class="btn btn-apple-glass btn-sm w-100">
                                     <i class="fas fa-book me-1"></i>Help Guide
                                 </a>
                             </div>

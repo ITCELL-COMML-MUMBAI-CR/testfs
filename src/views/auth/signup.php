@@ -20,7 +20,7 @@ ob_start();
                         </div>
                         
                         <!-- Registration Form -->
-                        <form id="registrationForm" method="POST" action="<?= Config::APP_URL ?>/signup">
+                        <form id="registrationForm" method="POST" action="<?= Config::getAppUrl() ?>/signup">
                             <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
                             
                             <!-- Personal Information -->
@@ -227,7 +227,7 @@ ob_start();
                         <div class="text-center">
                             <p class="text-muted">
                                 Already have an account? 
-                                <a href="<?= Config::APP_URL ?>/login" class="text-decoration-none text-apple-blue fw-medium">
+                                <a href="<?= Config::getAppUrl() ?>/login" class="text-decoration-none text-apple-blue fw-medium">
                                     Sign in here
                                 </a>
                             </p>

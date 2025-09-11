@@ -14,8 +14,8 @@ ob_start();
                     <div>
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-2">
-                                <li class="breadcrumb-item"><a href="<?= Config::APP_URL ?>/admin/dashboard">Dashboard</a></li>
-                                <li class="breadcrumb-item"><a href="<?= Config::APP_URL ?>/admin/users">Users</a></li>
+                                <li class="breadcrumb-item"><a href="<?= Config::getAppUrl() ?>/admin/dashboard">Dashboard</a></li>
+                                <li class="breadcrumb-item"><a href="<?= Config::getAppUrl() ?>/admin/users">Users</a></li>
                                 <li class="breadcrumb-item active">User Details</li>
                             </ol>
                         </nav>
@@ -30,7 +30,7 @@ ob_start();
                         </div>
                     </div>
                     <div class="mt-3 mt-md-0 d-flex gap-2">
-                        <a href="<?= Config::APP_URL ?>/admin/users/<?= $user_to_view['id'] ?>/edit" class="btn btn-apple-primary">
+                        <a href="<?= Config::getAppUrl() ?>/admin/users/<?= $user_to_view['id'] ?>/edit" class="btn btn-apple-primary">
                             <i class="fas fa-edit me-2"></i>Edit User
                         </a>
                         <button type="button" class="btn btn-apple-glass" onclick="confirmToggleStatus()">
@@ -52,7 +52,7 @@ ob_start();
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <a href="<?= Config::APP_URL ?>/admin/users" class="dropdown-item">
+                                    <a href="<?= Config::getAppUrl() ?>/admin/users" class="dropdown-item">
                                         <i class="fas fa-list me-2"></i>All Users
                                     </a>
                                 </li>
@@ -244,7 +244,7 @@ function showPasswordResetModal() {
 function resetPassword(password = null) {
     const requestData = password ? { password: password } : {};
     
-    fetch(`<?= Config::APP_URL ?>/admin/users/<?= $user_to_view['id'] ?>/reset-password`, {
+    fetch(`<?= Config::getAppUrl() ?>/admin/users/<?= $user_to_view['id'] ?>/reset-password`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -308,7 +308,7 @@ function confirmToggleStatus() {
 }
 
 function toggleUserStatus(newStatus) {
-    fetch(`<?= Config::APP_URL ?>/admin/users/<?= $user_to_view['id'] ?>/status`, {
+    fetch(`<?= Config::getAppUrl() ?>/admin/users/<?= $user_to_view['id'] ?>/status`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

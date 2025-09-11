@@ -65,7 +65,7 @@ class AuthController extends BaseController {
                 'password' => isset($_POST['password']) ? '[PASSWORD PROVIDED]' : 'not set'
             ]);
             $this->setFlash('error', 'Please fill all required fields: ' . implode(', ', $validator->getAllErrorMessages()));
-            $this->redirect(Config::APP_URL . '/login');
+            $this->redirect(Config::getAppUrl() . '/login');
             return;
         }
         
@@ -92,7 +92,7 @@ class AuthController extends BaseController {
             ]);
             $this->logFailedLogin($emailOrPhone, 'customer');
             $this->setFlash('error', 'Invalid login credentials');
-            $this->redirect(Config::APP_URL . '/login');
+            $this->redirect(Config::getAppUrl() . '/login');
             return;
         }
         
@@ -100,7 +100,7 @@ class AuthController extends BaseController {
         if ($customer['status'] !== 'approved') {
             $statusMessage = $this->getCustomerStatusMessage($customer['status']);
             $this->setFlash('error', $statusMessage);
-            $this->redirect(Config::APP_URL . '/login');
+            $this->redirect(Config::getAppUrl() . '/login');
             return;
         }
         
@@ -128,7 +128,7 @@ class AuthController extends BaseController {
         $this->logActivity('customer_login', ['customer_id' => $customer['customer_id']]);
         
         $this->setFlash('success', 'Welcome back, ' . $customer['name']);
-        $this->redirect(Config::APP_URL . '/');
+        $this->redirect(Config::getAppUrl() . '/');
     }
     
     private function handleUserLogin() {
@@ -140,7 +140,7 @@ class AuthController extends BaseController {
         
         if (!$isValid) {
             $this->setFlash('error', 'Please fill all required fields');
-            $this->redirect(Config::APP_URL . '/login');
+            $this->redirect(Config::getAppUrl() . '/login');
             return;
         }
         
@@ -154,14 +154,14 @@ class AuthController extends BaseController {
         if (!$user || !password_verify($password, $user['password'])) {
             $this->logFailedLogin($loginId, 'user');
             $this->setFlash('error', 'Invalid login credentials');
-            $this->redirect(Config::APP_URL . '/login');
+            $this->redirect(Config::getAppUrl() . '/login');
             return;
         }
         
         // Check account status
         if ($user['status'] !== 'active') {
             $this->setFlash('error', 'Your account is ' . $user['status'] . '. Please contact administrator.');
-            $this->redirect(Config::APP_URL . '/login');
+            $this->redirect(Config::getAppUrl() . '/login');
             return;
         }
         
@@ -220,14 +220,14 @@ class AuthController extends BaseController {
         
         if (!$isValid) {
             $this->setFlash('error', implode('<br>', $validator->getAllErrorMessages()));
-            $this->redirect(Config::APP_URL . '/signup');
+            $this->redirect(Config::getAppUrl() . '/signup');
             return;
         }
         
         // Check password confirmation
         if ($_POST['password'] !== $_POST['password_confirmation']) {
             $this->setFlash('error', 'Password confirmation does not match');
-            $this->redirect(Config::APP_URL . '/signup');
+            $this->redirect(Config::getAppUrl() . '/signup');
             return;
         }
         
@@ -270,13 +270,13 @@ class AuthController extends BaseController {
             $this->sendApprovalRequestToAdmin($customerId, $_POST);
             
             $this->setFlash('success', 'Registration successful! Your account is pending approval. You will receive an email confirmation once approved.');
-            $this->redirect(Config::APP_URL . '/login');
+            $this->redirect(Config::getAppUrl() . '/login');
             
         } catch (Exception $e) {
             $this->db->rollback();
             error_log("Registration error: " . $e->getMessage());
             $this->setFlash('error', 'Registration failed. Please try again.');
-            $this->redirect(Config::APP_URL . '/signup');
+            $this->redirect(Config::getAppUrl() . '/signup');
         }
     }
     
@@ -288,7 +288,7 @@ class AuthController extends BaseController {
         
         $this->session->logout();
         $this->setFlash('success', 'You have been logged out successfully');
-        $this->redirect(Config::APP_URL . '/');
+        $this->redirect(Config::getAppUrl() . '/');
     }
     
     private function redirectToDashboard($role = null) {
@@ -298,18 +298,18 @@ class AuthController extends BaseController {
         
         switch ($role) {
             case 'customer':
-                $this->redirect(Config::APP_URL . '/');
+                $this->redirect(Config::getAppUrl() . '/');
                 break;
             case 'controller':
             case 'controller_nodal':
-                $this->redirect(Config::APP_URL . '/controller/dashboard');
+                $this->redirect(Config::getAppUrl() . '/controller/dashboard');
                 break;
             case 'admin':
             case 'superadmin':
-                $this->redirect(Config::APP_URL . '/admin/dashboard');
+                $this->redirect(Config::getAppUrl() . '/admin/dashboard');
                 break;
             default:
-                $this->redirect(Config::APP_URL . '/');
+                $this->redirect(Config::getAppUrl() . '/');
         }
     }
     

@@ -68,7 +68,7 @@ class BaseController {
      */
     protected function requireAuth() {
         if (!$this->session->isLoggedIn()) {
-            $this->redirect(Config::APP_URL . '/login');
+            $this->redirect(Config::getAppUrl() . '/login');
         }
     }
     
@@ -105,7 +105,7 @@ class BaseController {
             // For login forms, redirect back with error instead of JSON
             if (isset($_POST['login_type'])) {
                 $this->setFlash('error', 'Invalid security token. Please try again.');
-                $this->redirect(Config::APP_URL . '/login');
+                $this->redirect(Config::getAppUrl() . '/login');
             } else {
                 $this->json(['error' => 'Invalid CSRF token'], 403);
             }

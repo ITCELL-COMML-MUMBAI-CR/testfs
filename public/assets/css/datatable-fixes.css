@@ -1,0 +1,253 @@
+/**
+ * DataTable Fixes for SAMPARK
+ * Fixes white text on white background issues
+ */
+
+/* Ensure proper text colors for DataTable elements */
+.dataTables_wrapper table.dataTable {
+    color: #212529 !important;
+}
+
+.dataTables_wrapper table.dataTable th {
+    color: #212529 !important;
+    background-color: #f8f9fa !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.dataTables_wrapper table.dataTable td {
+    color: #212529 !important;
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+/* Fix striped table rows */
+.dataTables_wrapper table.dataTable.table-striped > tbody > tr:nth-of-type(odd) > td {
+    background-color: #f8f9fa !important;
+    color: #212529 !important;
+}
+
+.dataTables_wrapper table.dataTable.table-striped > tbody > tr:nth-of-type(even) > td {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+}
+
+/* Fix hover states */
+.dataTables_wrapper table.dataTable.table-hover > tbody > tr:hover > td {
+    background-color: #e9ecef !important;
+    color: #212529 !important;
+}
+
+/* Fix selected rows */
+.dataTables_wrapper table.dataTable > tbody > tr.selected > td {
+    background-color: #0d6efd !important;
+    color: #ffffff !important;
+}
+
+/* Fix pagination buttons */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    color: #212529 !important;
+    background-color: transparent !important;
+    border: 1px solid #dee2e6 !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    color: #0d6efd !important;
+    background-color: #e9ecef !important;
+    border-color: #0d6efd !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    color: #ffffff !important;
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+}
+
+/* Fix length and filter controls */
+.dataTables_wrapper .dataTables_length select {
+    color: #212529 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #ced4da !important;
+}
+
+.dataTables_wrapper .dataTables_filter input {
+    color: #212529 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #ced4da !important;
+}
+
+/* Fix info text */
+.dataTables_wrapper .dataTables_info {
+    color: #6c757d !important;
+}
+
+/* Fix processing indicator */
+.dataTables_wrapper .dataTables_processing {
+    color: #212529 !important;
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    border: 1px solid #dee2e6 !important;
+}
+
+/* Fix empty table message */
+.dataTables_wrapper .dataTables_empty {
+    color: #6c757d !important;
+}
+
+/* Fix sorting indicators */
+.dataTables_wrapper table.dataTable thead .sorting:before,
+.dataTables_wrapper table.dataTable thead .sorting:after,
+.dataTables_wrapper table.dataTable thead .sorting_asc:before,
+.dataTables_wrapper table.dataTable thead .sorting_asc:after,
+.dataTables_wrapper table.dataTable thead .sorting_desc:before,
+.dataTables_wrapper table.dataTable thead .sorting_desc:after {
+    color: #6c757d !important;
+}
+
+/* Fix responsive wrapper */
+.dataTables_wrapper .dataTables_scrollHead table.dataTable th {
+    color: #212529 !important;
+    background-color: #f8f9fa !important;
+}
+
+.dataTables_wrapper .dataTables_scrollBody table.dataTable td {
+    color: #212529 !important;
+    background-color: #ffffff !important;
+}
+
+/* Fix custom badge colors in tables */
+.dataTables_wrapper .badge {
+    color: #ffffff !important;
+}
+
+.dataTables_wrapper .badge.bg-primary {
+    background-color: #0d6efd !important;
+    color: #ffffff !important;
+}
+
+.dataTables_wrapper .badge.bg-success {
+    background-color: #198754 !important;
+    color: #ffffff !important;
+}
+
+.dataTables_wrapper .badge.bg-warning {
+    background-color: #ffc107 !important;
+    color: #212529 !important;
+}
+
+.dataTables_wrapper .badge.bg-danger {
+    background-color: #dc3545 !important;
+    color: #ffffff !important;
+}
+
+.dataTables_wrapper .badge.bg-info {
+    background-color: #0dcaf0 !important;
+    color: #212529 !important;
+}
+
+.dataTables_wrapper .badge.bg-secondary {
+    background-color: #6c757d !important;
+    color: #ffffff !important;
+}
+
+/* Fix links in tables */
+.dataTables_wrapper table.dataTable a {
+    color: #0d6efd !important;
+}
+
+.dataTables_wrapper table.dataTable a:hover {
+    color: #0a58ca !important;
+}
+
+/* Fix text-muted in tables */
+.dataTables_wrapper table.dataTable .text-muted {
+    color: #6c757d !important;
+}
+
+/* Fix small text in tables */
+.dataTables_wrapper table.dataTable small {
+    color: #6c757d !important;
+}
+
+/* Override any conflicting styles */
+.dataTables_wrapper table.dataTable * {
+    color: inherit !important;
+}
+
+/* Ensure proper contrast for dark elements */
+.dataTables_wrapper table.dataTable .text-white {
+    color: #ffffff !important;
+}
+
+.dataTables_wrapper table.dataTable .text-dark {
+    color: #212529 !important;
+}
+
+/* Fix any remaining white text issues */
+.dataTables_wrapper table.dataTable td[style*="color: white"],
+.dataTables_wrapper table.dataTable th[style*="color: white"] {
+    color: #212529 !important;
+}
+
+.dataTables_wrapper table.dataTable td[style*="color: #fff"],
+.dataTables_wrapper table.dataTable th[style*="color: #fff"] {
+    color: #212529 !important;
+}
+
+.dataTables_wrapper table.dataTable td[style*="color: #ffffff"],
+.dataTables_wrapper table.dataTable th[style*="color: #ffffff"] {
+    color: #212529 !important;
+}
+
+/* Force override for any remaining issues */
+.dataTables_wrapper table.dataTable tbody tr td {
+    color: #212529 !important;
+}
+
+.dataTables_wrapper table.dataTable thead tr th {
+    color: #212529 !important;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .dataTables_wrapper table.dataTable {
+        color: #ffffff !important;
+    }
+    
+    .dataTables_wrapper table.dataTable th {
+        color: #ffffff !important;
+        background-color: #343a40 !important;
+    }
+    
+    .dataTables_wrapper table.dataTable td {
+        color: #ffffff !important;
+        background-color: #212529 !important;
+    }
+    
+    .dataTables_wrapper table.dataTable.table-striped > tbody > tr:nth-of-type(odd) > td {
+        background-color: #343a40 !important;
+        color: #ffffff !important;
+    }
+    
+    .dataTables_wrapper table.dataTable.table-striped > tbody > tr:nth-of-type(even) > td {
+        background-color: #212529 !important;
+        color: #ffffff !important;
+    }
+    
+    .dataTables_wrapper table.dataTable.table-hover > tbody > tr:hover > td {
+        background-color: #495057 !important;
+        color: #ffffff !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    .dataTables_wrapper table.dataTable th,
+    .dataTables_wrapper table.dataTable td {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+    }
+    
+    .dataTables_wrapper table.dataTable.table-striped > tbody > tr:nth-of-type(odd) > td {
+        background-color: #f8f9fa !important;
+        color: #000000 !important;
+    }
+}

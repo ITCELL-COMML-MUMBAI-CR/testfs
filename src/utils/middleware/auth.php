@@ -19,12 +19,12 @@ class AuthMiddleware {
                 strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
                 header('Content-Type: application/json');
                 http_response_code(401);
-                echo json_encode(['error' => 'Authentication required', 'redirect' => Config::APP_URL . '/login']);
+                echo json_encode(['error' => 'Authentication required', 'redirect' => Config::getAppUrl() . '/login']);
                 exit;
             }
             
             // Redirect to login page
-            header('Location: ' . Config::APP_URL . '/login');
+            header('Location: ' . Config::getAppUrl() . '/login');
             exit;
         }
         

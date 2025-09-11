@@ -16,7 +16,7 @@ ob_start();
                         <p class="text-muted mb-0">Manage system users, roles and permissions</p>
                     </div>
                     <div class="mt-3 mt-md-0">
-                        <a href="<?= Config::APP_URL ?>/admin/users/create" class="btn btn-apple-primary">
+                        <a href="<?= Config::getAppUrl() ?>/admin/users/create" class="btn btn-apple-primary">
                             <i class="fas fa-plus me-2"></i>Add New User
                         </a>
                     </div>
@@ -27,7 +27,7 @@ ob_start();
         <!-- Filters Card -->
         <div class="card-apple-glass mb-4">
             <div class="card-body">
-                <form id="filterForm" method="GET" action="<?= Config::APP_URL ?>/admin/users">
+                <form id="filterForm" method="GET" action="<?= Config::getAppUrl() ?>/admin/users">
                     <div class="row g-3 align-items-end">
                         <div class="col-md-3">
                             <label for="role" class="form-label-apple small">Role</label>
@@ -64,7 +64,7 @@ ob_start();
                             <button type="submit" class="btn btn-apple-primary flex-grow-1">
                                 <i class="fas fa-search me-1"></i>Filter
                             </button>
-                            <a href="<?= Config::APP_URL ?>/admin/users" class="btn btn-apple-glass flex-grow-1">
+                            <a href="<?= Config::getAppUrl() ?>/admin/users" class="btn btn-apple-glass flex-grow-1">
                                 <i class="fas fa-times me-1"></i>Clear
                             </a>
                         </div>
@@ -231,14 +231,14 @@ ob_start();
                         
                         <?php if (!empty(array_filter($filters))): ?>
                             <p class="text-muted mb-4">No users match your current filters. Try adjusting your search criteria.</p>
-                            <a href="<?= Config::APP_URL ?>/admin/users" class="btn btn-apple-glass me-2">
+                            <a href="<?= Config::getAppUrl() ?>/admin/users" class="btn btn-apple-glass me-2">
                                 <i class="fas fa-times me-1"></i>Clear Filters
                             </a>
                         <?php else: ?>
                             <p class="text-muted mb-4">There are no users in the system. Start by adding a new user.</p>
                         <?php endif; ?>
                         
-                        <a href="<?= Config::APP_URL ?>/admin/users/create" class="btn btn-apple-primary">
+                        <a href="<?= Config::getAppUrl() ?>/admin/users/create" class="btn btn-apple-primary">
                             <i class="fas fa-plus me-2"></i>Add New User
                         </a>
                     </div>
@@ -263,7 +263,7 @@ ob_start();
                         </div>
                     </div>
                     <div class="col-md-4 text-md-end mt-2 mt-md-0">
-                        <a href="<?= Config::APP_URL ?>/admin/roles" class="btn btn-apple-glass btn-sm">
+                        <a href="<?= Config::getAppUrl() ?>/admin/roles" class="btn btn-apple-glass btn-sm">
                             <i class="fas fa-user-shield me-1"></i>Manage Roles
                         </a>
                     </div>
@@ -516,14 +516,14 @@ function getRoleBadgeClass($role) {
 }
 
 $additional_css = [
-    Config::APP_URL . '/libs/datatables/dataTables.bootstrap5.min.css',
-    Config::APP_URL . '/assets/css/sweetalert-fixes.css'
+    Config::getAppUrl() . '/libs/datatables/dataTables.bootstrap5.min.css',
+    Config::getAppUrl() . '/assets/css/sweetalert-fixes.css'
 ];
 
 $additional_js = [
-    Config::APP_URL . '/libs/datatables/jquery.dataTables.min.js',
-    Config::APP_URL . '/libs/datatables/dataTables.bootstrap5.min.js',
-    Config::APP_URL . '/assets/js/admin-actions.js'
+    Config::getAppUrl() . '/libs/datatables/jquery.dataTables.min.js',
+    Config::getAppUrl() . '/libs/datatables/dataTables.bootstrap5.min.js',
+    Config::getAppUrl() . '/assets/js/admin-actions.js'
 ];
 
 $content = ob_get_clean();

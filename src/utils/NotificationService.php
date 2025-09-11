@@ -226,7 +226,7 @@ class NotificationService {
         // Replace common system variables
         $systemVars = [
             '{{app_name}}' => Config::APP_NAME,
-            '{{app_url}}' => Config::APP_URL,
+            '{{app_url}}' => Config::getAppUrl(),
             '{{current_date}}' => date('Y-m-d'),
             '{{current_time}}' => date('H:i:s'),
             '{{current_year}}' => date('Y')

@@ -9,7 +9,7 @@ ob_start();
 
 // Set additional CSS for this view
 $additional_css = [
-    Config::APP_URL . '/assets/css/controller-views.css'
+    Config::getAppUrl() . '/assets/css/controller-views.css'
 ];
 
 // Set page title
@@ -272,7 +272,7 @@ $page_title = 'Support Hub - SAMPARK';
                                            value="<?= $ticket['complaint_id'] ?>">
                                 </td>
                                 <td>
-                                    <a href="<?= Config::APP_URL ?>/controller/tickets/<?= $ticket['complaint_id'] ?>" 
+                                    <a href="<?= Config::getAppUrl() ?>/controller/tickets/<?= $ticket['complaint_id'] ?>" 
                                        class="fw-semibold text-decoration-none">
                                         #<?= $ticket['complaint_id'] ?>
                                     </a>
@@ -353,7 +353,7 @@ $page_title = 'Support Hub - SAMPARK';
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="<?= Config::APP_URL ?>/controller/tickets/<?= $ticket['complaint_id'] ?>" 
+                                        <a href="<?= Config::getAppUrl() ?>/controller/tickets/<?= $ticket['complaint_id'] ?>" 
                                            class="btn btn-sm btn-apple-primary" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>

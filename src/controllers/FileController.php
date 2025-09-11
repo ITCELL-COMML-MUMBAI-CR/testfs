@@ -281,7 +281,7 @@ class FileController extends BaseController {
                 $this->json([
                     'success' => true,
                     'message' => 'Avatar uploaded successfully',
-                    'avatar_url' => Config::APP_URL . '/uploads/avatars/' . $user['id'] . '.jpg?t=' . time()
+                    'avatar_url' => Config::getAppUrl() . '/uploads/avatars/' . $user['id'] . '.jpg?t=' . time()
                 ]);
             } else {
                 $this->json(['success' => false, 'message' => 'Failed to process image'], 500);

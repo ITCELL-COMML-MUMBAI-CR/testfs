@@ -6,16 +6,16 @@
     <title>Server Error - SAMPARK</title>
     
     <!-- Bootstrap 5 CSS -->
-    <link href="<?= Config::APP_URL ?>/libs/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="<?= Config::getAppUrl() ?>/libs/bootstrap/bootstrap.min.css" rel="stylesheet">
     
     <!-- Font Awesome -->
-    <link href="<?= Config::APP_URL ?>/libs/fontawesome/all.min.css" rel="stylesheet">
+    <link href="<?= Config::getAppUrl() ?>/libs/fontawesome/all.min.css" rel="stylesheet">
     
     <!-- Apple Design CSS -->
-    <link href="<?= Config::APP_URL ?>/assets/css/apple-design.css" rel="stylesheet">
+    <link href="<?= Config::getAppUrl() ?>/assets/css/apple-design.css" rel="stylesheet">
     
     <!-- Inter Font -->
-    <link href="<?= Config::APP_URL ?>/assets/fonts/inter.css" rel="stylesheet">
+    <link href="<?= Config::getAppUrl() ?>/assets/fonts/inter.css" rel="stylesheet">
     
     <style>
         body {
@@ -141,7 +141,7 @@
                         <button class="btn btn-apple-primary retry-button" onclick="retryNow()" id="retryBtn">
                             <i class="fas fa-redo me-2"></i>Retry Now
                         </button>
-                        <a href="<?= Config::APP_URL ?>/" class="btn btn-apple-glass">
+                        <a href="<?= Config::getAppUrl() ?>/" class="btn btn-apple-glass">
                             <i class="fas fa-home me-2"></i>Go Home
                         </a>
                     </div>
@@ -168,7 +168,7 @@
                             </button>
                         </div>
                         <div class="col-6 col-md-3">
-                            <a href="<?= Config::APP_URL ?>/help" class="btn btn-apple-glass btn-sm w-100">
+                            <a href="<?= Config::getAppUrl() ?>/help" class="btn btn-apple-glass btn-sm w-100">
                                 <i class="fas fa-question-circle me-1"></i>Help
                             </a>
                         </div>
@@ -199,10 +199,10 @@
     </div>
     
     <!-- Bootstrap JS -->
-    <script src="<?= Config::APP_URL ?>/libs/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="<?= Config::getAppUrl() ?>/libs/bootstrap/bootstrap.bundle.min.js"></script>
     
     <!-- SweetAlert2 -->
-    <script src="<?= Config::APP_URL ?>/libs/sweetalert2/sweetalert2.min.js"></script>
+    <script src="<?= Config::getAppUrl() ?>/libs/sweetalert2/sweetalert2.min.js"></script>
     
     <script>
         let countdownTimer;

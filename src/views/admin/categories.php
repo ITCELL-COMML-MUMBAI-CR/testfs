@@ -143,7 +143,7 @@ $user_name = $user['name'] ?? 'Administrator';
                                 </td>
                                 <td>
                                     <?php if ($category['ticket_count'] > 0): ?>
-                                        <a href="<?= Config::APP_URL ?>/admin/tickets?category=<?= $category['category_id'] ?>" 
+                                        <a href="<?= Config::getAppUrl() ?>/admin/tickets?category=<?= $category['category_id'] ?>" 
                                            class="text-decoration-none">
                                             <span class="badge bg-info"><?= $category['ticket_count'] ?> tickets</span>
                                         </a>

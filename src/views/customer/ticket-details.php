@@ -13,10 +13,10 @@ ob_start();
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <a href="<?= Config::APP_URL ?>/customer/dashboard" class="text-decoration-none">Dashboard</a>
+                            <a href="<?= Config::getAppUrl() ?>/customer/dashboard" class="text-decoration-none">Dashboard</a>
                         </li>
                         <li class="breadcrumb-item">
-                            <a href="<?= Config::APP_URL ?>/customer/tickets" class="text-decoration-none">My Tickets</a>
+                            <a href="<?= Config::getAppUrl() ?>/customer/tickets" class="text-decoration-none">My Tickets</a>
                         </li>
                         <li class="breadcrumb-item active">#<?= htmlspecialchars($ticket['complaint_id']) ?></li>
                     </ol>
@@ -362,11 +362,11 @@ ob_start();
                                 <i class="fas fa-share me-2"></i>Share Ticket
                             </button>
                             
-                            <a href="<?= Config::APP_URL ?>/customer/tickets/create" class="btn btn-apple-glass">
+                            <a href="<?= Config::getAppUrl() ?>/customer/tickets/create" class="btn btn-apple-glass">
                                 <i class="fas fa-plus me-2"></i>Create New Ticket
                             </a>
                             
-                            <a href="<?= Config::APP_URL ?>/customer/tickets" class="btn btn-apple-glass">
+                            <a href="<?= Config::getAppUrl() ?>/customer/tickets" class="btn btn-apple-glass">
                                 <i class="fas fa-list me-2"></i>All My Tickets
                             </a>
                         </div>
@@ -386,7 +386,7 @@ ob_start();
                         </p>
                         
                         <div class="d-grid gap-2">
-                            <a href="<?= Config::APP_URL ?>/help" class="btn btn-apple-glass btn-sm">
+                            <a href="<?= Config::getAppUrl() ?>/help" class="btn btn-apple-glass btn-sm">
                                 <i class="fas fa-book me-1"></i>Help Center
                             </a>
                             <button class="btn btn-apple-glass btn-sm" onclick="contactSupport()">
@@ -485,7 +485,7 @@ function submitFeedback(feedback) {
     formData.append('rating', feedback.rating);
     formData.append('remarks', feedback.remarks);
     
-    fetch('<?= Config::APP_URL ?>/customer/tickets/<?= $ticket['complaint_id'] ?>/feedback', {
+    fetch('<?= Config::getAppUrl() ?>/customer/tickets/<?= $ticket['complaint_id'] ?>/feedback', {
         method: 'POST',
         body: formData
     })

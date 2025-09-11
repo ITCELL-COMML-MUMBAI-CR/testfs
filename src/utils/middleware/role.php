@@ -150,24 +150,24 @@ class RoleMiddleware {
         $session->setFlash('error', $message);
         
         if (!$session->isLoggedIn()) {
-            header('Location: ' . Config::APP_URL . '/login');
+            header('Location: ' . Config::getAppUrl() . '/login');
         } else {
             // Redirect to their dashboard or access denied page
             $userRole = $session->getUserRole();
             switch ($userRole) {
                 case 'customer':
-                    header('Location: ' . Config::APP_URL . '/customer/dashboard');
+                    header('Location: ' . Config::getAppUrl() . '/customer/dashboard');
                     break;
                 case 'controller':
                 case 'controller_nodal':
-                    header('Location: ' . Config::APP_URL . '/controller/dashboard');
+                    header('Location: ' . Config::getAppUrl() . '/controller/dashboard');
                     break;
                 case 'admin':
                 case 'superadmin':
-                    header('Location: ' . Config::APP_URL . '/admin/dashboard');
+                    header('Location: ' . Config::getAppUrl() . '/admin/dashboard');
                     break;
                 default:
-                    header('Location: ' . Config::APP_URL . '/');
+                    header('Location: ' . Config::getAppUrl() . '/');
             }
         }
         exit;

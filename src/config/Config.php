@@ -11,9 +11,10 @@ class Config {
     const APP_NAME = 'SAMPARK';
     const APP_VERSION = '1.0.0';
     const APP_DESCRIPTION = 'Support and Mediation Portal for All Rail Cargo';
-    const APP_URL = 'http://localhost/testfs/public';
-    const BASE_PATH = '/testfs/public';
     const DEBUG_MODE = true;
+    
+    // APP_URL and BASE_PATH are now dynamic
+    // Use Config::getAppUrl() and Config::getBasePath() instead of constants
     
     // Email Configuration
     const FROM_EMAIL = 'noreply@sampark.railway.gov.in';
@@ -268,6 +269,34 @@ class Config {
     }
     
     /**
+     * Get application URL (dynamic based on environment)
+     */
+    public static function getAppUrl() {
+        // Check if running from command line
+        if (php_sapi_name() === 'cli') {
+            return 'http://localhost/testfs/public'; // Default for CLI
+        }
+        
+        // Auto-detect protocol
+        $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+        
+        // Get host
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        
+        // Get base path
+        $basePath = self::getBasePath();
+        
+        return $protocol . '://' . $host . $basePath;
+    }
+    
+    /**
+     * Legacy support - get APP_URL
+     */
+    public static function getAppUrlLegacy() {
+        return self::getAppUrl();
+    }
+    
+    /**
      * Generate complaint number
      */
     public static function generateComplaintNumber() {
@@ -287,11 +316,22 @@ class Config {
     }
     
     /**
-     * Get configuration value
+     * Get configuration value with dynamic APP_URL support
      */
     public static function get($key, $default = null) {
+        // Handle special dynamic constants
+        if (strtoupper($key) === 'APP_URL') {
+            return self::getAppUrl();
+        }
+        if (strtoupper($key) === 'BASE_PATH') {
+            return self::getBasePath();
+        }
+        
         return defined('self::' . strtoupper($key)) ? constant('self::' . strtoupper($key)) : $default;
     }
+    
+    // Dynamic constants - calculated at runtime
+    // We'll initialize these in the constructor or via static initialization
     
     /**
      * Get maximum upload size in bytes
@@ -721,3 +761,5 @@ class Config {
         }
     }
 }
+
+// Configuration is now dynamic - APP_URL and BASE_PATH are calculated at runtime

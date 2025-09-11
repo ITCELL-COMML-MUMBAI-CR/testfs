@@ -16,7 +16,7 @@ ob_start();
                         <p class="text-muted mb-0">Add a new user to the system</p>
                     </div>
                     <div class="mt-3 mt-md-0">
-                        <a href="<?= Config::APP_URL ?>/admin/users" class="btn btn-apple-glass">
+                        <a href="<?= Config::getAppUrl() ?>/admin/users" class="btn btn-apple-glass">
                             <i class="fas fa-arrow-left me-2"></i>Back to Users
                         </a>
                     </div>
@@ -29,7 +29,7 @@ ob_start();
             <div class="col-12 col-lg-8">
                 <div class="card-apple">
                     <div class="card-body">
-                        <form id="createUserForm" action="<?= Config::APP_URL ?>/admin/users/create" method="POST" class="needs-validation" novalidate>
+                        <form id="createUserForm" action="<?= Config::getAppUrl() ?>/admin/users/create" method="POST" class="needs-validation" novalidate>
                             <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
                             
                             <!-- Basic Information -->
@@ -159,7 +159,7 @@ ob_start();
                             
                             <!-- Form Actions -->
                             <div class="d-flex justify-content-end mt-4">
-                                <button type="button" class="btn btn-apple-glass me-2" onclick="location.href='<?= Config::APP_URL ?>/admin/users'">
+                                <button type="button" class="btn btn-apple-glass me-2" onclick="location.href='<?= Config::getAppUrl() ?>/admin/users'">
                                     Cancel
                                 </button>
                                 <button type="submit" class="btn btn-apple-primary">
@@ -250,7 +250,7 @@ ob_start();
                         </h5>
                         <p class="card-text small">Check the admin guide for detailed information on user roles and permissions.</p>
                         
-                        <a href="<?= Config::APP_URL ?>/help/admin-guide" class="btn btn-sm btn-apple-glass w-100">
+                        <a href="<?= Config::getAppUrl() ?>/help/admin-guide" class="btn btn-sm btn-apple-glass w-100">
                             <i class="fas fa-book me-2"></i>View Admin Guide
                         </a>
                     </div>

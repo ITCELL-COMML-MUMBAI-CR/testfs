@@ -190,7 +190,7 @@ class AdminController extends BaseController {
             $this->json([
                 'success' => true,
                 'message' => 'User created successfully',
-                'redirect' => Config::APP_URL . '/admin/users'
+                'redirect' => Config::getAppUrl() . '/admin/users'
             ]);
             
         } catch (Exception $e) {
@@ -214,7 +214,7 @@ class AdminController extends BaseController {
         
         if (!$userToEdit) {
             $this->setFlash('error', 'User not found');
-            $this->redirect(Config::APP_URL . '/admin/users');
+            $this->redirect(Config::getAppUrl() . '/admin/users');
             return;
         }
         
@@ -340,7 +340,7 @@ class AdminController extends BaseController {
         
         if (!$userToView) {
             $this->setFlash('error', 'User not found');
-            $this->redirect(Config::APP_URL . '/admin/users');
+            $this->redirect(Config::getAppUrl() . '/admin/users');
             return;
         }
         
@@ -615,7 +615,7 @@ class AdminController extends BaseController {
         
         if (!$customer) {
             $this->setFlash('error', 'Customer not found');
-            $this->redirect(Config::APP_URL . '/admin/customers');
+            $this->redirect(Config::getAppUrl() . '/admin/customers');
             return;
         }
         
@@ -650,7 +650,7 @@ class AdminController extends BaseController {
         
         if (!$customer) {
             $this->setFlash('error', 'Customer not found');
-            $this->redirect(Config::APP_URL . '/admin/customers');
+            $this->redirect(Config::getAppUrl() . '/admin/customers');
             return;
         }
         

@@ -9,7 +9,7 @@ ob_start();
 
 // Set additional CSS for this view
 $additional_css = [
-    Config::APP_URL . '/assets/css/controller-views.css'
+    Config::getAppUrl() . '/assets/css/controller-views.css'
 ];
 
 // Set page title
@@ -48,14 +48,14 @@ $page_title = 'Controller Dashboard - SAMPARK';
                         <i class="fas fa-plus me-2"></i>Quick Actions
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="<?= Config::APP_URL ?>/controller/tickets">
+                        <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/controller/tickets">
                             <i class="fas fa-list me-2"></i>View All Tickets
                         </a></li>
-                        <li><a class="dropdown-item" href="<?= Config::APP_URL ?>/controller/reports">
+                        <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/controller/reports">
                             <i class="fas fa-chart-line me-2"></i>Generate Report
                         </a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="<?= Config::APP_URL ?>/controller/help">
+                        <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/controller/help">
                             <i class="fas fa-question-circle me-2"></i>Help & Support
                         </a></li>
                     </ul>
@@ -173,7 +173,7 @@ $page_title = 'Controller Dashboard - SAMPARK';
                         <i class="fas fa-clock me-2 text-primary"></i>
                         Priority Tickets Requiring Action
                     </h5>
-                    <a href="<?= Config::APP_URL ?>/controller/tickets?status=pending" class="btn btn-sm btn-apple-primary">
+                    <a href="<?= Config::getAppUrl() ?>/controller/tickets?status=pending" class="btn btn-sm btn-apple-primary">
                         View All <i class="fas fa-arrow-right ms-1"></i>
                     </a>
                 </div>
@@ -204,7 +204,7 @@ $page_title = 'Controller Dashboard - SAMPARK';
                                     <?php foreach (array_slice($pending_tickets, 0, 8) as $ticket): ?>
                                     <tr class="ticket-row" data-ticket-id="<?= $ticket['complaint_id'] ?>">
                                         <td>
-                                            <a href="<?= Config::APP_URL ?>/controller/tickets/<?= $ticket['complaint_id'] ?>" 
+                                            <a href="<?= Config::getAppUrl() ?>/controller/tickets/<?= $ticket['complaint_id'] ?>" 
                                                class="fw-semibold text-decoration-none">
                                                 #<?= $ticket['complaint_id'] ?>
                                             </a>
@@ -238,7 +238,7 @@ $page_title = 'Controller Dashboard - SAMPARK';
                                         </td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <a href="<?= Config::APP_URL ?>/controller/tickets/<?= $ticket['complaint_id'] ?>" 
+                                                <a href="<?= Config::getAppUrl() ?>/controller/tickets/<?= $ticket['complaint_id'] ?>" 
                                                    class="btn btn-sm btn-apple-primary">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
@@ -283,7 +283,7 @@ $page_title = 'Controller Dashboard - SAMPARK';
                                 <?php foreach ($sla_violations as $violation): ?>
                                 <tr class="table-danger">
                                     <td>
-                                        <a href="<?= Config::APP_URL ?>/controller/tickets/<?= $violation['complaint_id'] ?>" 
+                                        <a href="<?= Config::getAppUrl() ?>/controller/tickets/<?= $violation['complaint_id'] ?>" 
                                            class="fw-semibold text-decoration-none">
                                             #<?= $violation['complaint_id'] ?>
                                         </a>
@@ -298,7 +298,7 @@ $page_title = 'Controller Dashboard - SAMPARK';
                                         <?= $violation['hours_overdue'] ?>h overdue
                                     </td>
                                     <td>
-                                        <a href="<?= Config::APP_URL ?>/controller/tickets/<?= $violation['complaint_id'] ?>" 
+                                        <a href="<?= Config::getAppUrl() ?>/controller/tickets/<?= $violation['complaint_id'] ?>" 
                                            class="btn btn-sm btn-danger">
                                             <i class="fas fa-exclamation-circle me-1"></i>Resolve Now
                                         </a>
@@ -352,7 +352,7 @@ $page_title = 'Controller Dashboard - SAMPARK';
                                             <?= date('M d, Y H:i', strtotime($activity['created_at'])) ?>
                                         </span>
                                         <?php if ($activity['complaint_id']): ?>
-                                        <a href="<?= Config::APP_URL ?>/controller/tickets/<?= $activity['complaint_id'] ?>" 
+                                        <a href="<?= Config::getAppUrl() ?>/controller/tickets/<?= $activity['complaint_id'] ?>" 
                                            class="ms-2 text-decoration-none">
                                             View Ticket
                                         </a>
@@ -436,19 +436,19 @@ $page_title = 'Controller Dashboard - SAMPARK';
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="<?= Config::APP_URL ?>/controller/tickets?status=pending" 
+                        <a href="<?= Config::getAppUrl() ?>/controller/tickets?status=pending" 
                            class="btn btn-apple-primary">
                             <i class="fas fa-clock me-2"></i>View Pending Tickets
                         </a>
-                        <a href="<?= Config::APP_URL ?>/controller/tickets?priority=critical" 
+                        <a href="<?= Config::getAppUrl() ?>/controller/tickets?priority=critical" 
                            class="btn btn-apple-danger">
                             <i class="fas fa-exclamation-circle me-2"></i>Critical Priority
                         </a>
-                        <a href="<?= Config::APP_URL ?>/controller/tickets?status=awaiting_approval" 
+                        <a href="<?= Config::getAppUrl() ?>/controller/tickets?status=awaiting_approval" 
                            class="btn btn-apple-warning">
                             <i class="fas fa-check-circle me-2"></i>Awaiting Approval
                         </a>
-                        <a href="<?= Config::APP_URL ?>/controller/reports" 
+                        <a href="<?= Config::getAppUrl() ?>/controller/reports" 
                            class="btn btn-apple-secondary">
                             <i class="fas fa-chart-line me-2"></i>Generate Report
                         </a>
@@ -503,7 +503,7 @@ $page_title = 'Controller Dashboard - SAMPARK';
                     <?php foreach ($escalated_tickets as $escalated): ?>
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <div>
-                            <a href="<?= Config::APP_URL ?>/controller/tickets/<?= $escalated['complaint_id'] ?>" 
+                            <a href="<?= Config::getAppUrl() ?>/controller/tickets/<?= $escalated['complaint_id'] ?>" 
                                class="fw-semibold text-decoration-none">
                                 #<?= $escalated['complaint_id'] ?>
                             </a>

@@ -17,24 +17,24 @@ ob_start();
                 
                 <?php if (!$is_logged_in): ?>
                     <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center mb-5">
-                        <a href="<?= Config::APP_URL ?>/login" class="btn btn-apple-primary btn-lg">
+                        <a href="<?= Config::getAppUrl() ?>/login" class="btn btn-apple-primary btn-lg">
                             <i class="fas fa-ticket-alt me-2"></i>Raise Support Ticket
                         </a>
-                        <a href="<?= Config::APP_URL ?>/signup" class="btn btn-apple-glass btn-lg">
+                        <a href="<?= Config::getAppUrl() ?>/signup" class="btn btn-apple-glass btn-lg">
                             <i class="fas fa-user-plus me-2"></i>Customer Registration
                         </a>
                     </div>
                 <?php else: ?>
                     <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center mb-5">
                         <?php if ($user_role === 'customer'): ?>
-                            <a href="<?= Config::APP_URL ?>/customer/tickets/create" class="btn btn-apple-primary btn-lg">
+                            <a href="<?= Config::getAppUrl() ?>/customer/tickets/create" class="btn btn-apple-primary btn-lg">
                                 <i class="fas fa-plus me-2"></i>Create New Ticket
                             </a>
-                            <a href="<?= Config::APP_URL ?>/customer/tickets" class="btn btn-apple-glass btn-lg">
+                            <a href="<?= Config::getAppUrl() ?>/customer/tickets" class="btn btn-apple-glass btn-lg">
                                 <i class="fas fa-list me-2"></i>My Tickets
                             </a>
                         <?php else: ?>
-                            <a href="<?= Config::APP_URL ?>/<?= $user_role === 'admin' || $user_role === 'superadmin' ? 'admin' : 'controller' ?>/dashboard" class="btn btn-apple-primary btn-lg">
+                            <a href="<?= Config::getAppUrl() ?>/<?= $user_role === 'admin' || $user_role === 'superadmin' ? 'admin' : 'controller' ?>/dashboard" class="btn btn-apple-primary btn-lg">
                                 <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
                             </a>
                         <?php endif; ?>

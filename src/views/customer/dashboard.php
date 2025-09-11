@@ -20,7 +20,7 @@ ob_start();
                         </p>
                     </div>
                     <div class="mt-3 mt-md-0">
-                        <a href="<?= Config::APP_URL ?>/customer/tickets/create" class="btn btn-apple-primary">
+                        <a href="<?= Config::getAppUrl() ?>/customer/tickets/create" class="btn btn-apple-primary">
                             <i class="fas fa-plus me-2"></i>Create New Ticket
                         </a>
                     </div>
@@ -78,7 +78,7 @@ ob_start();
                                 <i class="fas fa-ticket-alt text-apple-blue me-2"></i>
                                 Recent Tickets
                             </h4>
-                            <a href="<?= Config::APP_URL ?>/customer/tickets" class="btn btn-apple-glass btn-sm">
+                            <a href="<?= Config::getAppUrl() ?>/customer/tickets" class="btn btn-apple-glass btn-sm">
                                 <i class="fas fa-eye me-1"></i>View All
                             </a>
                         </div>
@@ -120,7 +120,7 @@ ob_start();
                                                     <small><?= date('M d, Y', strtotime($ticket['created_at'])) ?></small>
                                                 </td>
                                                 <td>
-                                                    <a href="<?= Config::APP_URL ?>/customer/tickets/<?= $ticket['complaint_id'] ?>" 
+                                                    <a href="<?= Config::getAppUrl() ?>/customer/tickets/<?= $ticket['complaint_id'] ?>" 
                                                        class="btn btn-apple-glass btn-sm">
                                                         <i class="fas fa-eye me-1"></i>View
                                                     </a>
@@ -135,7 +135,7 @@ ob_start();
                                 <i class="fas fa-ticket-alt text-muted mb-3" style="font-size: 3rem;"></i>
                                 <h5 class="text-muted mb-3">No Recent Tickets</h5>
                                 <p class="text-muted mb-4">You haven't created any support tickets yet.</p>
-                                <a href="<?= Config::APP_URL ?>/customer/tickets/create" class="btn btn-apple-primary">
+                                <a href="<?= Config::getAppUrl() ?>/customer/tickets/create" class="btn btn-apple-primary">
                                     <i class="fas fa-plus me-2"></i>Create Your First Ticket
                                 </a>
                             </div>
@@ -164,7 +164,7 @@ ob_start();
                                         <code>#<?= htmlspecialchars($feedback['complaint_id']) ?></code>
                                         <span class="text-muted">(<?= $feedback['days_pending'] ?> days)</span>
                                     </small>
-                                    <a href="<?= Config::APP_URL ?>/customer/tickets/<?= $feedback['complaint_id'] ?>" 
+                                    <a href="<?= Config::getAppUrl() ?>/customer/tickets/<?= $feedback['complaint_id'] ?>" 
                                        class="btn btn-warning btn-sm">Feedback</a>
                                 </div>
                             <?php endforeach; ?>
@@ -184,16 +184,16 @@ ob_start();
                             Quick Actions
                         </h6>
                         <div class="d-grid gap-2">
-                            <a href="<?= Config::APP_URL ?>/customer/tickets/create" class="btn btn-apple-primary">
+                            <a href="<?= Config::getAppUrl() ?>/customer/tickets/create" class="btn btn-apple-primary">
                                 <i class="fas fa-plus me-2"></i>New Support Ticket
                             </a>
-                            <a href="<?= Config::APP_URL ?>/customer/tickets" class="btn btn-apple-glass">
+                            <a href="<?= Config::getAppUrl() ?>/customer/tickets" class="btn btn-apple-glass">
                                 <i class="fas fa-list me-2"></i>View All Tickets
                             </a>
-                            <a href="<?= Config::APP_URL ?>/customer/profile" class="btn btn-apple-glass">
+                            <a href="<?= Config::getAppUrl() ?>/customer/profile" class="btn btn-apple-glass">
                                 <i class="fas fa-user-edit me-2"></i>Update Profile
                             </a>
-                            <a href="<?= Config::APP_URL ?>/help" class="btn btn-apple-glass">
+                            <a href="<?= Config::getAppUrl() ?>/help" class="btn btn-apple-glass">
                                 <i class="fas fa-question-circle me-2"></i>Help & Support
                             </a>
                         </div>

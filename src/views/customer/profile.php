@@ -257,7 +257,7 @@ ob_start();
                         </p>
                         
                         <div class="d-grid gap-2">
-                            <a href="<?= Config::APP_URL ?>/help" class="btn btn-apple-glass btn-sm">
+                            <a href="<?= Config::getAppUrl() ?>/help" class="btn btn-apple-glass btn-sm">
                                 <i class="fas fa-book me-1"></i>Help Center
                             </a>
                             <button class="btn btn-apple-glass btn-sm" onclick="contactSupport()">
@@ -374,7 +374,7 @@ function updateProfile() {
     
     const formData = new FormData(form);
     
-    fetch('<?= Config::APP_URL ?>/customer/profile', {
+    fetch('<?= Config::getAppUrl() ?>/customer/profile', {
         method: 'POST',
         body: formData
     })
@@ -566,7 +566,7 @@ function changePassword(passwords) {
     formData.append('new_password', passwords.newPassword);
     formData.append('confirm_password', passwords.confirmPassword);
     
-    fetch('<?= Config::APP_URL ?>/customer/change-password', {
+    fetch('<?= Config::getAppUrl() ?>/customer/change-password', {
         method: 'POST',
         body: formData
     })
@@ -594,7 +594,7 @@ function copyCustomerId(customerId) {
 }
 
 function loadAccountStats() {
-    fetch('<?= Config::APP_URL ?>/api/customer/stats')
+    fetch('<?= Config::getAppUrl() ?>/api/customer/stats')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -621,7 +621,7 @@ function downloadData() {
         'Cancel'
     ).then((result) => {
         if (result.isConfirmed) {
-            window.location.href = '<?= Config::APP_URL ?>/api/customer/export-data';
+            window.location.href = '<?= Config::getAppUrl() ?>/api/customer/export-data';
         }
     });
 }

@@ -9,7 +9,7 @@ ob_start();
 
 // Set additional CSS for this view
 $additional_css = [
-    Config::APP_URL . '/assets/css/controller-views.css'
+    Config::getAppUrl() . '/assets/css/controller-views.css'
 ];
 
 // Set page title
@@ -21,12 +21,12 @@ $page_title = 'Ticket Details - SAMPARK';
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a href="<?= Config::APP_URL ?>/controller/dashboard" class="text-decoration-none">
+                <a href="<?= Config::getAppUrl() ?>/controller/dashboard" class="text-decoration-none">
                     <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                 </a>
             </li>
             <li class="breadcrumb-item">
-                <a href="<?= Config::APP_URL ?>/controller/tickets" class="text-decoration-none">Support Hub</a>
+                <a href="<?= Config::getAppUrl() ?>/controller/tickets" class="text-decoration-none">Support Hub</a>
             </li>
             <li class="breadcrumb-item active">Ticket #<?= $ticket['complaint_id'] ?></li>
         </ol>
@@ -93,7 +93,7 @@ $page_title = 'Ticket Details - SAMPARK';
                         </a></li>
                     </ul>
                 </div>
-                <a href="<?= Config::APP_URL ?>/controller/tickets" class="btn btn-apple-secondary">
+                <a href="<?= Config::getAppUrl() ?>/controller/tickets" class="btn btn-apple-secondary">
                     <i class="fas fa-arrow-left me-2"></i>Back to List
                 </a>
             </div>
@@ -204,11 +204,11 @@ $page_title = 'Ticket Details - SAMPARK';
                                         <?= date('M d, Y', strtotime($file['uploaded_at'])) ?>
                                     </small>
                                     <div class="mt-2">
-                                        <a href="<?= Config::APP_URL ?>/api/tickets/<?= $ticket['complaint_id'] ?>/evidence/<?= urlencode($file['file_name']) ?>" 
+                                        <a href="<?= Config::getAppUrl() ?>/api/tickets/<?= $ticket['complaint_id'] ?>/evidence/<?= urlencode($file['file_name']) ?>" 
                                            class="btn btn-sm btn-apple-primary me-2" target="_blank">
                                             <i class="fas fa-eye me-1"></i>View
                                         </a>
-                                        <a href="<?= Config::APP_URL ?>/api/tickets/<?= $ticket['complaint_id'] ?>/evidence/<?= urlencode($file['file_name']) ?>?download=1" 
+                                        <a href="<?= Config::getAppUrl() ?>/api/tickets/<?= $ticket['complaint_id'] ?>/evidence/<?= urlencode($file['file_name']) ?>?download=1" 
                                            class="btn btn-sm btn-apple-secondary">
                                             <i class="fas fa-download me-1"></i>Download
                                         </a>
