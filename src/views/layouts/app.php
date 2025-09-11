@@ -238,7 +238,7 @@
     
     <!-- Marquee for announcements (only on home page) -->
     <?php if (isset($marquee_content) && !empty($marquee_content)): ?>
-        <div class="marquee-container" style="margin-top: 70px;">
+        <div class="marquee-container" style="margin-top: 90px;">
             <div class="marquee-content">
                 <i class="fas fa-bullhorn me-2"></i>
                 <?= htmlspecialchars($marquee_content) ?>

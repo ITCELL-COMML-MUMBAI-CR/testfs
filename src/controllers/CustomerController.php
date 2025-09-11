@@ -27,6 +27,7 @@ class CustomerController extends BaseController {
             'recent_tickets' => $this->getRecentTickets($customer['customer_id']),
             'announcements' => $this->getCustomerAnnouncements($customer['division']),
             'pending_feedback' => $this->getPendingFeedbackTickets($customer['customer_id']),
+            'pending_info' => $this->getPendingInfoTickets($customer['customer_id']),
             'csrf_token' => $this->session->getCSRFToken()
         ];
         
@@ -98,6 +99,8 @@ class CustomerController extends BaseController {
             ],
             'status_options' => Config::TICKET_STATUS,
             'priority_options' => Config::PRIORITY_LEVELS,
+            'pending_feedback' => $this->getPendingFeedbackTickets($customer['customer_id']),
+            'pending_info' => $this->getPendingInfoTickets($customer['customer_id']),
             'csrf_token' => $this->session->getCSRFToken()
         ];
         
@@ -502,6 +505,16 @@ class CustomerController extends BaseController {
                        TIMESTAMPDIFF(DAY, updated_at, NOW()) as days_pending
                 FROM complaints 
                 WHERE customer_id = ? AND status = 'awaiting_feedback'
+                ORDER BY updated_at ASC";
+        
+        return $this->db->fetchAll($sql, [$customerId]);
+    }
+    
+    private function getPendingInfoTickets($customerId) {
+        $sql = "SELECT complaint_id, category_id, created_at, 
+                       TIMESTAMPDIFF(DAY, updated_at, NOW()) as days_pending
+                FROM complaints 
+                WHERE customer_id = ? AND status = 'awaiting_info'
                 ORDER BY updated_at ASC";
         
         return $this->db->fetchAll($sql, [$customerId]);

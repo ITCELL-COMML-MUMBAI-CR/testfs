@@ -24,6 +24,76 @@ ob_start();
                 </div>
             </div>
         </div>
+
+        <!-- Urgent Action Required Alerts -->
+        <?php if (!empty($pending_feedback) || !empty($pending_info)): ?>
+            <div class="row mb-4">
+                <div class="col-12">
+                    
+                    <?php if (!empty($pending_feedback)): ?>
+                        <div class="alert alert-warning border-2 border-warning mb-3 shadow-sm">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-exclamation-triangle text-warning fs-3 me-3 pulse-warning"></i>
+                                <div>
+                                    <h5 class="alert-heading mb-1">⚠️ Urgent: Feedback Required</h5>
+                                    <p class="mb-0">You have <?= count($pending_feedback) ?> ticket(s) requiring immediate feedback.</p>
+                                </div>
+                            </div>
+                            <div class="row g-2">
+                                <?php foreach ($pending_feedback as $feedback): ?>
+                                    <div class="col-12 col-md-6 col-lg-4">
+                                        <div class="p-2 bg-white rounded border">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <strong>Ticket #<?= htmlspecialchars($feedback['complaint_id']) ?></strong>
+                                                <span class="badge bg-danger"><?= $feedback['days_pending'] ?> days</span>
+                                            </div>
+                                            <?php if ($feedback['days_pending'] >= 2): ?>
+                                                <div class="mb-2">
+                                                    <span class="badge bg-danger flash">Auto-close soon!</span>
+                                                </div>
+                                            <?php endif; ?>
+                                            <a href="<?= Config::getAppUrl() ?>/customer/tickets/<?= $feedback['complaint_id'] ?>" 
+                                               class="btn btn-warning btn-sm w-100 fw-bold">
+                                                <i class="fas fa-star me-1"></i>Provide Feedback
+                                            </a>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($pending_info)): ?>
+                        <div class="alert alert-info border-2 border-info mb-3 shadow-sm">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-info-circle text-info fs-3 me-3 pulse-info"></i>
+                                <div>
+                                    <h5 class="alert-heading mb-1">📋 Additional Information Required</h5>
+                                    <p class="mb-0">Please provide additional information for <?= count($pending_info) ?> ticket(s).</p>
+                                </div>
+                            </div>
+                            <div class="row g-2">
+                                <?php foreach ($pending_info as $info): ?>
+                                    <div class="col-12 col-md-6 col-lg-4">
+                                        <div class="p-2 bg-white rounded border">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <strong>Ticket #<?= htmlspecialchars($info['complaint_id']) ?></strong>
+                                                <span class="badge bg-info"><?= $info['days_pending'] ?> days</span>
+                                            </div>
+                                            <a href="<?= Config::getAppUrl() ?>/customer/tickets/<?= $info['complaint_id'] ?>" 
+                                               class="btn btn-info btn-sm w-100 fw-bold">
+                                                <i class="fas fa-plus-circle me-1"></i>Provide Information
+                                            </a>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                    
+                </div>
+            </div>
+        <?php endif; ?>
         
         <!-- Tickets Table -->
         <div class="card-apple">
@@ -902,6 +972,50 @@ function submitAdditionalInfoWithFiles(ticketId, data) {
 
 .text-danger {
     animation: urgent-pulse 2s infinite;
+}
+
+/* Pulse animations for urgent notifications */
+.pulse-warning {
+    animation: pulse-warning 2s infinite;
+}
+
+.pulse-info {
+    animation: pulse-info 2s infinite;
+}
+
+@keyframes pulse-warning {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse-info {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Flash animation for urgent badges */
+.flash {
+    animation: flash 1.5s infinite;
+}
+
+@keyframes flash {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.5; }
+}
+
+/* Enhanced alert styling */
+.alert {
+    border-radius: 12px !important;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #d1ecf1 0%, #a8dadc 100%);
 }
 </style>
 

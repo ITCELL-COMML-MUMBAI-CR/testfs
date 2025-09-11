@@ -14,7 +14,7 @@ ob_start();
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item">
                             <a href="<?= Config::getAppUrl() ?>/customer/dashboard" class="text-decoration-none">Dashboard</a>
-                        </li>
+                        </li>   
                         <li class="breadcrumb-item">
                             <a href="<?= Config::getAppUrl() ?>/customer/tickets" class="text-decoration-none">My Tickets</a>
                         </li>
@@ -38,10 +38,7 @@ ob_start();
                         <div class="btn-group" role="group">
                             <button class="btn btn-apple-glass" onclick="printTicket()">
                                 <i class="fas fa-print me-1"></i>Print
-                            </button>
-                            <button class="btn btn-apple-glass" onclick="shareTicket()">
-                                <i class="fas fa-share me-1"></i>Share
-                            </button>
+                            </button>       
                             <?php if ($requires_feedback): ?>
                                 <button class="btn btn-warning" onclick="provideFeedback()">
                                     <i class="fas fa-star me-1"></i>Provide Feedback
@@ -345,69 +342,6 @@ ob_start();
                                 <i class="fas fa-building me-2 text-muted"></i>
                                 <?= htmlspecialchars($ticket['company_name']) ?>
                             </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Quick Actions -->
-                <div class="card-apple-glass mb-4">
-                    <div class="card-body">
-                        <h6 class="card-title">
-                            <i class="fas fa-bolt text-apple-blue me-2"></i>
-                            Quick Actions
-                        </h6>
-                        
-                        <div class="d-grid gap-2">
-                            <?php if ($requires_feedback): ?>
-                                <button class="btn btn-warning" onclick="provideFeedback()">
-                                    <i class="fas fa-star me-2"></i>Provide Feedback
-                                </button>
-                            <?php endif; ?>
-                            
-                            <?php if ($ticket['status'] === 'awaiting_info'): ?>
-                                <button class="btn btn-info" onclick="provideAdditionalInfo()">
-                                    <i class="fas fa-plus-circle me-2"></i>Provide Additional Info
-                                </button>
-                            <?php endif; ?>
-                            
-                            <button class="btn btn-apple-glass" onclick="printTicket()">
-                                <i class="fas fa-print me-2"></i>Print Ticket
-                            </button>
-                            
-                            <button class="btn btn-apple-glass" onclick="shareTicket()">
-                                <i class="fas fa-share me-2"></i>Share Ticket
-                            </button>
-                            
-                            <a href="<?= Config::getAppUrl() ?>/customer/tickets/create" class="btn btn-apple-glass">
-                                <i class="fas fa-plus me-2"></i>Create New Ticket
-                            </a>
-                            
-                            <a href="<?= Config::getAppUrl() ?>/customer/tickets" class="btn btn-apple-glass">
-                                <i class="fas fa-list me-2"></i>All My Tickets
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Help -->
-                <div class="card-apple-glass">
-                    <div class="card-body">
-                        <h6 class="card-title">
-                            <i class="fas fa-question-circle text-apple-blue me-2"></i>
-                            Need Help?
-                        </h6>
-                        
-                        <p class="small text-muted mb-3">
-                            If you have questions about your ticket or need additional support, we're here to help.
-                        </p>
-                        
-                        <div class="d-grid gap-2">
-                            <a href="<?= Config::getAppUrl() ?>/help" class="btn btn-apple-glass btn-sm">
-                                <i class="fas fa-book me-1"></i>Help Center
-                            </a>
-                            <button class="btn btn-apple-glass btn-sm" onclick="contactSupport()">
-                                <i class="fas fa-headset me-1"></i>Contact Support
-                            </button>
                         </div>
                     </div>
                 </div>
