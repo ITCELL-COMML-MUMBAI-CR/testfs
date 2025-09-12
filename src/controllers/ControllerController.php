@@ -261,9 +261,16 @@ class ControllerController extends BaseController {
                 LEFT JOIN wagon_details w ON c.wagon_id = w.wagon_id
                 LEFT JOIN customers cust ON c.customer_id = cust.customer_id
                 LEFT JOIN departments d ON c.assigned_to_department = d.department_code
-                WHERE c.complaint_id = ? AND c.division = ? AND c.assigned_to_department = ?";
+                WHERE c.complaint_id = ? AND c.division = ?";
         
-        $params = [$ticketId, $user['division'], $user['department']];
+        // Controller_nodal can view tickets across departments in their division
+        // Regular controllers can only view tickets in their department
+        if ($user['role'] === 'controller_nodal') {
+            $params = [$ticketId, $user['division']];
+        } else {
+            $sql .= " AND c.assigned_to_department = ?";
+            $params = [$ticketId, $user['division'], $user['department']];
+        }
         
         $ticket = $this->db->fetch($sql, $params);
         
@@ -333,12 +340,43 @@ class ControllerController extends BaseController {
         }
         
         // Check permissions for actions
-        $canForward = in_array($user['role'], ['controller', 'controller_nodal']) && in_array($ticket['status'], ['pending', 'awaiting_info']);
-        $canReply = in_array($ticket['status'], ['pending', 'awaiting_info']);
-        $canApprove = $user['role'] === 'controller_nodal' && $ticket['status'] === 'awaiting_approval';
-        $canRevert = $user['role'] === 'controller_nodal' && in_array($ticket['status'], ['awaiting_approval', 'closed']);
-        $canRevertToCustomer = $user['role'] === 'controller_nodal' && in_array($ticket['status'], ['pending', 'awaiting_approval']);
-        $canInterimRemarks = in_array($user['role'], ['admin', 'controller_nodal', 'controller']) && $ticket['status'] === 'pending';
+        // For controller_nodal: restrict actions on tickets that are forwarded to other departments
+        $isForwardedToOtherDept = ($user['role'] === 'controller_nodal' && 
+                                   $ticket['forwarded_flag'] == 1 && 
+                                   $ticket['assigned_to_department'] !== $user['department']);
+        
+        // For controller_nodal: can only view tickets assigned to other departments (no actions)
+        $isAssignedToOtherDept = ($user['role'] === 'controller_nodal' && 
+                                  $ticket['assigned_to_department'] !== $user['department']);
+        
+        // For controller_nodal: restrict actions on tickets awaiting customer response
+        $isAwaitingCustomerInfo = ($user['role'] === 'controller_nodal' && 
+                                   $ticket['status'] === 'awaiting_info');
+        
+        $canForward = in_array($user['role'], ['controller', 'controller_nodal']) && 
+                     in_array($ticket['status'], ['pending', 'awaiting_info']) &&
+                     !$isForwardedToOtherDept &&
+                     !$isAwaitingCustomerInfo;
+        
+        $canReply = in_array($ticket['status'], ['pending', 'awaiting_info']) &&
+                   !$isAssignedToOtherDept &&
+                   !$isAwaitingCustomerInfo;
+        
+        $canApprove = $user['role'] === 'controller_nodal' && 
+                     $ticket['status'] === 'awaiting_approval' &&
+                     !$isAssignedToOtherDept;
+        
+        $canRevert = $user['role'] === 'controller_nodal' && 
+                    in_array($ticket['status'], ['awaiting_approval', 'closed']) &&
+                    !$isAssignedToOtherDept;
+        
+        $canRevertToCustomer = $user['role'] === 'controller_nodal' && 
+                              in_array($ticket['status'], ['pending', 'awaiting_approval']) &&
+                              !$isAssignedToOtherDept;
+        
+        $canInterimRemarks = in_array($user['role'], ['admin', 'controller_nodal', 'controller']) && 
+                            $ticket['status'] === 'pending' &&
+                            !$isAssignedToOtherDept;
         
         $data = [
             'page_title' => 'Ticket #' . $ticketId . ' - SAMPARK',
@@ -349,6 +387,9 @@ class ControllerController extends BaseController {
             'latest_important_remark' => $latestImportantRemark,
             'evidence' => $evidence,
             'available_users' => $availableUsers,
+            'is_viewing_other_dept' => $isAssignedToOtherDept,
+            'is_forwarded_ticket' => $isForwardedToOtherDept,
+            'is_awaiting_customer_info' => $isAwaitingCustomerInfo,
             'permissions' => [
                 'can_forward' => $canForward,
                 'can_reply' => $canReply,
@@ -419,6 +460,23 @@ class ControllerController extends BaseController {
             if (!$ticket) {
                 $this->db->rollback();
                 $this->json(['success' => false, 'message' => 'Invalid ticket or cannot forward'], 400);
+                return;
+            }
+            
+            // Controller_nodal cannot forward tickets that are already forwarded to other departments
+            if ($user['role'] === 'controller_nodal' && 
+                $ticket['forwarded_flag'] == 1 && 
+                $ticket['assigned_to_department'] !== $user['department']) {
+                $this->db->rollback();
+                $this->json(['success' => false, 'message' => 'Cannot forward tickets that are already forwarded to other departments'], 403);
+                return;
+            }
+            
+            // Controller_nodal cannot forward tickets that are awaiting customer info
+            if ($user['role'] === 'controller_nodal' && 
+                $ticket['status'] === 'awaiting_info') {
+                $this->db->rollback();
+                $this->json(['success' => false, 'message' => 'Cannot forward tickets that are awaiting customer information'], 403);
                 return;
             }
             
@@ -562,6 +620,13 @@ class ControllerController extends BaseController {
                 return;
             }
             
+            // Controller_nodal cannot reply to tickets assigned to other departments
+            if ($user['role'] === 'controller_nodal' && 
+                $ticket['assigned_to_department'] !== $user['department']) {
+                $this->json(['success' => false, 'message' => 'Cannot reply to tickets assigned to other departments'], 403);
+                return;
+            }
+            
             $isInterimReply = isset($_POST['is_interim_reply']) && $_POST['is_interim_reply'];
             $officerRemarks = isset($_POST['officer_remarks']) ? trim($_POST['officer_remarks']) : '';
             
@@ -667,6 +732,12 @@ class ControllerController extends BaseController {
                 return;
             }
             
+            // Controller_nodal cannot approve replies for tickets assigned to other departments
+            if ($ticket['assigned_to_department'] !== $user['department']) {
+                $this->json(['success' => false, 'message' => 'Cannot approve replies for tickets assigned to other departments'], 403);
+                return;
+            }
+            
             // Update ticket status
             $sql = "UPDATE complaints SET 
                     status = 'awaiting_feedback',
@@ -741,6 +812,12 @@ class ControllerController extends BaseController {
                 return;
             }
             
+            // Controller_nodal cannot reject replies for tickets assigned to other departments
+            if ($ticket['assigned_to_department'] !== $user['department']) {
+                $this->json(['success' => false, 'message' => 'Cannot reject replies for tickets assigned to other departments'], 403);
+                return;
+            }
+            
             // Update ticket status back to pending
             $sql = "UPDATE complaints SET 
                     status = 'pending',
@@ -807,6 +884,12 @@ class ControllerController extends BaseController {
             
             if (!$ticket) {
                 $this->json(['success' => false, 'message' => 'Invalid ticket or cannot revert'], 400);
+                return;
+            }
+            
+            // Controller_nodal cannot revert tickets assigned to other departments
+            if ($ticket['assigned_to_department'] !== $user['department']) {
+                $this->json(['success' => false, 'message' => 'Cannot revert tickets assigned to other departments'], 403);
                 return;
             }
             
@@ -887,6 +970,13 @@ class ControllerController extends BaseController {
             if (!$ticket) {
                 $this->db->rollback();
                 $this->json(['success' => false, 'message' => 'Invalid ticket or cannot revert'], 400);
+                return;
+            }
+            
+            // Controller_nodal cannot revert to customer for tickets assigned to other departments
+            if ($ticket['assigned_to_department'] !== $user['department']) {
+                $this->db->rollback();
+                $this->json(['success' => false, 'message' => 'Cannot revert to customer for tickets assigned to other departments'], 403);
                 return;
             }
             
@@ -972,6 +1062,14 @@ class ControllerController extends BaseController {
             if (!$ticket) {
                 $this->db->rollback();
                 $this->json(['success' => false, 'message' => 'Invalid ticket, wrong status, or access denied'], 400);
+                return;
+            }
+            
+            // Controller_nodal cannot add interim remarks for tickets assigned to other departments
+            if ($user['role'] === 'controller_nodal' && 
+                $ticket['assigned_to_department'] !== $user['department']) {
+                $this->db->rollback();
+                $this->json(['success' => false, 'message' => 'Cannot add interim remarks for tickets assigned to other departments'], 403);
                 return;
             }
             

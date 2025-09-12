@@ -356,11 +356,29 @@ $page_title = 'Support Hub - SAMPARK';
                                 </td>
                                 <td>
                                     <div class="action-buttons-group" role="group">
+                                        <?php
+                                        // Check if controller_nodal can take actions on this ticket
+                                        $isOwnDepartment = ($ticket['assigned_to_department'] === $user['department']);
+                                        $isAwaitingInfo = ($ticket['status'] === 'awaiting_info');
+                                        $canTakeActions = ($user['role'] !== 'controller_nodal') || ($isOwnDepartment && !$isAwaitingInfo);
+                                        
+                                        $viewButtonClass = $canTakeActions ? 'action-btn-primary' : 'action-btn-secondary';
+                                        $viewButtonTitle = $canTakeActions ? 'View Details - Can take actions' : 
+                                                          ($isAwaitingInfo ? 'View Only - Awaiting customer info' : 'View Only - Restricted access');
+                                        ?>
                                         <a href="<?= Config::getAppUrl() ?>/controller/tickets/<?= $ticket['complaint_id'] ?>" 
-                                           class="action-btn action-btn-primary action-btn-compact" title="View Details">
+                                           class="action-btn <?= $viewButtonClass ?> action-btn-compact" title="<?= $viewButtonTitle ?>">
                                             <i class="fas fa-eye"></i>
+                                            <?php if ($isAwaitingInfo && $user['role'] === 'controller_nodal'): ?>
+                                            <i class="fas fa-clock text-warning ms-1" style="font-size: 0.7em;"></i>
+                                            <?php endif; ?>
                                         </a>
-                                        <?php if (in_array($user['role'], ['controller', 'controller_nodal']) && in_array($ticket['status'], ['pending', 'awaiting_info'])): ?>
+                                        <?php 
+                                        // Show forward button only if user can take actions
+                                        if (in_array($user['role'], ['controller', 'controller_nodal']) && 
+                                            in_array($ticket['status'], ['pending', 'awaiting_info']) &&
+                                            $canTakeActions): 
+                                        ?>
                                         <button class="action-btn action-btn-warning action-btn-compact" 
                                                 onclick="forwardTicket(<?= $ticket['complaint_id'] ?>)" title="Forward">
                                             <i class="fas fa-share"></i>

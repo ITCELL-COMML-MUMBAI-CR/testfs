@@ -126,6 +126,17 @@ $page_title = 'Forwarded Tickets - SAMPARK';
         </div>
     </div>
 
+    <!-- Access Level Info -->
+    <div class="alert alert-info d-flex align-items-center mb-3">
+        <i class="fas fa-info-circle me-2"></i>
+        <div class="small">
+            <strong>Access Levels:</strong> 
+            <i class="fas fa-edit text-success me-1"></i> <span class="text-success">Your Department</span> - Can take actions • 
+            <i class="fas fa-eye text-secondary me-1"></i> <span class="text-muted">Other Departments</span> - View only • 
+            <i class="fas fa-clock text-warning me-1"></i> <span class="text-warning">Awaiting Customer Info</span> - No actions allowed
+        </div>
+    </div>
+
     <!-- Forwarded Tickets Table -->
     <div class="card card-apple">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -247,11 +258,21 @@ $page_title = 'Forwarded Tickets - SAMPARK';
                                 </td>
                                 <td>
                                     <div class="text-truncate">
-                                        <span class="fw-semibold text-truncate d-block" 
-                                              style="max-width: 140px;" 
-                                              title="<?= htmlspecialchars($ticket['assigned_department_name'] ?? $ticket['assigned_to_department'] ?? 'N/A') ?>">
-                                            <?= htmlspecialchars($ticket['assigned_department_name'] ?? $ticket['assigned_to_department'] ?? 'N/A') ?>
-                                        </span>
+                                        <?php 
+                                        // Check if this ticket is assigned to the current user's department
+                                        $isOwnDepartment = ($ticket['assigned_to_department'] === $user['department']);
+                                        $departmentClass = $isOwnDepartment ? 'text-success fw-semibold' : 'text-muted';
+                                        $accessIcon = $isOwnDepartment ? 'fas fa-edit text-success' : 'fas fa-eye text-secondary';
+                                        $accessTitle = $isOwnDepartment ? 'Can take actions' : 'View only';
+                                        ?>
+                                        <div class="d-flex align-items-center">
+                                            <i class="<?= $accessIcon ?> me-2" title="<?= $accessTitle ?>"></i>
+                                            <span class="<?= $departmentClass ?> text-truncate d-block" 
+                                                  style="max-width: 120px;" 
+                                                  title="<?= htmlspecialchars($ticket['assigned_department_name'] ?? $ticket['assigned_to_department'] ?? 'N/A') ?> - <?= $accessTitle ?>">
+                                                <?= htmlspecialchars($ticket['assigned_department_name'] ?? $ticket['assigned_to_department'] ?? 'N/A') ?>
+                                            </span>
+                                        </div>
                                         <small class="text-muted text-truncate d-block" 
                                                style="max-width: 140px;" 
                                                title="<?= htmlspecialchars($ticket['assigned_to_department'] ?? 'N/A') ?> - <?= htmlspecialchars($ticket['division'] ?? 'N/A') ?>">
@@ -297,9 +318,23 @@ $page_title = 'Forwarded Tickets - SAMPARK';
                                 </td>
                                 <td>
                                     <div class="action-buttons-group" role="group">
+                                        <?php
+                                        // Check if controller_nodal can take actions on this ticket
+                                        $isOwnDepartment = ($ticket['assigned_to_department'] === $user['department']);
+                                        $isAwaitingInfo = ($ticket['status'] === 'awaiting_info');
+                                        $canTakeActions = $isOwnDepartment && !$isAwaitingInfo;
+                                        
+                                        $buttonClass = $canTakeActions ? 'action-btn-primary' : 'action-btn-secondary';
+                                        $buttonTitle = $canTakeActions ? 'View Details - Can take actions' : 
+                                                      ($isAwaitingInfo ? 'View Only - Awaiting customer info' : 'View Only - Different department');
+                                        $icon = $canTakeActions ? 'fa-eye' : 'fa-eye';
+                                        ?>
                                         <a href="<?= Config::getAppUrl() ?>/controller/tickets/<?= $ticket['complaint_id'] ?>" 
-                                           class="action-btn action-btn-primary action-btn-compact" title="View Details">
-                                            <i class="fas fa-eye"></i>
+                                           class="action-btn <?= $buttonClass ?> action-btn-compact" title="<?= $buttonTitle ?>">
+                                            <i class="fas <?= $icon ?>"></i>
+                                            <?php if ($isAwaitingInfo && $isOwnDepartment): ?>
+                                            <i class="fas fa-clock text-warning ms-1" style="font-size: 0.7em;"></i>
+                                            <?php endif; ?>
                                         </a>
                                     </div>
                                 </td>

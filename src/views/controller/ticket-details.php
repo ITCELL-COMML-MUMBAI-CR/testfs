@@ -95,6 +95,32 @@ $page_title = 'Ticket Details - SAMPARK';
         </div>
     </div>
 
+    <!-- Department Access Alert for Controller Nodal -->
+    <?php if ($is_viewing_other_dept ?? false): ?>
+    <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+        <i class="fas fa-eye me-2"></i>
+        <div>
+            <strong>View Only Mode</strong> - You are viewing a ticket assigned to <?= htmlspecialchars($ticket['assigned_department_name'] ?? $ticket['assigned_to_department']) ?> department. 
+            <?php if ($is_forwarded_ticket ?? false): ?>
+                This ticket was forwarded and no actions can be taken.
+            <?php else: ?>
+                You can only view this ticket, actions are restricted to the assigned department.
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Awaiting Customer Info Alert for Controller Nodal -->
+    <?php if ($is_awaiting_customer_info ?? false): ?>
+    <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+        <i class="fas fa-clock me-2"></i>
+        <div>
+            <strong>Awaiting Customer Response</strong> - This ticket is waiting for additional information from the customer. 
+            No actions can be taken until the customer provides the requested information.
+        </div>
+    </div>
+    <?php endif; ?>
+
     <!-- Status Alert -->
     <?php
     $statusInfo = [
@@ -613,30 +639,6 @@ $page_title = 'Ticket Details - SAMPARK';
                 </div>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="card card-apple">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-bolt me-2"></i>Quick Actions
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <button class="btn btn-apple-secondary btn-sm" onclick="copyTicketUrl()">
-                            <i class="fas fa-copy me-2"></i>Copy Ticket URL
-                        </button>
-                        <button class="btn btn-apple-secondary btn-sm" onclick="emailCustomer()">
-                            <i class="fas fa-envelope me-2"></i>Email Customer
-                        </button>
-                        <button class="btn btn-apple-secondary btn-sm" onclick="addNote()">
-                            <i class="fas fa-sticky-note me-2"></i>Add Internal Note
-                        </button>
-                        <button class="btn btn-apple-secondary btn-sm" onclick="escalateTicket()">
-                            <i class="fas fa-arrow-up me-2"></i>Escalate
-                        </button>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -1310,27 +1312,6 @@ function addInterimRemarks() {
 }
 
 // Utility functions
-function copyTicketUrl() {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-        Swal.fire({
-            title: 'Copied!',
-            text: 'Ticket URL copied to clipboard',
-            icon: 'success',
-            timer: 2000,
-            showConfirmButton: false
-        });
-    });
-}
-
-function emailCustomer() {
-    const email = '<?= $ticket['customer_email'] ?? '' ?>';
-    if (email) {
-        window.location.href = `mailto:${email}?subject=Regarding Ticket #${ticketId}`;
-    } else {
-        Swal.fire('Error', 'Customer email not available', 'error');
-    }
-}
 
 function printTicket() {
     const printWindow = window.open(`${APP_URL}/controller/tickets/${ticketId}/print`, '_blank');
@@ -1352,36 +1333,6 @@ function viewHistory() {
     });
 }
 
-function addNote() {
-    // Implementation for adding internal notes
-    Swal.fire({
-        title: 'Add Internal Note',
-        input: 'textarea',
-        inputPlaceholder: 'Enter internal note...',
-        showCancelButton: true,
-        confirmButtonText: 'Add Note'
-    }).then((result) => {
-        if (result.isConfirmed && result.value) {
-            // API call to add note
-            Swal.fire('Success', 'Internal note added', 'success');
-        }
-    });
-}
-
-function escalateTicket() {
-    Swal.fire({
-        title: 'Escalate Ticket',
-        text: 'This will escalate the ticket to higher authorities.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Escalate'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // API call to escalate
-            Swal.fire('Success', 'Ticket escalated successfully', 'success');
-        }
-    });
-}
 </script>
 
 <style>
