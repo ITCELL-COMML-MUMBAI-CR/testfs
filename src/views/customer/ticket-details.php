@@ -50,6 +50,76 @@ ob_start();
             </div>
         </div>
         
+        <!-- Latest Important Update for Customer -->
+        <?php if ($latest_important_remark): ?>
+        <div class="card card-apple mb-4 customer-important-update">
+            <div class="card-header bg-gradient-primary text-white">
+                <h5 class="mb-0 d-flex align-items-center">
+                    <i class="fas fa-bell me-2"></i>
+                    Important Update for You
+                    <?php 
+                    $remarkTypeLabel = '';
+                    $remarkTypeBadgeClass = 'bg-light text-primary';
+                    
+                    switch($latest_important_remark['remarks_type']) {
+                        case 'admin_remarks':
+                            $remarkTypeLabel = 'Information Required';
+                            $remarkTypeBadgeClass = 'bg-warning text-dark';
+                            break;
+                        case 'forwarding_remarks':
+                            $remarkTypeLabel = 'Status Update';
+                            $remarkTypeBadgeClass = 'bg-info text-white';
+                            break;
+                        case 'interim_remarks':
+                            $remarkTypeLabel = 'Progress Update';
+                            $remarkTypeBadgeClass = 'bg-success text-white';
+                            break;
+                        default:
+                            $remarkTypeLabel = 'Update';
+                            break;
+                    }
+                    ?>
+                    <span class="badge <?= $remarkTypeBadgeClass ?> ms-2"><?= $remarkTypeLabel ?></span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-primary border-start border-primary border-4 mb-0">
+                    <div class="d-flex align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold mb-2">
+                                <?php if ($latest_important_remark['remarks_type'] === 'admin_remarks'): ?>
+                                    📋 Please provide the requested information:
+                                <?php else: ?>
+                                    <?= ucfirst(str_replace('_', ' ', $latest_important_remark['transaction_type'])) ?>
+                                <?php endif; ?>
+                                <span class="text-muted small ms-2">
+                                    <?= date('M d, Y H:i', strtotime($latest_important_remark['created_at'])) ?>
+                                </span>
+                            </div>
+                            <div class="fs-6 mb-3">
+                                <?= nl2br(htmlspecialchars($latest_important_remark['remarks'] ?? '')) ?>
+                            </div>
+                            <div class="text-muted small">
+                                <i class="fas fa-user-tie me-1"></i>
+                                From: <?= htmlspecialchars($latest_important_remark['user_name'] ?? 'Railway Authority') ?>
+                                <?php if ($latest_important_remark['user_role']): ?>
+                                <span class="ms-2 badge bg-secondary">
+                                    <?= ucfirst($latest_important_remark['user_role']) ?>
+                                </span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php if ($latest_important_remark['remarks_type'] === 'admin_remarks'): ?>
+                        <div class="ms-3">
+                            <i class="fas fa-exclamation-triangle text-warning fa-2x"></i>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <div class="row g-4">
             
             <!-- Main Content -->
@@ -821,6 +891,55 @@ function getStatusIcon($status) {
     }
 }
 
+?>
+
+<style>
+/* Customer Important Update Styling */
+.customer-important-update {
+    border: 2px solid var(--apple-primary) !important;
+    box-shadow: 0 0 20px rgba(0, 123, 255, 0.2);
+    animation: customerHighlight 3s ease-in-out;
+}
+
+.customer-important-update .card-header {
+    background: linear-gradient(135deg, var(--apple-primary), #0056b3) !important;
+}
+
+@keyframes customerHighlight {
+    0%, 100% { 
+        box-shadow: 0 0 20px rgba(0, 123, 255, 0.2);
+        transform: scale(1);
+    }
+    50% { 
+        box-shadow: 0 0 30px rgba(0, 123, 255, 0.4);
+        transform: scale(1.005);
+    }
+}
+
+/* Enhanced alert styling for customer information requests */
+.alert-primary.border-primary {
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.1), rgba(0, 123, 255, 0.05)) !important;
+    border-color: var(--apple-primary) !important;
+}
+
+/* Special styling for admin information requests */
+.customer-important-update .alert-primary:has(.fa-exclamation-triangle) {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.15), rgba(255, 193, 7, 0.08)) !important;
+    border-color: #ffc107 !important;
+    animation: urgentPulse 2s infinite;
+}
+
+@keyframes urgentPulse {
+    0%, 100% { 
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.5); 
+    }
+    50% { 
+        box-shadow: 0 0 0 8px rgba(255, 193, 7, 0); 
+    }
+}
+</style>
+
+<?php
 $content = ob_get_clean();
 include '../src/views/layouts/app.php';
 ?>

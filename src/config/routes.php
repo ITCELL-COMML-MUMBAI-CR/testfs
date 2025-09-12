@@ -33,12 +33,17 @@ $router->get('/customer/help', 'Customer@help', ['auth', 'role:customer']);
 // Controller Routes
 $router->get('/controller/dashboard', 'Controller@dashboard', ['auth', 'role:controller,controller_nodal']);
 $router->get('/controller/tickets', 'Controller@tickets', ['auth', 'role:controller,controller_nodal']);
+$router->get('/controller/forwarded-tickets', 'Controller@forwardedTickets', ['auth', 'role:controller_nodal']);
 $router->get('/controller/tickets/{id}', 'Controller@viewTicket', ['auth', 'role:controller,controller_nodal']);
 $router->post('/controller/tickets/{id}/forward', 'Controller@forwardTicket', ['auth', 'role:controller,controller_nodal']);
 $router->post('/controller/tickets/{id}/reply', 'Controller@replyTicket', ['auth', 'role:controller,controller_nodal']);
 $router->post('/controller/tickets/{id}/approve', 'Controller@approveReply', ['auth', 'role:controller_nodal']);
 $router->post('/controller/tickets/{id}/reject', 'Controller@rejectReply', ['auth', 'role:controller_nodal']);
 $router->post('/controller/tickets/{id}/revert', 'Controller@revertTicket', ['auth', 'role:controller_nodal']);
+$router->post('/controller/tickets/{id}/revert-to-customer', 'Controller@revertToCustomer', ['auth', 'role:controller_nodal']);
+$router->post('/controller/tickets/{id}/interim-remarks', 'Controller@addInterimRemarks', ['auth', 'role:admin,controller,controller_nodal']);
+$router->get('/controller/tickets/{id}/print', 'Controller@printTicket', ['auth', 'role:controller,controller_nodal']);
+$router->get('/controller/tickets/{id}/export', 'Controller@exportTicket', ['auth', 'role:controller,controller_nodal']);
 $router->get('/controller/reports', 'Controller@reports', ['auth', 'role:controller,controller_nodal']);
 $router->get('/controller/help', 'Controller@help', ['auth', 'role:controller,controller_nodal']);
 $router->get('/controller/profile', 'Controller@profile', ['auth', 'role:controller,controller_nodal']);
@@ -104,6 +109,7 @@ $router->post('/api/compress-file', 'FileCompression@compressFile', ['auth']);
 
 // Background automation and refresh endpoints
 $router->post('/api/background-automation', 'Api@processBackgroundAutomation', ['auth']);
+$router->post('/api/background-tasks', 'Api@processBackgroundTasks', ['auth']);
 $router->get('/api/tickets/refresh', 'Api@getRefreshedTickets', ['auth']);
 $router->get('/api/heartbeat', 'Api@heartbeat'); // No auth for heartbeat
 $router->get('/api/system-stats', 'Api@getSystemStats', ['auth']);

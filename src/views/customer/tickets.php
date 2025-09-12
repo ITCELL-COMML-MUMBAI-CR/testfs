@@ -172,8 +172,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const customerTable = initializeCustomerTicketsTable('customerTicketsTable');
         console.log('Customer tickets table initialized with background refresh');
     } else {
-        console.warn('DataTable configuration not loaded - fallback to basic table');
-        initializeBasicTable();
+        console.warn('DataTable configuration not loaded - fallback to basic DataTable');
+        initializeBasicCustomerDataTable();
     }
     
     // Update filter behavior for DataTables
@@ -207,6 +207,25 @@ function forceRefresh() {
 function initializeBasicTable() {
     // Fallback initialization if DataTables config is not available
     console.log('Using basic table without auto-refresh');
+}
+
+function initializeBasicCustomerDataTable() {
+    // Simple DataTable initialization with built-in search
+    if (typeof $ !== 'undefined' && $.fn.DataTable) {
+        $('#customerTicketsTable').DataTable({
+            paging: true,
+            searching: true, // Enable built-in search
+            ordering: true,
+            info: true,
+            responsive: true,
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            order: [[4, 'desc']] // Order by date column
+        });
+        console.log('Basic DataTable with search initialized for customer tickets');
+    } else {
+        console.warn('DataTable library not available');
+    }
 }
 
 function copyTicketId(ticketId) {

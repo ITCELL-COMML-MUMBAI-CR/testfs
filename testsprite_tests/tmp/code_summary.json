@@ -1,0 +1,265 @@
+{
+  "tech_stack": ["PHP", "MySQL", "Bootstrap", "jQuery", "DataTables", "SweetAlert2"],
+  "features": [
+    {
+      "name": "Authentication System",
+      "description": "User authentication and role-based access control for customers, controllers, and admins",
+      "files": ["src/controllers/AuthController.php", "src/utils/middleware/auth.php", "src/utils/middleware/role.php"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "Authentication API",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/login": {
+            "post": {
+              "summary": "User login",
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "login_type": {"type": "string", "enum": ["customer", "staff"]},
+                        "identifier": {"type": "string"},
+                        "password": {"type": "string"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/logout": {
+            "get": {
+              "summary": "User logout"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Controller Management System",
+      "description": "Controller and controller_nodal role management for ticket handling, forwarding, and approval workflows",
+      "files": ["src/controllers/ControllerController.php", "src/views/controller/tickets.php", "src/views/controller/ticket-details.php"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "Controller Management API",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/controller/dashboard": {
+            "get": {
+              "summary": "Get controller dashboard",
+              "security": [{"roleAuth": ["controller", "controller_nodal"]}]
+            }
+          },
+          "/controller/tickets": {
+            "get": {
+              "summary": "Get tickets list",
+              "security": [{"roleAuth": ["controller", "controller_nodal"]}]
+            }
+          },
+          "/controller/tickets/{id}": {
+            "get": {
+              "summary": "View ticket details",
+              "security": [{"roleAuth": ["controller", "controller_nodal"]}]
+            }
+          },
+          "/controller/tickets/{id}/forward": {
+            "post": {
+              "summary": "Forward ticket",
+              "security": [{"roleAuth": ["controller", "controller_nodal"]}]
+            }
+          },
+          "/controller/tickets/{id}/reply": {
+            "post": {
+              "summary": "Reply to ticket",
+              "security": [{"roleAuth": ["controller", "controller_nodal"]}]
+            }
+          },
+          "/controller/tickets/{id}/approve": {
+            "post": {
+              "summary": "Approve reply",
+              "security": [{"roleAuth": ["controller_nodal"]}]
+            }
+          },
+          "/controller/tickets/{id}/reject": {
+            "post": {
+              "summary": "Reject reply",
+              "security": [{"roleAuth": ["controller_nodal"]}]
+            }
+          },
+          "/controller/tickets/{id}/revert": {
+            "post": {
+              "summary": "Revert ticket to customer",
+              "security": [{"roleAuth": ["controller_nodal"]}]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Customer Management System",
+      "description": "Customer ticket creation, management, and feedback system",
+      "files": ["src/controllers/CustomerController.php", "src/views/customer/tickets.php", "src/views/customer/create-ticket.php"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "Customer Management API",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/customer/dashboard": {
+            "get": {
+              "summary": "Get customer dashboard",
+              "security": [{"roleAuth": ["customer"]}]
+            }
+          },
+          "/customer/tickets": {
+            "get": {
+              "summary": "Get customer tickets",
+              "security": [{"roleAuth": ["customer"]}]
+            }
+          },
+          "/customer/tickets/create": {
+            "post": {
+              "summary": "Create new ticket",
+              "security": [{"roleAuth": ["customer"]}]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Admin Management System",
+      "description": "Administrative functions for user management, system configuration, and reporting",
+      "files": ["src/controllers/AdminController.php", "src/views/admin/dashboard.php", "src/views/admin/users/index.php"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "Admin Management API",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/admin/dashboard": {
+            "get": {
+              "summary": "Get admin dashboard",
+              "security": [{"roleAuth": ["admin", "superadmin"]}]
+            }
+          },
+          "/admin/users": {
+            "get": {
+              "summary": "Get users list",
+              "security": [{"roleAuth": ["admin", "superadmin"]}]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "API Services",
+      "description": "REST API endpoints for AJAX requests and data operations",
+      "files": ["src/controllers/ApiController.php", "src/config/routes.php"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "API Services",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/api/tickets/stats": {
+            "get": {
+              "summary": "Get ticket statistics",
+              "security": [{"roleAuth": ["controller", "controller_nodal", "admin", "superadmin"]}]
+            }
+          },
+          "/api/zones": {
+            "get": {
+              "summary": "Get zones list",
+              "security": [{"roleAuth": ["authenticated"]}]
+            }
+          },
+          "/api/divisions": {
+            "get": {
+              "summary": "Get divisions list",
+              "security": [{"roleAuth": ["authenticated"]}]
+            }
+          },
+          "/api/departments": {
+            "get": {
+              "summary": "Get departments list",
+              "security": [{"roleAuth": ["authenticated"]}]
+            }
+          },
+          "/api/notifications": {
+            "get": {
+              "summary": "Get notifications",
+              "security": [{"roleAuth": ["authenticated"]}]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "File Management System",
+      "description": "File upload, compression, and evidence management",
+      "files": ["src/controllers/FileController.php", "src/controllers/FileCompressionController.php", "src/utils/FileUploader.php", "src/utils/FileCompressor.php"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "File Management API",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/api/tickets/{id}/upload": {
+            "post": {
+              "summary": "Upload evidence files",
+              "security": [{"roleAuth": ["authenticated"]}]
+            }
+          },
+          "/api/tickets/{id}/evidence/{file}": {
+            "get": {
+              "summary": "Get evidence file",
+              "security": [{"roleAuth": ["authenticated"]}]
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Background Refresh Service",
+      "description": "Background automation and real-time data refresh system",
+      "files": ["src/utils/BackgroundRefreshService.php", "public/cron.php"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "Background Services API",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/api/background-automation": {
+            "post": {
+              "summary": "Process background automation",
+              "security": [{"roleAuth": ["authenticated"]}]
+            }
+          },
+          "/api/tickets/refresh": {
+            "get": {
+              "summary": "Get refreshed ticket data",
+              "security": [{"roleAuth": ["authenticated"]}]
+            }
+          },
+          "/api/heartbeat": {
+            "get": {
+              "summary": "System heartbeat",
+              "security": []
+            }
+          }
+        }
+      }
+    }
+  ]
+}

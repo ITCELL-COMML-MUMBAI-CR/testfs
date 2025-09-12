@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Controller Tickets Management View - SAMPARK
  * Enhanced interface for managing support tickets with advanced filtering and improved UX
@@ -32,11 +32,16 @@ $page_title = 'Support Hub - SAMPARK';
         </div>
         <div class="col-auto">
             <div class="d-flex gap-2">
-                <button class="btn btn-apple-secondary" onclick="exportTickets()">
-                    <i class="fas fa-download me-2"></i>Export
+                <?php if ($user['role'] === 'controller_nodal'): ?>
+                <a href="<?= Config::getAppUrl() ?>/controller/forwarded-tickets" class="action-btn action-btn-info action-btn-with-text">
+                    <i class="fas fa-share-alt"></i>Forwarded Tickets
+                </a>
+                <?php endif; ?>
+                <button class="action-btn action-btn-secondary action-btn-with-text" onclick="exportTickets()">
+                    <i class="fas fa-download"></i>Export
                 </button>
-                <button class="btn btn-apple-primary" onclick="forceRefresh()">
-                    <i class="fas fa-sync-alt me-2"></i>Refresh
+                <button class="action-btn action-btn-primary action-btn-with-text" onclick="forceRefresh()">
+                    <i class="fas fa-sync-alt"></i>Refresh
                 </button>
             </div>
         </div>
@@ -53,7 +58,7 @@ $page_title = 'Support Hub - SAMPARK';
                         </div>
                         <div>
                             <div class="text-muted small">Pending</div>
-                            <div class="h4 mb-0 fw-semibold" id="pendingCount">
+                            <div class="h4 mb-0 fw-semibold" id="pendingCount" data-stat="pending">
                                 <?= $tickets['total'] ?? 0 ?>
                             </div>
                         </div>
@@ -70,7 +75,7 @@ $page_title = 'Support Hub - SAMPARK';
                         </div>
                         <div>
                             <div class="text-muted small">High Priority</div>
-                            <div class="h4 mb-0 fw-semibold" id="highPriorityCount">0</div>
+                            <div class="h4 mb-0 fw-semibold" id="highPriorityCount" data-stat="high_priority">0</div>
                         </div>
                     </div>
                 </div>
@@ -85,7 +90,7 @@ $page_title = 'Support Hub - SAMPARK';
                         </div>
                         <div>
                             <div class="text-muted small">SLA Violations</div>
-                            <div class="h4 mb-0 fw-semibold" id="slaViolationCount">0</div>
+                            <div class="h4 mb-0 fw-semibold" id="slaViolationCount" data-stat="sla_violations">0</div>
                         </div>
                     </div>
                 </div>
@@ -100,7 +105,7 @@ $page_title = 'Support Hub - SAMPARK';
                         </div>
                         <div>
                             <div class="text-muted small">Resolved Today</div>
-                            <div class="h4 mb-0 fw-semibold" id="resolvedTodayCount">0</div>
+                            <div class="h4 mb-0 fw-semibold" id="resolvedTodayCount" data-stat="resolved_today">0</div>
                         </div>
                     </div>
                 </div>
@@ -114,18 +119,18 @@ $page_title = 'Support Hub - SAMPARK';
             <h5 class="mb-0">
                 <i class="fas fa-filter me-2"></i>Filters
             </h5>
-            <button class="btn btn-sm btn-apple-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse">
+            <button class="action-btn action-btn-secondary action-btn-compact" type="button" data-bs-toggle="collapse" data-bs-target="#filtersCollapse" title="Toggle Filters">
                 <i class="fas fa-chevron-down"></i>
             </button>
         </div>
         <div class="collapse show" id="filtersCollapse">
             <div class="card-body">
                 <form id="filtersForm" onsubmit="applyFilters(event)">
-                    <div class="row g-3">
+                    <div class="row g-3 align-items-end">
                         <!-- Status Filter -->
                         <div class="col-md-6 col-lg-3">
                             <label class="form-label-apple">Status</label>
-                            <select class="form-control-apple" name="status" id="statusFilter">
+                            <select class="form-control-apple ticket-filter" name="status" id="statusFilter">
                                 <option value="">All Statuses</option>
                                 <option value="pending" <?= ($filters['status'] ?? '') === 'pending' ? 'selected' : '' ?>>Pending</option>
                                 <option value="awaiting_info" <?= ($filters['status'] ?? '') === 'awaiting_info' ? 'selected' : '' ?>>Awaiting Info</option>
@@ -138,7 +143,7 @@ $page_title = 'Support Hub - SAMPARK';
                         <!-- Priority Filter -->
                         <div class="col-md-6 col-lg-3">
                             <label class="form-label-apple">Priority</label>
-                            <select class="form-control-apple" name="priority" id="priorityFilter">
+                            <select class="form-control-apple ticket-filter" name="priority" id="priorityFilter">
                                 <option value="">All Priorities</option>
                                 <option value="critical" <?= ($filters['priority'] ?? '') === 'critical' ? 'selected' : '' ?>>Critical</option>
                                 <option value="high" <?= ($filters['priority'] ?? '') === 'high' ? 'selected' : '' ?>>High</option>
@@ -150,49 +155,27 @@ $page_title = 'Support Hub - SAMPARK';
                         <!-- Date From -->
                         <div class="col-md-6 col-lg-2">
                             <label class="form-label-apple">Date From</label>
-                            <input type="date" class="form-control-apple" name="date_from" id="dateFromFilter" 
+                            <input type="date" class="form-control-apple ticket-filter" name="date_from" id="dateFromFilter" 
                                    value="<?= $filters['date_from'] ?? '' ?>">
                         </div>
 
                         <!-- Date To -->
                         <div class="col-md-6 col-lg-2">
                             <label class="form-label-apple">Date To</label>
-                            <input type="date" class="form-control-apple" name="date_to" id="dateToFilter" 
+                            <input type="date" class="form-control-apple ticket-filter" name="date_to" id="dateToFilter" 
                                    value="<?= $filters['date_to'] ?? '' ?>">
                         </div>
 
-                        <!-- Division Filter (only for nodal controllers) -->
-                        <?php if ($user['role'] === 'controller_nodal'): ?>
-                        <div class="col-md-6 col-lg-2">
-                            <label class="form-label-apple">Division</label>
-                            <select class="form-control-apple" name="division" id="divisionFilter">
-                                <option value="">All Divisions</option>
-                                <?php foreach ($divisions ?? [] as $division): ?>
-                                <option value="<?= htmlspecialchars($division['division']) ?>" 
-                                        <?= ($filters['division'] ?? '') === $division['division'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($division['division']) ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-
-                    <div class="row mt-3">
-                        <!--  <div class="col">
-                            Search Bar
-                            <div class="input-group input-group-apple">
-                                <input type="text" class="form-control" placeholder="Search by ticket ID, customer name, or description..." 
-                                       name="search" id="searchInput" value="<?= $_GET['search'] ?? '' ?>">
-                                <button class="btn btn-apple-primary" type="submit">
-                                    <i class="fas fa-search"></i>
+                        <!-- Action Buttons -->
+                        <div class="col-md-12 col-lg-2">
+                            <div class="d-flex gap-2">
+                                <button type="button" class="action-btn action-btn-secondary action-btn-with-text flex-fill" onclick="clearFilters()">
+                                    <i class="fas fa-times"></i>Clear
+                                </button>
+                                <button type="submit" class="action-btn action-btn-primary action-btn-with-text flex-fill">
+                                    <i class="fas fa-search"></i>Apply
                                 </button>
                             </div>
-                        </div>-->
-                        <div class="col-auto">
-                            <button type="button" class="btn btn-apple-secondary" onclick="clearFilters()">
-                                <i class="fas fa-times me-2"></i>Clear
-                            </button>
                         </div>
                     </div>
                 </form>
@@ -209,31 +192,10 @@ $page_title = 'Support Hub - SAMPARK';
                     <?= $tickets['total'] ?? 0 ?>
                 </span>
             </h5>
-            <div class="d-flex gap-2">
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-apple-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-sort me-2"></i>Sort By
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#" onclick="sortTickets('priority')">Priority</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="sortTickets('created_at')">Date Created</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="sortTickets('updated_at')">Last Updated</a></li>
-                        <li><a class="dropdown-item" href="#" onclick="sortTickets('sla_deadline')">SLA Deadline</a></li>
-                    </ul>
-                </div>
-            </div>
         </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="card-title mb-0">Support Tickets</h5>
-                    <div class="d-flex align-items-center">
-                        <small class="text-muted last-refresh-time me-3">Last updated: --</small>
-                        <span class="badge bg-primary" id="autoRefreshStatus">Auto-refresh: ON</span>
-                    </div>
-                </div>
-                
-                <table class="table table-hover mb-0" id="controllerTicketsTable">
+        <div class="card-body p-3">
+            <div class="table-responsive" style="margin: -0.5rem;">
+                <table class="table table-hover mb-0" id="controllerTicketsTable" style="margin: 0.75rem;">
                     <thead class="table-light">
                         <tr>
                             <th class="border-0" style="width: 120px;">Ticket ID</th>
@@ -350,8 +312,8 @@ $page_title = 'Support Hub - SAMPARK';
                                         <?php else: ?>
                                             <span class="text-muted text-truncate d-block" 
                                                   style="max-width: 140px;" 
-                                                  title="<?= htmlspecialchars($ticket['assigned_to_department'] ?? 'N/A') ?>">
-                                                <?= htmlspecialchars($ticket['assigned_to_department'] ?? 'N/A') ?>
+                                                  title="<?= htmlspecialchars($ticket['assigned_department_name'] ?? $ticket['assigned_to_department'] ?? 'N/A') ?>">
+                                                <?= htmlspecialchars($ticket['assigned_department_name'] ?? $ticket['assigned_to_department'] ?? 'N/A') ?>
                                             </span>
                                         <?php endif; ?>
                                     </div>
@@ -393,19 +355,13 @@ $page_title = 'Support Hub - SAMPARK';
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <div class="btn-group" role="group">
+                                    <div class="action-buttons-group" role="group">
                                         <a href="<?= Config::getAppUrl() ?>/controller/tickets/<?= $ticket['complaint_id'] ?>" 
-                                           class="btn btn-sm btn-apple-primary" title="View Details">
+                                           class="action-btn action-btn-primary action-btn-compact" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <?php if (in_array($ticket['status'], ['pending', 'awaiting_info'])): ?>
-                                        <button class="btn btn-sm btn-apple-secondary" 
-                                                onclick="quickReply(<?= $ticket['complaint_id'] ?>)" title="Quick Reply">
-                                            <i class="fas fa-reply"></i>
-                                        </button>
-                                        <?php endif; ?>
-                                        <?php if (in_array($user['role'], ['controller_nodal', 'controller']) && in_array($ticket['status'], ['pending', 'awaiting_info'])): ?>
-                                        <button class="btn btn-sm btn-apple-warning" 
+                                        <?php if (in_array($user['role'], ['controller', 'controller_nodal']) && in_array($ticket['status'], ['pending', 'awaiting_info'])): ?>
+                                        <button class="action-btn action-btn-warning action-btn-compact" 
                                                 onclick="forwardTicket(<?= $ticket['complaint_id'] ?>)" title="Forward">
                                             <i class="fas fa-share"></i>
                                         </button>
@@ -497,9 +453,11 @@ $page_title = 'Support Hub - SAMPARK';
                     <?php endif; ?>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-apple-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-apple-primary">
-                        <i class="fas fa-paper-plane me-2"></i>Send Reply
+                    <button type="button" class="action-btn action-btn-secondary action-btn-with-text" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>Cancel
+                    </button>
+                    <button type="submit" class="action-btn action-btn-primary action-btn-with-text">
+                        <i class="fas fa-paper-plane"></i>Send Reply
                     </button>
                 </div>
             </form>
@@ -557,9 +515,11 @@ $page_title = 'Support Hub - SAMPARK';
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-apple-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-apple-primary">
-                        <i class="fas fa-share me-2"></i>Forward Ticket
+                    <button type="button" class="action-btn action-btn-secondary action-btn-with-text" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>Cancel
+                    </button>
+                    <button type="submit" class="action-btn action-btn-primary action-btn-with-text">
+                        <i class="fas fa-share"></i>Forward Ticket
                     </button>
                 </div>
             </form>
@@ -574,44 +534,42 @@ let currentView = 'table';
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize controller tickets table with auto-refresh
-    if (typeof initializeControllerTicketsTable === 'function') {
-        const controllerTable = initializeControllerTicketsTable('controllerTicketsTable');
-        console.log('Controller tickets table initialized with background refresh');
-    } else {
-        console.warn('DataTable configuration not loaded - using fallback');
-        initializeBasicTable();
+    // Initialize DataTable for tickets table
+    // Use basic DataTable since we have server-rendered HTML data
+    initializeBasicDataTable();
+    
+    // Load stats immediately
+    updateStats();
+    
+    // Setup event listeners
+    setupEventListeners();
+    
+    // Initialize background refresh manager if available
+    if (window.backgroundRefreshManager) {
+        // Set up periodic stats refresh
+        setInterval(updateStats, 30000); // Refresh stats every 30 seconds
     }
     
-    updateStats();
-    setupEventListeners();
+    console.log('Controller tickets page initialized');
 });
 
 function setupEventListeners() {
-    // Update filter behavior for DataTables
-    document.querySelectorAll('#filtersForm select, #filtersForm input[type="date"]').forEach(element => {
+    // Handle filter changes
+    document.querySelectorAll('.ticket-filter').forEach(element => {
         element.addEventListener('change', function() {
-            if (window.backgroundRefreshManager) {
-                // Force immediate refresh when user changes filters
-                window.backgroundRefreshManager.forceRefresh();
-            } else {
-                applyFilters();
-            }
+            // Apply filters immediately when changed
+            applyFilters();
         });
     });
     
-    // Search with debounce for DataTables
+    // Search with debounce
     let searchTimeout;
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                if (window.backgroundRefreshManager) {
-                    window.backgroundRefreshManager.forceRefresh();
-                } else {
-                    applyFilters();
-                }
+                applyFilters();
             }, 500);
         });
     }
@@ -622,6 +580,7 @@ function applyFilters(event) {
         event.preventDefault();
     }
     
+    // Update URL with current filters
     const form = document.getElementById('filtersForm');
     const formData = new FormData(form);
     const params = new URLSearchParams();
@@ -632,16 +591,12 @@ function applyFilters(event) {
         }
     }
     
-    // Preserve current page if no search term
-    if (!formData.get('search')) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const currentPage = urlParams.get('page');
-        if (currentPage) {
-            params.append('page', currentPage);
-        }
-    }
+    // Update URL without page reload
+    const newUrl = window.location.pathname + '?' + params.toString();
+    window.history.pushState({}, '', newUrl);
     
-    window.location.href = window.location.pathname + '?' + params.toString();
+    // Refresh the page to apply filters
+    window.location.reload();
 }
 
 function clearFilters() {
@@ -650,28 +605,91 @@ function clearFilters() {
 }
 
 function forceRefresh() {
-    if (window.backgroundRefreshManager) {
-        window.backgroundRefreshManager.forceRefresh();
-        
-        // Show brief confirmation
-        const button = event.target.closest('button');
-        const originalText = button.innerHTML;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Refreshing...';
-        button.disabled = true;
-        
-        setTimeout(() => {
-            button.innerHTML = originalText;
-            button.disabled = false;
-        }, 2000);
-    } else {
-        showLoading();
+    // Update stats immediately
+    updateStats();
+    
+    // Show brief confirmation
+    const button = event.target.closest('button');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Refreshing...';
+    button.disabled = true;
+    
+    // Reload the page to get fresh data
+    setTimeout(() => {
         window.location.reload();
-    }
+    }, 1000);
 }
 
 function initializeBasicTable() {
     // Fallback initialization if DataTables config is not available
     console.log('Using basic table without auto-refresh');
+}
+
+function initializeBasicDataTable() {
+    // Simple DataTable initialization with built-in search
+    if (typeof $ !== 'undefined' && $.fn.DataTable) {
+        try {
+            const $table = $('#controllerTicketsTable');
+            
+            // Check if table exists and has content
+            if ($table.length === 0) {
+                console.warn('Table #controllerTicketsTable not found');
+                return;
+            }
+            
+            // Destroy existing DataTable if it exists
+            if ($.fn.DataTable.isDataTable('#controllerTicketsTable')) {
+                $table.DataTable().destroy();
+                $table.empty(); // Clear any leftover DataTables elements
+            }
+            
+            // Verify table structure before initializing
+            const headerCols = $table.find('thead tr th').length;
+            const firstRowCols = $table.find('tbody tr:first td').length;
+            const hasEmptyMessage = $table.find('tbody tr:first td[colspan]').length > 0;
+            const dataRowCount = $table.find('tbody tr').not(':has(td[colspan])').length;
+            
+            console.log(`Table structure: ${headerCols} headers, ${firstRowCols} cells in first row, ${dataRowCount} data rows, hasEmptyMessage: ${hasEmptyMessage}`);
+            
+            // Only initialize DataTables if we have actual data rows (not just empty state)
+            if (headerCols > 0 && dataRowCount > 0 && !hasEmptyMessage) {
+                $table.DataTable({
+                    paging: true,
+                    searching: true,
+                    ordering: false,
+                    info: true,
+                    responsive: true,
+                    pageLength: 25,
+                    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                    autoWidth: false,
+                    deferRender: true,
+                    language: {
+                        search: "Search tickets:",
+                        lengthMenu: "Show _MENU_ tickets",
+                        info: "Showing _START_ to _END_ of _TOTAL_ tickets",
+                        infoEmpty: "No tickets available",
+                        infoFiltered: "(filtered from _MAX_ total tickets)",
+                        emptyTable: "No tickets found matching your criteria",
+                        paginate: {
+                            first: "First",
+                            last: "Last", 
+                            next: "Next",
+                            previous: "Previous"
+                        }
+                    }
+                });
+                console.log('DataTable initialized successfully for controller tickets');
+            } else {
+                console.log(`Skipping DataTables initialization - no data rows available (${dataRowCount} data rows, empty message: ${hasEmptyMessage})`);
+            }
+        } catch (error) {
+            console.error('Error initializing DataTable:', error);
+            // Fallback to basic table functionality
+            console.log('Using table without DataTables due to initialization error');
+        }
+    } else {
+        console.warn('DataTable library not available');
+    }
 }
 
 // Legacy function for backward compatibility
@@ -689,9 +707,14 @@ function sortTickets(column) {
     const params = new URLSearchParams(window.location.search);
     params.set('sort', column);
     
-    // Toggle sort direction
-    const currentSort = params.get('sort_dir');
-    params.set('sort_dir', currentSort === 'desc' ? 'asc' : 'desc');
+    // Default sort direction - critical tickets first for priority
+    if (column === 'priority') {
+        params.set('sort_dir', 'critical_first');
+    } else {
+        // Toggle sort direction for other columns
+        const currentSort = params.get('sort_dir');
+        params.set('sort_dir', currentSort === 'desc' ? 'asc' : 'desc');
+    }
     
     window.location.href = window.location.pathname + '?' + params.toString();
 }
@@ -726,13 +749,17 @@ function forwardTicket(ticketId) {
     document.getElementById('forwardTicketId').textContent = ticketId;
     document.getElementById('forwardForm').dataset.ticketId = ticketId;
     
-    // Load zones and divisions for nodal controllers
+    // Load zones and divisions for nodal controllers, or just departments for controllers
     if (document.getElementById('forwardZone')) {
+        // Nodal controller modal
         loadZonesAndDivisions().then(() => {
             new bootstrap.Modal(document.getElementById('forwardModal')).show();
         });
     } else {
-        new bootstrap.Modal(document.getElementById('forwardModal')).show();
+        // Regular controller modal - load departments only
+        loadDepartments().then(() => {
+            new bootstrap.Modal(document.getElementById('forwardModal')).show();
+        });
     }
 }
 
@@ -864,39 +891,57 @@ function populateDepartmentSelect(selectElement, departments) {
 }
 
 function updateDepartmentVisibility() {
+    const userRole = '<?= $user['role'] ?? '' ?>';
     const userDivision = '<?= $user['division'] ?? '' ?>';
     const selectedDivision = document.getElementById('forwardDivision')?.value || userDivision;
     const nodalDeptSelect = document.getElementById('forwardDepartment');
+    const controllerDeptSelect = document.getElementById('forwardDepartmentController');
     
     console.log('updateDepartmentVisibility called:', {
+        userRole,
         userDivision,
         selectedDivision,
         allDepartments: allDepartments.length,
-        nodalDeptSelect: !!nodalDeptSelect
+        nodalDeptSelect: !!nodalDeptSelect,
+        controllerDeptSelect: !!controllerDeptSelect
     });
     
-    if (nodalDeptSelect) {
+    // Filter for Commercial departments
+    const commercialDepts = allDepartments.filter(dept => {
+        // Check multiple possible codes for Commercial department
+        return dept.department_code === 'COMM' || 
+               dept.department_code === 'CML' ||
+               dept.department_code === 'Commercial' || 
+               dept.department_name.toLowerCase().includes('commercial');
+    });
+    
+    if (controllerDeptSelect && userRole === 'controller') {
+        // Regular controllers can only forward to Commercial departments of same division
+        console.log('Controller role: showing only Commercial departments');
+        
+        if (commercialDepts.length === 0) {
+            // Fallback: if no commercial dept found, show a manual option
+            controllerDeptSelect.innerHTML = '<option value="">Select Department...</option><option value="COMM">Commercial</option>';
+        } else {
+            populateDepartmentSelect(controllerDeptSelect, commercialDepts);
+        }
+    }
+    
+    if (nodalDeptSelect && userRole === 'controller_nodal') {
         // For controller_nodal: if forwarding outside their division, only show Commercial
         if (selectedDivision && selectedDivision !== userDivision && selectedDivision !== '') {
             // Forwarding outside division - only Commercial
-            console.log('Forwarding outside division, filtering for Commercial departments');
-            const commercialDepts = allDepartments.filter(dept => {
-                // Check multiple possible codes for Commercial department
-                return dept.department_code === 'CML' || 
-                       dept.department_code === 'Commercial' || 
-                       dept.department_name.toLowerCase().includes('commercial');
-            });
-            console.log('Found commercial departments:', commercialDepts);
+            console.log('Nodal Controller forwarding outside division, filtering for Commercial departments');
             
             if (commercialDepts.length === 0) {
                 // Fallback: if no commercial dept found, show a manual option
-                nodalDeptSelect.innerHTML = '<option value="">Select Department...</option><option value="CML">Commercial</option>';
+                nodalDeptSelect.innerHTML = '<option value="">Select Department...</option><option value="COMM">Commercial</option>';
             } else {
                 populateDepartmentSelect(nodalDeptSelect, commercialDepts);
             }
         } else {
             // Forwarding within division - all departments
-            console.log('Forwarding within division, showing all departments');
+            console.log('Nodal Controller forwarding within division, showing all departments');
             populateDepartmentSelect(nodalDeptSelect, allDepartments);
         }
     }
@@ -964,14 +1009,23 @@ document.getElementById('forwardForm').addEventListener('submit', async function
 <?php endif; ?>
 
 function updateStats() {
-    // Update dashboard stats (this would typically come from an API)
+    // Update dashboard stats from API
     fetch(`${APP_URL}/api/tickets/stats`)
         .then(response => response.json())
         .then(data => {
-            document.getElementById('pendingCount').textContent = data.pending || 0;
-            document.getElementById('highPriorityCount').textContent = data.high_priority || 0;
-            document.getElementById('slaViolationCount').textContent = data.sla_violations || 0;
-            document.getElementById('resolvedTodayCount').textContent = data.resolved_today || 0;
+            if (data.success && data.stats) {
+                const stats = data.stats;
+                document.getElementById('pendingCount').textContent = stats.pending || 0;
+                document.getElementById('highPriorityCount').textContent = stats.high_priority || 0;
+                document.getElementById('slaViolationCount').textContent = stats.sla_violations || 0;
+                document.getElementById('resolvedTodayCount').textContent = stats.resolved_today || 0;
+                
+                // Update ticket count in header
+                const ticketCountElement = document.getElementById('ticketCount');
+                if (ticketCountElement) {
+                    ticketCountElement.textContent = stats.total || 0;
+                }
+            }
         })
         .catch(error => console.error('Error loading stats:', error));
 }
@@ -1013,14 +1067,14 @@ function updateStats() {
     border-bottom: 2px solid #e3e6f0;
     color: #5a5c69;
     font-weight: 600;
-    padding: 0.75rem 0.5rem;
+    padding: 1rem 0.75rem;
     text-transform: uppercase;
     font-size: 0.75rem;
     letter-spacing: 0.5px;
 }
 
 #controllerTicketsTable td {
-    padding: 0.75rem 0.5rem;
+    padding: 1rem 0.75rem;
     vertical-align: middle;
     border-bottom: 1px solid #f1f1f1;
 }
@@ -1074,7 +1128,7 @@ function updateStats() {
     
     #controllerTicketsTable th,
     #controllerTicketsTable td {
-        padding: 0.5rem 0.25rem;
+        padding: 0.75rem 0.5rem;
     }
 }
 
@@ -1130,6 +1184,7 @@ function updateStats() {
 @media (max-width: 768px) {
     .table-responsive {
         font-size: 0.875rem;
+        padding: 0.5rem;
     }
     
     .btn-group .btn {

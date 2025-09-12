@@ -137,9 +137,42 @@ class CustomerController extends BaseController {
                            FROM transactions t
                            LEFT JOIN users u ON t.created_by_id = u.id
                            WHERE t.complaint_id = ? 
-                           ORDER BY t.created_at ASC";
+                           ORDER BY t.created_at DESC";
         
         $transactions = $this->db->fetchAll($transactionSql, [$ticketId]);
+        
+        // Separate priority changes from regular transactions for customer view
+        $regularTransactions = [];
+        $priorityChanges = [];
+        $latestImportantRemark = null;
+        
+        foreach ($transactions as $transaction) {
+            if ($transaction['remarks_type'] === 'priority_escalation') {
+                $priorityChanges[] = $transaction;
+            } else {
+                $regularTransactions[] = $transaction;
+                
+                // For customers, prioritize information requests and progress updates
+                if (!$latestImportantRemark) {
+                    $importantTypes = ['admin_remarks', 'interim_remarks', 'forwarding_remarks'];
+                    if (in_array($transaction['remarks_type'], $importantTypes) && !empty(trim($transaction['remarks']))) {
+                        $latestImportantRemark = $transaction;
+                    }
+                }
+            }
+        }
+        
+        // If no important remark found, get the latest visible transaction for customer
+        if (!$latestImportantRemark && !empty($regularTransactions)) {
+            $reversed = array_reverse($regularTransactions);
+            foreach ($reversed as $transaction) {
+                // Show non-internal remarks to customer
+                if (!empty(trim($transaction['remarks'])) && $transaction['remarks_type'] !== 'internal_remarks') {
+                    $latestImportantRemark = $transaction;
+                    break;
+                }
+            }
+        }
         
         // Get evidence files
         $evidenceSql = "SELECT * FROM evidence WHERE complaint_id = ? ORDER BY uploaded_at ASC";
@@ -155,7 +188,9 @@ class CustomerController extends BaseController {
             'page_title' => 'Ticket #' . $ticketId . ' - SAMPARK',
             'customer' => $customer,
             'ticket' => $ticket,
-            'transactions' => $transactions,
+            'transactions' => $regularTransactions,
+            'priority_changes' => $priorityChanges,
+            'latest_important_remark' => $latestImportantRemark,
             'evidence' => $evidence,
             'requires_feedback' => $requiresFeedback,
             'csrf_token' => $this->session->getCSRFToken()

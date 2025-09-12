@@ -1,2 +1,2 @@
 /.claude
-logs/*.log
+logs/error.log

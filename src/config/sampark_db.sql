@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 11, 2025 at 10:21 AM
+-- Generation Time: Sep 11, 2025 at 08:32 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -298,7 +298,634 @@ INSERT INTO `activity_logs` (`id`, `user_id`, `customer_id`, `user_role`, `actio
 (191, NULL, NULL, 'system', 'system_background_automation', 'Processed 3 automation tasks in 39.12ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:18:19'),
 (192, NULL, NULL, 'system', 'system_background_automation', 'Processed 3 automation tasks in 42.08ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:19:19'),
 (193, NULL, NULL, 'system', 'system_background_automation', 'Processed 3 automation tasks in 36.48ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:20:09'),
-(194, NULL, NULL, 'system', 'system_background_automation', 'Processed 3 automation tasks in 61.01ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:20:49');
+(194, NULL, NULL, 'system', 'system_background_automation', 'Processed 3 automation tasks in 61.01ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:20:49'),
+(195, NULL, NULL, 'system', 'system_background_automation', 'Processed 3 automation tasks in 42.16ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:21:49'),
+(196, NULL, NULL, 'system', 'system_background_automation', 'Processed 3 automation tasks in 90.32ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:22:49'),
+(197, NULL, NULL, 'system', 'system_background_automation', 'Processed 3 automation tasks in 57.11ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:23:49'),
+(198, NULL, NULL, 'system', 'system_background_automation', 'Processed 3 automation tasks in 77.33ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:24:49'),
+(199, NULL, NULL, 'system', 'system_background_automation', 'Processed 3 automation tasks in 64.22ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:25:49'),
+(200, NULL, NULL, 'system', 'system_background_automation', 'Processed 4 automation tasks in 400.53ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:26:50'),
+(201, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.48ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:27:49'),
+(202, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 39.42ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:28:49'),
+(203, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 75.18ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:29:49');
+INSERT INTO `activity_logs` (`id`, `user_id`, `customer_id`, `user_role`, `action`, `description`, `complaint_id`, `ip_address`, `user_agent`, `created_at`) VALUES
+(204, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 31.52ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:30:49'),
+(205, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 41.24ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:31:29'),
+(206, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 52.97ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:32:15'),
+(207, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 27.65ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:32:49'),
+(208, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 82.58ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:33:49'),
+(209, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 40.96ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:34:49'),
+(210, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 78.94ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:35:49'),
+(211, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 78.98ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:36:49'),
+(212, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.21ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:37:49'),
+(213, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 34ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:38:27'),
+(214, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 80ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:39:26'),
+(215, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 38.84ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:40:14'),
+(216, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 51.66ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:40:58'),
+(217, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 40.14ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:42:26'),
+(218, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 81.89ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:43:27'),
+(219, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 29.74ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:44:02'),
+(220, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 23.02ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:44:49'),
+(221, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 30.1ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:45:39'),
+(222, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 32.26ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:46:25'),
+(223, NULL, 'CUST2025090001', 'customer', 'logout', '{\"previous_role\":\"customer\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:46:26'),
+(224, NULL, 'CUST2025090001', 'customer', 'customer_login', '{\"customer_id\":\"CUST2025090001\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:46:46'),
+(225, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 34.51ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:46:58'),
+(226, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 24.37ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:47:49'),
+(227, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 39.9ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:48:49'),
+(228, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 29.93ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:49:49'),
+(229, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 21.24ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:50:49'),
+(230, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 61.32ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:51:49'),
+(231, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 32.37ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:52:49'),
+(232, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 35.44ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:53:49'),
+(233, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 71.87ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:54:49'),
+(234, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 61.16ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:55:49'),
+(235, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 23.63ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:56:30'),
+(236, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 79.44ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:57:15'),
+(237, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.4ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:58:16'),
+(238, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 67.3ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 08:59:17'),
+(239, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 75.57ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:00:18'),
+(240, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.49ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:01:19'),
+(241, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 67.94ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:02:20'),
+(242, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.7ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:03:21'),
+(243, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.5ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:04:22'),
+(244, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 50.39ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:05:23'),
+(245, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 80.98ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:06:24'),
+(246, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.7ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:07:25'),
+(247, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.38ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:08:26'),
+(248, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 77.01ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:09:27'),
+(249, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 72.92ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:10:28'),
+(250, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.8ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:11:29'),
+(251, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 83.72ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:12:30'),
+(252, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 61.82ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:13:31'),
+(253, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 65.72ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:14:32'),
+(254, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 68.06ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:15:33'),
+(255, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 76.51ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:16:34'),
+(256, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.43ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:17:35'),
+(257, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 68.39ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:18:36'),
+(258, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 64.3ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:19:37'),
+(259, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 67.5ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:20:38'),
+(260, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 78.41ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:21:39'),
+(261, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 53.03ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:22:40'),
+(262, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 57.53ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:23:41'),
+(263, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 80.54ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:24:42'),
+(264, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.35ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:25:42'),
+(265, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.95ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:26:42'),
+(266, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.5ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:27:42'),
+(267, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 82.18ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:28:42'),
+(268, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 64.54ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:29:41'),
+(269, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 53.32ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:30:42'),
+(270, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 64.45ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:31:42'),
+(271, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 61.08ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:32:42'),
+(272, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.29ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:33:42'),
+(273, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.25ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:34:42'),
+(274, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 71.44ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:35:42'),
+(275, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 73.32ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:36:42'),
+(276, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 78.49ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:37:42'),
+(277, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.14ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:38:42'),
+(278, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.85ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:39:42'),
+(279, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 72.47ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:40:42'),
+(280, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.21ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:41:42'),
+(281, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 46.52ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:42:20'),
+(282, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 44.98ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:43:25'),
+(283, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 38.28ms', NULL, '10.31.37.92', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', '2025-09-11 09:44:06'),
+(284, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 75.59ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:45:30'),
+(285, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 79.95ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:46:30'),
+(286, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 60.89ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:47:30'),
+(287, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 43.79ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:48:30'),
+(288, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 56.38ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:49:29'),
+(289, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 76.07ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:50:30'),
+(290, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.15ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:51:31'),
+(291, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 42.35ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:52:39'),
+(292, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 48.21ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:53:40'),
+(293, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 79.29ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:54:40'),
+(294, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 48.75ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:55:40'),
+(295, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 46.7ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:56:40'),
+(296, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 77.57ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:57:40'),
+(297, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 78.8ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:58:40'),
+(298, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 79.87ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 09:59:41'),
+(299, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 72.97ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:00:42'),
+(300, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 77.69ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:01:42'),
+(301, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 67.49ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:02:42'),
+(302, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 67.94ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:03:42'),
+(303, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 44.05ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:04:48'),
+(304, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 33.68ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:05:47'),
+(305, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.93ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:06:48'),
+(306, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 73.68ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:07:48'),
+(307, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 49.33ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:08:19'),
+(308, NULL, 'CUST2025090001', 'customer', 'ticket_provide_info', 'Ticket provide_info - {\"new_status\":\"pending\",\"message\":\"Additional information provided. Ticket is now back under review.\"}', '202509100001', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:08:27'),
+(309, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 78.18ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:09:41'),
+(310, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 48.56ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:10:41'),
+(311, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 52.18ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:11:40'),
+(312, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 53.15ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:12:41'),
+(313, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 48.13ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:13:40'),
+(314, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 83.4ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:14:41'),
+(315, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.33ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:16:09'),
+(316, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 76.61ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:16:59'),
+(317, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 55.08ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:18:06'),
+(318, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 94.89ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:18:52'),
+(319, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 47.95ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:20:05'),
+(320, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 29.76ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:20:52'),
+(321, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 99.38ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:21:52'),
+(322, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 64.5ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:22:52'),
+(323, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.34ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:23:52'),
+(324, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 39.83ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:24:51'),
+(325, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.32ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:25:52'),
+(326, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 77.68ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:26:52'),
+(327, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.59ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:27:52'),
+(328, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 88.83ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:28:53'),
+(329, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 95.93ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:30:17'),
+(330, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 39.82ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:30:48'),
+(331, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.38ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:31:52'),
+(332, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 43.97ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:33:03'),
+(333, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 68.57ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:34:07'),
+(334, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 82.96ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:35:07'),
+(335, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 75.7ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:36:07'),
+(336, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 43.63ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:37:06'),
+(337, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 68.73ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:38:07'),
+(338, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 72.49ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:39:07'),
+(339, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 44.84ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:40:07'),
+(340, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 29.63ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:40:54'),
+(341, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 54.6ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:41:27'),
+(342, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 43.14ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:42:04'),
+(343, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 58.94ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:43:03'),
+(344, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 65.29ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:44:22'),
+(345, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 56.37ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:45:23'),
+(346, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 31.68ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:46:22'),
+(347, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.36ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:47:23'),
+(348, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 50.2ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:48:12'),
+(349, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 51.66ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:49:05'),
+(350, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 46.34ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:49:36'),
+(351, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 50.71ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:50:29'),
+(352, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 26.37ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:51:29'),
+(353, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 51.1ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:52:29'),
+(354, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.88ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:53:29'),
+(355, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 79.73ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:54:11'),
+(356, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 32.96ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:54:44'),
+(357, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 55.78ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:55:27'),
+(358, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 88.2ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:56:27'),
+(359, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 47.82ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:57:27'),
+(360, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 44.64ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:58:26'),
+(361, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 65.95ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 10:59:27'),
+(362, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 30.78ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:00:26'),
+(363, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 57.65ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:01:27'),
+(364, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 39.34ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:02:26'),
+(365, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 39.99ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:03:28'),
+(366, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 47.13ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:04:29'),
+(367, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 53.49ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:05:30'),
+(368, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 44.26ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:06:31'),
+(369, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 89.92ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:07:32'),
+(370, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 90.73ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:08:33'),
+(371, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 47.08ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:09:08'),
+(372, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 49.92ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:10:13'),
+(373, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.31ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:11:13'),
+(374, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 46.52ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:14:50'),
+(375, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 42.44ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:15:52'),
+(376, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 75.66ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:16:52'),
+(377, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 46.83ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:17:52'),
+(378, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 59.46ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:28:44'),
+(379, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 41.48ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:29:22'),
+(380, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 31.05ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:30:21'),
+(381, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 55ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:31:15'),
+(382, 3, NULL, 'admin', 'user_login', '{\"user_id\":3,\"role\":\"admin\"}', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:31:26'),
+(383, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 40.72ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:31:46'),
+(384, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 44.48ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:32:22'),
+(385, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 58.97ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:32:55'),
+(386, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 49.14ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:33:34'),
+(387, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.46ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:34:34'),
+(388, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 64.33ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:35:34'),
+(389, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 44.87ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:36:34'),
+(390, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 59.87ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:37:34'),
+(391, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 68.87ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:38:34'),
+(392, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 56.94ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:39:42'),
+(393, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 57.39ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:40:43'),
+(394, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 64.01ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:41:44'),
+(395, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 51.31ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:42:24'),
+(396, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 89.86ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:43:46'),
+(397, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.8ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:44:47'),
+(398, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 72.01ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:45:48');
+INSERT INTO `activity_logs` (`id`, `user_id`, `customer_id`, `user_role`, `action`, `description`, `complaint_id`, `ip_address`, `user_agent`, `created_at`) VALUES
+(399, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 40.23ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:46:43'),
+(400, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 46.94ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:47:44'),
+(401, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 47.99ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:48:45'),
+(402, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 45.37ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:49:33'),
+(403, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 61.01ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:50:10'),
+(404, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 49.04ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:50:50'),
+(405, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 43.06ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:51:50'),
+(406, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 48.88ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:52:50'),
+(407, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 33.43ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:53:50'),
+(408, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 37.37ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:54:50'),
+(409, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 77.5ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:55:50'),
+(410, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 75.02ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:56:50'),
+(411, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 36.06ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:57:50'),
+(412, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 48.24ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:58:50'),
+(413, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.8ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 11:59:50'),
+(414, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 72.89ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:00:50'),
+(415, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.81ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:01:50'),
+(416, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 77.5ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:02:50'),
+(417, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 44.27ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:03:46'),
+(418, NULL, 'CUST2025090001', 'customer', 'profile_updated', '{\"customer_id\":\"CUST2025090001\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:04:01'),
+(419, NULL, 'CUST2025090001', 'customer', 'profile_updated', '{\"customer_id\":\"CUST2025090001\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:04:15'),
+(420, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 58.02ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:04:18'),
+(421, NULL, 'CUST2025090001', 'customer', 'profile_updated', '{\"customer_id\":\"CUST2025090001\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:04:23'),
+(422, NULL, 'CUST2025090001', 'customer', 'profile_updated', '{\"customer_id\":\"CUST2025090001\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:04:35'),
+(423, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 41.95ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:04:50'),
+(424, NULL, 'CUST2025090001', 'customer', 'logout', '{\"previous_role\":\"customer\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:05:05'),
+(425, NULL, 'CUST2025090001', 'customer', 'customer_login', '{\"customer_id\":\"CUST2025090001\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:05:16'),
+(426, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 41.23ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:05:24'),
+(427, NULL, 'CUST2025090001', 'customer', 'password_changed', '{\"customer_id\":\"CUST2025090001\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:05:37'),
+(428, NULL, 'CUST2025090001', 'customer', 'logout', '{\"previous_role\":\"customer\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:05:41'),
+(429, NULL, NULL, NULL, 'failed_login', 'Failed login attempt for customer: 9876543210', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:05:52'),
+(430, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 35.12ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:05:54'),
+(431, NULL, 'CUST2025090001', 'customer', 'customer_login', '{\"customer_id\":\"CUST2025090001\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:06:00'),
+(432, NULL, 'CUST2025090001', 'customer', 'logout', '{\"previous_role\":\"customer\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:06:03'),
+(433, NULL, 'CUST2025090001', 'customer', 'customer_login', '{\"customer_id\":\"CUST2025090001\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:06:15'),
+(434, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 44.04ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:06:27'),
+(435, NULL, 'CUST2025090001', 'customer', 'logout', '{\"previous_role\":\"customer\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:06:28'),
+(436, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 31.99ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:07:36'),
+(437, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 59.54ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:09:47'),
+(438, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 41.35ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:10:46'),
+(439, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 58.5ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:11:50'),
+(440, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 81.27ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:12:50'),
+(441, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 46.71ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:13:50'),
+(442, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 48.19ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:14:50'),
+(443, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 67.15ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:15:50'),
+(444, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 73.95ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:16:50'),
+(445, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 37.15ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:17:50'),
+(446, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.51ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:18:50'),
+(447, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.63ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:19:50'),
+(448, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 37.74ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:20:50'),
+(449, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.6ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:21:50'),
+(450, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 77.16ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:22:50'),
+(451, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 41.75ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:23:50'),
+(452, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 56.32ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:24:50'),
+(453, NULL, NULL, NULL, 'failed_login', 'Failed login attempt for customer: CN003', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:24:57'),
+(454, NULL, NULL, NULL, 'failed_login', 'Failed login attempt for customer: CN003', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:25:04'),
+(455, NULL, NULL, NULL, 'failed_login', 'Failed login attempt for user: CN003', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:25:12'),
+(456, NULL, NULL, NULL, 'failed_login', 'Failed login attempt for user: CN003', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:25:21'),
+(457, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 34.42ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:25:22'),
+(458, NULL, NULL, NULL, 'failed_login', 'Failed login attempt for user: CN003', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:25:43'),
+(459, NULL, NULL, NULL, 'failed_login', 'Failed login attempt for user: CN001', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:26:10'),
+(460, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 39.21ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:26:11'),
+(461, 5, NULL, 'controller_nodal', 'user_login', '{\"user_id\":5,\"role\":\"controller_nodal\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:26:18'),
+(462, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 75.8ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:26:50'),
+(463, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 45.44ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:27:50'),
+(464, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 34.76ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:28:50'),
+(465, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.91ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:29:50'),
+(466, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.07ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:30:50'),
+(467, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 68.33ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:31:50'),
+(468, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.96ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:32:50'),
+(469, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.88ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:33:50'),
+(470, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 49.84ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:34:50'),
+(471, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.08ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:35:50'),
+(472, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 83.11ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:36:50'),
+(473, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 65.86ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:37:50'),
+(474, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 68.1ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:38:50'),
+(475, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 73.65ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:39:50'),
+(476, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 59.89ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:40:50'),
+(477, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.5ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:41:50'),
+(478, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.26ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:42:50'),
+(479, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 53.91ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:43:50'),
+(480, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.63ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:44:50'),
+(481, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 61.1ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:45:50'),
+(482, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 54.95ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:46:50'),
+(483, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 73.96ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:47:50'),
+(484, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 64.94ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:48:50'),
+(485, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 71.59ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:49:50'),
+(486, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 59.56ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:50:50'),
+(487, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 78.44ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:51:50'),
+(488, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.65ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:52:50'),
+(489, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 77.19ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:53:50'),
+(490, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.82ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:54:50'),
+(491, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.6ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:55:50'),
+(492, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 78.07ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:56:50'),
+(493, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 48.81ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:57:50'),
+(494, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 89.46ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:58:50'),
+(495, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 76.78ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 12:59:50'),
+(496, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.39ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:00:50'),
+(497, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 71.33ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:01:50'),
+(498, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 65.73ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:02:50'),
+(499, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 72.63ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:03:50'),
+(500, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 67.42ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:04:50'),
+(501, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 75.13ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:05:50'),
+(502, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 61.05ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:06:50'),
+(503, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.52ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:07:50'),
+(504, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.96ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:08:50'),
+(505, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 88.44ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:09:50'),
+(506, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.03ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:10:50'),
+(507, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 82.17ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:11:50'),
+(508, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 79.22ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:12:50'),
+(509, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.59ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:13:50'),
+(510, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 86.34ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:14:50'),
+(511, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 77.2ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:15:50'),
+(512, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 58.5ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:16:50'),
+(513, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 59.39ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:17:50'),
+(514, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 89.34ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:18:50'),
+(515, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 34.01ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:19:50'),
+(516, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 71ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:20:50'),
+(517, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.49ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:21:50'),
+(518, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.81ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:22:50'),
+(519, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 58.63ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:23:50'),
+(520, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 57.74ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:24:50'),
+(521, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.53ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:25:50'),
+(522, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 77.14ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:26:50'),
+(523, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.99ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:27:50'),
+(524, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 73.63ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:28:50'),
+(525, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 65.81ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:29:50'),
+(526, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.18ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:30:50'),
+(527, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 61.85ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:31:50'),
+(528, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 71.15ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:32:50'),
+(529, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.11ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:33:50'),
+(530, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 58.36ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:34:50'),
+(531, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 55.39ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:35:50'),
+(532, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 67.09ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:36:50'),
+(533, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 64.52ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:37:50'),
+(534, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.77ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:38:50'),
+(535, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.19ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:39:50'),
+(536, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 54.88ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:40:50'),
+(537, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.95ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:41:50'),
+(538, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 58.83ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:42:50'),
+(539, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 75.04ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:43:50'),
+(540, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 57.71ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:44:50'),
+(541, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 53.19ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:45:50'),
+(542, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 60.65ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:46:50'),
+(543, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 75.82ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:47:50'),
+(544, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 55.79ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:48:50'),
+(545, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 78.38ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:49:50'),
+(546, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.83ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:50:50'),
+(547, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 71.34ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:51:50'),
+(548, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.11ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:52:50'),
+(549, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 79.35ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:53:50'),
+(550, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 82.24ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:54:50'),
+(551, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 60.07ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:55:50'),
+(552, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.02ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:56:50'),
+(553, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 59.26ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:57:50'),
+(554, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 64.18ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:58:50'),
+(555, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 56.51ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 13:59:50'),
+(556, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 52.6ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:00:50'),
+(557, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 76.64ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:01:50'),
+(558, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 54.74ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:02:50'),
+(559, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 45.64ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:03:50'),
+(560, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 49.02ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:04:50'),
+(561, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.71ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:05:50'),
+(562, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 85.42ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:06:50'),
+(563, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 75.45ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:07:50'),
+(564, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 67.08ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:08:50'),
+(565, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 101.72ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:09:50'),
+(566, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 61.77ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:10:50'),
+(567, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 48.64ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:11:50'),
+(568, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.13ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:12:50'),
+(569, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.67ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:13:50'),
+(570, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.81ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:14:50'),
+(571, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 65.15ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:15:50'),
+(572, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 31.74ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:16:50'),
+(573, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 71.69ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:17:50'),
+(574, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 71.34ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:18:50'),
+(575, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.82ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:19:50'),
+(576, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 59.39ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:20:50'),
+(577, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 82.59ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:21:50'),
+(578, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 97.5ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:22:50'),
+(579, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 84.05ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:23:50'),
+(580, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 58.34ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:24:50'),
+(581, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.22ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:25:50'),
+(582, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 73.92ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:26:50'),
+(583, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.53ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:27:50'),
+(584, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 59.15ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:28:50'),
+(585, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 85.29ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:29:50'),
+(586, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 78.9ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:30:50'),
+(587, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 68.16ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:31:50'),
+(588, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.45ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:32:50'),
+(589, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 92.38ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:33:50');
+INSERT INTO `activity_logs` (`id`, `user_id`, `customer_id`, `user_role`, `action`, `description`, `complaint_id`, `ip_address`, `user_agent`, `created_at`) VALUES
+(590, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 64.3ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:34:50'),
+(591, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 51.98ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:35:50'),
+(592, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 98.58ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:36:50'),
+(593, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.34ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:37:50'),
+(594, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 87.49ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:38:50'),
+(595, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.06ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:39:50'),
+(596, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.72ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:40:50'),
+(597, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 86.02ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:41:50'),
+(598, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 68.34ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:42:50'),
+(599, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.9ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:43:50'),
+(600, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.52ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:44:50'),
+(601, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 71.89ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:45:50'),
+(602, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 40.79ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:46:50'),
+(603, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 80.51ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:47:50'),
+(604, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.86ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:48:50'),
+(605, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 81.26ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:49:50'),
+(606, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.58ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:50:50'),
+(607, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 73.54ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:51:50'),
+(608, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 78.75ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:52:50'),
+(609, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.17ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:53:50'),
+(610, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 67.43ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:54:50'),
+(611, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 57.65ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:55:50'),
+(612, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.49ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:56:50'),
+(613, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 100.04ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:57:50'),
+(614, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.92ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:58:50'),
+(615, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 68.99ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 14:59:50'),
+(616, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 68.33ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:00:50'),
+(617, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 90.52ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:01:50'),
+(618, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 77.89ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:02:50'),
+(619, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 77.92ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:03:50'),
+(620, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 73.99ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:04:50'),
+(621, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 83.44ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:05:50'),
+(622, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 51.09ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:06:50'),
+(623, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 59.84ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:07:50'),
+(624, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 65.4ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:08:50'),
+(625, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 82.81ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:09:50'),
+(626, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 80.87ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:10:50'),
+(627, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 79.98ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:11:50'),
+(628, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 86.26ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:12:50'),
+(629, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 75.74ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:13:50'),
+(630, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 73.27ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:14:50'),
+(631, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 81.32ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:15:50'),
+(632, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 71.12ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:16:50'),
+(633, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 60.35ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:17:50'),
+(634, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.35ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:18:50'),
+(635, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.23ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:19:50'),
+(636, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 64.74ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:20:50'),
+(637, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 93.88ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:21:50'),
+(638, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 67.45ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:22:50'),
+(639, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 78.18ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:23:50'),
+(640, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 78.29ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:24:50'),
+(641, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.66ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:25:50'),
+(642, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 77.22ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:26:50'),
+(643, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.81ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:27:50'),
+(644, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 65.64ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:28:50'),
+(645, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 46.4ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:29:50'),
+(646, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 40.71ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:30:50'),
+(647, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 47.26ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:31:50'),
+(648, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.32ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:32:51'),
+(649, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.81ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:33:50'),
+(650, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 79.21ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:34:50'),
+(651, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 70.89ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:35:50'),
+(652, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.93ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:36:50'),
+(653, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 77.13ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:37:50'),
+(654, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 67.26ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:38:50'),
+(655, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 64.01ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:39:50'),
+(656, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 52.04ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:40:50'),
+(657, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 72.12ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:41:50'),
+(658, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.08ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:42:50'),
+(659, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.46ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:43:50'),
+(660, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.4ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:44:50'),
+(661, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 68.7ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:45:50'),
+(662, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 39.82ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:46:50'),
+(663, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 65.32ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:47:50'),
+(664, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 69.87ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:48:50'),
+(665, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 67.05ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:49:50'),
+(666, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 86.64ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:50:50'),
+(667, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 58.05ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:51:50'),
+(668, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.81ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:52:50'),
+(669, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 81.47ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:53:50'),
+(670, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.79ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:54:50'),
+(671, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 56.84ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:55:50'),
+(672, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 41.97ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:56:50'),
+(673, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 71.67ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:57:50'),
+(674, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.13ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:58:50'),
+(675, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.32ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 15:59:50'),
+(676, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 62.51ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:00:50'),
+(677, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 57.87ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:01:50'),
+(678, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 68.02ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:02:50'),
+(679, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 63.91ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:03:50'),
+(680, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 65ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:04:50'),
+(681, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 74.4ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:05:50'),
+(682, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 66.75ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:06:50'),
+(683, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 78.18ms', NULL, '10.31.210.225', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:07:50'),
+(684, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.8ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:39:27'),
+(685, NULL, NULL, NULL, 'failed_login', 'Failed login attempt for customer: 9876543210', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:40:10'),
+(686, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 18.73ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:40:12'),
+(687, NULL, 'CUST2025090001', 'customer', 'customer_login', '{\"customer_id\":\"CUST2025090001\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:40:25'),
+(688, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.37ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:40:49'),
+(689, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 18.58ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:41:49'),
+(690, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.96ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:42:49'),
+(691, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.71ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:43:48'),
+(692, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.41ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:45:04'),
+(693, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 16.65ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:45:49'),
+(694, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.7ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:46:24'),
+(695, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.27ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:47:37'),
+(696, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.88ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:48:09'),
+(697, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 19.67ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:49:12'),
+(698, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.71ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:50:12'),
+(699, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 15.86ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:51:12'),
+(700, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 17.78ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:52:12'),
+(701, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 16.6ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:53:12'),
+(702, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.98ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:54:12'),
+(703, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.07ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:55:12'),
+(704, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 15ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:56:13'),
+(705, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.44ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:56:47'),
+(706, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.47ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:57:30'),
+(707, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.51ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:58:02'),
+(708, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 7.88ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:58:50'),
+(709, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 16.37ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 16:59:22'),
+(710, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.42ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:00:22'),
+(711, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.66ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:01:22'),
+(712, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.02ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:02:49'),
+(713, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.33ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:03:49'),
+(714, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.25ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:04:49'),
+(715, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 86.15ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:05:21'),
+(716, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 16.24ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:05:52'),
+(717, NULL, 'CUST2025090001', 'customer', 'logout', '{\"previous_role\":\"customer\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:06:38'),
+(718, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.05ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:06:39'),
+(719, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.43ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:07:45'),
+(720, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 15.55ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:08:45'),
+(721, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.2ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:09:45'),
+(722, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.81ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:10:32'),
+(723, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.54ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:11:31'),
+(724, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.3ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:12:32'),
+(725, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 18.97ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:13:32'),
+(726, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.19ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:14:25'),
+(727, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 16.14ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:15:38'),
+(728, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 19ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:16:38'),
+(729, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 9.19ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:17:38'),
+(730, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 15.61ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:18:11'),
+(731, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.9ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:18:46'),
+(732, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.65ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:19:45'),
+(733, NULL, NULL, NULL, 'failed_login', 'Failed login attempt for customer: 9876543211', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:19:46'),
+(734, NULL, NULL, NULL, 'failed_login', 'Failed login attempt for customer: 9876543211', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:20:06'),
+(735, NULL, 'CUST2025090001', 'customer', 'customer_login', '{\"customer_id\":\"CUST2025090001\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:20:15'),
+(736, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.9ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:20:17'),
+(737, NULL, 'CUST2025090001', 'customer', 'logout', '{\"previous_role\":\"customer\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:21:03'),
+(738, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.87ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:21:04'),
+(739, NULL, 'CUST20250107', 'customer', 'customer_login', '{\"customer_id\":\"CUST20250107\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:21:14'),
+(740, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.25ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:22:19'),
+(741, NULL, 'CUST20250107', 'customer', 'logout', '{\"previous_role\":\"customer\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:22:30'),
+(742, 5, NULL, 'controller_nodal', 'user_login', '{\"user_id\":5,\"role\":\"controller_nodal\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:22:55'),
+(743, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.45ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:22:57'),
+(744, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 9.23ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:23:49'),
+(745, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 17.05ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:24:23'),
+(746, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.78ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:25:23'),
+(747, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.53ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:26:23'),
+(748, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.27ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:27:23'),
+(749, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.67ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:28:23'),
+(750, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.49ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:29:23'),
+(751, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.43ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:33:18'),
+(752, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.64ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:34:18'),
+(753, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.27ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:35:17'),
+(754, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.07ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:36:04'),
+(755, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.63ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:36:51'),
+(756, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.56ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:37:30'),
+(757, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.23ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:38:30'),
+(758, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 9.37ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:39:11'),
+(759, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.78ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:39:43'),
+(760, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.78ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:40:51'),
+(761, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.88ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:41:51'),
+(762, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 19.42ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:42:51'),
+(763, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.62ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:43:51'),
+(764, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.21ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:45:08'),
+(765, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.2ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:46:00'),
+(766, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 19.17ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:47:09'),
+(767, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.2ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:48:02'),
+(768, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 17.48ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:49:02'),
+(769, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 15.24ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:50:02'),
+(770, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 16.77ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:51:02'),
+(771, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.21ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:52:02'),
+(772, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 15.56ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:53:02'),
+(773, 5, NULL, 'controller_nodal', 'logout', '{\"previous_role\":\"controller_nodal\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:53:41'),
+(774, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.98ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:53:42'),
+(775, NULL, 'CUST2025090001', 'customer', 'customer_login', '{\"customer_id\":\"CUST2025090001\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:53:55'),
+(776, NULL, 'CUST2025090001', 'customer', 'logout', '{\"previous_role\":\"customer\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:54:28'),
+(777, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.02ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:54:30'),
+(778, NULL, NULL, NULL, 'failed_login', 'Failed login attempt for user: CN001', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:54:40'),
+(779, 5, NULL, 'controller_nodal', 'user_login', '{\"user_id\":5,\"role\":\"controller_nodal\"}', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:54:58'),
+(780, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.15ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:55:02'),
+(781, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.29ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:56:02'),
+(782, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.74ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:57:02'),
+(783, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 15.25ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:58:02');
+INSERT INTO `activity_logs` (`id`, `user_id`, `customer_id`, `user_role`, `action`, `description`, `complaint_id`, `ip_address`, `user_agent`, `created_at`) VALUES
+(784, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.12ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 17:59:02'),
+(785, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.36ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:00:02'),
+(786, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.79ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:01:02'),
+(787, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.94ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:02:02'),
+(788, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.32ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:02:38'),
+(789, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.33ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:03:42'),
+(790, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.64ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:04:21'),
+(791, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 8.28ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:04:57'),
+(792, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.41ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:05:56'),
+(793, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 9.57ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:06:32'),
+(794, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.4ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:07:35'),
+(795, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.17ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:08:43'),
+(796, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 16.04ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:09:43'),
+(797, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.66ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:10:43'),
+(798, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.33ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:11:43'),
+(799, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 17.72ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:12:43'),
+(800, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 16.42ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:13:47'),
+(801, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.82ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:14:47'),
+(802, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.25ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:15:47'),
+(803, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.59ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:16:47'),
+(804, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 17.58ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:17:47'),
+(805, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 11.07ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:18:47'),
+(806, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 9ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:19:47'),
+(807, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.75ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:20:47'),
+(808, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 13.77ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:21:55'),
+(809, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 17.52ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:22:56'),
+(810, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.35ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:23:56'),
+(811, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 14.69ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:24:56'),
+(812, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.48ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:25:56'),
+(813, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 15.58ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:26:56'),
+(814, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.59ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:28:19'),
+(815, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 10.61ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:29:19'),
+(816, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 8.76ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:30:19'),
+(817, NULL, NULL, 'system', 'system_background_automation', 'Processed 5 automation tasks in 12.28ms', NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36', '2025-09-11 18:31:17');
 
 -- --------------------------------------------------------
 
@@ -340,13 +967,13 @@ CREATE TABLE `complaints` (
 --
 
 INSERT INTO `complaints` (`complaint_id`, `category_id`, `date`, `time`, `shed_id`, `wagon_id`, `rating`, `rating_remarks`, `description`, `action_taken`, `status`, `department`, `division`, `zone`, `customer_id`, `fnr_number`, `e_indent_number`, `assigned_to_department`, `forwarded_flag`, `priority`, `sla_deadline`, `created_at`, `updated_at`, `closed_at`, `escalated_at`, `escalation_stopped`) VALUES
-('202509090001', 3, '2025-09-09', '17:33:03', 210, 1012, 'unsatisfactory', 'ok', '12dad d aafaf   eewqewq qqj hgig iy78aaa7 a9 9dy adihd', NULL, 'closed', NULL, 'CSMT', 'CR', 'CUST2025090001', '', '', 'Commercial', 0, 'normal', NULL, '2025-09-09 12:03:03', '2025-09-11 08:14:17', '2025-09-11 08:14:17', NULL, 0),
-('202509100001', 6, '2025-09-10', '11:59:14', 266, 1024, NULL, NULL, 'qwqwqwqwqwqqwqwqqwwqwwqw', NULL, 'awaiting_info', NULL, 'CSMT', 'CR', 'CUST2025090001', '', '', 'Commercial', 0, 'normal', NULL, '2025-09-10 06:29:14', '2025-09-10 10:32:54', NULL, NULL, 0),
-('202509100002', 9, '2025-09-10', '12:00:21', 97, 1012, NULL, NULL, '21212addad ad dq 2e23sda', NULL, 'pending', NULL, 'CSMT', 'CR', 'CUST2025090001', '12', '12', 'Commercial', 0, 'normal', NULL, '2025-09-10 06:30:21', '2025-09-10 06:30:21', NULL, NULL, 0),
-('202509100003', 56, '2025-09-10', '13:25:20', 164, 1028, NULL, NULL, '12qw qwqwq q qwqw q qwqw2', NULL, 'pending', NULL, 'CSMT', 'CR', 'CUST2025090001', '12', '', 'Commercial', 0, 'normal', NULL, '2025-09-10 07:55:20', '2025-09-10 07:55:20', NULL, NULL, 0),
-('202509100004', 15, '2025-09-10', '15:01:35', 61, NULL, NULL, NULL, '12121  wsdsdss 1212 sssdewsss', NULL, 'pending', NULL, 'CSMT', 'CR', 'CUST2025090001', '11222', '', 'Commercial', 0, 'normal', NULL, '2025-09-10 09:31:35', '2025-09-10 09:31:35', NULL, NULL, 0),
-('202509100005', 6, '2025-09-10', '19:00:59', 30, 1026, NULL, NULL, '121212 1 121212 121212', NULL, 'pending', NULL, 'CSMT', 'CR', 'CUST2025090001', '12', '12', 'Commercial', 0, 'normal', NULL, '2025-09-10 13:30:59', '2025-09-10 13:30:59', NULL, NULL, 0),
-('202509100006', 20, '2025-09-10', '19:06:15', 210, 1012, NULL, NULL, '1212121212 1 12 1212 1', NULL, 'pending', NULL, 'CSMT', 'CR', 'CUST2025090001', '12', '12', 'Commercial', 0, 'normal', NULL, '2025-09-10 13:36:15', '2025-09-10 13:36:15', NULL, NULL, 0);
+('202509090001', 3, '2025-09-09', '17:33:03', 210, 1012, 'unsatisfactory', 'ok', '12dad d aafaf   eewqewq qqj hgig iy78aaa7 a9 9dy adihd', NULL, 'awaiting_feedback', NULL, 'CSMT', 'CR', 'CUST2025090001', '', '', 'Commercial', 0, 'normal', NULL, '2025-09-09 12:03:03', '2025-09-11 10:18:52', '2025-09-11 08:14:17', '2025-09-11 10:18:52', 0),
+('202509100001', 6, '2025-09-10', '11:59:14', 266, 1024, NULL, NULL, 'qwqwqwqwqwqqwqwqqwwqwwqw\n\n--- Additional Info ---\nOk', NULL, 'pending', NULL, 'CSMT', 'CR', 'CUST2025090001', '', '', 'Commercial', 0, 'medium', '2025-09-13 08:26:49', '2025-09-10 06:29:14', '2025-09-11 10:08:27', NULL, '2025-09-11 08:26:49', 0),
+('202509100002', 9, '2025-09-10', '12:00:21', 97, 1012, NULL, NULL, '21212addad ad dq 2e23sda', NULL, 'awaiting_info', NULL, 'CSMT', 'CR', 'CUST2025090001', '12', '12', 'Commercial', 0, 'medium', '2025-09-13 08:26:49', '2025-09-10 06:30:21', '2025-09-11 10:18:47', NULL, '2025-09-11 08:26:49', 0),
+('202509100003', 56, '2025-09-10', '13:25:20', 164, 1028, NULL, NULL, '12qw qwqwq q qwqw q qwqw2', NULL, 'awaiting_feedback', NULL, 'CSMT', 'CR', 'CUST2025090001', '12', '', 'Commercial', 0, 'medium', '2025-09-13 08:26:49', '2025-09-10 07:55:20', '2025-09-11 16:57:25', NULL, '2025-09-11 08:26:49', 0),
+('202509100004', 15, '2025-09-10', '15:01:35', 61, NULL, NULL, NULL, '12121  wsdsdss 1212 sssdewsss', NULL, 'pending', NULL, 'CSMT', 'CR', 'CUST2025090001', '11222', '', 'Commercial', 0, 'medium', '2025-09-13 08:26:50', '2025-09-10 09:31:35', '2025-09-11 08:26:50', NULL, '2025-09-11 08:26:50', 0),
+('202509100005', 6, '2025-09-10', '19:00:59', 30, 1026, NULL, NULL, '121212 1 121212 121212', NULL, 'pending', NULL, 'CSMT', 'CR', 'CUST2025090001', '12', '12', 'Commercial', 0, 'medium', '2025-09-13 08:26:50', '2025-09-10 13:30:59', '2025-09-11 08:26:50', NULL, '2025-09-11 08:26:50', 0),
+('202509100006', 20, '2025-09-10', '19:06:15', 210, 1012, NULL, NULL, '1212121212 1 12 1212 1', NULL, 'pending', NULL, 'CSMT', 'CR', 'CUST2025090001', '12', '12', 'Commercial', 0, 'medium', '2025-09-13 08:26:50', '2025-09-10 13:36:15', '2025-09-11 08:26:50', NULL, '2025-09-11 08:26:50', 0);
 
 -- --------------------------------------------------------
 
@@ -466,8 +1093,75 @@ INSERT INTO `customers` (`customer_id`, `password`, `name`, `email`, `mobile`, `
 ('CUST20250104', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Kavitha Reddy', 'kavitha.reddy@ghifreight.com', '9123456783', 'GHI Freight Services', 'Manager', '33DDDDD3333D4W2', 'individual', 'customer', 'approved', 'Chennai', 'Southern', '2025-09-03 11:52:21', '6', '2025-09-03 11:52:21'),
 ('CUST20250105', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Sanjay Gupta', 'sanjay.gupta@jkltransport.com', '9123456784', 'JKL Transport Corporation', 'Senior Executive', '27EEEEE4444E5V1', 'individual', 'customer', 'approved', 'Howrah', 'Eastern', '2025-09-03 11:52:21', '2', '2025-09-03 11:52:21'),
 ('CUST20250106', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Neha Joshi', 'neha.joshi@mnoexport.com', '9123456785', 'MNO Export House', 'Export Manager', '14FFFFF5555F6U0', 'individual', 'customer', 'pending', 'Mumbai Central', 'Western', '2025-09-03 11:52:21', '3', '2025-09-03 11:52:21'),
-('CUST20250107', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Rajesh Kumar', 'rajesh.kumar@pqrimpex.com', '9123456786', 'PQR Impex Limited', 'Managing Director', '', 'individual', 'customer', 'rejected', 'Sealdah', 'Eastern', '2025-09-03 11:52:21', '2', '2025-09-03 11:52:21'),
-('CUST2025090001', '$2y$10$rn9ldknOIypiqK1sPHiYYuogBjtR6fLyXS7SLA03Of1xQqtFObWNC', 'TEST', 'test@gmail.com', '9876543210', 'IT CELL', 'Sr CCTC', NULL, 'individual', 'customer', 'approved', 'Mumbai', 'Central', '2025-09-08 07:08:17', NULL, '2025-09-11 07:36:22');
+('CUST20250107', '$2y$10$pLYUe3NUVCS/ogXxkk7Pg.NPwU25VJRFJs7FXXOzkU72nfW47sgsa', 'Rajesh Kumar', 'rajesh.kumar@pqrimpex.com', '9876543211', 'PQR Impex Limited', 'Managing Director', '', 'individual', 'customer', 'approved', 'Sealdah', 'Eastern', '2025-09-03 11:52:21', '2', '2025-09-11 17:21:14'),
+('CUST2025090001', '$2y$10$pLYUe3NUVCS/ogXxkk7Pg.NPwU25VJRFJs7FXXOzkU72nfW47sgsa', 'TEST', 'test@gmail.com', '9876543210', 'IT CELL', 'Sr CCTC', NULL, 'individual', 'customer', 'approved', 'Mumbai', 'Central', '2025-09-08 07:08:17', NULL, '2025-09-11 17:53:55');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `departments`
+--
+
+CREATE TABLE `departments` (
+  `department_id` int(11) NOT NULL,
+  `department_code` varchar(20) NOT NULL,
+  `department_name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `departments`
+--
+
+INSERT INTO `departments` (`department_id`, `department_code`, `department_name`, `description`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'CML', 'Commercial', 'Commercial Department - Revenue, freight operations, passenger services', 1, '2025-09-11 18:20:49', '2025-09-11 18:24:59'),
+(2, 'ENG', 'Engineering', 'Technical Department - Infrastructure, signaling, telecommunications', 1, '2025-09-11 18:20:49', '2025-09-11 18:25:14'),
+(3, 'C&W', 'Mechanical', 'Mechanical Department - Rolling stock maintenance, workshops', 1, '2025-09-11 18:20:49', '2025-09-11 18:26:11'),
+(4, 'ELE', 'Electrical', 'Electrical Department - Electrical systems, traction, power supply', 1, '2025-09-11 18:20:49', '2025-09-11 18:25:19'),
+(5, 'S&T', 'Signal & Telecom', 'Signal & Telecommunication Department', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(7, 'OPTG', 'Operating', 'Operations Department - Train operations, crew management', 1, '2025-09-11 18:20:49', '2025-09-11 18:25:36'),
+(8, 'RPF', 'Security', 'Security Department - Railway Protection Force, safety', 1, '2025-09-11 18:20:49', '2025-09-11 18:25:42');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `divisions`
+--
+
+CREATE TABLE `divisions` (
+  `division_id` int(11) NOT NULL,
+  `division_code` varchar(10) NOT NULL,
+  `division_name` varchar(100) NOT NULL,
+  `zone_id` int(11) NOT NULL,
+  `zone_code` varchar(10) NOT NULL,
+  `headquarters` varchar(100) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `divisions`
+--
+
+INSERT INTO `divisions` (`division_id`, `division_code`, `division_name`, `zone_id`, `zone_code`, `headquarters`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'CSMT', 'Mumbai CSMT Division', 1, 'CR', 'Mumbai CSMT', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(2, 'BSL', 'Bhusaval Division', 1, 'CR', 'Bhusaval', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(3, 'NGP', 'Nagpur Division', 1, 'CR', 'Nagpur', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(4, 'PUNE', 'Pune Division', 1, 'CR', 'Pune', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(5, 'SOLAPUR', 'Solapur Division', 1, 'CR', 'Solapur', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(6, 'BRC', 'Vadodara Division', 2, 'WR', 'Vadodara', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(7, 'RTM', 'Ratlam Division', 2, 'WR', 'Ratlam', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(8, 'ADI', 'Ahmedabad Division', 2, 'WR', 'Ahmedabad', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(9, 'RJT', 'Rajkot Division', 2, 'WR', 'Rajkot', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(10, 'BB', 'Mumbai Central Division', 2, 'WR', 'Mumbai Central', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(11, 'DLI', 'Delhi Division', 3, 'NR', 'New Delhi', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(12, 'FZR', 'Firozpur Division', 3, 'NR', 'Firozpur', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(13, 'LDH', 'Ludhiana Division', 3, 'NR', 'Ludhiana', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(14, 'AMB', 'Ambala Division', 3, 'NR', 'Ambala', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49');
 
 -- --------------------------------------------------------
 
@@ -587,6 +1281,19 @@ CREATE TABLE `news` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `news`
+--
+
+INSERT INTO `news` (`id`, `title`, `content`, `short_description`, `type`, `priority`, `is_active`, `show_on_homepage`, `show_on_marquee`, `publish_date`, `expire_date`, `division_specific`, `zone_specific`, `created_by`, `created_at`, `updated_at`) VALUES
+(1, 'SAMPARK Portal Launched for Enhanced Customer Support', '<p>We are pleased to announce the launch of SAMPARK (Support and Mediation Portal for All Rail Cargo), a comprehensive digital platform designed to streamline freight customer support services across Indian Railways.</p>\r\n    <p><strong>Key Features:</strong></p>\r\n    <ul>\r\n    <li>Online ticket submission and tracking</li>\r\n    <li>Real-time status updates</li>\r\n    <li>Document upload capabilities</li>\r\n    <li>Automated escalation system</li>\r\n    <li>Mobile-responsive design</li>\r\n    </ul>\r\n    <p>This portal will significantly reduce response times and improve the overall customer experience for freight services.</p>', 'Launch of SAMPARK portal for improved freight customer support with online ticket tracking and real-time updates.', 'news', 'high', 1, 1, 1, '2025-09-11 17:10:27', '2025-10-11 17:10:27', NULL, NULL, 1, '2025-09-11 17:10:27', '2025-09-11 17:10:27'),
+(2, 'Enhanced Security Measures Implemented', '<p>Indian Railways has implemented enhanced security protocols across all freight terminals and goods sheds to ensure the safety of cargo and personnel.</p>\r\n    <p><strong>New Security Features:</strong></p>\r\n    <ul>\r\n    <li>24/7 CCTV surveillance</li>\r\n    <li>Biometric access controls</li>\r\n    <li>GPS tracking for high-value consignments</li>\r\n    <li>Enhanced lighting and perimeter security</li>\r\n    </ul>\r\n    <p>These measures will help prevent theft, damage, and unauthorized access to freight facilities.</p>', 'New security protocols including CCTV surveillance, biometric controls, and GPS tracking implemented across freight terminals.', 'news', 'medium', 1, 1, 0, '2025-09-09 17:10:27', '2025-10-06 17:10:27', NULL, NULL, 1, '2025-09-11 17:10:27', '2025-09-11 17:10:27'),
+(3, 'Digital Documentation System Now Live', '<p>All freight booking and delivery processes have been digitized to reduce paperwork and improve efficiency.</p>\r\n    <p><strong>Benefits:</strong></p>\r\n    <ul>\r\n    <li>Paperless transactions</li>\r\n    <li>Faster processing times</li>\r\n    <li>Real-time document verification</li>\r\n    <li>Environmental sustainability</li>\r\n    </ul>\r\n    <p>Customers can now upload all required documents through the SAMPARK portal, eliminating the need for physical document submission.</p>', 'Complete digitization of freight documentation processes for paperless, faster, and more efficient operations.', 'update', 'medium', 1, 1, 0, '2025-09-06 17:10:27', '2025-10-01 17:10:27', NULL, NULL, 1, '2025-09-11 17:10:27', '2025-09-11 17:10:27'),
+(4, 'Scheduled Maintenance - September 15, 2025', '<p><strong>IMPORTANT NOTICE:</strong> Scheduled maintenance of SAMPARK portal and related systems.</p>\r\n    <p><strong>Maintenance Window:</strong><br>\r\n    Date: September 15, 2025<br>\r\n    Time: 02:00 AM to 06:00 AM IST</p>\r\n    <p><strong>Services Affected:</strong></p>\r\n    <ul>\r\n    <li>Online ticket submission</li>\r\n    <li>Status tracking</li>\r\n    <li>Document uploads</li>\r\n    <li>Customer portal access</li>\r\n    </ul>\r\n    <p>Emergency support will be available through telephone helpline during this period. We apologize for any inconvenience caused.</p>', 'Scheduled system maintenance on September 15, 2025 from 2:00 AM to 6:00 AM. Online services will be temporarily unavailable.', 'announcement', 'high', 1, 1, 1, '2025-09-11 17:10:27', '2025-09-18 17:10:27', NULL, NULL, 1, '2025-09-11 17:10:27', '2025-09-11 17:10:27'),
+(5, 'New Freight Booking Guidelines Effective Immediately', '<p>Updated freight booking guidelines are now in effect to streamline operations and improve service quality.</p>\r\n    <p><strong>Key Changes:</strong></p>\r\n    <ul>\r\n    <li>Advance booking window extended to 30 days</li>\r\n    <li>Enhanced documentation requirements for hazardous materials</li>\r\n    <li>New weight and dimension verification procedures</li>\r\n    <li>Mandatory insurance for high-value consignments</li>\r\n    </ul>\r\n    <p>Please refer to the updated guidelines available in the documents section of the portal.</p>', 'Updated freight booking guidelines now effective with extended advance booking and new documentation requirements.', 'announcement', 'medium', 1, 1, 0, '2025-09-10 17:10:27', '2025-11-10 17:10:27', NULL, NULL, 1, '2025-09-11 17:10:27', '2025-09-11 17:10:27'),
+(6, 'Customer Feedback Program Launch', '<p>We are launching a comprehensive customer feedback program to continuously improve our freight services.</p>\r\n    <p><strong>How to Participate:</strong></p>\r\n    <ul>\r\n    <li>Complete online surveys after service delivery</li>\r\n    <li>Provide ratings for terminal facilities</li>\r\n    <li>Submit improvement suggestions</li>\r\n    <li>Participate in quarterly feedback sessions</li>\r\n    </ul>\r\n    <p>Your feedback is valuable and will directly influence service improvements and infrastructure development.</p>', 'New customer feedback program launched to collect suggestions and continuously improve freight service quality.', 'announcement', 'low', 1, 1, 0, '2025-09-08 17:10:27', '2025-10-26 17:10:27', NULL, NULL, 1, '2025-09-11 17:10:27', '2025-09-11 17:10:27'),
+(7, 'Emergency Contact Information Updated', '<p><strong>URGENT UPDATE:</strong> Emergency contact information for freight services has been updated.</p>\r\n    <p><strong>New Emergency Helpline:</strong><br>\r\n    📞 1800-111-321 (24/7 Available)<br>\r\n    📧 emergency@sampark.railway.gov.in</p>\r\n    <p><strong>For Immediate Assistance:</strong></p>\r\n    <ul>\r\n    <li>Cargo theft or damage</li>\r\n    <li>Safety incidents</li>\r\n    <li>Urgent delivery requirements</li>\r\n    <li>System technical issues</li>\r\n    </ul>\r\n    <p>Please update your records with the new contact information.</p>', 'Emergency contact information updated. New 24/7 helpline: 1800-111-321 for urgent freight service assistance.', 'alert', 'urgent', 1, 1, 1, '2025-09-11 17:10:27', '2025-12-10 17:10:27', NULL, NULL, 1, '2025-09-11 17:10:27', '2025-09-11 17:10:27');
+
 -- --------------------------------------------------------
 
 --
@@ -625,6 +1332,36 @@ CREATE TABLE `quick_links` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `quick_links`
+--
+
+INSERT INTO `quick_links` (`id`, `title`, `description`, `url`, `icon`, `target`, `is_active`, `sort_order`, `created_at`, `updated_at`) VALUES
+(2, 'Indian Railways', 'Official Indian Railways website', 'https://indianrailways.gov.in', 'fas fa-train', '_blank', 1, 1, '2025-09-11 17:05:15', '2025-09-11 17:05:15'),
+(3, 'Railway Board', 'Ministry of Railways - Railway Board', 'https://railwayboard.gov.in', 'fas fa-building', '_blank', 1, 2, '2025-09-11 17:05:15', '2025-09-11 17:05:15'),
+(4, 'Freight Business Portal', 'Online freight booking and tracking', 'https://freight.indianrailways.gov.in', 'fas fa-shipping-fast', '_blank', 1, 3, '2025-09-11 17:05:15', '2025-09-11 17:05:15'),
+(5, 'FOIS - Freight Operations', 'Freight Operations Information System', 'https://fois.indianrailways.gov.in', 'fas fa-chart-line', '_blank', 1, 4, '2025-09-11 17:05:15', '2025-09-11 17:05:15'),
+(6, 'NTES - Train Enquiry', 'National Train Enquiry System', 'https://enquiry.indianrailways.gov.in', 'fas fa-search', '_blank', 1, 5, '2025-09-11 17:05:15', '2025-09-11 17:05:15'),
+(7, 'Railway Safety Guidelines', 'Safety guidelines and protocols', 'https://safety.indianrailways.gov.in', 'fas fa-shield-alt', '_blank', 1, 6, '2025-09-11 17:05:15', '2025-09-11 17:05:15'),
+(8, 'Complaints & Suggestions', 'Rail Madad - Customer Care Portal', 'https://railmadad.indianrailways.gov.in', 'fas fa-comment-dots', '_blank', 1, 7, '2025-09-11 17:05:15', '2025-09-11 17:05:15'),
+(9, 'Tender Notices', 'Railway procurement and tenders', 'https://tender.indianrailways.gov.in', 'fas fa-file-contract', '_blank', 1, 8, '2025-09-11 17:05:15', '2025-09-11 17:05:15');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `remember_tokens`
+--
+
+CREATE TABLE `remember_tokens` (
+  `id` int(11) NOT NULL,
+  `selector` varchar(32) NOT NULL,
+  `token_hash` varchar(64) NOT NULL,
+  `user_type` enum('customer','user') NOT NULL,
+  `user_id` varchar(50) NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -1195,9 +1932,9 @@ CREATE TABLE `system_cache` (
 --
 
 INSERT INTO `system_cache` (`id`, `cache_key`, `cache_data`, `expires_at`, `created_at`, `updated_at`) VALUES
-(1, 'last_automation_run', '{\"last_run\":\"2025-09-11 13:50:49\"}', NULL, '2025-09-11 04:58:46', '2025-09-11 08:20:49'),
-(2, 'last_heartbeat', '{\"timestamp\":\"2025-09-11 13:50:50\"}', NULL, '2025-09-11 04:58:46', '2025-09-11 08:20:50'),
-(3, 'system_stats', '{\"total_active_tickets\":6,\"high_priority_tickets\":0,\"sla_violations\":0,\"updated_at\":\"2025-09-11 13:50:49\"}', NULL, '2025-09-11 04:58:46', '2025-09-11 08:20:49');
+(1, 'last_automation_run', '{\"last_run\":\"2025-09-12 00:01:17\"}', NULL, '2025-09-11 04:58:46', '2025-09-11 18:31:17'),
+(2, 'last_heartbeat', '{\"timestamp\":\"2025-09-12 00:01:17\"}', NULL, '2025-09-11 04:58:46', '2025-09-11 18:31:17'),
+(3, 'system_stats', '{\"total_active_tickets\":7,\"high_priority_tickets\":0,\"sla_violations\":0,\"updated_at\":\"2025-09-12 00:01:17\"}', NULL, '2025-09-11 04:58:46', '2025-09-11 18:31:17');
 
 -- --------------------------------------------------------
 
@@ -1289,7 +2026,8 @@ INSERT INTO `transactions` (`transaction_id`, `complaint_id`, `remarks`, `intern
 (10, '202509090001', 'Rating: Excellent\nRemarks: Good', NULL, 'feedback_submitted', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CUST2025090001', 'customer', 'customer', '2025-09-10 10:33:58', NULL, 0, 0),
 (11, '202509100005', 'Ticket created by customer', NULL, 'created', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CUST2025090001', 'customer', 'customer', '2025-09-10 13:30:59', NULL, 0, 0),
 (12, '202509100006', 'Ticket created by customer', NULL, 'created', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CUST2025090001', 'customer', 'customer', '2025-09-10 13:36:15', NULL, 0, 0),
-(13, '202509090001', 'Rating: Unsatisfactory\nRemarks: ok', NULL, 'feedback_submitted', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CUST2025090001', 'customer', 'customer', '2025-09-11 08:14:17', NULL, 0, 0);
+(13, '202509090001', 'Rating: Unsatisfactory\nRemarks: ok', NULL, 'feedback_submitted', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'CUST2025090001', 'customer', 'customer', '2025-09-11 08:14:17', NULL, 0, 0),
+(23, '202509100001', 'Ok', NULL, '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 'customer', NULL, '2025-09-11 10:08:27', NULL, 0, 0);
 
 -- --------------------------------------------------------
 
@@ -1321,9 +2059,9 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `login_id`, `password`, `role`, `department`, `division`, `zone`, `name`, `email`, `mobile`, `status`, `created_at`, `created_by`, `updated_at`) VALUES
 (1, 'SA001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'superadmin', 'IT', 'Headquarters', 'All Zones', 'System Administrator', 'admin@sampark.railway.gov.in', '9999999999', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
 (2, 'AD001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Administration', 'Sealdah', 'Eastern', 'Rajesh Kumar', 'admin.sealdah@railway.gov.in', '9876543210', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
-(3, 'AD002', '$2y$10$lAVN0r4PQ3MexAV3o9lx7ubhPC8UDaTb07h9E4tZ.r.Fu9KdKzZkK', 'admin', 'Administration', 'Mumbai', 'Central', 'Priya Sharma', 'admin.mumbai@railway.gov.in', '9876543211', 'active', '2025-09-03 11:52:21', 1, '2025-09-11 07:02:31'),
+(3, 'AD002', '$2y$10$lAVN0r4PQ3MexAV3o9lx7ubhPC8UDaTb07h9E4tZ.r.Fu9KdKzZkK', 'admin', 'Administration', 'Mumbai', 'Central', 'Priya Sharma', 'admin.mumbai@railway.gov.in', '9876543211', 'active', '2025-09-03 11:52:21', 1, '2025-09-11 11:31:26'),
 (4, 'AD003', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'Administration', 'Delhi', 'Northern', 'Amit Singh', 'admin.delhi@railway.gov.in', '9876543212', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
-(5, 'CN001', '$2y$10$z1nUw8ZkNql2bMdXOC5xeO7rif9YKepKMs9x9nE/IRz6a1xl4vQKG', 'controller_nodal', 'Commercial', 'CSMT', 'CR', 'Suresh Chandraa', 'commercial.sealdah@railway.gov.in', '9876543220', 'active', '2025-09-03 11:52:21', 1, '2025-09-11 07:05:23'),
+(5, 'CN001', '$2y$10$z1nUw8ZkNql2bMdXOC5xeO7rif9YKepKMs9x9nE/IRz6a1xl4vQKG', 'controller_nodal', 'Commercial', 'CSMT', 'CR', 'Suresh Chandraa', 'commercial.sealdah@railway.gov.in', '9876543220', 'active', '2025-09-03 11:52:21', 1, '2025-09-11 17:54:58'),
 (6, 'CN002', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'controller_nodal', 'Commercial', 'Howrah', 'Eastern', 'Meera Patel', 'commercial.howrah@railway.gov.in', '9876543221', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
 (7, 'CN003', '$2y$10$vk7Sui.A5oRAYH6MFBezlONS.iTf2PrSoh2/jo70zLU788JzvuDzS', 'controller_nodal', 'Commercial', 'CSMT', 'CR', 'Ravi Gupta', 'commercial.mumbai@railway.gov.in', '9876543222', 'active', '2025-09-03 11:52:21', 1, '2025-09-10 13:31:24'),
 (8, 'CN004', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'controller_nodal', 'Commercial', 'Delhi', 'Northern', 'Sunita Devi', 'commercial.delhi@railway.gov.in', '9876543223', 'active', '2025-09-03 11:52:21', 1, '2025-09-03 11:52:21'),
@@ -1778,6 +2516,64 @@ INSERT INTO `wagon_details` (`wagon_id`, `wagon_code`, `type`, `capacity`, `desc
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `zones`
+--
+
+CREATE TABLE `zones` (
+  `zone_id` int(11) NOT NULL,
+  `zone_code` varchar(10) NOT NULL,
+  `zone_name` varchar(100) NOT NULL,
+  `zone_full_name` varchar(200) NOT NULL,
+  `headquarters` varchar(100) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `zones`
+--
+
+INSERT INTO `zones` (`zone_id`, `zone_code`, `zone_name`, `zone_full_name`, `headquarters`, `is_active`, `created_at`, `updated_at`) VALUES
+(1, 'CR', 'Central Railway', 'Central Railway Zone', 'Mumbai', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(2, 'WR', 'Western Railway', 'Western Railway Zone', 'Mumbai', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(3, 'NR', 'Northern Railway', 'Northern Railway Zone', 'New Delhi', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(4, 'SR', 'Southern Railway', 'Southern Railway Zone', 'Chennai', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(5, 'ER', 'Eastern Railway', 'Eastern Railway Zone', 'Kolkata', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(6, 'NER', 'North Eastern Railway', 'North Eastern Railway Zone', 'Gorakhpur', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(7, 'NFR', 'Northeast Frontier Railway', 'Northeast Frontier Railway Zone', 'Guwahati', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(8, 'SCR', 'South Central Railway', 'South Central Railway Zone', 'Secunderabad', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(9, 'SER', 'South Eastern Railway', 'South Eastern Railway Zone', 'Kolkata', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(10, 'SECR', 'South East Central Railway', 'South East Central Railway Zone', 'Bilaspur', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(11, 'SWR', 'South Western Railway', 'South Western Railway Zone', 'Hubli', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(12, 'WCR', 'West Central Railway', 'West Central Railway Zone', 'Jabalpur', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(13, 'NCR', 'North Central Railway', 'North Central Railway Zone', 'Allahabad', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(14, 'NWR', 'North Western Railway', 'North Western Railway Zone', 'Jaipur', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(15, 'ECR', 'East Central Railway', 'East Central Railway Zone', 'Hajipur', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(16, 'ECOR', 'East Coast Railway', 'East Coast Railway Zone', 'Bhubaneswar', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49'),
+(17, 'KR', 'Konkan Railway', 'Konkan Railway Corporation', 'Navi Mumbai', 1, '2025-09-11 18:20:49', '2025-09-11 18:20:49');
+
+-- --------------------------------------------------------
+
+--
+-- Stand-in structure for view `zone_division_departments`
+-- (See below for the actual view)
+--
+CREATE TABLE `zone_division_departments` (
+`zone_code` varchar(10)
+,`zone_name` varchar(100)
+,`division_code` varchar(10)
+,`division_name` varchar(100)
+,`department_code` varchar(20)
+,`department_name` varchar(100)
+,`zone_active` tinyint(1)
+,`division_active` tinyint(1)
+,`department_active` tinyint(1)
+);
+
+-- --------------------------------------------------------
+
+--
 -- Structure for view `active_tickets`
 --
 DROP TABLE IF EXISTS `active_tickets`;
@@ -1792,6 +2588,15 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 DROP TABLE IF EXISTS `ticket_summary`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `ticket_summary`  AS SELECT `complaints`.`division` AS `division`, `complaints`.`zone` AS `zone`, `complaints`.`status` AS `status`, `complaints`.`priority` AS `priority`, count(0) AS `ticket_count`, avg(timestampdiff(HOUR,`complaints`.`created_at`,coalesce(`complaints`.`closed_at`,current_timestamp()))) AS `avg_resolution_hours` FROM `complaints` GROUP BY `complaints`.`division`, `complaints`.`zone`, `complaints`.`status`, `complaints`.`priority` ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `zone_division_departments`
+--
+DROP TABLE IF EXISTS `zone_division_departments`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `zone_division_departments`  AS SELECT `z`.`zone_code` AS `zone_code`, `z`.`zone_name` AS `zone_name`, `d`.`division_code` AS `division_code`, `d`.`division_name` AS `division_name`, `dept`.`department_code` AS `department_code`, `dept`.`department_name` AS `department_name`, `z`.`is_active` AS `zone_active`, `d`.`is_active` AS `division_active`, `dept`.`is_active` AS `department_active` FROM ((`zones` `z` join `divisions` `d` on(`d`.`zone_code` = `z`.`zone_code`)) join `departments` `dept`) WHERE `z`.`is_active` = 1 AND `d`.`is_active` = 1 AND `dept`.`is_active` = 1 ;
 
 --
 -- Indexes for dumped tables
@@ -1846,6 +2651,26 @@ ALTER TABLE `customers`
   ADD KEY `idx_customer_type` (`customer_type`);
 
 --
+-- Indexes for table `departments`
+--
+ALTER TABLE `departments`
+  ADD PRIMARY KEY (`department_id`),
+  ADD UNIQUE KEY `idx_department_code` (`department_code`),
+  ADD KEY `idx_department_active` (`is_active`),
+  ADD KEY `idx_departments_active` (`is_active`);
+
+--
+-- Indexes for table `divisions`
+--
+ALTER TABLE `divisions`
+  ADD PRIMARY KEY (`division_id`),
+  ADD UNIQUE KEY `idx_division_code_zone` (`division_code`,`zone_code`),
+  ADD KEY `idx_zone_id` (`zone_id`),
+  ADD KEY `idx_division_active` (`is_active`),
+  ADD KEY `idx_divisions_zone` (`zone_code`),
+  ADD KEY `idx_divisions_active` (`is_active`);
+
+--
 -- Indexes for table `email_templates`
 --
 ALTER TABLE `email_templates`
@@ -1894,6 +2719,16 @@ ALTER TABLE `quick_links`
   ADD PRIMARY KEY (`id`),
   ADD KEY `idx_active` (`is_active`),
   ADD KEY `idx_sort` (`sort_order`);
+
+--
+-- Indexes for table `remember_tokens`
+--
+ALTER TABLE `remember_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `selector` (`selector`),
+  ADD KEY `idx_selector` (`selector`),
+  ADD KEY `idx_user` (`user_type`,`user_id`),
+  ADD KEY `idx_expires` (`expires_at`);
 
 --
 -- Indexes for table `shed`
@@ -1970,6 +2805,16 @@ ALTER TABLE `wagon_details`
   ADD KEY `idx_active` (`is_active`);
 
 --
+-- Indexes for table `zones`
+--
+ALTER TABLE `zones`
+  ADD PRIMARY KEY (`zone_id`),
+  ADD UNIQUE KEY `zone_code` (`zone_code`),
+  ADD UNIQUE KEY `idx_zone_code` (`zone_code`),
+  ADD KEY `idx_zone_active` (`is_active`),
+  ADD KEY `idx_zones_active` (`is_active`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -1977,13 +2822,25 @@ ALTER TABLE `wagon_details`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=195;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=818;
 
 --
 -- AUTO_INCREMENT for table `complaint_categories`
 --
 ALTER TABLE `complaint_categories`
   MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
+
+--
+-- AUTO_INCREMENT for table `departments`
+--
+ALTER TABLE `departments`
+  MODIFY `department_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT for table `divisions`
+--
+ALTER TABLE `divisions`
+  MODIFY `division_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
 
 --
 -- AUTO_INCREMENT for table `email_templates`
@@ -1995,13 +2852,13 @@ ALTER TABLE `email_templates`
 -- AUTO_INCREMENT for table `evidence`
 --
 ALTER TABLE `evidence`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `news`
 --
 ALTER TABLE `news`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `notifications`
@@ -2013,7 +2870,13 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `quick_links`
 --
 ALTER TABLE `quick_links`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `remember_tokens`
+--
+ALTER TABLE `remember_tokens`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `shed`
@@ -2031,7 +2894,7 @@ ALTER TABLE `sla_definitions`
 -- AUTO_INCREMENT for table `system_cache`
 --
 ALTER TABLE `system_cache`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=430;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2182;
 
 --
 -- AUTO_INCREMENT for table `system_settings`
@@ -2043,7 +2906,7 @@ ALTER TABLE `system_settings`
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `transaction_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -2056,6 +2919,12 @@ ALTER TABLE `users`
 --
 ALTER TABLE `wagon_details`
   MODIFY `wagon_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1428;
+
+--
+-- AUTO_INCREMENT for table `zones`
+--
+ALTER TABLE `zones`
+  MODIFY `zone_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- Constraints for dumped tables
@@ -2076,6 +2945,12 @@ ALTER TABLE `complaints`
   ADD CONSTRAINT `complaints_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `complaints_ibfk_3` FOREIGN KEY (`category_id`) REFERENCES `complaint_categories` (`category_id`),
   ADD CONSTRAINT `complaints_ibfk_4` FOREIGN KEY (`shed_id`) REFERENCES `shed` (`shed_id`);
+
+--
+-- Constraints for table `divisions`
+--
+ALTER TABLE `divisions`
+  ADD CONSTRAINT `divisions_ibfk_1` FOREIGN KEY (`zone_id`) REFERENCES `zones` (`zone_id`) ON UPDATE CASCADE;
 
 --
 -- Constraints for table `news`
@@ -2106,124 +2981,6 @@ ALTER TABLE `transactions`
   ADD CONSTRAINT `transactions_ibfk_3` FOREIGN KEY (`to_user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `transactions_ibfk_4` FOREIGN KEY (`from_customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE SET NULL,
   ADD CONSTRAINT `transactions_ibfk_5` FOREIGN KEY (`to_customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE SET NULL;
-
---
--- Sample data for table `quick_links`
---
-
-INSERT INTO `quick_links` (`id`, `title`, `description`, `url`, `icon`, `target`, `is_active`, `sort_order`, `created_at`, `updated_at`) VALUES
-(1, 'Indian Railways', 'Official Indian Railways website', 'https://indianrailways.gov.in', 'fas fa-train', '_blank', 1, 1, NOW(), NOW()),
-(2, 'Railway Board', 'Ministry of Railways - Railway Board', 'https://railwayboard.gov.in', 'fas fa-building', '_blank', 1, 2, NOW(), NOW()),
-(3, 'Freight Business Portal', 'Online freight booking and tracking', 'https://freight.indianrailways.gov.in', 'fas fa-shipping-fast', '_blank', 1, 3, NOW(), NOW()),
-(4, 'FOIS - Freight Operations', 'Freight Operations Information System', 'https://fois.indianrailways.gov.in', 'fas fa-chart-line', '_blank', 1, 4, NOW(), NOW()),
-(5, 'NTES - Train Enquiry', 'National Train Enquiry System', 'https://enquiry.indianrailways.gov.in', 'fas fa-search', '_blank', 1, 5, NOW(), NOW()),
-(6, 'Railway Safety Guidelines', 'Safety guidelines and protocols', 'https://safety.indianrailways.gov.in', 'fas fa-shield-alt', '_blank', 1, 6, NOW(), NOW()),
-(7, 'Complaints & Suggestions', 'Rail Madad - Customer Care Portal', 'https://railmadad.indianrailways.gov.in', 'fas fa-comment-dots', '_blank', 1, 7, NOW(), NOW()),
-(8, 'Tender Notices', 'Railway procurement and tenders', 'https://tender.indianrailways.gov.in', 'fas fa-file-contract', '_blank', 1, 8, NOW(), NOW());
-
---
--- Sample data for table `news`
---
-
-INSERT INTO `news` (`id`, `title`, `content`, `short_description`, `type`, `priority`, `is_active`, `show_on_homepage`, `show_on_marquee`, `publish_date`, `expire_date`, `division_specific`, `zone_specific`, `created_by`, `created_at`, `updated_at`) VALUES
-(1, 'SAMPARK Portal Launched for Enhanced Customer Support', 
-'<p>We are pleased to announce the launch of SAMPARK (Support and Mediation Portal for All Rail Cargo), a comprehensive digital platform designed to streamline freight customer support services across Indian Railways.</p>
-<p><strong>Key Features:</strong></p>
-<ul>
-<li>Online ticket submission and tracking</li>
-<li>Real-time status updates</li>
-<li>Document upload capabilities</li>
-<li>Automated escalation system</li>
-<li>Mobile-responsive design</li>
-</ul>
-<p>This portal will significantly reduce response times and improve the overall customer experience for freight services.</p>', 
-'Launch of SAMPARK portal for improved freight customer support with online ticket tracking and real-time updates.', 
-'news', 'high', 1, 1, 1, NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY), NULL, NULL, 1, NOW(), NOW()),
-
-(2, 'Enhanced Security Measures Implemented', 
-'<p>Indian Railways has implemented enhanced security protocols across all freight terminals and goods sheds to ensure the safety of cargo and personnel.</p>
-<p><strong>New Security Features:</strong></p>
-<ul>
-<li>24/7 CCTV surveillance</li>
-<li>Biometric access controls</li>
-<li>GPS tracking for high-value consignments</li>
-<li>Enhanced lighting and perimeter security</li>
-</ul>
-<p>These measures will help prevent theft, damage, and unauthorized access to freight facilities.</p>', 
-'New security protocols including CCTV surveillance, biometric controls, and GPS tracking implemented across freight terminals.', 
-'news', 'medium', 1, 1, 0, DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_ADD(NOW(), INTERVAL 25 DAY), NULL, NULL, 1, NOW(), NOW()),
-
-(3, 'Digital Documentation System Now Live', 
-'<p>All freight booking and delivery processes have been digitized to reduce paperwork and improve efficiency.</p>
-<p><strong>Benefits:</strong></p>
-<ul>
-<li>Paperless transactions</li>
-<li>Faster processing times</li>
-<li>Real-time document verification</li>
-<li>Environmental sustainability</li>
-</ul>
-<p>Customers can now upload all required documents through the SAMPARK portal, eliminating the need for physical document submission.</p>', 
-'Complete digitization of freight documentation processes for paperless, faster, and more efficient operations.', 
-'update', 'medium', 1, 1, 0, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_ADD(NOW(), INTERVAL 20 DAY), NULL, NULL, 1, NOW(), NOW()),
-
-(4, 'Scheduled Maintenance - September 15, 2025', 
-'<p><strong>IMPORTANT NOTICE:</strong> Scheduled maintenance of SAMPARK portal and related systems.</p>
-<p><strong>Maintenance Window:</strong><br>
-Date: September 15, 2025<br>
-Time: 02:00 AM to 06:00 AM IST</p>
-<p><strong>Services Affected:</strong></p>
-<ul>
-<li>Online ticket submission</li>
-<li>Status tracking</li>
-<li>Document uploads</li>
-<li>Customer portal access</li>
-</ul>
-<p>Emergency support will be available through telephone helpline during this period. We apologize for any inconvenience caused.</p>', 
-'Scheduled system maintenance on September 15, 2025 from 2:00 AM to 6:00 AM. Online services will be temporarily unavailable.', 
-'announcement', 'high', 1, 1, 1, NOW(), DATE_ADD(NOW(), INTERVAL 7 DAY), NULL, NULL, 1, NOW(), NOW()),
-
-(5, 'New Freight Booking Guidelines Effective Immediately', 
-'<p>Updated freight booking guidelines are now in effect to streamline operations and improve service quality.</p>
-<p><strong>Key Changes:</strong></p>
-<ul>
-<li>Advance booking window extended to 30 days</li>
-<li>Enhanced documentation requirements for hazardous materials</li>
-<li>New weight and dimension verification procedures</li>
-<li>Mandatory insurance for high-value consignments</li>
-</ul>
-<p>Please refer to the updated guidelines available in the documents section of the portal.</p>', 
-'Updated freight booking guidelines now effective with extended advance booking and new documentation requirements.', 
-'announcement', 'medium', 1, 1, 0, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 60 DAY), NULL, NULL, 1, NOW(), NOW()),
-
-(6, 'Customer Feedback Program Launch', 
-'<p>We are launching a comprehensive customer feedback program to continuously improve our freight services.</p>
-<p><strong>How to Participate:</strong></p>
-<ul>
-<li>Complete online surveys after service delivery</li>
-<li>Provide ratings for terminal facilities</li>
-<li>Submit improvement suggestions</li>
-<li>Participate in quarterly feedback sessions</li>
-</ul>
-<p>Your feedback is valuable and will directly influence service improvements and infrastructure development.</p>', 
-'New customer feedback program launched to collect suggestions and continuously improve freight service quality.', 
-'announcement', 'low', 1, 1, 0, DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_ADD(NOW(), INTERVAL 45 DAY), NULL, NULL, 1, NOW(), NOW()),
-
-(7, 'Emergency Contact Information Updated', 
-'<p><strong>URGENT UPDATE:</strong> Emergency contact information for freight services has been updated.</p>
-<p><strong>New Emergency Helpline:</strong><br>
-📞 1800-111-321 (24/7 Available)<br>
-📧 emergency@sampark.railway.gov.in</p>
-<p><strong>For Immediate Assistance:</strong></p>
-<ul>
-<li>Cargo theft or damage</li>
-<li>Safety incidents</li>
-<li>Urgent delivery requirements</li>
-<li>System technical issues</li>
-</ul>
-<p>Please update your records with the new contact information.</p>', 
-'Emergency contact information updated. New 24/7 helpline: 1800-111-321 for urgent freight service assistance.', 
-'alert', 'urgent', 1, 1, 1, NOW(), DATE_ADD(NOW(), INTERVAL 90 DAY), NULL, NULL, 1, NOW(), NOW());
-
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

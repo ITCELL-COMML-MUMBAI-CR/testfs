@@ -297,8 +297,11 @@ class BackgroundRefreshManager {
         Object.keys(stats).forEach(key => {
             const elements = document.querySelectorAll(`[data-stat="${key}"]`);
             elements.forEach(el => {
-                if (el.textContent !== stats[key].toString()) {
-                    el.textContent = stats[key];
+                const statValue = stats[key] ?? 0; // Handle null/undefined values
+                const currentValue = el.textContent?.trim() || '0';
+                
+                if (currentValue !== statValue.toString()) {
+                    el.textContent = statValue;
                     
                     // Add visual indicator of change
                     el.classList.add('stat-updated');

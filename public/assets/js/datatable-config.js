@@ -9,6 +9,7 @@ const DATATABLE_DEFAULTS = {
     serverSide: false, // We handle data refresh manually
     responsive: true,
     autoWidth: false,
+    searching: true, // Always enable search functionality
     pageLength: 25,
     lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
     order: [[0, 'desc']], // Default order by first column descending
@@ -192,6 +193,7 @@ function initializeCustomerTicketsTable(tableId = 'customerTicketsTable') {
             }
         ],
         order: [[4, 'desc']], // Order by created date
+        searching: true, // Ensure search is enabled
         rowCallback: function(row, data) {
             // Add visual indicators for urgent tickets
             if (data.is_urgent) {
@@ -215,8 +217,37 @@ function initializeCustomerTicketsTable(tableId = 'customerTicketsTable') {
 
 /**
  * Controller Tickets DataTable Configuration
+ * Note: This function is currently not used as controller tickets use server-rendered HTML
+ * and initialize with basic DataTable configuration directly in the view
  */
 function initializeControllerTicketsTable(tableId = 'controllerTicketsTable') {
+    // Check if table has existing data (server-rendered)
+    const $table = $(`#${tableId}`);
+    const hasData = $table.find('tbody tr').length > 0 && !$table.find('tbody tr td[colspan]').length;
+    
+    if (hasData) {
+        // For server-rendered data, use basic DataTable initialization
+        return $table.DataTable({
+            serverSide: false,
+            searching: true,
+            ordering: false,
+            order: [],
+            responsive: true,
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+            language: {
+                search: 'Search tickets:',
+                lengthMenu: 'Show _MENU_ tickets',
+                info: 'Showing _START_ to _END_ of _TOTAL_ tickets',
+                infoEmpty: 'Showing 0 to 0 of 0 tickets',
+                infoFiltered: '(filtered from _MAX_ total tickets)',
+                zeroRecords: 'No matching tickets found',
+                emptyTable: 'No tickets found'
+            }
+        });
+    }
+    
+    // AJAX configuration for dynamic loading (if needed in future)
     const config = {
         ajax: {
             url: `${window.APP_URL || ''}/api/tickets/refresh`,
@@ -375,7 +406,9 @@ function initializeControllerTicketsTable(tableId = 'controllerTicketsTable') {
                 }
             }
         ],
-        order: [[1, 'desc'], [6, 'desc']], // Order by priority, then by created date
+        order: [], // Disable default sorting - backend already sorts by priority
+        ordering: false, // Disable column sorting to preserve backend order
+        searching: true, // Enable search functionality
         rowCallback: function(row, data) {
             // Add visual indicators
             if (data.is_urgent) {

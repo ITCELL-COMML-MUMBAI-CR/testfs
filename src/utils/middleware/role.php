@@ -190,8 +190,9 @@ class RoleMiddleware {
         
         // Controller nodal can access multiple divisions
         if ($userRole === 'controller_nodal') {
-            // Logic to check if nodal controller can access target division
-            return true; // Simplified for now
+            // Nodal controllers can access their own division and other divisions
+            // but should have proper validation for cross-division access
+            return $userDivision === $targetDivision || self::canAccessCrossDivision($userDivision, $targetDivision);
         }
         
         // Regular controller can only access their own division
@@ -200,6 +201,16 @@ class RoleMiddleware {
         }
         
         return false;
+    }
+    
+    /**
+     * Check if nodal controller can access cross-division
+     */
+    private static function canAccessCrossDivision($userDivision, $targetDivision) {
+        // For now, allow cross-division access for nodal controllers
+        // In a real implementation, this should check against a configuration
+        // or database table that defines which divisions a nodal controller can access
+        return true;
     }
     
     /**

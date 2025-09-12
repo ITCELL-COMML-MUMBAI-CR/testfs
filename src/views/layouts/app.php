@@ -224,6 +224,10 @@
                                     <i class="fas fa-bell me-2"></i>Notifications
                                     <span class="badge bg-danger ms-auto" id="notificationCount" style="display: none;">0</span>
                                 </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="window.backgroundManager?.forceRefresh()">
+                                    <i class="fas fa-sync me-2"></i>Force Sync
+                                    <span class="badge bg-secondary ms-auto" id="background-status-indicator" title="Background sync status">●</span>
+                                </a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="<?= Config::getAppUrl() ?>/logout">
                                     <i class="fas fa-sign-out-alt me-2"></i>Logout
@@ -349,6 +353,7 @@
     
     <!-- Background Refresh System -->
     <script src="<?= Config::getAppUrl() ?>/assets/js/background-refresh.js"></script>
+    <script src="<?= Config::getAppUrl() ?>/assets/js/background-manager.js"></script>
     <script src="<?= Config::getAppUrl() ?>/assets/js/datatable-config.js"></script>
     
     <!-- Global JavaScript Variables -->

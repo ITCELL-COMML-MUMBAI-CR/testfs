@@ -650,6 +650,37 @@ class ApiController extends BaseController {
         }
     }
     
+    public function processBackgroundTasks() {
+        try {
+            // Include the background priority service
+            require_once __DIR__ . '/../utils/BackgroundPriorityService.php';
+            
+            // Initialize background priority service
+            $priorityService = new BackgroundPriorityService();
+            
+            // Process all tickets for priority escalation
+            $escalationResults = $priorityService->processAllTickets();
+            
+            // Get escalation statistics
+            $stats = $priorityService->getEscalationStats();
+            
+            $this->json([
+                'success' => true,
+                'escalation_results' => $escalationResults,
+                'escalation_stats' => $stats,
+                'timestamp' => date('Y-m-d H:i:s')
+            ]);
+            
+        } catch (Exception $e) {
+            error_log("Background tasks error: " . $e->getMessage());
+            $this->json([
+                'success' => false,
+                'error' => 'Background task processing failed',
+                'timestamp' => date('Y-m-d H:i:s')
+            ], 500);
+        }
+    }
+    
     /**
      * Get ticket statistics for controller dashboard
      */
@@ -675,10 +706,14 @@ class ApiController extends BaseController {
             // Get basic stats
             $stats = [
                 'pending' => 0,
-                'in_progress' => 0,
+                'awaiting_info' => 0,
+                'awaiting_approval' => 0,
                 'awaiting_feedback' => 0,
                 'closed' => 0,
-                'total' => 0
+                'total' => 0,
+                'high_priority' => 0,
+                'sla_violations' => 0,
+                'resolved_today' => 0
             ];
             
             $sql = "SELECT 
@@ -710,6 +745,30 @@ class ApiController extends BaseController {
             $todaySql = "SELECT COUNT(*) as count FROM complaints {$todayWhereClause}";
             $todayResult = $this->db->fetch($todaySql, $todayParams);
             $stats['today'] = (int)($todayResult['count'] ?? 0);
+            
+            // Get high priority count
+            $highPrioritySql = "SELECT COUNT(*) as count FROM complaints 
+                               {$whereClause}
+                               AND priority IN ('high', 'critical')";
+            $highPriorityResult = $this->db->fetch($highPrioritySql, $params);
+            $stats['high_priority'] = (int)($highPriorityResult['count'] ?? 0);
+            
+            // Get SLA violations count
+            $slaViolationsSql = "SELECT COUNT(*) as count FROM complaints 
+                                {$whereClause}
+                                AND sla_deadline IS NOT NULL 
+                                AND NOW() > sla_deadline 
+                                AND status != 'closed'";
+            $slaViolationsResult = $this->db->fetch($slaViolationsSql, $params);
+            $stats['sla_violations'] = (int)($slaViolationsResult['count'] ?? 0);
+            
+            // Get resolved today count
+            $resolvedTodaySql = "SELECT COUNT(*) as count FROM complaints 
+                                {$whereClause}
+                                AND status = 'closed' 
+                                AND DATE(closed_at) = CURDATE()";
+            $resolvedTodayResult = $this->db->fetch($resolvedTodaySql, $params);
+            $stats['resolved_today'] = (int)($resolvedTodayResult['count'] ?? 0);
             
             // Get average response time (in hours)
             $responseSql = "SELECT 

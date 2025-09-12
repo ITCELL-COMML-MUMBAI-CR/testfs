@@ -7,6 +7,7 @@
 require_once 'BaseController.php';
 require_once __DIR__ . '/../utils/Validator.php';
 require_once __DIR__ . '/../utils/NotificationService.php';
+require_once __DIR__ . '/../utils/BackgroundPriorityService.php';
 
 class ControllerController extends BaseController {
     
@@ -42,8 +43,6 @@ class ControllerController extends BaseController {
         $priority = $_GET['priority'] ?? '';
         $dateFrom = $_GET['date_from'] ?? '';
         $dateTo = $_GET['date_to'] ?? '';
-        $division = $_GET['division'] ?? '';
-        
         // Build query conditions based on user role and department access
         $conditions = [];
         $params = [];
@@ -52,6 +51,9 @@ class ControllerController extends BaseController {
         $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
         $params[] = $user['division'];
         $params[] = $user['department'];
+        
+        // Exclude closed complaints by default
+        $conditions[] = "c.status != 'closed'";
         
         // Add filters
         if ($status) {
@@ -74,11 +76,6 @@ class ControllerController extends BaseController {
             $params[] = $dateTo . ' 23:59:59';
         }
         
-        if ($division && $user['role'] === 'controller_nodal') {
-            $conditions[] = 'c.division = ?';
-            $params[] = $division;
-        }
-        
         $whereClause = implode(' AND ', $conditions);
         
         $sql = "SELECT c.*, 
@@ -86,6 +83,7 @@ class ControllerController extends BaseController {
                        s.name as shed_name, s.shed_code,
                        cust.name as customer_name, cust.email as customer_email,
                        cust.company_name, cust.mobile as customer_mobile,
+                       d.department_name as assigned_department_name,
                        TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
                        CASE 
                            WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
@@ -95,6 +93,7 @@ class ControllerController extends BaseController {
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
                 LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                LEFT JOIN departments d ON c.assigned_to_department = d.department_code
                 WHERE {$whereClause}
                 ORDER BY 
                     CASE WHEN c.priority = 'critical' THEN 1
@@ -114,16 +113,130 @@ class ControllerController extends BaseController {
                 'status' => $status,
                 'priority' => $priority,
                 'date_from' => $dateFrom,
-                'date_to' => $dateTo,
-                'division' => $division
+                'date_to' => $dateTo
             ],
             'status_options' => Config::TICKET_STATUS,
             'priority_options' => Config::PRIORITY_LEVELS,
-            'divisions' => $this->getDivisions(),
             'csrf_token' => $this->session->getCSRFToken()
         ];
         
         $this->view('controller/tickets', $data);
+    }
+    
+    public function forwardedTickets() {
+        $user = $this->getCurrentUser();
+        
+        // Only controller_nodal can access this view
+        if ($user['role'] !== 'controller_nodal') {
+            $this->setFlash('error', 'Access denied. Only nodal controllers can view forwarded tickets.');
+            $this->redirect(Config::getAppUrl() . '/controller/tickets');
+            return;
+        }
+        
+        $page = $_GET['page'] ?? 1;
+        $status = $_GET['status'] ?? '';
+        $priority = $_GET['priority'] ?? '';
+        $dateFrom = $_GET['date_from'] ?? '';
+        $dateTo = $_GET['date_to'] ?? '';
+        $department = $_GET['department'] ?? '';
+        
+        // Build query conditions for forwarded tickets within the division
+        $conditions = [];
+        $params = [];
+        
+        // Only show tickets forwarded to departments within the user's division
+        $conditions[] = 'c.division = ?';
+        $params[] = $user['division'];
+        
+        // Only show tickets that have been forwarded (forwarded_flag = 1)
+        $conditions[] = 'c.forwarded_flag = 1';
+        
+        // Exclude closed complaints by default
+        $conditions[] = "c.status != 'closed'";
+        
+        // Add filters
+        if ($status) {
+            $conditions[] = 'c.status = ?';
+            $params[] = $status;
+        }
+        
+        if ($priority) {
+            $conditions[] = 'c.priority = ?';
+            $params[] = $priority;
+        }
+        
+        if ($department) {
+            $conditions[] = 'c.assigned_to_department = ?';
+            $params[] = $department;
+        }
+        
+        if ($dateFrom) {
+            $conditions[] = 'c.created_at >= ?';
+            $params[] = $dateFrom . ' 00:00:00';
+        }
+        
+        if ($dateTo) {
+            $conditions[] = 'c.created_at <= ?';
+            $params[] = $dateTo . ' 23:59:59';
+        }
+        
+        $whereClause = implode(' AND ', $conditions);
+        
+        $sql = "SELECT c.*, 
+                       cat.category, cat.type, cat.subtype,
+                       s.name as shed_name, s.shed_code,
+                       cust.name as customer_name, cust.email as customer_email,
+                       cust.company_name, cust.mobile as customer_mobile,
+                       d.department_name as assigned_department_name,
+                       TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
+                       CASE 
+                           WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
+                           ELSE 0
+                       END as is_sla_violated
+                FROM complaints c
+                LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
+                LEFT JOIN shed s ON c.shed_id = s.shed_id
+                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                LEFT JOIN departments d ON c.assigned_to_department = d.department_code
+                WHERE {$whereClause}
+                ORDER BY 
+                    CASE WHEN c.priority = 'critical' THEN 1
+                         WHEN c.priority = 'high' THEN 2
+                         WHEN c.priority = 'medium' THEN 3
+                         ELSE 4
+                    END,
+                    c.created_at ASC";
+        
+        $tickets = $this->paginate($sql, $params, $page);
+        
+        // Get departments for filter dropdown from departments table
+        $departments = $this->db->fetchAll(
+            "SELECT DISTINCT d.department_code, d.department_name
+             FROM departments d
+             INNER JOIN complaints c ON c.assigned_to_department = d.department_code
+             WHERE c.division = ? AND c.forwarded_flag = 1 AND d.is_active = 1
+             ORDER BY d.department_name",
+            [$user['division']]
+        );
+        
+        $data = [
+            'page_title' => 'Forwarded Tickets - SAMPARK',
+            'user' => $user,
+            'tickets' => $tickets,
+            'departments' => $departments,
+            'filters' => [
+                'status' => $status,
+                'priority' => $priority,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'department' => $department
+            ],
+            'status_options' => Config::TICKET_STATUS,
+            'priority_options' => Config::PRIORITY_LEVELS,
+            'csrf_token' => $this->session->getCSRFToken()
+        ];
+        
+        $this->view('controller/forwarded-tickets', $data);
     }
     
     public function viewTicket($ticketId) {
@@ -136,6 +249,7 @@ class ControllerController extends BaseController {
                        w.wagon_code, w.type as wagon_type,
                        cust.name as customer_name, cust.email as customer_email, 
                        cust.mobile as customer_mobile, cust.company_name,
+                       d.department_name as assigned_department_name,
                        TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
                        CASE 
                            WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
@@ -146,6 +260,7 @@ class ControllerController extends BaseController {
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
                 LEFT JOIN wagon_details w ON c.wagon_id = w.wagon_id
                 LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                LEFT JOIN departments d ON c.assigned_to_department = d.department_code
                 WHERE c.complaint_id = ? AND c.division = ? AND c.assigned_to_department = ?";
         
         $params = [$ticketId, $user['division'], $user['department']];
@@ -160,15 +275,49 @@ class ControllerController extends BaseController {
         
         // Get ticket transactions
         $transactionSql = "SELECT t.*, 
-                                  u.name as user_name, u.role as user_role,
+                                  u.name as user_name, u.role as user_role, u.department as user_department, 
+                                  u.division as user_division, u.zone as user_zone,
                                   cust.name as customer_name
                            FROM transactions t
                            LEFT JOIN users u ON t.created_by_id = u.id
                            LEFT JOIN customers cust ON t.created_by_customer_id = cust.customer_id
                            WHERE t.complaint_id = ? 
-                           ORDER BY t.created_at ASC";
+                           ORDER BY t.created_at DESC";
         
         $transactions = $this->db->fetchAll($transactionSql, [$ticketId]);
+        
+        // Separate priority changes from regular transactions
+        $regularTransactions = [];
+        $priorityChanges = [];
+        $latestImportantRemark = null;
+        
+        foreach ($transactions as $transaction) {
+            if ($transaction['remarks_type'] === 'priority_escalation') {
+                $priorityChanges[] = $transaction;
+            } else {
+                $regularTransactions[] = $transaction;
+                
+                // Track latest important remark (excluding system and priority escalation)
+                if (!$latestImportantRemark && !in_array($transaction['remarks_type'], ['priority_escalation', 'system'])) {
+                    // Prioritize certain remark types for display
+                    $importantTypes = ['admin_remarks', 'forwarding_remarks', 'interim_remarks', 'internal_remarks'];
+                    if (in_array($transaction['remarks_type'], $importantTypes) && !empty(trim($transaction['remarks']))) {
+                        $latestImportantRemark = $transaction;
+                    }
+                }
+            }
+        }
+        
+        // If no important remark found, get the latest non-system transaction
+        if (!$latestImportantRemark && !empty($regularTransactions)) {
+            $reversed = array_reverse($regularTransactions);
+            foreach ($reversed as $transaction) {
+                if (!empty(trim($transaction['remarks'])) && $transaction['remarks_type'] !== 'system') {
+                    $latestImportantRemark = $transaction;
+                    break;
+                }
+            }
+        }
         
         // Get evidence files
         $evidenceSql = "SELECT * FROM evidence WHERE complaint_id = ? ORDER BY uploaded_at ASC";
@@ -184,23 +333,29 @@ class ControllerController extends BaseController {
         }
         
         // Check permissions for actions
-        $canForward = $user['role'] === 'controller_nodal' && in_array($ticket['status'], ['pending', 'awaiting_info']);
+        $canForward = in_array($user['role'], ['controller', 'controller_nodal']) && in_array($ticket['status'], ['pending', 'awaiting_info']);
         $canReply = in_array($ticket['status'], ['pending', 'awaiting_info']);
         $canApprove = $user['role'] === 'controller_nodal' && $ticket['status'] === 'awaiting_approval';
         $canRevert = $user['role'] === 'controller_nodal' && in_array($ticket['status'], ['awaiting_approval', 'closed']);
+        $canRevertToCustomer = $user['role'] === 'controller_nodal' && in_array($ticket['status'], ['pending', 'awaiting_approval']);
+        $canInterimRemarks = in_array($user['role'], ['admin', 'controller_nodal', 'controller']) && $ticket['status'] === 'pending';
         
         $data = [
             'page_title' => 'Ticket #' . $ticketId . ' - SAMPARK',
             'user' => $user,
             'ticket' => $ticket,
-            'transactions' => $transactions,
+            'transactions' => $regularTransactions,
+            'priority_changes' => $priorityChanges,
+            'latest_important_remark' => $latestImportantRemark,
             'evidence' => $evidence,
             'available_users' => $availableUsers,
             'permissions' => [
                 'can_forward' => $canForward,
                 'can_reply' => $canReply,
                 'can_approve' => $canApprove,
-                'can_revert' => $canRevert
+                'can_revert' => $canRevert,
+                'can_revert_to_customer' => $canRevertToCustomer,
+                'can_interim_remarks' => $canInterimRemarks
             ],
             'csrf_token' => $this->session->getCSRFToken()
         ];
@@ -262,6 +417,7 @@ class ControllerController extends BaseController {
             $ticket = $this->db->fetch("SELECT * FROM complaints WHERE {$accessConditions}", $accessParams);
             
             if (!$ticket) {
+                $this->db->rollback();
                 $this->json(['success' => false, 'message' => 'Invalid ticket or cannot forward'], 400);
                 return;
             }
@@ -270,11 +426,21 @@ class ControllerController extends BaseController {
             $targetDivision = $user['role'] === 'controller_nodal' ? $_POST['division'] : $user['division'];
             $targetZone = $user['role'] === 'controller_nodal' ? $_POST['zone'] : $user['zone'];
             
-            // RBAC: Validate department selection for controller_nodal
+            // RBAC: Validate department selection 
             if ($user['role'] === 'controller_nodal' && $targetDivision !== $user['division']) {
-                // Forwarding outside division - only Commercial department allowed
-                if ($_POST['department'] !== 'COMM') {
+                // Nodal controller forwarding outside division - only Commercial department allowed
+                if (!in_array($_POST['department'], ['COMM', 'CML'])) {
                     $this->json(['success' => false, 'message' => 'When forwarding outside your division, you can only forward to Commercial department'], 400);
+                    return;
+                }
+            } elseif ($user['role'] === 'controller') {
+                // Regular controller can only forward to Commercial department of same division
+                if (!in_array($_POST['department'], ['COMM', 'CML'])) {
+                    $this->json(['success' => false, 'message' => 'Controllers can only forward tickets to Commercial department'], 400);
+                    return;
+                }
+                if ($targetDivision !== $user['division']) {
+                    $this->json(['success' => false, 'message' => 'Controllers can only forward tickets within their division'], 400);
                     return;
                 }
             }
@@ -296,6 +462,18 @@ class ControllerController extends BaseController {
             // Handle department field (could be department_code from new system)
             $departmentValue = $_POST['department'];
             
+            // Validate department exists
+            $deptCheck = $this->db->fetch(
+                "SELECT department_code FROM departments WHERE department_code = ? AND is_active = 1",
+                [$departmentValue]
+            );
+            
+            if (!$deptCheck) {
+                $this->db->rollback();
+                $this->json(['success' => false, 'message' => 'Invalid department selected'], 400);
+                return;
+            }
+            
             $this->db->query($sql, [
                 $departmentValue,
                 $targetDivision,
@@ -307,11 +485,17 @@ class ControllerController extends BaseController {
             // Update SLA deadline based on new priority
             $this->updateSLADeadline($ticketId, $newPriority);
             
+            // Handle priority escalation for cross-division forwarding
+            $priorityService = new BackgroundPriorityService();
+            if ($targetDivision !== $user['division']) {
+                $priorityService->resetEscalationForCrossDivisionForward($ticketId, $user['division'], $targetDivision);
+            }
+            
             // Create transaction record
-            $this->createTransaction($ticketId, 'forwarded', $_POST['remarks'], $user['id']);
+            $this->createTransaction($ticketId, 'forwarded', $_POST['remarks'], $user['id'], null, 'forwarding_remarks');
             
             // Send notifications to target department
-            $this->sendForwardNotifications($ticketId, $ticket, $user, $targetDivision, $_POST['department'], $_POST['remarks']);
+            $this->sendForwardNotifications($ticketId, $ticket, $user, $targetDivision, $_POST['remarks']);
             
             $this->db->commit();
             
@@ -360,13 +544,17 @@ class ControllerController extends BaseController {
             $this->db->beginTransaction();
             
             // Verify ticket access
-            $accessCondition = $user['role'] === 'controller' ? 
-                "assigned_to_user_id = ?" : "division = ?";
-            $accessParam = $user['role'] === 'controller' ? $user['id'] : $user['division'];
+            if ($user['role'] === 'controller') {
+                $accessCondition = "division = ? AND assigned_to_department = ?";
+                $accessParams = [$ticketId, $user['division'], $user['department']];
+            } else {
+                $accessCondition = "division = ?";
+                $accessParams = [$ticketId, $user['division']];
+            }
             
             $ticket = $this->db->fetch(
                 "SELECT * FROM complaints WHERE complaint_id = ? AND {$accessCondition} AND status IN ('pending', 'awaiting_info')",
-                [$ticketId, $accessParam]
+                $accessParams
             );
             
             if (!$ticket) {
@@ -486,6 +674,10 @@ class ControllerController extends BaseController {
                     WHERE complaint_id = ?";
             
             $this->db->query($sql, [$ticketId]);
+            
+            // Stop escalation for tickets awaiting feedback
+            $priorityService = new BackgroundPriorityService();
+            $priorityService->stopEscalationForStatus($ticketId, 'awaiting_feedback');
             
             // Create transaction record
             $remarks = 'Reply approved' . (trim($_POST['approval_remarks']) ? ': ' . trim($_POST['approval_remarks']) : '');
@@ -649,6 +841,497 @@ class ControllerController extends BaseController {
                 'message' => 'Failed to revert ticket. Please try again.'
             ], 500);
         }
+    }
+    
+    public function revertToCustomer($ticketId) {
+        $this->validateCSRF();
+        $user = $this->getCurrentUser();
+        
+        // Only nodal controllers can revert to customer
+        if ($user['role'] !== 'controller_nodal') {
+            $this->json(['success' => false, 'message' => 'Access denied. Only nodal controllers can revert tickets to customers.'], 403);
+            return;
+        }
+        
+        $validator = new Validator();
+        $isValid = $validator->validate($_POST, [
+            'info_request' => 'required|min:10|max:1000'
+        ]);
+        
+        if (!$isValid) {
+            $this->json([
+                'success' => false,
+                'errors' => $validator->getErrors()
+            ], 400);
+            return;
+        }
+        
+        try {
+            $this->db->beginTransaction();
+            
+            // Verify ticket access
+            $accessConditions = "complaint_id = ? AND status IN ('pending', 'awaiting_approval')";
+            $accessParams = [$ticketId];
+            
+            if ($user['role'] === 'controller') {
+                $accessConditions .= " AND division = ? AND assigned_to_department = ?";
+                $accessParams[] = $user['division'];
+                $accessParams[] = $user['department'];
+            } else {
+                $accessConditions .= " AND division = ?";
+                $accessParams[] = $user['division'];
+            }
+            
+            $ticket = $this->db->fetch("SELECT * FROM complaints WHERE {$accessConditions}", $accessParams);
+            
+            if (!$ticket) {
+                $this->db->rollback();
+                $this->json(['success' => false, 'message' => 'Invalid ticket or cannot revert'], 400);
+                return;
+            }
+            
+            // Update ticket status to awaiting_info
+            $sql = "UPDATE complaints SET 
+                    status = 'awaiting_info',
+                    updated_at = NOW()
+                    WHERE complaint_id = ?";
+            
+            $this->db->query($sql, [$ticketId]);
+            
+            // Stop escalation for tickets awaiting info
+            $priorityService = new BackgroundPriorityService();
+            $priorityService->stopEscalationForStatus($ticketId, 'awaiting_info');
+            
+            // Create transaction record
+            $remarks = 'Additional information requested from customer: ' . trim($_POST['info_request']);
+            $this->createTransaction($ticketId, 'info_requested', $remarks, $user['id'], null, 'admin_remarks');
+            
+            // Send notification to customer
+            $this->sendInfoRequestNotifications($ticketId, $ticket, $user, $_POST['info_request']);
+            
+            $this->db->commit();
+            
+            $this->json([
+                'success' => true,
+                'message' => 'Information request sent to customer successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            $this->db->rollback();
+            error_log("Revert to customer error: " . $e->getMessage());
+            
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to send information request. Please try again.'
+            ], 500);
+        }
+    }
+    
+    public function addInterimRemarks($ticketId) {
+        $this->validateCSRF();
+        $user = $this->getCurrentUser();
+        
+        // Check role permissions
+        if (!in_array($user['role'], ['admin', 'controller_nodal', 'controller'])) {
+            $this->json(['success' => false, 'message' => 'Access denied'], 403);
+            return;
+        }
+        
+        $validator = new Validator();
+        $isValid = $validator->validate($_POST, [
+            'interim_remarks' => 'required|min:10|max:1000'
+        ]);
+        
+        if (!$isValid) {
+            $this->json([
+                'success' => false,
+                'errors' => $validator->getErrors()
+            ], 400);
+            return;
+        }
+        
+        try {
+            $this->db->beginTransaction();
+            
+            // Verify ticket access and status
+            $accessConditions = "complaint_id = ? AND status = 'pending'";
+            $accessParams = [$ticketId];
+            
+            if ($user['role'] === 'controller') {
+                $accessConditions .= " AND division = ? AND assigned_to_department = ?";
+                $accessParams[] = $user['division'];
+                $accessParams[] = $user['department'];
+            } elseif ($user['role'] === 'controller_nodal') {
+                $accessConditions .= " AND division = ?";
+                $accessParams[] = $user['division'];
+            }
+            // Admin can access all tickets
+            
+            $ticket = $this->db->fetch("SELECT * FROM complaints WHERE {$accessConditions}", $accessParams);
+            
+            if (!$ticket) {
+                $this->db->rollback();
+                $this->json(['success' => false, 'message' => 'Invalid ticket, wrong status, or access denied'], 400);
+                return;
+            }
+            
+            // Create transaction record for interim remarks (doesn't change ticket status)
+            $remarks = 'Interim remarks: ' . trim($_POST['interim_remarks']);
+            $this->createTransaction($ticketId, 'interim_remarks', $remarks, $user['id'], null, 'interim_remarks');
+            
+            // Send notification to customer about the interim update
+            $this->sendInterimRemarksNotifications($ticketId, $ticket, $user, $_POST['interim_remarks']);
+            
+            $this->db->commit();
+            
+            $this->json([
+                'success' => true,
+                'message' => 'Interim remarks added successfully. Customer has been notified.'
+            ]);
+            
+        } catch (Exception $e) {
+            $this->db->rollback();
+            error_log("Interim remarks error: " . $e->getMessage());
+            
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to add interim remarks. Please try again.'
+            ], 500);
+        }
+    }
+    
+    
+    public function printTicket($ticketId) {
+        $user = $this->getCurrentUser();
+        
+        // Get ticket details with access control
+        $sql = "SELECT c.*, 
+                       cat.category, cat.type, cat.subtype,
+                       s.name as shed_name, s.shed_code, s.division, s.zone,
+                       w.wagon_code, w.type as wagon_type,
+                       cust.name as customer_name, cust.email as customer_email, 
+                       cust.mobile as customer_mobile, cust.company_name,
+                       d.department_name as assigned_department_name
+                FROM complaints c
+                LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
+                LEFT JOIN shed s ON c.shed_id = s.shed_id
+                LEFT JOIN wagon_details w ON c.wagon_id = w.wagon_id
+                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                LEFT JOIN departments d ON c.assigned_to_department = d.department_code
+                WHERE c.complaint_id = ? AND c.division = ? AND c.assigned_to_department = ?";
+        
+        $params = [$ticketId, $user['division'], $user['department']];
+        $ticket = $this->db->fetch($sql, $params);
+        
+        if (!$ticket) {
+            $this->setFlash('error', 'Ticket not found or access denied');
+            $this->redirect(Config::getAppUrl() . '/controller/tickets');
+            return;
+        }
+        
+        // Get transactions
+        $transactionSql = "SELECT t.*, 
+                                  u.name as user_name, u.role as user_role, u.department as user_department, 
+                                  u.division as user_division, u.zone as user_zone,
+                                  cust.name as customer_name
+                           FROM transactions t
+                           LEFT JOIN users u ON t.created_by_id = u.id
+                           LEFT JOIN customers cust ON t.created_by_customer_id = cust.customer_id
+                           WHERE t.complaint_id = ? 
+                           ORDER BY t.created_at ASC";
+        
+        $transactions = $this->db->fetchAll($transactionSql, [$ticketId]);
+        
+        // Get evidence files
+        $evidenceSql = "SELECT * FROM evidence WHERE complaint_id = ? ORDER BY uploaded_at ASC";
+        $evidenceRaw = $this->db->fetchAll($evidenceSql, [$ticketId]);
+        $evidence = $this->transformEvidenceForDisplay($evidenceRaw);
+        
+        $data = [
+            'page_title' => 'Print Ticket #' . $ticketId,
+            'user' => $user,
+            'ticket' => $ticket,
+            'transactions' => $transactions,
+            'evidence' => $evidence,
+            'is_print' => true
+        ];
+        
+        $this->view('controller/ticket-print', $data);
+    }
+    
+    public function exportTicket($ticketId) {
+        $user = $this->getCurrentUser();
+        
+        // Get ticket details with access control
+        $sql = "SELECT c.*, 
+                       cat.category, cat.type, cat.subtype,
+                       s.name as shed_name, s.shed_code, s.division, s.zone,
+                       w.wagon_code, w.type as wagon_type,
+                       cust.name as customer_name, cust.email as customer_email, 
+                       cust.mobile as customer_mobile, cust.company_name,
+                       d.department_name as assigned_department_name
+                FROM complaints c
+                LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
+                LEFT JOIN shed s ON c.shed_id = s.shed_id
+                LEFT JOIN wagon_details w ON c.wagon_id = w.wagon_id
+                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                LEFT JOIN departments d ON c.assigned_to_department = d.department_code
+                WHERE c.complaint_id = ? AND c.division = ? AND c.assigned_to_department = ?";
+        
+        $params = [$ticketId, $user['division'], $user['department']];
+        $ticket = $this->db->fetch($sql, $params);
+        
+        if (!$ticket) {
+            $this->json(['success' => false, 'message' => 'Ticket not found or access denied'], 404);
+            return;
+        }
+        
+        // Get transactions
+        $transactionSql = "SELECT t.*, 
+                                  u.name as user_name, u.role as user_role, u.department as user_department, 
+                                  u.division as user_division, u.zone as user_zone,
+                                  cust.name as customer_name
+                           FROM transactions t
+                           LEFT JOIN users u ON t.created_by_id = u.id
+                           LEFT JOIN customers cust ON t.created_by_customer_id = cust.customer_id
+                           WHERE t.complaint_id = ? 
+                           ORDER BY t.created_at ASC";
+        
+        $transactions = $this->db->fetchAll($transactionSql, [$ticketId]);
+        
+        // Get evidence files
+        $evidenceSql = "SELECT * FROM evidence WHERE complaint_id = ? ORDER BY uploaded_at ASC";
+        $evidenceRaw = $this->db->fetchAll($evidenceSql, [$ticketId]);
+        $evidence = $this->transformEvidenceForDisplay($evidenceRaw);
+        
+        try {
+            // Generate HTML for PDF
+            $html = $this->generateTicketHTML($ticket, $transactions, $evidence, $user);
+            
+            // Set headers for HTML download (can be saved as PDF by browser)
+            header('Content-Type: text/html; charset=UTF-8');
+            header('Content-Disposition: attachment; filename="ticket_' . $ticketId . '.html"');
+            header('Cache-Control: private, max-age=0, must-revalidate');
+            header('Pragma: public');
+            
+            // Output the HTML
+            echo $html;
+            
+        } catch (Exception $e) {
+            error_log("Export ticket error: " . $e->getMessage());
+            $this->json(['success' => false, 'message' => 'Failed to export ticket'], 500);
+        }
+    }
+    
+    private function generateTicketHTML($ticket, $transactions, $evidence, $user) {
+        ob_start();
+        ?>
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Ticket #<?= $ticket['complaint_id'] ?></title>
+            <meta charset="UTF-8">
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    margin: 20px; 
+                    line-height: 1.6;
+                    color: #333;
+                }
+                .header { 
+                    text-align: center; 
+                    margin-bottom: 30px; 
+                    border-bottom: 2px solid #007bff;
+                    padding-bottom: 20px;
+                }
+                .header h1 {
+                    color: #007bff;
+                    margin-bottom: 10px;
+                }
+                .section { 
+                    margin: 25px 0; 
+                    page-break-inside: avoid;
+                }
+                .section-title {
+                    font-size: 18px;
+                    font-weight: bold;
+                    color: #007bff;
+                    border-bottom: 1px solid #dee2e6;
+                    padding-bottom: 5px;
+                    margin-bottom: 15px;
+                }
+                .info-row {
+                    margin: 8px 0;
+                    display: flex;
+                }
+                .label { 
+                    font-weight: bold; 
+                    min-width: 120px;
+                    color: #666;
+                }
+                .evidence { 
+                    margin: 10px 0; 
+                    padding: 10px;
+                    background: #f8f9fa;
+                    border-left: 4px solid #007bff;
+                }
+                .transaction { 
+                    border-left: 4px solid #007bff; 
+                    padding: 15px; 
+                    margin: 15px 0; 
+                    background: #f8f9fa;
+                    border-radius: 5px;
+                }
+                .transaction-type {
+                    font-weight: bold;
+                    color: #007bff;
+                    margin-bottom: 8px;
+                }
+                .description-box {
+                    background: #f8f9fa;
+                    border: 1px solid #dee2e6;
+                    border-radius: 5px;
+                    padding: 15px;
+                    margin: 10px 0;
+                }
+                .badge {
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 12px;
+                    font-weight: bold;
+                    margin: 0 5px;
+                }
+                .badge-success { background: #d4edda; color: #155724; }
+                .badge-warning { background: #fff3cd; color: #856404; }
+                .badge-info { background: #cce7f0; color: #0c5460; }
+                .badge-secondary { background: #e2e3e5; color: #383d41; }
+                @media print {
+                    body { margin: 10px; }
+                    .page-break { page-break-before: always; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>SAMPARK - Support Ticket System</h1>
+                <h2>Ticket #<?= htmlspecialchars($ticket['complaint_id']) ?></h2>
+                <div>
+                    <span class="badge badge-<?= 
+                        $ticket['status'] === 'closed' ? 'success' : 
+                        ($ticket['status'] === 'pending' ? 'warning' : 'info') ?>">
+                        <?= ucwords(str_replace('_', ' ', $ticket['status'])) ?>
+                    </span>
+                    <span class="badge badge-<?= 
+                        $ticket['priority'] === 'critical' ? 'danger' : 
+                        ($ticket['priority'] === 'high' ? 'warning' : 'secondary') ?>">
+                        <?= ucfirst($ticket['priority']) ?> Priority
+                    </span>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Ticket Information</div>
+                <div class="info-row">
+                    <span class="label">Created:</span>
+                    <span><?= date('M d, Y H:i', strtotime($ticket['created_at'])) ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Category:</span>
+                    <span><?= htmlspecialchars($ticket['category'] ?? 'N/A') ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Location:</span>
+                    <span><?= htmlspecialchars($ticket['shed_name'] ?? 'N/A') ?>
+                    <?php if ($ticket['shed_code']): ?>
+                    (<?= htmlspecialchars($ticket['shed_code']) ?>)
+                    <?php endif; ?></span>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Customer Information</div>
+                <div class="info-row">
+                    <span class="label">Name:</span>
+                    <span><?= htmlspecialchars($ticket['customer_name'] ?? 'N/A') ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Email:</span>
+                    <span><?= htmlspecialchars($ticket['customer_email'] ?? 'N/A') ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Mobile:</span>
+                    <span><?= htmlspecialchars($ticket['customer_mobile'] ?? 'N/A') ?></span>
+                </div>
+                <?php if ($ticket['company_name']): ?>
+                <div class="info-row">
+                    <span class="label">Company:</span>
+                    <span><?= htmlspecialchars($ticket['company_name']) ?></span>
+                </div>
+                <?php endif; ?>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Issue Description</div>
+                <div class="description-box">
+                    <?= nl2br(htmlspecialchars($ticket['description'] ?? $ticket['complaint_message'] ?? 'No description provided')) ?>
+                </div>
+            </div>
+            
+            <?php if ($ticket['action_taken']): ?>
+            <div class="section">
+                <div class="section-title">Action Taken</div>
+                <div class="description-box">
+                    <?= nl2br(htmlspecialchars($ticket['action_taken'])) ?>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <?php if (!empty($evidence)): ?>
+            <div class="section">
+                <div class="section-title">Evidence Files (<?= count($evidence) ?>)</div>
+                <?php foreach ($evidence as $file): ?>
+                <div class="evidence">
+                    <strong><?= htmlspecialchars($file['original_name']) ?></strong><br>
+                    Size: <?= number_format($file['file_size'] / 1024, 1) ?> KB • 
+                    Uploaded: <?= date('M d, Y', strtotime($file['uploaded_at'])) ?>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+            
+            <div class="section page-break">
+                <div class="section-title">Transaction History</div>
+                <?php foreach ($transactions as $transaction): ?>
+                <div class="transaction">
+                    <div class="transaction-type"><?= ucfirst(str_replace('_', ' ', $transaction['transaction_type'])) ?></div>
+                    <div><?= nl2br(htmlspecialchars($transaction['remarks'] ?? '')) ?></div>
+                    <small style="color: #666; margin-top: 10px; display: block;">
+                        By: <?= htmlspecialchars($transaction['user_name'] ?? $transaction['customer_name'] ?? 'System') ?>
+                        <?php if ($transaction['user_department']): ?>
+                        (<?= htmlspecialchars($transaction['user_department']) ?>
+                        <?php if ($transaction['user_division']): ?>
+                        - <?= htmlspecialchars($transaction['user_division']) ?>
+                        <?php endif; ?>
+                        <?php if ($transaction['user_zone']): ?>
+                        - <?= htmlspecialchars($transaction['user_zone']) ?>
+                        <?php endif; ?>)
+                        <?php endif; ?>
+                        • <?= date('M d, Y H:i', strtotime($transaction['created_at'])) ?>
+                    </small>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            
+            <div class="section" style="text-align: center; border-top: 1px solid #dee2e6; padding-top: 20px;">
+                <small style="color: #666;">
+                    Generated on <?= date('M d, Y H:i') ?> by <?= htmlspecialchars($user['name']) ?><br>
+                    SAMPARK - Railway Customer Support System
+                </small>
+            </div>
+        </body>
+        </html>
+        <?php
+        return ob_get_clean();
     }
     
     public function reports() {
@@ -891,18 +1574,19 @@ class ControllerController extends BaseController {
         }
     }
     
-    private function createTransaction($complaintId, $type, $remarks, $fromUserId, $toUserId = null) {
+    private function createTransaction($complaintId, $type, $remarks, $fromUserId, $toUserId = null, $remarksType = 'internal_remarks') {
         $sql = "INSERT INTO transactions (
-            complaint_id, transaction_type, remarks, 
+            complaint_id, transaction_type, remarks, remarks_type,
             from_user_id, to_user_id, 
             created_by_id, created_by_type, created_by_role, 
             created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, 'user', ?, NOW())";
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'user', ?, NOW())";
         
         $this->db->query($sql, [
             $complaintId,
             $type,
             $remarks,
+            $remarksType,
             $fromUserId,
             $toUserId,
             $fromUserId,
@@ -916,55 +1600,94 @@ class ControllerController extends BaseController {
         return $uploader->uploadEvidence($complaintId, $files, 'user', $user['id']);
     }
     
-    private function sendForwardNotifications($ticketId, $ticket, $fromUser, $toUser, $remarks) {
+    private function sendForwardNotifications($ticketId, $ticket, $fromUser, $targetDivision, $remarks) {
         $notificationService = new NotificationService();
         
-        // Notify the assigned user
-        $notificationService->createNotification([
-            'user_id' => $toUser['id'],
-            'title' => 'Ticket Assigned',
-            'message' => "Ticket #{$ticketId} has been assigned to you by {$fromUser['name']}",
-            'type' => 'info',
-            'complaint_id' => $ticketId,
-            'action_url' => Config::getAppUrl() . "/controller/tickets/{$ticketId}"
-        ]);
+        // Get users in the target department/division
+        $targetUsers = $this->db->fetchAll(
+            "SELECT id, name, email, mobile FROM users 
+             WHERE division = ? AND department = ? AND status = 'active' AND role IN ('controller', 'controller_nodal')",
+            [$targetDivision, $_POST['department']]
+        );
         
-        // Send email notification
-        $notificationService->sendTicketAssignedEmail($ticketId, $toUser, $fromUser, $remarks);
+        if (empty($targetUsers)) {
+            return; // No users to notify
+        }
+        
+        // Prepare notification data
+        $data = [
+            'complaint_id' => $ticketId,
+            'customer_name' => $ticket['customer_name'] ?? 'Customer',
+            'forwarded_by' => $fromUser['name'],
+            'department' => $_POST['department'],
+            'division' => $targetDivision,
+            'remarks' => $remarks
+        ];
+        
+        // Prepare recipients
+        $recipients = [];
+        foreach ($targetUsers as $user) {
+            $recipients[] = [
+                'user_id' => $user['id'],
+                'email' => $user['email'],
+                'mobile' => $user['mobile'] ?? null,
+                'complaint_id' => $ticketId
+            ];
+        }
+        
+        // Send notifications using the existing template system
+        $notificationService->send('ticket_forwarded', $recipients, $data);
     }
     
     private function sendReplyNotifications($ticketId, $ticket, $user, $reply, $status) {
         $notificationService = new NotificationService();
         
         if ($status === 'awaiting_feedback') {
-            // Notify customer
-            $notificationService->createNotification([
-                'customer_id' => $ticket['customer_id'],
-                'title' => 'Ticket Reply Received',
-                'message' => "Your ticket #{$ticketId} has received a reply",
-                'type' => 'success',
-                'complaint_id' => $ticketId,
-                'action_url' => Config::getAppUrl() . "/customer/tickets/{$ticketId}"
-            ]);
+            // Get customer info
+            $customer = $this->db->fetch(
+                "SELECT customer_id, name, email, mobile FROM customers WHERE customer_id = ?",
+                [$ticket['customer_id']]
+            );
             
-            // Send email to customer
-            $notificationService->sendTicketReplyEmail($ticketId, $ticket['customer_id'], $user, $reply);
+            if ($customer) {
+                $data = [
+                    'complaint_id' => $ticketId,
+                    'customer_name' => $customer['name'],
+                    'reply_from' => $user['name'],
+                    'reply_text' => $reply
+                ];
+                
+                $recipients = [[
+                    'customer_id' => $customer['customer_id'],
+                    'email' => $customer['email'],
+                    'mobile' => $customer['mobile'],
+                    'complaint_id' => $ticketId
+                ]];
+                
+                $notificationService->send('ticket_reply', $recipients, $data);
+            }
         } else {
             // Notify nodal controller for approval
             $nodalController = $this->db->fetch(
-                "SELECT id FROM users WHERE role = 'controller_nodal' AND division = ? AND status = 'active' LIMIT 1",
+                "SELECT id, name, email, mobile FROM users WHERE role = 'controller_nodal' AND division = ? AND status = 'active' LIMIT 1",
                 [$user['division']]
             );
             
             if ($nodalController) {
-                $notificationService->createNotification([
-                    'user_id' => $nodalController['id'],
-                    'title' => 'Reply Pending Approval',
-                    'message' => "Ticket #{$ticketId} reply from {$user['name']} is awaiting approval",
-                    'type' => 'warning',
+                $data = [
                     'complaint_id' => $ticketId,
-                    'action_url' => Config::getAppUrl() . "/controller/tickets/{$ticketId}"
-                ]);
+                    'reply_from' => $user['name'],
+                    'department' => $user['department']
+                ];
+                
+                $recipients = [[
+                    'user_id' => $nodalController['id'],
+                    'email' => $nodalController['email'],
+                    'mobile' => $nodalController['mobile'],
+                    'complaint_id' => $ticketId
+                ]];
+                
+                $notificationService->send('reply_approval_needed', $recipients, $data);
             }
         }
     }
@@ -973,26 +1696,52 @@ class ControllerController extends BaseController {
         $notificationService = new NotificationService();
         
         if ($action === 'approved') {
-            // Notify customer
-            $notificationService->createNotification([
-                'customer_id' => $ticket['customer_id'],
-                'title' => 'Ticket Reply Received',
-                'message' => "Your ticket #{$ticketId} has received a reply",
-                'type' => 'success',
-                'complaint_id' => $ticketId,
-                'action_url' => Config::getAppUrl() . "/customer/tickets/{$ticketId}"
-            ]);
+            // Get customer info
+            $customer = $this->db->fetch(
+                "SELECT customer_id, name, email, mobile FROM customers WHERE customer_id = ?",
+                [$ticket['customer_id']]
+            );
+            
+            if ($customer) {
+                $data = [
+                    'complaint_id' => $ticketId,
+                    'customer_name' => $customer['name'],
+                    'approved_by' => $user['name']
+                ];
+                
+                $recipients = [[
+                    'customer_id' => $customer['customer_id'],
+                    'email' => $customer['email'],
+                    'mobile' => $customer['mobile'],
+                    'complaint_id' => $ticketId
+                ]];
+                
+                $notificationService->send('reply_approved', $recipients, $data);
+            }
         } else {
             // Notify assigned controller
             if ($ticket['assigned_to_user_id']) {
-                $notificationService->createNotification([
-                    'user_id' => $ticket['assigned_to_user_id'],
-                    'title' => 'Reply Rejected',
-                    'message' => "Your reply for ticket #{$ticketId} was rejected: {$reason}",
-                    'type' => 'error',
-                    'complaint_id' => $ticketId,
-                    'action_url' => Config::getAppUrl() . "/controller/tickets/{$ticketId}"
-                ]);
+                $assignedUser = $this->db->fetch(
+                    "SELECT id, name, email, mobile FROM users WHERE id = ?",
+                    [$ticket['assigned_to_user_id']]
+                );
+                
+                if ($assignedUser) {
+                    $data = [
+                        'complaint_id' => $ticketId,
+                        'rejected_by' => $user['name'],
+                        'reason' => $reason
+                    ];
+                    
+                    $recipients = [[
+                        'user_id' => $assignedUser['id'],
+                        'email' => $assignedUser['email'],
+                        'mobile' => $assignedUser['mobile'],
+                        'complaint_id' => $ticketId
+                    ]];
+                    
+                    $notificationService->send('reply_rejected', $recipients, $data);
+                }
             }
         }
     }
@@ -1000,18 +1749,85 @@ class ControllerController extends BaseController {
     private function sendRevertNotifications($ticketId, $ticket, $user, $reason) {
         $notificationService = new NotificationService();
         
-        // Notify customer
-        $notificationService->createNotification([
-            'customer_id' => $ticket['customer_id'],
-            'title' => 'Additional Information Required',
-            'message' => "Ticket #{$ticketId} requires additional information: {$reason}",
-            'type' => 'info',
-            'complaint_id' => $ticketId,
-            'action_url' => Config::getAppUrl() . "/customer/tickets/{$ticketId}"
-        ]);
+        // Get customer info
+        $customer = $this->db->fetch(
+            "SELECT customer_id, name, email, mobile FROM customers WHERE customer_id = ?",
+            [$ticket['customer_id']]
+        );
         
-        // Send email to customer
-        $notificationService->sendTicketRevertEmail($ticketId, $ticket['customer_id'], $user, $reason);
+        if ($customer) {
+            $data = [
+                'complaint_id' => $ticketId,
+                'customer_name' => $customer['name'],
+                'reverted_by' => $user['name'],
+                'reason' => $reason
+            ];
+            
+            $recipients = [[
+                'customer_id' => $customer['customer_id'],
+                'email' => $customer['email'],
+                'mobile' => $customer['mobile'],
+                'complaint_id' => $ticketId
+            ]];
+            
+            $notificationService->send('ticket_reverted', $recipients, $data);
+        }
+    }
+    
+    private function sendInfoRequestNotifications($ticketId, $ticket, $user, $infoRequest) {
+        $notificationService = new NotificationService();
+        
+        // Get customer info
+        $customer = $this->db->fetch(
+            "SELECT customer_id, name, email, mobile FROM customers WHERE customer_id = ?",
+            [$ticket['customer_id']]
+        );
+        
+        if ($customer) {
+            $data = [
+                'complaint_id' => $ticketId,
+                'customer_name' => $customer['name'],
+                'requested_by' => $user['name'],
+                'info_request' => $infoRequest
+            ];
+            
+            $recipients = [[
+                'customer_id' => $customer['customer_id'],
+                'email' => $customer['email'],
+                'mobile' => $customer['mobile'],
+                'complaint_id' => $ticketId
+            ]];
+            
+            $notificationService->send('info_requested', $recipients, $data);
+        }
+    }
+    
+    private function sendInterimRemarksNotifications($ticketId, $ticket, $user, $interimRemarks) {
+        $notificationService = new NotificationService();
+        
+        // Get customer info
+        $customer = $this->db->fetch(
+            "SELECT customer_id, name, email, mobile FROM customers WHERE customer_id = ?",
+            [$ticket['customer_id']]
+        );
+        
+        if ($customer) {
+            $data = [
+                'complaint_id' => $ticketId,
+                'customer_name' => $customer['name'],
+                'updated_by' => $user['name'],
+                'interim_remarks' => $interimRemarks
+            ];
+            
+            $recipients = [[
+                'customer_id' => $customer['customer_id'],
+                'email' => $customer['email'],
+                'mobile' => $customer['mobile'],
+                'complaint_id' => $ticketId
+            ]];
+            
+            $notificationService->send('interim_remarks_added', $recipients, $data);
+        }
     }
     
     private function getSummaryReport($user, $dateFrom, $dateTo, $division) {

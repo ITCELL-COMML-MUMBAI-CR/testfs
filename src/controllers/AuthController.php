@@ -138,7 +138,10 @@ class AuthController extends BaseController {
         $loginId = trim($_POST['login_id']);
         $password = $_POST['password'];
         
-        $sql = "SELECT * FROM users WHERE login_id = ? AND status = 'active'";
+        $sql = "SELECT u.*, d.department_name 
+                FROM users u 
+                LEFT JOIN departments d ON u.department = d.department_code 
+                WHERE u.login_id = ? AND u.status = 'active'";
         $user = $this->db->fetch($sql, [$loginId]);
         
         if (!$user || !password_verify($password, $user['password'])) {
@@ -163,7 +166,8 @@ class AuthController extends BaseController {
             'name' => $user['name'],
             'email' => $user['email'],
             'mobile' => $user['mobile'],
-            'department' => $user['department'],
+            'department' => $user['department'], // This is the department code
+            'department_name' => $user['department_name'], // This is the department name for display
             'division' => $user['division'],
             'zone' => $user['zone']
         ]);

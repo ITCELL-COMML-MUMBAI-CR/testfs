@@ -117,7 +117,8 @@ class BaseController {
         
         // Add user type specific fields
         if ($this->session->getUserType() === 'user') {
-            $userData['department'] = $this->session->get('user_department');
+            $userData['department'] = $this->session->get('user_department'); // Department code
+            $userData['department_name'] = $this->session->get('user_department_name'); // Department name for display
             $userData['division'] = $this->session->get('user_division');
             $userData['zone'] = $this->session->get('user_zone');
         } else {
