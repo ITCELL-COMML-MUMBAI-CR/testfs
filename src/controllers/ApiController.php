@@ -1141,7 +1141,7 @@ class ApiController extends BaseController {
      * Get admin statistics
      */
     private function getAdminStats() {
-        $sql = "SELECT 
+        $sql = "SELECT
                     COUNT(*) as total,
                     SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
                     SUM(CASE WHEN status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
@@ -1151,7 +1151,156 @@ class ApiController extends BaseController {
                     SUM(CASE WHEN sla_deadline IS NOT NULL AND NOW() > sla_deadline AND status != 'closed' THEN 1 ELSE 0 END) as sla_violations,
                     SUM(CASE WHEN escalated_at IS NOT NULL AND status != 'closed' THEN 1 ELSE 0 END) as escalated
                 FROM complaints";
-        
+
         return $this->db->fetch($sql);
+    }
+
+    /**
+     * Get additional info modal data
+     */
+    public function getAdditionalInfoModal($ticketId) {
+        $this->requireAuth();
+        $this->requireRole('customer');
+
+        try {
+            $user = $this->getCurrentUser();
+
+            // Verify ticket belongs to customer
+            $ticket = $this->db->fetch(
+                "SELECT c.*,
+                        s.name as shed_name, s.shed_code,
+                        cat.category, cat.type, cat.subtype
+                 FROM complaints c
+                 LEFT JOIN shed s ON c.shed_id = s.shed_id
+                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
+                 WHERE c.complaint_id = ? AND c.customer_id = ?",
+                [$ticketId, $user['customer_id']]
+            );
+
+            if (!$ticket) {
+                $this->json(['error' => 'Ticket not found or access denied'], 403);
+                return;
+            }
+
+            // Get existing files from evidence table
+            $existingFiles = [];
+            $evidenceRaw = $this->db->fetchAll(
+                "SELECT * FROM evidence WHERE complaint_id = ? ORDER BY uploaded_at ASC",
+                [$ticketId]
+            );
+
+            // Transform evidence data for display (same as CustomerController)
+            foreach ($evidenceRaw as $record) {
+                for ($i = 1; $i <= 3; $i++) {
+                    $fileNameField = "file_name_$i";
+                    $fileTypeField = "file_type_$i";
+                    $filePathField = "file_path_$i";
+                    $compressedSizeField = "compressed_size_$i";
+
+                    if (!empty($record[$fileNameField])) {
+                        $existingFiles[] = [
+                            'id' => $record['id'] . '_' . $i,
+                            'originalName' => $record[$fileNameField],
+                            'fileName' => $record[$fileNameField],
+                            'fileSize' => $record[$compressedSizeField] ?? 0,
+                            'fileType' => $record[$fileTypeField],
+                            'filePath' => Config::getPublicUploadPath() . $record[$filePathField],
+                            'extension' => strtolower(pathinfo($record[$fileNameField], PATHINFO_EXTENSION)),
+                            'createdAt' => $record['uploaded_at']
+                        ];
+                    }
+                }
+            }
+
+            // Get latest revert message if any
+            $latestRevert = $this->db->fetch(
+                "SELECT remarks, created_at
+                 FROM transactions
+                 WHERE complaint_id = ? AND transaction_type = 'reverted'
+                 ORDER BY created_at DESC
+                 LIMIT 1",
+                [$ticketId]
+            );
+
+            $this->json([
+                'success' => true,
+                'ticket' => $ticket,
+                'existingFiles' => $existingFiles,
+                'latestRevert' => $latestRevert,
+                'maxFiles' => 3,
+                'availableSlots' => max(0, 3 - count($existingFiles))
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Get additional info modal error: " . $e->getMessage());
+            $this->json(['error' => 'Failed to load modal data'], 500);
+        }
+    }
+
+    /**
+     * Get ticket files for additional info modal
+     */
+    public function getTicketFiles($ticketId) {
+        $this->requireAuth();
+
+        try {
+            $user = $this->getCurrentUser();
+
+            // Verify ticket access
+            if ($user['role'] === 'customer') {
+                $ticket = $this->db->fetch(
+                    "SELECT complaint_id FROM complaints WHERE complaint_id = ? AND customer_id = ?",
+                    [$ticketId, $user['customer_id']]
+                );
+            } else {
+                $ticket = $this->db->fetch(
+                    "SELECT complaint_id FROM complaints WHERE complaint_id = ?",
+                    [$ticketId]
+                );
+            }
+
+            if (!$ticket) {
+                $this->json(['error' => 'Ticket not found or access denied'], 403);
+                return;
+            }
+
+            // Get files from evidence table
+            $evidenceRaw = $this->db->fetchAll(
+                "SELECT * FROM evidence WHERE complaint_id = ? ORDER BY uploaded_at ASC",
+                [$ticketId]
+            );
+
+            $formattedFiles = [];
+            foreach ($evidenceRaw as $record) {
+                for ($i = 1; $i <= 3; $i++) {
+                    $fileNameField = "file_name_$i";
+                    $fileTypeField = "file_type_$i";
+                    $filePathField = "file_path_$i";
+                    $compressedSizeField = "compressed_size_$i";
+
+                    if (!empty($record[$fileNameField])) {
+                        $formattedFiles[] = [
+                            'id' => $record['id'] . '_' . $i,
+                            'originalName' => $record[$fileNameField],
+                            'fileName' => $record[$fileNameField],
+                            'fileSize' => $record[$compressedSizeField] ?? 0,
+                            'fileType' => $record[$fileTypeField],
+                            'filePath' => Config::getPublicUploadPath() . $record[$filePathField],
+                            'extension' => strtolower(pathinfo($record[$fileNameField], PATHINFO_EXTENSION)),
+                            'createdAt' => $record['uploaded_at']
+                        ];
+                    }
+                }
+            }
+
+            $this->json([
+                'success' => true,
+                'files' => $formattedFiles
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Get ticket files error: " . $e->getMessage());
+            $this->json(['error' => 'Failed to fetch files'], 500);
+        }
     }
 }

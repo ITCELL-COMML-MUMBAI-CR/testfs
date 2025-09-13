@@ -102,6 +102,8 @@ $router->get('/api/customer/stats', 'Api@getCustomerStats', ['auth']);
 $router->get('/api/customer/export-data', 'Api@exportCustomerData', ['auth']);
 $router->post('/api/tickets/{id}/upload', 'Api@uploadEvidence', ['auth']);
 $router->get('/api/tickets/{id}/evidence/{file}', 'Api@getEvidence', ['auth']);
+$router->get('/api/tickets/{id}/files', 'Api@getTicketFiles', ['auth']);
+$router->get('/api/tickets/{id}/additional-info-modal', 'Api@getAdditionalInfoModal', ['auth', 'role:customer']);
 $router->get('/api/tickets/updates', 'Api@getTicketUpdates', ['auth']);
 $router->get('/api/notifications', 'Api@getNotifications', ['auth']);
 $router->post('/api/notifications/{id}/mark-read', 'Api@markNotificationRead', ['auth']);

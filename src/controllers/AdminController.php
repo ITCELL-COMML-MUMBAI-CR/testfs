@@ -1285,18 +1285,32 @@ class AdminController extends BaseController {
     public function content() {
         $user = $this->getCurrentUser();
         
+        // Get all content types for DataTables
         $news = $this->db->fetchAll(
-            "SELECT * FROM news ORDER BY publish_date DESC LIMIT 50"
+            "SELECT n.*, u.name as created_by_name 
+             FROM news n 
+             LEFT JOIN users u ON n.created_by = u.id 
+             ORDER BY n.publish_date DESC"
         );
         
         $quickLinks = $this->db->fetchAll(
             "SELECT * FROM quick_links ORDER BY sort_order, title"
         );
         
+        // Get announcements (news with type = 'announcement')
+        $announcements = $this->db->fetchAll(
+            "SELECT n.*, u.name as created_by_name 
+             FROM news n 
+             LEFT JOIN users u ON n.created_by = u.id 
+             WHERE n.type = 'announcement' 
+             ORDER BY n.publish_date DESC"
+        );
+        
         $data = [
             'page_title' => 'Content Management - SAMPARK',
             'user' => $user,
             'news' => $news,
+            'announcements' => $announcements,
             'quick_links' => $quickLinks,
             'divisions' => $this->getDivisions(),
             'zones' => $this->getZones(),
@@ -1426,6 +1440,164 @@ class AdminController extends BaseController {
             $this->json([
                 'success' => false,
                 'message' => 'Failed to create quick link. Please try again.'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Delete news item
+     */
+    public function deleteNews($id) {
+        $this->validateCSRF();
+        $user = $this->getCurrentUser();
+        
+        try {
+            $news = $this->db->fetch("SELECT * FROM news WHERE id = ?", [$id]);
+            
+            if (!$news) {
+                $this->json(['success' => false, 'message' => 'News item not found'], 404);
+                return;
+            }
+            
+            $this->db->query("DELETE FROM news WHERE id = ?", [$id]);
+            
+            // Log activity
+            $this->logActivity('news_deleted', [
+                'news_id' => $id,
+                'title' => $news['title']
+            ]);
+            
+            $this->json([
+                'success' => true,
+                'message' => 'News item deleted successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            Config::logError("News deletion error: " . $e->getMessage());
+            
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to delete news item. Please try again.'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Delete announcement
+     */
+    public function deleteAnnouncement($id) {
+        $this->validateCSRF();
+        $user = $this->getCurrentUser();
+        
+        try {
+            $announcement = $this->db->fetch("SELECT * FROM news WHERE id = ? AND type = 'announcement'", [$id]);
+            
+            if (!$announcement) {
+                $this->json(['success' => false, 'message' => 'Announcement not found'], 404);
+                return;
+            }
+            
+            $this->db->query("DELETE FROM news WHERE id = ?", [$id]);
+            
+            // Log activity
+            $this->logActivity('announcement_deleted', [
+                'announcement_id' => $id,
+                'title' => $announcement['title']
+            ]);
+            
+            $this->json([
+                'success' => true,
+                'message' => 'Announcement deleted successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            Config::logError("Announcement deletion error: " . $e->getMessage());
+            
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to delete announcement. Please try again.'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Delete quick link
+     */
+    public function deleteLink($id) {
+        $this->validateCSRF();
+        $user = $this->getCurrentUser();
+        
+        try {
+            $link = $this->db->fetch("SELECT * FROM quick_links WHERE id = ?", [$id]);
+            
+            if (!$link) {
+                $this->json(['success' => false, 'message' => 'Link not found'], 404);
+                return;
+            }
+            
+            $this->db->query("DELETE FROM quick_links WHERE id = ?", [$id]);
+            
+            // Log activity
+            $this->logActivity('quick_link_deleted', [
+                'link_id' => $id,
+                'title' => $link['title']
+            ]);
+            
+            $this->json([
+                'success' => true,
+                'message' => 'Link deleted successfully'
+            ]);
+            
+        } catch (Exception $e) {
+            Config::logError("Link deletion error: " . $e->getMessage());
+            
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to delete link. Please try again.'
+            ], 500);
+        }
+    }
+    
+    /**
+     * Toggle content status (active/inactive)
+     */
+    public function toggleContentStatus($type, $id) {
+        $this->validateCSRF();
+        $user = $this->getCurrentUser();
+        
+        try {
+            $table = ($type === 'link') ? 'quick_links' : 'news';
+            $field = ($type === 'link') ? 'is_active' : 'is_active';
+            
+            $item = $this->db->fetch("SELECT * FROM {$table} WHERE id = ?", [$id]);
+            
+            if (!$item) {
+                $this->json(['success' => false, 'message' => ucfirst($type) . ' not found'], 404);
+                return;
+            }
+            
+            $newStatus = $item[$field] ? 0 : 1;
+            
+            $this->db->query("UPDATE {$table} SET {$field} = ? WHERE id = ?", [$newStatus, $id]);
+            
+            // Log activity
+            $this->logActivity("{$type}_status_toggled", [
+                'item_id' => $id,
+                'new_status' => $newStatus ? 'active' : 'inactive'
+            ]);
+            
+            $this->json([
+                'success' => true,
+                'message' => ucfirst($type) . ' status updated successfully',
+                'new_status' => $newStatus
+            ]);
+            
+        } catch (Exception $e) {
+            Config::logError("Content status toggle error: " . $e->getMessage());
+            
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to update status. Please try again.'
             ], 500);
         }
     }

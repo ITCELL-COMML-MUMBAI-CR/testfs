@@ -131,12 +131,17 @@ class CustomerController extends BaseController {
             return;
         }
         
-        // Get ticket transactions (visible to customer)
-        $transactionSql = "SELECT t.*, 
+        // Get ticket transactions (visible to customer) - exclude forwarded transactions, internal-only remarks, and awaiting approval remarks
+        $transactionSql = "SELECT t.*,
                                   u.name as user_name, u.role as user_role
                            FROM transactions t
                            LEFT JOIN users u ON t.created_by_id = u.id
-                           WHERE t.complaint_id = ? 
+                           WHERE t.complaint_id = ?
+                           AND t.transaction_type NOT IN ('forwarded')
+                           AND (t.remarks_type IS NULL OR t.remarks_type NOT IN ('internal_remarks', 'forwarding_remarks'))
+                           AND NOT (t.remarks_type = 'customer_remarks' AND t.transaction_type IN ('awaiting_approval', 'replied') AND
+                                    NOT EXISTS (SELECT 1 FROM transactions t2 WHERE t2.complaint_id = t.complaint_id
+                                               AND t2.transaction_type = 'approved' AND t2.created_at >= t.created_at))
                            ORDER BY t.created_at DESC";
         
         $transactions = $this->db->fetchAll($transactionSql, [$ticketId]);
@@ -152,24 +157,111 @@ class CustomerController extends BaseController {
             } else {
                 $regularTransactions[] = $transaction;
                 
-                // For customers, prioritize information requests and progress updates
+                // For customers, only show action taken when approved by controller nodal, customer remarks, and interim remarks
                 if (!$latestImportantRemark) {
-                    $importantTypes = ['admin_remarks', 'interim_remarks', 'forwarding_remarks'];
-                    if (in_array($transaction['remarks_type'], $importantTypes) && !empty(trim($transaction['remarks']))) {
-                        $latestImportantRemark = $transaction;
+                    $importantTypes = ['customer_remarks', 'interim_remarks'];
+                    $remarksText = !empty($transaction['remarks']) ? $transaction['remarks'] : $transaction['internal_remarks'];
+
+                    // Only show customer_remarks if it's from an approved transaction or not an action taken
+                    $isActionTaken = ($transaction['remarks_type'] === 'customer_remarks' &&
+                                      in_array($transaction['transaction_type'], ['closed', 'action_taken']));
+
+                    if (in_array($transaction['remarks_type'], $importantTypes) && !empty(trim($remarksText))) {
+                        // Skip awaiting approval remarks that haven't been approved yet
+                        if ($transaction['remarks_type'] === 'customer_remarks' &&
+                            in_array($transaction['transaction_type'], ['awaiting_approval', 'replied'])) {
+                            // Check if this action has been approved by controller nodal
+                            $approvedSql = "SELECT COUNT(*) as approved_count FROM transactions
+                                           WHERE complaint_id = ? AND transaction_type = 'approved'
+                                           AND created_at >= ?";
+                            $approvedCount = $this->db->fetch($approvedSql, [$transaction['complaint_id'], $transaction['created_at']]);
+
+                            if ($approvedCount['approved_count'] > 0) {
+                                $latestImportantRemark = $transaction;
+                                // For interim remarks, ensure we use the correct remarks field
+                                if ($transaction['remarks_type'] === 'interim_remarks') {
+                                    $latestImportantRemark['display_remarks'] = !empty($transaction['remarks']) ? $transaction['remarks'] : $transaction['internal_remarks'];
+                                }
+                            }
+                        } else if ($isActionTaken) {
+                            // Check if this action has been approved by controller nodal
+                            $approvedSql = "SELECT COUNT(*) as approved_count FROM transactions
+                                           WHERE complaint_id = ? AND transaction_type = 'approved'
+                                           AND created_at >= ?";
+                            $approvedCount = $this->db->fetch($approvedSql, [$transaction['complaint_id'], $transaction['created_at']]);
+
+                            if ($approvedCount['approved_count'] > 0) {
+                                $latestImportantRemark = $transaction;
+                                // For interim remarks, ensure we use the correct remarks field
+                                if ($transaction['remarks_type'] === 'interim_remarks') {
+                                    $latestImportantRemark['display_remarks'] = !empty($transaction['remarks']) ? $transaction['remarks'] : $transaction['internal_remarks'];
+                                }
+                            }
+                        } else {
+                            // Show other customer_remarks and interim_remarks regardless
+                            $latestImportantRemark = $transaction;
+                            // For interim remarks, ensure we use the correct remarks field
+                            if ($transaction['remarks_type'] === 'interim_remarks') {
+                                $latestImportantRemark['display_remarks'] = !empty($transaction['remarks']) ? $transaction['remarks'] : $transaction['internal_remarks'];
+                            }
+                        }
                     }
                 }
             }
         }
         
-        // If no important remark found, get the latest visible transaction for customer
+        // If no important remark found, get the latest relevant transaction for customer
         if (!$latestImportantRemark && !empty($regularTransactions)) {
             $reversed = array_reverse($regularTransactions);
             foreach ($reversed as $transaction) {
-                // Show non-internal remarks to customer
-                if (!empty(trim($transaction['remarks'])) && $transaction['remarks_type'] !== 'internal_remarks') {
-                    $latestImportantRemark = $transaction;
-                    break;
+                // Only show action taken when approved by controller nodal, customer remarks, and interim remarks
+                $allowedTypes = ['customer_remarks', 'interim_remarks'];
+                $remarksText = !empty($transaction['remarks']) ? $transaction['remarks'] : $transaction['internal_remarks'];
+
+                if (in_array($transaction['remarks_type'], $allowedTypes) && !empty(trim($remarksText))) {
+                    // Skip awaiting approval remarks that haven't been approved yet
+                    if ($transaction['remarks_type'] === 'customer_remarks' &&
+                        in_array($transaction['transaction_type'], ['awaiting_approval', 'replied'])) {
+                        // Check if this action has been approved by controller nodal
+                        $approvedSql = "SELECT COUNT(*) as approved_count FROM transactions
+                                       WHERE complaint_id = ? AND transaction_type = 'approved'
+                                       AND created_at >= ?";
+                        $approvedCount = $this->db->fetch($approvedSql, [$transaction['complaint_id'], $transaction['created_at']]);
+
+                        if ($approvedCount['approved_count'] > 0) {
+                            $latestImportantRemark = $transaction;
+                            // For interim remarks, ensure we use the correct remarks field
+                            if ($transaction['remarks_type'] === 'interim_remarks') {
+                                $latestImportantRemark['display_remarks'] = !empty($transaction['remarks']) ? $transaction['remarks'] : $transaction['internal_remarks'];
+                            }
+                            break;
+                        }
+                        continue; // Skip this transaction if not approved
+                    }
+
+                    $isActionTaken = ($transaction['remarks_type'] === 'customer_remarks' &&
+                                      in_array($transaction['transaction_type'], ['closed', 'action_taken']));
+
+                    if ($isActionTaken) {
+                        // Check if this action has been approved by controller nodal
+                        $approvedSql = "SELECT COUNT(*) as approved_count FROM transactions
+                                       WHERE complaint_id = ? AND transaction_type = 'approved'
+                                       AND created_at >= ?";
+                        $approvedCount = $this->db->fetch($approvedSql, [$transaction['complaint_id'], $transaction['created_at']]);
+
+                        if ($approvedCount['approved_count'] > 0) {
+                            $latestImportantRemark = $transaction;
+                            break;
+                        }
+                    } else {
+                        // Show other customer_remarks and interim_remarks regardless
+                        $latestImportantRemark = $transaction;
+                        // For interim remarks, ensure we use the correct remarks field
+                        if ($transaction['remarks_type'] === 'interim_remarks') {
+                            $latestImportantRemark['display_remarks'] = !empty($transaction['remarks']) ? $transaction['remarks'] : $transaction['internal_remarks'];
+                        }
+                        break;
+                    }
                 }
             }
         }
@@ -676,6 +768,7 @@ class CustomerController extends BaseController {
                 
                 if (!empty($record[$fileNameField])) {
                     $evidence[] = [
+                        'id' => $record['id'] . '_' . $i, // Create a unique ID for each file slot
                         'file_name' => $record[$fileNameField],
                         'original_name' => $record[$fileNameField], // Use file_name as original_name
                         'file_type' => $record[$fileTypeField],
@@ -715,7 +808,58 @@ class CustomerController extends BaseController {
         $uploader = new FileUploader();
         return $uploader->uploadEvidence($complaintId, $files, 'customer', $this->getCurrentUser()['customer_id']);
     }
-    
+
+    private function handleFileRemoval($complaintId, $removedFileIds) {
+        if (empty($removedFileIds)) {
+            return;
+        }
+
+        // Get existing evidence record
+        $evidence = $this->db->fetch(
+            "SELECT * FROM evidence WHERE complaint_id = ?",
+            [$complaintId]
+        );
+
+        if (!$evidence) {
+            return;
+        }
+
+        // Prepare update data to clear removed file slots
+        $updateData = [];
+        $params = [];
+
+        foreach ($removedFileIds as $fileId) {
+            // fileId format is evidenceId_slot (e.g., "5_1", "5_2", "5_3")
+            if (strpos($fileId, '_') !== false) {
+                list($evidenceId, $slot) = explode('_', $fileId);
+
+                if ($evidenceId == $evidence['id'] && in_array($slot, [1, 2, 3])) {
+                    // Clear the file slot
+                    $updateData[] = "file_name_$slot = NULL";
+                    $updateData[] = "file_type_$slot = NULL";
+                    $updateData[] = "file_path_$slot = NULL";
+                    $updateData[] = "compressed_size_$slot = NULL";
+
+                    // Also delete the physical file if it exists
+                    $fileNameField = "file_name_$slot";
+                    if (!empty($evidence[$fileNameField])) {
+                        $filePath = Config::getUploadPath() . $evidence[$fileNameField];
+                        if (file_exists($filePath)) {
+                            unlink($filePath);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Execute update if there are changes
+        if (!empty($updateData)) {
+            $params[] = $complaintId;
+            $sql = "UPDATE evidence SET " . implode(', ', $updateData) . " WHERE complaint_id = ?";
+            $this->db->query($sql, $params);
+        }
+    }
+
     private function sendTicketCreatedNotifications($complaintId, $customer, $shedInfo) {
         // Send notifications to all controller_nodals in Commercial dept of the division
         // Implementation for sending email/SMS notifications
@@ -1091,7 +1235,7 @@ class CustomerController extends BaseController {
         // Verify ticket belongs to customer and is awaiting info or pending
         $ticket = $this->db->fetch(
             "SELECT * FROM complaints WHERE complaint_id = ? AND customer_id = ? AND status IN ('awaiting_info', 'pending')",
-            [$ticketId, $customer['id']]
+            [$ticketId, $customer['customer_id']]
         );
         
         if (!$ticket) {
@@ -1117,75 +1261,23 @@ class CustomerController extends BaseController {
             $currentDescription = $ticket['description'];
             $updatedDescription = $currentDescription . "\n\n--- Additional Info ---\n" . $additionalInfo;
             
-            // Handle supporting files if any
-            $uploadedFiles = [];
+            // Handle file removal first (if specified)
+            if (!empty($_POST['removed_files'])) {
+                $removedFiles = json_decode($_POST['removed_files'], true) ?: [];
+                $this->handleFileRemoval($ticketId, $removedFiles);
+            }
+
+            // Handle supporting files if any - use same logic as ticket creation
+            $uploadResult = null;
             if (!empty($_FILES['supporting_files'])) {
-                $fileUploader = new FileUploader();
-                
-                // Handle multiple files uploaded via supporting_files array
-                $files = $_FILES['supporting_files'];
-                if (isset($files['name']) && is_array($files['name'])) {
-                    // Multiple files format
-                    for ($i = 0; $i < count($files['name']); $i++) {
-                        if ($files['error'][$i] === UPLOAD_ERR_OK) {
-                            $singleFile = [
-                                'name' => $files['name'][$i],
-                                'type' => $files['type'][$i],
-                                'tmp_name' => $files['tmp_name'][$i],
-                                'size' => $files['size'][$i],
-                                'error' => $files['error'][$i]
-                            ];
-                            
-                            $uploadResult = $fileUploader->uploadSingleEvidence($singleFile, $ticketId);
-                            if ($uploadResult['success']) {
-                                // Insert evidence record
-                                $evidenceId = $this->db->query(
-                                    "INSERT INTO evidence (complaint_id, file_name_1, file_type_1, uploaded_by_type, uploaded_by_id) VALUES (?, ?, ?, ?, ?)",
-                                    [
-                                        $ticketId,
-                                        $uploadResult['file_name'],
-                                        $uploadResult['file_type'],
-                                        'customer',
-                                        $this->session->get('customer_id')
-                                    ]
-                                );
-                                
-                                $uploadedFiles[] = [
-                                    'id' => $evidenceId,
-                                    'original_name' => $uploadResult['original_name'],
-                                    'file_name' => $uploadResult['file_name']
-                                ];
-                            } else {
-                                throw new Exception('File upload failed for ' . $singleFile['name'] . ': ' . $uploadResult['message']);
-                            }
-                        }
-                    }
-                } else {
-                    // Single file format
-                    if ($files['error'] === UPLOAD_ERR_OK) {
-                        $uploadResult = $fileUploader->uploadSingleEvidence($files, $ticketId);
-                        if ($uploadResult['success']) {
-                            // Insert evidence record
-                            $evidenceId = $this->db->query(
-                                "INSERT INTO evidence (complaint_id, original_name, file_name, file_size, file_type, uploaded_at) VALUES (?, ?, ?, ?, ?, NOW())",
-                                [
-                                    $ticketId,
-                                    $uploadResult['original_name'],
-                                    $uploadResult['file_name'],
-                                    $uploadResult['file_size'],
-                                    $uploadResult['file_type']
-                                ]
-                            );
-                            
-                            $uploadedFiles[] = [
-                                'id' => $evidenceId,
-                                'original_name' => $uploadResult['original_name'],
-                                'file_name' => $uploadResult['file_name']
-                            ];
-                        } else {
-                            throw new Exception('File upload failed: ' . $uploadResult['message']);
-                        }
-                    }
+                $uploadResult = $this->handleEvidenceUpload($ticketId, $_FILES['supporting_files']);
+
+                if (!$uploadResult['success']) {
+                    $this->db->rollback();
+                    return $this->json([
+                        'success' => false,
+                        'message' => 'File upload failed: ' . implode(', ', $uploadResult['errors'])
+                    ], 400);
                 }
             }
             
@@ -1197,14 +1289,14 @@ class CustomerController extends BaseController {
             
             // Add transaction log
             $remarkText = $additionalInfo;
-            if (!empty($uploadedFiles)) {
-                $fileNames = array_column($uploadedFiles, 'original_name');
+            if ($uploadResult && !empty($uploadResult['files'])) {
+                $fileNames = array_column($uploadResult['files'], 'original_name');
                 $remarkText .= " (with " . count($fileNames) . " supporting document(s): " . implode(', ', $fileNames) . ")";
             }
             
             $this->db->query(
                 "INSERT INTO transactions (complaint_id, transaction_type, remarks, created_by_type, created_by_id, created_at) VALUES (?, ?, ?, ?, ?, NOW())",
-                [$ticketId, 'info_provided', $remarkText, 'customer', $customer['id']]
+                [$ticketId, 'info_provided', $remarkText, 'customer', $customer['customer_id']]
             );
             
             // Process workflow

@@ -112,8 +112,7 @@ function initializeCustomerTicketsTable(tableId = 'customerTicketsTable') {
                 title: 'Ticket ID',
                 render: function(data, type, row) {
                     if (type === 'display') {
-                        const urgentClass = row.is_urgent ? 'text-danger font-weight-bold' : '';
-                        return `<a href="${window.APP_URL || ''}/customer/tickets/${data}" class="ticket-link ${urgentClass}">${data}</a>`;
+                        return `<a href="${window.APP_URL || ''}/customer/tickets/${data}" class="ticket-link">${data}</a>`;
                     }
                     return data;
                 }
@@ -123,14 +122,6 @@ function initializeCustomerTicketsTable(tableId = 'customerTicketsTable') {
                 title: 'Category',
                 render: function(data, type, row) {
                     return `<span class="category-label">${data}</span><br><small class="text-muted">${row.type}</small><br><small class="text-info">${row.subtype || 'N/A'}</small>`;
-                }
-            },
-            {
-                data: 'status',
-                title: 'Status',
-                render: function(data, type, row) {
-                    const statusBadgeClass = getStatusBadgeClass(data);
-                    return `<span class="badge ${statusBadgeClass}">${formatStatus(data)}</span>`;
                 }
             },
             {
@@ -179,20 +170,20 @@ function initializeCustomerTicketsTable(tableId = 'customerTicketsTable') {
                 orderable: false,
                 render: function(data, type, row) {
                     let actions = `<a href="${window.APP_URL || ''}/customer/tickets/${row.complaint_id}" class="btn btn-sm btn-primary text-white">View</a>`;
-                    
+
                     if (row.status === 'awaiting_feedback') {
                         actions += ` <button class="btn btn-sm btn-success text-white" onclick="provideFeedback('${row.complaint_id}')">Feedback</button>`;
                     }
-                    
+
                     if (row.status === 'awaiting_info') {
                         actions += ` <button class="btn btn-sm btn-info text-white" onclick="provideAdditionalInfo('${row.complaint_id}')">Provide Info</button>`;
                     }
-                    
+
                     return actions;
                 }
             }
         ],
-        order: [[4, 'desc']], // Order by created date
+        order: [[3, 'desc']], // Order by created date
         searching: true, // Ensure search is enabled
         rowCallback: function(row, data) {
             // Add visual indicators for urgent tickets

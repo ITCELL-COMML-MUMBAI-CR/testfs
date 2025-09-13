@@ -983,7 +983,7 @@ class ControllerController extends BaseController {
         
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
-            'info_request' => 'required|min:10|max:1000'
+            'info_request' => 'required|min:0|max:1000'
         ]);
         
         if (!$isValid) {

@@ -26,9 +26,9 @@ ob_start();
                     <div>
                         <h1 class="display-3 mb-2">
                             Ticket #<?= htmlspecialchars($ticket['complaint_id']) ?>
-                            <span class="badge badge-apple status-<?= str_replace('_', '-', $ticket['status']) ?> ms-3">
+                            <!-- <span class="badge badge-apple status-<?= str_replace('_', '-', $ticket['status']) ?> ms-3">
                                 <?= ucwords(str_replace('_', ' ', $ticket['status'])) ?>
-                            </span>
+                            </span> -->
                         </h1>
                         <p class="text-muted mb-0">
                             <?= htmlspecialchars($ticket['category']) ?> → <?= htmlspecialchars($ticket['type']) ?> → <?= htmlspecialchars($ticket['subtype']) ?>
@@ -51,9 +51,24 @@ ob_start();
         </div>
         
         <!-- Latest Important Update for Customer -->
+        <!-- Debug: Latest important remark data -->
+        <?php if (false): // Enable for debugging ?>
+            <div class="alert alert-info">
+                <strong>Debug - Latest Important Remark:</strong><br>
+                <?php if ($latest_important_remark): ?>
+                    Transaction Type: <?= htmlspecialchars($latest_important_remark['transaction_type'] ?? 'NULL') ?><br>
+                    Remarks Type: <?= htmlspecialchars($latest_important_remark['remarks_type'] ?? 'NULL') ?><br>
+                    Remarks: <?= htmlspecialchars($latest_important_remark['remarks'] ?? 'NULL') ?><br>
+                    Created: <?= htmlspecialchars($latest_important_remark['created_at'] ?? 'NULL') ?>
+                <?php else: ?>
+                    No latest important remark found
+                <?php endif; ?>
+            </div>
+        <?php endif; ?>
+
         <?php if ($latest_important_remark): ?>
         <div class="card card-apple mb-4 customer-important-update">
-            <div class="card-header bg-gradient-primary text-white">
+            <div class="card-header bg-gradient-primary">
                 <h5 class="mb-0 d-flex align-items-center">
                     <i class="fas fa-bell me-2"></i>
                     Important Update for You
@@ -62,20 +77,26 @@ ob_start();
                     $remarkTypeBadgeClass = 'bg-light text-primary';
                     
                     switch($latest_important_remark['remarks_type']) {
-                        case 'admin_remarks':
-                            $remarkTypeLabel = 'Information Required';
-                            $remarkTypeBadgeClass = 'bg-warning text-dark';
-                            break;
-                        case 'forwarding_remarks':
-                            $remarkTypeLabel = 'Status Update';
-                            $remarkTypeBadgeClass = 'bg-info text-white';
+                        case 'customer_remarks':
+                            // For customer_remarks, check the transaction type to determine the label
+                            if ($latest_important_remark['transaction_type'] === 'closed') {
+                                $remarkTypeLabel = 'Action Taken';
+                                $remarkTypeBadgeClass = 'bg-success text-white';
+                            } elseif ($latest_important_remark['transaction_type'] === 'info_requested') {
+                                $remarkTypeLabel = 'Information Required';
+                                $remarkTypeBadgeClass = 'bg-warning text-dark';
+                            } else {
+                                $remarkTypeLabel = 'Update';
+                                $remarkTypeBadgeClass = 'bg-info text-white';
+                            }
                             break;
                         case 'interim_remarks':
                             $remarkTypeLabel = 'Progress Update';
-                            $remarkTypeBadgeClass = 'bg-success text-white';
+                            $remarkTypeBadgeClass = 'bg-info text-white';
                             break;
                         default:
                             $remarkTypeLabel = 'Update';
+                            $remarkTypeBadgeClass = 'bg-light text-primary';
                             break;
                     }
                     ?>
@@ -87,8 +108,14 @@ ob_start();
                     <div class="d-flex align-items-start">
                         <div class="flex-grow-1">
                             <div class="fw-semibold mb-2">
-                                <?php if ($latest_important_remark['remarks_type'] === 'admin_remarks'): ?>
+                                <?php if ($latest_important_remark['remarks_type'] === 'customer_remarks' && $latest_important_remark['transaction_type'] === 'info_requested'): ?>
                                     📋 Please provide the requested information:
+                                <?php elseif ($latest_important_remark['remarks_type'] === 'customer_remarks' && $latest_important_remark['transaction_type'] === 'closed'): ?>
+                                    ✅ Action has been taken on your ticket:
+                                <?php elseif ($latest_important_remark['remarks_type'] === 'interim_remarks'): ?>
+                                    📈 Progress update on your ticket:
+                                <?php elseif ($latest_important_remark['remarks_type'] === 'customer_remarks'): ?>
+                                    📢 Update from SAMPARK Team:
                                 <?php else: ?>
                                     <?= ucfirst(str_replace('_', ' ', $latest_important_remark['transaction_type'])) ?>
                                 <?php endif; ?>
@@ -97,16 +124,28 @@ ob_start();
                                 </span>
                             </div>
                             <div class="fs-6 mb-3">
-                                <?= nl2br(htmlspecialchars($latest_important_remark['remarks'] ?? '')) ?>
+                                <?= nl2br(htmlspecialchars($latest_important_remark['display_remarks'] ?? $latest_important_remark['remarks'] ?? '')) ?>
                             </div>
                             <div class="text-muted small">
                                 <i class="fas fa-user-tie me-1"></i>
                                 From: SAMPARK TEAM
                             </div>
                         </div>
-                        <?php if ($latest_important_remark['remarks_type'] === 'admin_remarks'): ?>
+                        <?php if ($latest_important_remark['remarks_type'] === 'customer_remarks' && $latest_important_remark['transaction_type'] === 'info_requested'): ?>
                         <div class="ms-3">
                             <i class="fas fa-exclamation-triangle text-warning fa-2x"></i>
+                        </div>
+                        <?php elseif ($latest_important_remark['remarks_type'] === 'customer_remarks' && $latest_important_remark['transaction_type'] === 'closed'): ?>
+                        <div class="ms-3">
+                            <i class="fas fa-check-circle text-success fa-2x"></i>
+                        </div>
+                        <?php elseif ($latest_important_remark['remarks_type'] === 'interim_remarks'): ?>
+                        <div class="ms-3">
+                            <i class="fas fa-info-circle text-info fa-2x"></i>
+                        </div>
+                        <?php elseif ($latest_important_remark['remarks_type'] === 'customer_remarks'): ?>
+                        <div class="ms-3">
+                            <i class="fas fa-comment text-primary fa-2x"></i>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -153,7 +192,7 @@ ob_start();
                                 From: SAMPARK TEAM
                             </div>
                             <div class="d-grid">
-                                <button class="btn btn-warning btn-lg" onclick="provideAdditionalInfo()">
+                                <button class="btn btn-warning btn-lg" onclick="provideAdditionalInfo('<?= $ticket['complaint_id'] ?>')">
                                     <i class="fas fa-plus-circle me-2"></i>Provide Additional Information
                                 </button>
                             </div>
@@ -191,14 +230,6 @@ ob_start();
                                 </div>
                             </div>
                             
-                            <div class="col-md-6">
-                                <label class="form-label-apple small">Priority</label>
-                                <div>
-                                    <span class="badge badge-priority-<?= $ticket['priority'] ?>">
-                                        <?= ucfirst($ticket['priority']) ?>
-                                    </span>
-                                </div>
-                            </div>
                             
                             <div class="col-md-6">
                                 <label class="form-label-apple small">Created On</label>
@@ -259,15 +290,6 @@ ob_start();
                                 </div>
                             </div>
                             
-                            <div class="col-md-6">
-                                <label class="form-label-apple small">Incident Date</label>
-                                <div><?= date('F d, Y', strtotime($ticket['date'])) ?></div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label class="form-label-apple small">Incident Time</label>
-                                <div><?= date('H:i', strtotime($ticket['time'])) ?></div>
-                            </div>
                             
                             <?php if ($ticket['wagon_code']): ?>
                                 <div class="col-md-6">
@@ -383,9 +405,17 @@ ob_start();
                                             </div>
                                         <?php endif; ?>
                                         
-                                        <?php if ($transaction['remarks']): ?>
+                                        <?php
+                                        $displayRemarks = '';
+                                        if (!empty($transaction['remarks'])) {
+                                            $displayRemarks = $transaction['remarks'];
+                                        } elseif (!empty($transaction['internal_remarks'])) {
+                                            $displayRemarks = $transaction['internal_remarks'];
+                                        }
+                                        ?>
+                                        <?php if (!empty(trim($displayRemarks))): ?>
                                             <div class="bg-light p-3 rounded small">
-                                                <?= nl2br(htmlspecialchars($transaction['remarks'])) ?>
+                                                <?= nl2br(htmlspecialchars($displayRemarks)) ?>
                                             </div>
                                         <?php endif; ?>
                                     </div>
@@ -400,6 +430,7 @@ ob_start();
             <div class="col-12 col-lg-4">
                 
                 <!-- Status Card -->
+                <?php if ($ticket['status'] === 'awaiting_info'): ?>
                 <div class="card-apple mb-4">
                     <div class="card-body text-center">
                         <div class="mb-3">
@@ -409,30 +440,19 @@ ob_start();
                         <span class="badge badge-apple status-<?= str_replace('_', '-', $ticket['status']) ?> fs-6 px-3 py-2">
                             <?= ucwords(str_replace('_', ' ', $ticket['status'])) ?>
                         </span>
-                        
-                        <?php if ($ticket['status'] === 'awaiting_feedback'): ?>
-                            <div class="mt-3">
-                                <p class="small text-warning mb-2">
-                                    <i class="fas fa-exclamation-triangle me-1"></i>
-                                    Your feedback is required to close this ticket
-                                </p>
-                                <button class="btn btn-warning btn-sm" onclick="provideFeedback()">
-                                    <i class="fas fa-star me-1"></i>Provide Feedback
-                                </button>
-                            </div>
-                        <?php elseif ($ticket['status'] === 'awaiting_info'): ?>
-                            <div class="mt-3">
-                                <p class="small text-info mb-2">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Additional information is required for this ticket
-                                </p>
-                                <button class="btn btn-info btn-sm" onclick="provideAdditionalInfo()">
-                                    <i class="fas fa-plus-circle me-1"></i>Provide Additional Info
-                                </button>
-                            </div>
-                        <?php endif; ?>
+
+                        <div class="mt-3">
+                            <p class="small text-info mb-2">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Additional information is required for this ticket
+                            </p>
+                            <button class="btn btn-info btn-sm" onclick="provideAdditionalInfo('<?= $ticket['complaint_id'] ?>')">
+                                <i class="fas fa-plus-circle me-1"></i>Provide Additional Info
+                            </button>
+                        </div>
                     </div>
                 </div>
+                <?php endif; ?>
                 
                 <!-- Customer Information -->
                 <div class="card-apple-glass mb-4">
@@ -465,6 +485,9 @@ ob_start();
         </div>
     </div>
 </section>
+
+<!-- Include Additional Info Modal -->
+<?php include '../src/views/modals/additional-info-modal.php'; ?>
 
 <script>
 function provideFeedback() {
@@ -723,657 +746,15 @@ function contactSupport() {
 }
 
 // Global function for providing additional information
-window.provideAdditionalInfo = function() {
-    showProvideInfoDialog();
+window.provideAdditionalInfo = function(ticketId) {
+    // Use passed ticketId parameter or fallback to PHP ticket ID
+    const ticketIdToUse = ticketId || '<?= $ticket['complaint_id'] ?>';
+    showAdditionalInfoModal(ticketIdToUse);
 }
 
+// Legacy function - redirects to new modal
 function showProvideInfoDialog() {
-    <?php if ($latest_revert): ?>
-    const revertMessage = `<?= addslashes(nl2br(htmlspecialchars($latest_revert['remarks'] ?? ''))) ?>`;
-    <?php else: ?>
-    revertMessage = '';
-    <?php endif; ?>
-    
-    // Get existing files data
-    const existingFiles = [
-        <?php if (!empty($evidence)): ?>
-            <?php foreach ($evidence as $index => $file): ?>
-                {
-                    id: <?= $file['id'] ?>,
-                    fileName: '<?= addslashes($file['file_name']) ?>',
-                    originalName: '<?= addslashes($file['original_name']) ?>',
-                    fileSize: <?= $file['file_size'] ?>,
-                    filePath: '<?= addslashes(Config::getPublicUploadPath() . $file['file_name']) ?>',
-                    extension: '<?= addslashes(strtolower(pathinfo($file['original_name'], PATHINFO_EXTENSION))) ?>'
-                }<?= $index < count($evidence) - 1 ? ',' : '' ?>
-            <?php endforeach; ?>
-        <?php endif; ?>
-    ];
-    
-    // Initialize removed files tracking
-    window.removedExistingFiles = [];
-    
-    const existingFilesHtml = existingFiles.length > 0 ? `
-        <div class="mb-3">
-            <label class="form-label">Current Supporting Documents (${existingFiles.length}/3)</label>
-            <div id="existingFilesContainer">
-                ${existingFiles.map(file => createExistingFilePreview(file)).join('')}
-            </div>
-        </div>
-    ` : '';
-    
-    const remainingSlots = 3 - (existingFiles.length - window.removedExistingFiles.length);
-    const uploadSectionHtml = remainingSlots > 0 ? `
-        <div class="mb-3" id="uploadSection">
-            <label class="form-label">Add New Supporting Documents (${remainingSlots} slots available)</label>
-            <input type="file" class="d-none" id="infoFileInput" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.txt,.xls,.xlsx" multiple>
-            
-            <div class="upload-zone border-2 border-dashed rounded p-3 text-center" id="infoUploadZone">
-                <div class="upload-placeholder">
-                    <i class="fas fa-cloud-upload-alt text-muted mb-2" style="font-size: 2rem;"></i>
-                    <p class="mb-2">Click to select files or drag and drop</p>
-                    <button type="button" class="btn btn-outline-primary btn-sm mb-2">
-                        <i class="fas fa-folder-open me-1"></i>Browse Files
-                    </button>
-                    <small class="text-muted d-block">Maximum ${remainingSlots} additional files, 5MB each (auto-compressed)</small>
-                </div>
-                
-                <div class="upload-preview mt-3" id="infoUploadPreview"></div>
-                
-                <div class="compression-progress d-none mt-3" id="infoCompressionProgress">
-                    <div class="d-flex align-items-center justify-content-center">
-                        <div class="loader me-2" style="width: 20px; height: 20px;"></div>
-                        <span class="text-muted">Compressing files...</span>
-                    </div>
-                    <div class="progress mt-2" style="height: 4px;">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                             role="progressbar" style="width: 0%" id="infoCompressionBar"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    ` : `
-        <div class="alert alert-warning mb-3">
-            <i class="fas fa-exclamation-triangle me-2"></i>
-            You have reached the maximum limit of 3 files. Please remove existing files to add new ones.
-        </div>
-    `;
-    
-    Swal.fire({
-        title: 'Provide Additional Information',
-        html: `
-            <div class="text-start">
-                <p class="mb-3">Please provide the additional information requested for ticket #<?= $ticket['complaint_id'] ?>.</p>
-                
-                ${revertMessage ? `
-                <div class="mb-3">
-                    <label class="form-label">Message from SAMPARK TEAM:</label>
-                    <div class="alert alert-warning">
-                        <div class="small mb-2"><strong>Reason for requesting additional information:</strong></div>
-                        <div>${revertMessage}</div>
-                    </div>
-                </div>
-                ` : ''}
-                
-                <div class="mb-3">
-                    <label for="additionalInfoText" class="form-label">Additional Information</label>
-                    <textarea class="form-control" id="additionalInfoText" rows="5" 
-                              placeholder="Provide the requested information, clarifications, or additional details..."></textarea>
-                </div>
-                
-                ${existingFilesHtml}
-                ${uploadSectionHtml}
-            </div>
-        `,
-        showCancelButton: true,
-        confirmButtonText: 'Submit Information',
-        customClass: {
-            confirmButton: 'btn btn-info',
-            cancelButton: 'btn btn-secondary'
-        },
-        width: '700px',
-        didOpen: () => {
-            setupInfoFileUpload();
-        },
-        preConfirm: () => {
-            const additionalInfo = document.getElementById('additionalInfoText').value.trim();
-            
-            if (!additionalInfo) {
-                Swal.showValidationMessage('Please provide the additional information');
-                return false;
-            }
-            
-            // Check if compression is in progress
-            if (!document.getElementById('infoCompressionProgress').classList.contains('d-none')) {
-                Swal.showValidationMessage('Please wait for file compression to complete');
-                return false;
-            }
-            
-            return {
-                additionalInfo: additionalInfo,
-                files: window.infoCompressedFiles || []
-            };
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            submitAdditionalInfoWithFiles(result.value);
-        }
-        // Cleanup
-        window.infoSelectedFiles = [];
-        window.infoCompressedFiles = [];
-    });
-}
-
-function provideAdditionalInfo() {
-    showProvideInfoDialog();
-}
-
-// File upload functionality for info dialog (using same system as create-ticket)
-window.infoSelectedFiles = [];
-window.infoCompressedFiles = [];
-window.removedExistingFiles = [];
-
-function createExistingFilePreview(file) {
-    const fileIcon = getInfoFileIcon(getFileTypeFromExtension(file.extension));
-    const fileSize = formatInfoFileSize(file.fileSize);
-    
-    return `
-        <div class="existing-file-preview mb-2" data-file-id="${file.id}">
-            <div class="d-flex align-items-center p-2 border rounded bg-light">
-                <div class="file-icon me-3">
-                    <i class="${fileIcon} text-muted"></i>
-                </div>
-                <div class="file-info flex-grow-1">
-                    <div class="fw-semibold">${file.originalName}</div>
-                    <div class="text-muted small">${fileSize}</div>
-                </div>
-                <div class="file-actions">
-                    <button type="button" class="btn btn-link btn-sm text-primary me-2" onclick="viewExistingFile('${file.filePath}', '${file.originalName}')">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button type="button" class="btn btn-link btn-sm text-danger" onclick="removeExistingFile(${file.id})">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function getFileTypeFromExtension(extension) {
-    const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
-    if (imageTypes.includes(extension)) return 'image/' + extension;
-    if (extension === 'pdf') return 'application/pdf';
-    if (extension === 'doc' || extension === 'docx') return 'application/msword';
-    if (extension === 'xls' || extension === 'xlsx') return 'application/vnd.ms-excel';
-    if (extension === 'txt') return 'text/plain';
-    return 'application/octet-stream';
-}
-
-function viewExistingFile(filePath, fileName) {
-    const extension = fileName.split('.').pop().toLowerCase();
-    const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
-    
-    if (imageTypes.includes(extension)) {
-        Swal.fire({
-            title: fileName,
-            imageUrl: filePath,
-            imageAlt: fileName,
-            showCloseButton: true,
-            showConfirmButton: false,
-            width: '80%',
-            padding: '1rem'
-        });
-    } else {
-        window.open(filePath, '_blank');
-    }
-}
-
-function removeExistingFile(fileId) {
-    // Add to removed files array
-    window.removedExistingFiles.push(fileId);
-    
-    // Remove from UI
-    const fileElement = document.querySelector(`[data-file-id="${fileId}"]`);
-    if (fileElement) {
-        fileElement.remove();
-    }
-    
-    // Update remaining slots count and upload section
-    updateUploadSectionAvailability();
-}
-
-function updateUploadSectionAvailability() {
-    const existingFilesContainer = document.getElementById('existingFilesContainer');
-    const remainingExistingFiles = existingFilesContainer ? existingFilesContainer.children.length : 0;
-    const newFilesCount = window.infoCompressedFiles.length;
-    const remainingSlots = 3 - remainingExistingFiles - newFilesCount;
-    
-    const uploadSection = document.getElementById('uploadSection');
-    const warningAlert = document.querySelector('.alert-warning');
-    
-    if (remainingSlots > 0) {
-        // Show upload section if hidden
-        if (!uploadSection && warningAlert) {
-            warningAlert.outerHTML = `
-                <div class="mb-3" id="uploadSection">
-                    <label class="form-label">Add New Supporting Documents (${remainingSlots} slots available)</label>
-                    <input type="file" class="d-none" id="infoFileInput" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.txt,.xls,.xlsx" multiple>
-                    
-                    <div class="upload-zone border-2 border-dashed rounded p-3 text-center" id="infoUploadZone">
-                        <div class="upload-placeholder">
-                            <i class="fas fa-cloud-upload-alt text-muted mb-2" style="font-size: 2rem;"></i>
-                            <p class="mb-2">Click to select files or drag and drop</p>
-                            <button type="button" class="btn btn-outline-primary btn-sm mb-2">
-                                <i class="fas fa-folder-open me-1"></i>Browse Files
-                            </button>
-                            <small class="text-muted d-block">Maximum ${remainingSlots} additional files, 5MB each (auto-compressed)</small>
-                        </div>
-                        
-                        <div class="upload-preview mt-3" id="infoUploadPreview"></div>
-                        
-                        <div class="compression-progress d-none mt-3" id="infoCompressionProgress">
-                            <div class="d-flex align-items-center justify-content-center">
-                                <div class="loader me-2" style="width: 20px; height: 20px;"></div>
-                                <span class="text-muted">Compressing files...</span>
-                            </div>
-                            <div class="progress mt-2" style="height: 4px;">
-                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                                     role="progressbar" style="width: 0%" id="infoCompressionBar"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            setupInfoFileUpload();
-        } else if (uploadSection) {
-            // Update existing upload section label
-            const label = uploadSection.querySelector('.form-label');
-            if (label) {
-                label.textContent = `Add New Supporting Documents (${remainingSlots} slots available)`;
-            }
-            const smallText = uploadSection.querySelector('small');
-            if (smallText) {
-                smallText.textContent = `Maximum ${remainingSlots} additional files, 5MB each (auto-compressed)`;
-            }
-        }
-    } else {
-        // Hide upload section and show warning
-        if (uploadSection) {
-            uploadSection.outerHTML = `
-                <div class="alert alert-warning mb-3">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    You have reached the maximum limit of 3 files. Please remove existing files to add new ones.
-                </div>
-            `;
-        }
-    }
-}
-
-function setupInfoFileUpload() {
-    const uploadZone = document.getElementById('infoUploadZone');
-    const fileInput = document.getElementById('infoFileInput');
-    
-    // Reset state
-    window.infoSelectedFiles = [];
-    window.infoCompressedFiles = [];
-    
-    // Drag and drop handlers
-    uploadZone.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        this.classList.add('border-primary');
-    });
-    
-    uploadZone.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        this.classList.remove('border-primary');
-    });
-    
-    uploadZone.addEventListener('drop', function(e) {
-        e.preventDefault();
-        this.classList.remove('border-primary');
-        
-        const files = Array.from(e.dataTransfer.files);
-        handleInfoFileSelection(files);
-    });
-    
-    // File input change handler
-    fileInput.addEventListener('change', function() {
-        handleInfoFileSelection(Array.from(this.files));
-    });
-    
-    // Click handler for the entire zone
-    uploadZone.addEventListener('click', function(e) {
-        // Prevent double triggering
-        if (e.target.tagName !== 'INPUT') {
-            fileInput.click();
-        }
-    });
-}
-
-function handleInfoFileSelection(files) {
-    // Calculate total files (existing + new)
-    const existingFilesContainer = document.getElementById('existingFilesContainer');
-    const remainingExistingFiles = existingFilesContainer ? existingFilesContainer.children.length : 0;
-    const currentNewFiles = window.infoCompressedFiles.length;
-    const totalCurrentFiles = remainingExistingFiles + currentNewFiles;
-    const remainingSlots = 3 - totalCurrentFiles;
-    
-    // Validate file count against total limit
-    if (files.length > remainingSlots) {
-        Swal.showValidationMessage(`You can only add ${remainingSlots} more file(s). Total limit is 3 files per ticket.`);
-        return;
-    }
-    
-    // Validate each file
-    const validFiles = [];
-    files.forEach(file => {
-        const validation = validateInfoFile(file);
-        if (validation.valid) {
-            validFiles.push(file);
-        } else {
-            Swal.showValidationMessage(`${file.name}: ${validation.errors.join(', ')}`);
-            return;
-        }
-    });
-    
-    if (validFiles.length === 0) return;
-    
-    // Add to selected files
-    window.infoSelectedFiles = window.infoSelectedFiles.concat(validFiles);
-    
-    // Show compression progress
-    showInfoCompressionProgress();
-    
-    // Compress files
-    compressInfoFiles(validFiles);
-}
-
-function validateInfoFile(file) {
-    const maxSize = 50 * 1024 * 1024; // 50MB (will be compressed to 5MB)
-    const allowedTypes = [
-        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp',
-        'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    ];
-    
-    const errors = [];
-    
-    if (file.size > maxSize) {
-        errors.push('File too large (max 20MB before compression)');
-    }
-    
-    if (!allowedTypes.includes(file.type)) {
-        errors.push('File type not supported');
-    }
-    
-    return {
-        valid: errors.length === 0,
-        errors: errors
-    };
-}
-
-function showInfoCompressionProgress() {
-    document.getElementById('infoCompressionProgress').classList.remove('d-none');
-}
-
-function hideInfoCompressionProgress() {
-    document.getElementById('infoCompressionProgress').classList.add('d-none');
-}
-
-function updateInfoCompressionProgress(percent) {
-    const progressBar = document.getElementById('infoCompressionBar');
-    progressBar.style.width = percent + '%';
-}
-
-async function compressInfoFiles(files) {
-    const preview = document.getElementById('infoUploadPreview');
-    let processedCount = 0;
-    
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        
-        // Create preview immediately
-        createInfoFilePreview(file, preview, 'compressing');
-        
-        try {
-            // Compress file using the same method as create-ticket
-            const compressedFile = await compressFileAsyncInfo(file);
-            window.infoCompressedFiles.push(compressedFile);
-            
-            // Update preview status and show compressed size
-            updateInfoFilePreviewStatus(file.name, 'compressed');
-            updateInfoFilePreviewSize(file.name, compressedFile.size);
-            
-        } catch (error) {
-            console.error('Compression failed for', file.name, error);
-            // Use original file if compression fails (fallback)
-            window.infoCompressedFiles.push(file);
-            updateInfoFilePreviewStatus(file.name, 'ready');
-        }
-        
-        processedCount++;
-        updateInfoCompressionProgress((processedCount / files.length) * 100);
-    }
-    
-    // Hide progress
-    hideInfoCompressionProgress();
-}
-
-function createInfoFilePreview(file, container, status = 'pending') {
-    const previewDiv = document.createElement('div');
-    previewDiv.className = 'file-preview mb-2';
-    previewDiv.dataset.fileName = file.name;
-    
-    const fileIcon = getInfoFileIcon(file.type);
-    const fileSize = formatInfoFileSize(file.size);
-    
-    previewDiv.innerHTML = `
-        <div class="d-flex align-items-center p-2 border rounded">
-            <div class="file-icon me-3">
-                <i class="${fileIcon} text-muted"></i>
-            </div>
-            <div class="file-info flex-grow-1">
-                <div class="fw-semibold">${file.name}</div>
-                <div class="text-muted small d-flex align-items-center">
-                    <span id="original-size-${file.name}">${fileSize}</span>
-                    <span id="compressed-size-${file.name}" class="ms-2" style="display: none;"></span>
-                </div>
-            </div>
-            <div class="file-status me-2">
-                <span class="badge badge-${getStatusBadgeClass(status)}" id="status-${file.name}">
-                    ${getStatusText(status)}
-                </span>
-            </div>
-            <div class="file-actions">
-                <button type="button" class="btn btn-link btn-sm text-danger" onclick="removeInfoFile('${file.name}')">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        </div>
-    `;
-    
-    container.appendChild(previewDiv);
-}
-
-function updateInfoFilePreviewStatus(fileName, status) {
-    const statusElement = document.getElementById(`status-${fileName}`);
-    if (statusElement) {
-        switch(status) {
-            case 'compressed':
-                statusElement.className = 'badge badge-success';
-                statusElement.textContent = 'Ready';
-                break;
-            case 'error':
-                statusElement.className = 'badge badge-danger';
-                statusElement.textContent = 'Error';
-                break;
-            case 'ready':
-                statusElement.className = 'badge badge-success';
-                statusElement.textContent = 'Ready';
-                break;
-        }
-    }
-}
-
-function updateInfoFilePreviewSize(fileName, compressedSize) {
-    const compressedSizeElement = document.getElementById(`compressed-size-${fileName}`);
-    if (compressedSizeElement) {
-        const compressedSizeText = formatInfoFileSize(compressedSize);
-        compressedSizeElement.innerHTML = `<span class="text-success">→ ${compressedSizeText}</span>`;
-        compressedSizeElement.style.display = 'inline';
-    }
-}
-
-function getInfoFileIcon(mimeType) {
-    if (mimeType.startsWith('image/')) return 'fas fa-image text-primary';
-    if (mimeType === 'application/pdf') return 'fas fa-file-pdf text-danger';
-    if (mimeType.includes('word')) return 'fas fa-file-word text-primary';
-    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fas fa-file-excel text-success';
-    if (mimeType === 'text/plain') return 'fas fa-file-alt text-muted';
-    return 'fas fa-file text-muted';
-}
-
-function formatInfoFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-function getStatusBadgeClass(status) {
-    switch (status) {
-        case 'compressing': return 'warning';
-        case 'compressed': return 'success';
-        case 'error': return 'danger';
-        case 'ready': return 'success';
-        default: return 'secondary';
-    }
-}
-
-function getStatusText(status) {
-    switch (status) {
-        case 'compressing': return 'Compressing...';
-        case 'compressed': return 'Ready';
-        case 'error': return 'Error';
-        case 'ready': return 'Ready';
-        default: return 'Pending';
-    }
-}
-
-function removeInfoFile(fileName) {
-    // Remove from selected files
-    window.infoSelectedFiles = window.infoSelectedFiles.filter(file => file.name !== fileName);
-    
-    // Remove from compressed files
-    window.infoCompressedFiles = window.infoCompressedFiles.filter(file => file.name !== fileName);
-    
-    // Remove preview
-    const previewElement = document.querySelector(`[data-file-name="${fileName}"]`);
-    if (previewElement) {
-        previewElement.remove();
-    }
-    
-    // Update upload section availability
-    updateUploadSectionAvailability();
-}
-
-function compressFileAsyncInfo(file) {
-    return new Promise((resolve, reject) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('action', 'compress');
-        formData.append('csrf_token', '<?= $csrf_token ?>');
-        
-        fetch('<?= Config::getAppUrl() ?>/api/compress-file', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.compressed_data) {
-                try {
-                    // Convert base64 back to file
-                    const binaryString = atob(data.compressed_data);
-                    const bytes = new Uint8Array(binaryString.length);
-                    for (let i = 0; i < binaryString.length; i++) {
-                        bytes[i] = binaryString.charCodeAt(i);
-                    }
-                
-                    // Create a new File object from the compressed data
-                    const compressedFile = new File([bytes], file.name, {
-                        type: file.type,
-                        lastModified: Date.now()
-                    });
-                    resolve(compressedFile);
-                } catch (error) {
-                    reject(new Error('Failed to decode compressed data: ' + error.message));
-                }
-            } else {
-                reject(new Error(data.message || 'Compression failed'));
-            }
-        })
-        .catch(error => {
-            reject(error);
-        });
-    });
-}
-
-function submitAdditionalInfoWithFiles(data) {
-    const formData = new FormData();
-    formData.append('csrf_token', '<?= $csrf_token ?>');
-    formData.append('additional_info', data.additionalInfo);
-    
-    // Add compressed files
-    data.files.forEach((file, index) => {
-        formData.append(`supporting_files[]`, file);
-    });
-    
-    // Add removed existing files IDs
-    if (window.removedExistingFiles.length > 0) {
-        formData.append('removed_files', JSON.stringify(window.removedExistingFiles));
-    }
-    
-    fetch('<?= Config::getAppUrl() ?>/customer/tickets/<?= $ticket['complaint_id'] ?>/provide-info', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(responseData => {
-        if (responseData.success) {
-            window.SAMPARK.ui.showSuccess('Information Submitted', responseData.message);
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            window.SAMPARK.ui.showError('Submission Failed', responseData.message);
-        }
-    })
-    .catch(error => {
-        window.SAMPARK.ui.showError('Error', 'Failed to submit information. Please try again.');
-    });
-}
-
-function submitAdditionalInfo(additionalInfo) {
-    const formData = new FormData();
-    formData.append('csrf_token', '<?= $csrf_token ?>');
-    formData.append('additional_info', additionalInfo);
-    
-    fetch('<?= Config::getAppUrl() ?>/customer/tickets/<?= $ticket['complaint_id'] ?>/provide-info', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.SAMPARK.ui.showSuccess('Information Submitted', data.message);
-            setTimeout(() => location.reload(), 1500);
-        } else {
-            window.SAMPARK.ui.showError('Submission Failed', data.message);
-        }
-    })
-    .catch(error => {
-        window.SAMPARK.ui.showError('Error', 'Failed to submit additional information. Please try again.');
-    });
+    showAdditionalInfoModal('<?= $ticket['complaint_id'] ?>');
 }
 
 </script>
@@ -1613,3 +994,5 @@ function getStatusIcon($status) {
 $content = ob_get_clean();
 include '../src/views/layouts/app.php';
 ?>
+
+<script src="<?= Config::getAppUrl() ?>/public/assets/js/additional-info-modal.js"></script>
