@@ -2508,7 +2508,7 @@ INSERT INTO `system_settings` (`id`, `setting_key`, `setting_value`, `setting_ty
 (1, 'site_name', 'SAMPARK', 'string', 'Website name', 'general', 1, NULL, '2025-09-03 11:51:58'),
 (2, 'site_tagline', 'Support and Mediation Portal for All Rail Cargo', 'string', 'Website tagline', 'general', 1, NULL, '2025-09-03 11:51:58'),
 (3, 'auto_close_days', '3', 'integer', 'Number of days after which reverted tickets are auto-closed', 'tickets', 1, NULL, '2025-09-03 11:51:58'),
-(4, 'max_file_size', '2097152', 'integer', 'Maximum file upload size in bytes (2MB)', 'uploads', 1, NULL, '2025-09-03 11:51:58'),
+(4, 'max_file_size', '5242880', 'integer', 'Maximum file upload size in bytes (5MB)', 'uploads', 1, NULL, '2025-09-03 11:51:58'),
 (5, 'max_files_per_ticket', '3', 'integer', 'Maximum number of files per ticket', 'uploads', 1, NULL, '2025-09-03 11:51:58'),
 (6, 'session_timeout', '3600', 'integer', 'Session timeout in seconds (1 hour)', 'security', 1, NULL, '2025-09-03 11:51:58'),
 (7, 'enable_sms', '0', 'boolean', 'Enable SMS notifications', 'notifications', 1, NULL, '2025-09-03 11:51:58'),

@@ -188,9 +188,6 @@ $page_title = 'Support Hub - SAMPARK';
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
                 <i class="fas fa-list me-2"></i>Support Tickets
-                <span class="badge bg-apple-blue ms-2" id="ticketCount">
-                    <?= $tickets['total'] ?? 0 ?>
-                </span>
             </h5>
         </div>
         <div class="card-body p-3">
@@ -527,9 +524,9 @@ $page_title = 'Support Hub - SAMPARK';
                     <?php endif; ?>
                     <!-- Priority will be auto-reset by system -->
                     <div class="mb-3">
-                        <label class="form-label-apple">Remarks</label>
-                        <textarea class="form-control-apple" name="remarks" rows="4" required 
-                                  placeholder="Add forwarding remarks..."></textarea>
+                        <label class="form-label-apple">Internal Remarks</label>
+                        <textarea class="form-control-apple" name="internal_remarks" rows="4" required 
+                                  placeholder="Add internal remarks for forwarding..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">

@@ -429,6 +429,69 @@ window.provideAdditionalInfo = function(ticketId) {
 }
 
 function showProvideInfoDialog(ticketId) {
+    // Initialize removed files tracking
+    window.removedExistingFiles = [];
+    
+    // Fetch existing files for this ticket
+    fetch(`${APP_URL}/api/tickets/${ticketId}/files`)
+        .then(response => response.json())
+        .then(data => {
+            const existingFiles = data.success ? data.files : [];
+            showProvideInfoDialogWithFiles(ticketId, existingFiles);
+        })
+        .catch(error => {
+            console.error('Failed to fetch existing files:', error);
+            showProvideInfoDialogWithFiles(ticketId, []);
+        });
+}
+
+function showProvideInfoDialogWithFiles(ticketId, existingFiles) {
+    const existingFilesHtml = existingFiles.length > 0 ? `
+        <div class="mb-3">
+            <label class="form-label">Current Supporting Documents (${existingFiles.length}/3)</label>
+            <div id="existingFilesContainer">
+                ${existingFiles.map(file => createExistingFilePreview(file)).join('')}
+            </div>
+        </div>
+    ` : '';
+    
+    const remainingSlots = 3 - (existingFiles.length - window.removedExistingFiles.length);
+    const uploadSectionHtml = remainingSlots > 0 ? `
+        <div class="mb-3" id="uploadSection">
+            <label class="form-label">Add New Supporting Documents (${remainingSlots} slots available)</label>
+            <input type="file" class="d-none" id="infoFileInput" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.txt,.xls,.xlsx" multiple>
+            
+            <div class="upload-zone border-2 border-dashed rounded p-3 text-center" id="infoUploadZone">
+                <div class="upload-placeholder">
+                    <i class="fas fa-cloud-upload-alt text-muted mb-2" style="font-size: 2rem;"></i>
+                    <p class="mb-2">Click to select files or drag and drop</p>
+                    <button type="button" class="btn btn-outline-primary btn-sm mb-2">
+                        <i class="fas fa-folder-open me-1"></i>Browse Files
+                    </button>
+                    <small class="text-muted d-block">Maximum ${remainingSlots} additional files, 5MB each (auto-compressed)</small>
+                </div>
+                
+                <div class="upload-preview mt-3" id="infoUploadPreview"></div>
+                
+                <div class="compression-progress d-none mt-3" id="infoCompressionProgress">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <div class="loader me-2" style="width: 20px; height: 20px;"></div>
+                        <span class="text-muted">Compressing files...</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 4px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 0%" id="infoCompressionBar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    ` : `
+        <div class="alert alert-warning mb-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            You have reached the maximum limit of 3 files. Please remove existing files to add new ones.
+        </div>
+    `;
+    
     Swal.fire({
         title: 'Provide Additional Information',
         html: `
@@ -441,35 +504,8 @@ function showProvideInfoDialog(ticketId) {
                               placeholder="Provide the requested information, clarifications, or additional details..."></textarea>
                 </div>
                 
-                <!-- File Upload Section -->
-                <div class="mb-3">
-                    <label class="form-label">Supporting Documents (Optional)</label>
-                    <input type="file" class="d-none" id="infoFileInput" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.txt,.xls,.xlsx" multiple>
-                    
-                    <div class="upload-zone border-2 border-dashed rounded p-3 text-center" id="infoUploadZone">
-                        <div class="upload-placeholder">
-                            <i class="fas fa-cloud-upload-alt text-muted mb-2" style="font-size: 2rem;"></i>
-                            <p class="mb-2">Click to select files or drag and drop</p>
-                            <button type="button" class="btn btn-outline-primary btn-sm mb-2">
-                                <i class="fas fa-folder-open me-1"></i>Browse Files
-                            </button>
-                            <small class="text-muted d-block">Maximum 3 files, 2MB each (auto-compressed)</small>
-                        </div>
-                        
-                        <div class="upload-preview mt-3" id="infoUploadPreview"></div>
-                        
-                        <div class="compression-progress d-none mt-3" id="infoCompressionProgress">
-                            <div class="d-flex align-items-center justify-content-center">
-                                <div class="loader me-2" style="width: 20px; height: 20px;"></div>
-                                <span class="text-muted">Compressing files...</span>
-                            </div>
-                            <div class="progress mt-2" style="height: 4px;">
-                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                                     role="progressbar" style="width: 0%" id="infoCompressionBar"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                ${existingFilesHtml}
+                ${uploadSectionHtml}
             </div>
         `,
         showCancelButton: true,
@@ -514,6 +550,144 @@ function showProvideInfoDialog(ticketId) {
 // File upload functionality for info dialog (using same system as create-ticket)
 window.infoSelectedFiles = [];
 window.infoCompressedFiles = [];
+window.removedExistingFiles = [];
+
+function createExistingFilePreview(file) {
+    const fileIcon = getInfoFileIcon(getFileTypeFromExtension(file.extension));
+    const fileSize = formatInfoFileSize(file.fileSize);
+    
+    return `
+        <div class="existing-file-preview mb-2" data-file-id="${file.id}">
+            <div class="d-flex align-items-center p-2 border rounded bg-light">
+                <div class="file-icon me-3">
+                    <i class="${fileIcon} text-muted"></i>
+                </div>
+                <div class="file-info flex-grow-1">
+                    <div class="fw-semibold">${file.originalName}</div>
+                    <div class="text-muted small">${fileSize}</div>
+                </div>
+                <div class="file-actions">
+                    <button type="button" class="btn btn-link btn-sm text-primary me-2" onclick="viewExistingFile('${file.filePath}', '${file.originalName}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-link btn-sm text-danger" onclick="removeExistingFile(${file.id})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function getFileTypeFromExtension(extension) {
+    const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+    if (imageTypes.includes(extension)) return 'image/' + extension;
+    if (extension === 'pdf') return 'application/pdf';
+    if (extension === 'doc' || extension === 'docx') return 'application/msword';
+    if (extension === 'xls' || extension === 'xlsx') return 'application/vnd.ms-excel';
+    if (extension === 'txt') return 'text/plain';
+    return 'application/octet-stream';
+}
+
+function viewExistingFile(filePath, fileName) {
+    const extension = fileName.split('.').pop().toLowerCase();
+    const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+    
+    if (imageTypes.includes(extension)) {
+        Swal.fire({
+            title: fileName,
+            imageUrl: filePath,
+            imageAlt: fileName,
+            showCloseButton: true,
+            showConfirmButton: false,
+            width: '80%',
+            padding: '1rem'
+        });
+    } else {
+        window.open(filePath, '_blank');
+    }
+}
+
+function removeExistingFile(fileId) {
+    // Add to removed files array
+    window.removedExistingFiles.push(fileId);
+    
+    // Remove from UI
+    const fileElement = document.querySelector(`[data-file-id="${fileId}"]`);
+    if (fileElement) {
+        fileElement.remove();
+    }
+    
+    // Update remaining slots count and upload section
+    updateUploadSectionAvailability();
+}
+
+function updateUploadSectionAvailability() {
+    const existingFilesContainer = document.getElementById('existingFilesContainer');
+    const remainingExistingFiles = existingFilesContainer ? existingFilesContainer.children.length : 0;
+    const newFilesCount = window.infoCompressedFiles.length;
+    const remainingSlots = 3 - remainingExistingFiles - newFilesCount;
+    
+    const uploadSection = document.getElementById('uploadSection');
+    const warningAlert = document.querySelector('.alert-warning');
+    
+    if (remainingSlots > 0) {
+        // Show upload section if hidden
+        if (!uploadSection && warningAlert) {
+            warningAlert.outerHTML = `
+                <div class="mb-3" id="uploadSection">
+                    <label class="form-label">Add New Supporting Documents (${remainingSlots} slots available)</label>
+                    <input type="file" class="d-none" id="infoFileInput" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.txt,.xls,.xlsx" multiple>
+                    
+                    <div class="upload-zone border-2 border-dashed rounded p-3 text-center" id="infoUploadZone">
+                        <div class="upload-placeholder">
+                            <i class="fas fa-cloud-upload-alt text-muted mb-2" style="font-size: 2rem;"></i>
+                            <p class="mb-2">Click to select files or drag and drop</p>
+                            <button type="button" class="btn btn-outline-primary btn-sm mb-2">
+                                <i class="fas fa-folder-open me-1"></i>Browse Files
+                            </button>
+                            <small class="text-muted d-block">Maximum ${remainingSlots} additional files, 5MB each (auto-compressed)</small>
+                        </div>
+                        
+                        <div class="upload-preview mt-3" id="infoUploadPreview"></div>
+                        
+                        <div class="compression-progress d-none mt-3" id="infoCompressionProgress">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="loader me-2" style="width: 20px; height: 20px;"></div>
+                                <span class="text-muted">Compressing files...</span>
+                            </div>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%" id="infoCompressionBar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            setupInfoFileUpload();
+        } else if (uploadSection) {
+            // Update existing upload section label
+            const label = uploadSection.querySelector('.form-label');
+            if (label) {
+                label.textContent = `Add New Supporting Documents (${remainingSlots} slots available)`;
+            }
+            const smallText = uploadSection.querySelector('small');
+            if (smallText) {
+                smallText.textContent = `Maximum ${remainingSlots} additional files, 5MB each (auto-compressed)`;
+            }
+        }
+    } else {
+        // Hide upload section and show warning
+        if (uploadSection) {
+            uploadSection.outerHTML = `
+                <div class="alert alert-warning mb-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    You have reached the maximum limit of 3 files. Please remove existing files to add new ones.
+                </div>
+            `;
+        }
+    }
+}
 
 function setupInfoFileUpload() {
     const uploadZone = document.getElementById('infoUploadZone');
@@ -557,9 +731,16 @@ function setupInfoFileUpload() {
 }
 
 function handleInfoFileSelection(files) {
-    // Validate file count
-    if (window.infoSelectedFiles.length + files.length > 3) {
-        Swal.showValidationMessage('Maximum 3 files allowed');
+    // Calculate total files (existing + new)
+    const existingFilesContainer = document.getElementById('existingFilesContainer');
+    const remainingExistingFiles = existingFilesContainer ? existingFilesContainer.children.length : 0;
+    const currentNewFiles = window.infoCompressedFiles.length;
+    const totalCurrentFiles = remainingExistingFiles + currentNewFiles;
+    const remainingSlots = 3 - totalCurrentFiles;
+    
+    // Validate file count against total limit
+    if (files.length > remainingSlots) {
+        Swal.showValidationMessage(`You can only add ${remainingSlots} more file(s). Total limit is 3 files per ticket.`);
         return;
     }
     
@@ -588,7 +769,7 @@ function handleInfoFileSelection(files) {
 }
 
 function validateInfoFile(file) {
-    const maxSize = 20 * 1024 * 1024; // 20MB (will be compressed to 2MB)
+    const maxSize = 50 * 1024 * 1024; // 50MB (will be compressed to 5MB)
     const allowedTypes = [
         'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp',
         'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -745,19 +926,23 @@ function compressFileAsync(file) {
         .then(response => response.json())
         .then(data => {
             if (data.success && data.compressed_data) {
-                // Convert base64 back to file
-                const binaryString = atob(data.compressed_data);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
+                try {
+                    // Convert base64 back to file
+                    const binaryString = atob(data.compressed_data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
                 
-                // Create a new File object from the compressed data
-                const compressedFile = new File([bytes], file.name, {
-                    type: file.type,
-                    lastModified: Date.now()
-                });
-                resolve(compressedFile);
+                    // Create a new File object from the compressed data
+                    const compressedFile = new File([bytes], file.name, {
+                        type: file.type,
+                        lastModified: Date.now()
+                    });
+                    resolve(compressedFile);
+                } catch (error) {
+                    reject(new Error('Failed to decode compressed data: ' + error.message));
+                }
             } else {
                 reject(new Error(data.message || 'Compression failed'));
             }
@@ -810,6 +995,9 @@ function removeInfoFile(fileName) {
     if (previewElement) {
         previewElement.remove();
     }
+    
+    // Update upload section availability
+    updateUploadSectionAvailability();
 }
 
 function compressFileAsyncInfo(file) {
@@ -826,19 +1014,23 @@ function compressFileAsyncInfo(file) {
         .then(response => response.json())
         .then(data => {
             if (data.success && data.compressed_data) {
-                // Convert base64 back to file
-                const binaryString = atob(data.compressed_data);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
-                }
+                try {
+                    // Convert base64 back to file
+                    const binaryString = atob(data.compressed_data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
                 
-                // Create a new File object from the compressed data
-                const compressedFile = new File([bytes], file.name, {
-                    type: file.type,
-                    lastModified: Date.now()
-                });
-                resolve(compressedFile);
+                    // Create a new File object from the compressed data
+                    const compressedFile = new File([bytes], file.name, {
+                        type: file.type,
+                        lastModified: Date.now()
+                    });
+                    resolve(compressedFile);
+                } catch (error) {
+                    reject(new Error('Failed to decode compressed data: ' + error.message));
+                }
             } else {
                 reject(new Error(data.message || 'Compression failed'));
             }
@@ -858,6 +1050,11 @@ function submitAdditionalInfoWithFiles(ticketId, data) {
     data.files.forEach((file, index) => {
         formData.append(`supporting_files[]`, file);
     });
+    
+    // Add removed existing files IDs
+    if (window.removedExistingFiles.length > 0) {
+        formData.append('removed_files', JSON.stringify(window.removedExistingFiles));
+    }
     
     fetch(APP_URL + '/customer/tickets/' + ticketId + '/provide-info', {
         method: 'POST',

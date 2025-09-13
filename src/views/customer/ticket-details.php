@@ -101,12 +101,7 @@ ob_start();
                             </div>
                             <div class="text-muted small">
                                 <i class="fas fa-user-tie me-1"></i>
-                                From: <?= htmlspecialchars($latest_important_remark['user_name'] ?? 'Railway Authority') ?>
-                                <?php if ($latest_important_remark['user_role']): ?>
-                                <span class="ms-2 badge bg-secondary">
-                                    <?= ucfirst($latest_important_remark['user_role']) ?>
-                                </span>
-                                <?php endif; ?>
+                                From: SAMPARK TEAM
                             </div>
                         </div>
                         <?php if ($latest_important_remark['remarks_type'] === 'admin_remarks'): ?>
@@ -114,6 +109,58 @@ ob_start();
                             <i class="fas fa-exclamation-triangle text-warning fa-2x"></i>
                         </div>
                         <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Revert Message Display -->
+        <?php 
+        // Find the most recent revert transaction
+        $latest_revert = null;
+        foreach ($transactions as $transaction) {
+            if ($transaction['transaction_type'] === 'reverted') {
+                $latest_revert = $transaction;
+                break; // Get the most recent one (transactions are ordered by created_at DESC)
+            }
+        }
+        ?>
+        <?php if ($latest_revert && $ticket['status'] === 'awaiting_info'): ?>
+        <div class="card card-apple mb-4 revert-message-alert">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0 d-flex align-items-center">
+                    <i class="fas fa-undo me-2"></i>
+                    Additional Information Required
+                    <span class="badge bg-light text-dark ms-2">Action Required</span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning border-start border-warning border-4 mb-0">
+                    <div class="d-flex align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold mb-2">
+                                📋 Your ticket has been reverted back to you for additional information:
+                                <span class="text-muted small ms-2">
+                                    <?= date('M d, Y H:i', strtotime($latest_revert['created_at'])) ?>
+                                </span>
+                            </div>
+                            <div class="fs-6 mb-3 bg-white p-3 rounded border">
+                                <?= nl2br(htmlspecialchars($latest_revert['remarks'] ?? '')) ?>
+                            </div>
+                            <div class="text-muted small mb-3">
+                                <i class="fas fa-user-tie me-1"></i>
+                                From: SAMPARK TEAM
+                            </div>
+                            <div class="d-grid">
+                                <button class="btn btn-warning btn-lg" onclick="provideAdditionalInfo()">
+                                    <i class="fas fa-plus-circle me-2"></i>Provide Additional Information
+                                </button>
+                            </div>
+                        </div>
+                        <div class="ms-3">
+                            <i class="fas fa-exclamation-triangle text-warning fa-3x"></i>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -328,8 +375,7 @@ ob_start();
                                         
                                         <?php if ($transaction['user_name']): ?>
                                             <div class="small text-muted mb-2">
-                                                By: <?= htmlspecialchars($transaction['user_name']) ?> 
-                                                (<?= ucfirst($transaction['user_role']) ?>)
+                                                By: SAMPARK TEAM
                                             </div>
                                         <?php elseif ($transaction['created_by_type'] === 'customer'): ?>
                                             <div class="small text-muted mb-2">
@@ -676,19 +722,107 @@ function contactSupport() {
     );
 }
 
-function provideAdditionalInfo() {
+// Global function for providing additional information
+window.provideAdditionalInfo = function() {
+    showProvideInfoDialog();
+}
+
+function showProvideInfoDialog() {
+    <?php if ($latest_revert): ?>
+    const revertMessage = `<?= addslashes(nl2br(htmlspecialchars($latest_revert['remarks'] ?? ''))) ?>`;
+    <?php else: ?>
+    revertMessage = '';
+    <?php endif; ?>
+    
+    // Get existing files data
+    const existingFiles = [
+        <?php if (!empty($evidence)): ?>
+            <?php foreach ($evidence as $index => $file): ?>
+                {
+                    id: <?= $file['id'] ?>,
+                    fileName: '<?= addslashes($file['file_name']) ?>',
+                    originalName: '<?= addslashes($file['original_name']) ?>',
+                    fileSize: <?= $file['file_size'] ?>,
+                    filePath: '<?= addslashes(Config::getPublicUploadPath() . $file['file_name']) ?>',
+                    extension: '<?= addslashes(strtolower(pathinfo($file['original_name'], PATHINFO_EXTENSION))) ?>'
+                }<?= $index < count($evidence) - 1 ? ',' : '' ?>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    ];
+    
+    // Initialize removed files tracking
+    window.removedExistingFiles = [];
+    
+    const existingFilesHtml = existingFiles.length > 0 ? `
+        <div class="mb-3">
+            <label class="form-label">Current Supporting Documents (${existingFiles.length}/3)</label>
+            <div id="existingFilesContainer">
+                ${existingFiles.map(file => createExistingFilePreview(file)).join('')}
+            </div>
+        </div>
+    ` : '';
+    
+    const remainingSlots = 3 - (existingFiles.length - window.removedExistingFiles.length);
+    const uploadSectionHtml = remainingSlots > 0 ? `
+        <div class="mb-3" id="uploadSection">
+            <label class="form-label">Add New Supporting Documents (${remainingSlots} slots available)</label>
+            <input type="file" class="d-none" id="infoFileInput" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.txt,.xls,.xlsx" multiple>
+            
+            <div class="upload-zone border-2 border-dashed rounded p-3 text-center" id="infoUploadZone">
+                <div class="upload-placeholder">
+                    <i class="fas fa-cloud-upload-alt text-muted mb-2" style="font-size: 2rem;"></i>
+                    <p class="mb-2">Click to select files or drag and drop</p>
+                    <button type="button" class="btn btn-outline-primary btn-sm mb-2">
+                        <i class="fas fa-folder-open me-1"></i>Browse Files
+                    </button>
+                    <small class="text-muted d-block">Maximum ${remainingSlots} additional files, 5MB each (auto-compressed)</small>
+                </div>
+                
+                <div class="upload-preview mt-3" id="infoUploadPreview"></div>
+                
+                <div class="compression-progress d-none mt-3" id="infoCompressionProgress">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <div class="loader me-2" style="width: 20px; height: 20px;"></div>
+                        <span class="text-muted">Compressing files...</span>
+                    </div>
+                    <div class="progress mt-2" style="height: 4px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                             role="progressbar" style="width: 0%" id="infoCompressionBar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    ` : `
+        <div class="alert alert-warning mb-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            You have reached the maximum limit of 3 files. Please remove existing files to add new ones.
+        </div>
+    `;
+    
     Swal.fire({
         title: 'Provide Additional Information',
         html: `
             <div class="text-start">
                 <p class="mb-3">Please provide the additional information requested for ticket #<?= $ticket['complaint_id'] ?>.</p>
                 
+                ${revertMessage ? `
+                <div class="mb-3">
+                    <label class="form-label">Message from SAMPARK TEAM:</label>
+                    <div class="alert alert-warning">
+                        <div class="small mb-2"><strong>Reason for requesting additional information:</strong></div>
+                        <div>${revertMessage}</div>
+                    </div>
+                </div>
+                ` : ''}
+                
                 <div class="mb-3">
                     <label for="additionalInfoText" class="form-label">Additional Information</label>
                     <textarea class="form-control" id="additionalInfoText" rows="5" 
                               placeholder="Provide the requested information, clarifications, or additional details..."></textarea>
-                    <small class="text-muted">This information will be appended to your original ticket description</small>
                 </div>
+                
+                ${existingFilesHtml}
+                ${uploadSectionHtml}
             </div>
         `,
         showCancelButton: true,
@@ -697,7 +831,10 @@ function provideAdditionalInfo() {
             confirmButton: 'btn btn-info',
             cancelButton: 'btn btn-secondary'
         },
-        width: '600px',
+        width: '700px',
+        didOpen: () => {
+            setupInfoFileUpload();
+        },
         preConfirm: () => {
             const additionalInfo = document.getElementById('additionalInfoText').value.trim();
             
@@ -706,12 +843,513 @@ function provideAdditionalInfo() {
                 return false;
             }
             
-            return additionalInfo;
+            // Check if compression is in progress
+            if (!document.getElementById('infoCompressionProgress').classList.contains('d-none')) {
+                Swal.showValidationMessage('Please wait for file compression to complete');
+                return false;
+            }
+            
+            return {
+                additionalInfo: additionalInfo,
+                files: window.infoCompressedFiles || []
+            };
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            submitAdditionalInfo(result.value);
+            submitAdditionalInfoWithFiles(result.value);
         }
+        // Cleanup
+        window.infoSelectedFiles = [];
+        window.infoCompressedFiles = [];
+    });
+}
+
+function provideAdditionalInfo() {
+    showProvideInfoDialog();
+}
+
+// File upload functionality for info dialog (using same system as create-ticket)
+window.infoSelectedFiles = [];
+window.infoCompressedFiles = [];
+window.removedExistingFiles = [];
+
+function createExistingFilePreview(file) {
+    const fileIcon = getInfoFileIcon(getFileTypeFromExtension(file.extension));
+    const fileSize = formatInfoFileSize(file.fileSize);
+    
+    return `
+        <div class="existing-file-preview mb-2" data-file-id="${file.id}">
+            <div class="d-flex align-items-center p-2 border rounded bg-light">
+                <div class="file-icon me-3">
+                    <i class="${fileIcon} text-muted"></i>
+                </div>
+                <div class="file-info flex-grow-1">
+                    <div class="fw-semibold">${file.originalName}</div>
+                    <div class="text-muted small">${fileSize}</div>
+                </div>
+                <div class="file-actions">
+                    <button type="button" class="btn btn-link btn-sm text-primary me-2" onclick="viewExistingFile('${file.filePath}', '${file.originalName}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button type="button" class="btn btn-link btn-sm text-danger" onclick="removeExistingFile(${file.id})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function getFileTypeFromExtension(extension) {
+    const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+    if (imageTypes.includes(extension)) return 'image/' + extension;
+    if (extension === 'pdf') return 'application/pdf';
+    if (extension === 'doc' || extension === 'docx') return 'application/msword';
+    if (extension === 'xls' || extension === 'xlsx') return 'application/vnd.ms-excel';
+    if (extension === 'txt') return 'text/plain';
+    return 'application/octet-stream';
+}
+
+function viewExistingFile(filePath, fileName) {
+    const extension = fileName.split('.').pop().toLowerCase();
+    const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+    
+    if (imageTypes.includes(extension)) {
+        Swal.fire({
+            title: fileName,
+            imageUrl: filePath,
+            imageAlt: fileName,
+            showCloseButton: true,
+            showConfirmButton: false,
+            width: '80%',
+            padding: '1rem'
+        });
+    } else {
+        window.open(filePath, '_blank');
+    }
+}
+
+function removeExistingFile(fileId) {
+    // Add to removed files array
+    window.removedExistingFiles.push(fileId);
+    
+    // Remove from UI
+    const fileElement = document.querySelector(`[data-file-id="${fileId}"]`);
+    if (fileElement) {
+        fileElement.remove();
+    }
+    
+    // Update remaining slots count and upload section
+    updateUploadSectionAvailability();
+}
+
+function updateUploadSectionAvailability() {
+    const existingFilesContainer = document.getElementById('existingFilesContainer');
+    const remainingExistingFiles = existingFilesContainer ? existingFilesContainer.children.length : 0;
+    const newFilesCount = window.infoCompressedFiles.length;
+    const remainingSlots = 3 - remainingExistingFiles - newFilesCount;
+    
+    const uploadSection = document.getElementById('uploadSection');
+    const warningAlert = document.querySelector('.alert-warning');
+    
+    if (remainingSlots > 0) {
+        // Show upload section if hidden
+        if (!uploadSection && warningAlert) {
+            warningAlert.outerHTML = `
+                <div class="mb-3" id="uploadSection">
+                    <label class="form-label">Add New Supporting Documents (${remainingSlots} slots available)</label>
+                    <input type="file" class="d-none" id="infoFileInput" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.txt,.xls,.xlsx" multiple>
+                    
+                    <div class="upload-zone border-2 border-dashed rounded p-3 text-center" id="infoUploadZone">
+                        <div class="upload-placeholder">
+                            <i class="fas fa-cloud-upload-alt text-muted mb-2" style="font-size: 2rem;"></i>
+                            <p class="mb-2">Click to select files or drag and drop</p>
+                            <button type="button" class="btn btn-outline-primary btn-sm mb-2">
+                                <i class="fas fa-folder-open me-1"></i>Browse Files
+                            </button>
+                            <small class="text-muted d-block">Maximum ${remainingSlots} additional files, 5MB each (auto-compressed)</small>
+                        </div>
+                        
+                        <div class="upload-preview mt-3" id="infoUploadPreview"></div>
+                        
+                        <div class="compression-progress d-none mt-3" id="infoCompressionProgress">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <div class="loader me-2" style="width: 20px; height: 20px;"></div>
+                                <span class="text-muted">Compressing files...</span>
+                            </div>
+                            <div class="progress mt-2" style="height: 4px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" style="width: 0%" id="infoCompressionBar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            setupInfoFileUpload();
+        } else if (uploadSection) {
+            // Update existing upload section label
+            const label = uploadSection.querySelector('.form-label');
+            if (label) {
+                label.textContent = `Add New Supporting Documents (${remainingSlots} slots available)`;
+            }
+            const smallText = uploadSection.querySelector('small');
+            if (smallText) {
+                smallText.textContent = `Maximum ${remainingSlots} additional files, 5MB each (auto-compressed)`;
+            }
+        }
+    } else {
+        // Hide upload section and show warning
+        if (uploadSection) {
+            uploadSection.outerHTML = `
+                <div class="alert alert-warning mb-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    You have reached the maximum limit of 3 files. Please remove existing files to add new ones.
+                </div>
+            `;
+        }
+    }
+}
+
+function setupInfoFileUpload() {
+    const uploadZone = document.getElementById('infoUploadZone');
+    const fileInput = document.getElementById('infoFileInput');
+    
+    // Reset state
+    window.infoSelectedFiles = [];
+    window.infoCompressedFiles = [];
+    
+    // Drag and drop handlers
+    uploadZone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('border-primary');
+    });
+    
+    uploadZone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('border-primary');
+    });
+    
+    uploadZone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('border-primary');
+        
+        const files = Array.from(e.dataTransfer.files);
+        handleInfoFileSelection(files);
+    });
+    
+    // File input change handler
+    fileInput.addEventListener('change', function() {
+        handleInfoFileSelection(Array.from(this.files));
+    });
+    
+    // Click handler for the entire zone
+    uploadZone.addEventListener('click', function(e) {
+        // Prevent double triggering
+        if (e.target.tagName !== 'INPUT') {
+            fileInput.click();
+        }
+    });
+}
+
+function handleInfoFileSelection(files) {
+    // Calculate total files (existing + new)
+    const existingFilesContainer = document.getElementById('existingFilesContainer');
+    const remainingExistingFiles = existingFilesContainer ? existingFilesContainer.children.length : 0;
+    const currentNewFiles = window.infoCompressedFiles.length;
+    const totalCurrentFiles = remainingExistingFiles + currentNewFiles;
+    const remainingSlots = 3 - totalCurrentFiles;
+    
+    // Validate file count against total limit
+    if (files.length > remainingSlots) {
+        Swal.showValidationMessage(`You can only add ${remainingSlots} more file(s). Total limit is 3 files per ticket.`);
+        return;
+    }
+    
+    // Validate each file
+    const validFiles = [];
+    files.forEach(file => {
+        const validation = validateInfoFile(file);
+        if (validation.valid) {
+            validFiles.push(file);
+        } else {
+            Swal.showValidationMessage(`${file.name}: ${validation.errors.join(', ')}`);
+            return;
+        }
+    });
+    
+    if (validFiles.length === 0) return;
+    
+    // Add to selected files
+    window.infoSelectedFiles = window.infoSelectedFiles.concat(validFiles);
+    
+    // Show compression progress
+    showInfoCompressionProgress();
+    
+    // Compress files
+    compressInfoFiles(validFiles);
+}
+
+function validateInfoFile(file) {
+    const maxSize = 50 * 1024 * 1024; // 50MB (will be compressed to 5MB)
+    const allowedTypes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp',
+        'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    
+    const errors = [];
+    
+    if (file.size > maxSize) {
+        errors.push('File too large (max 20MB before compression)');
+    }
+    
+    if (!allowedTypes.includes(file.type)) {
+        errors.push('File type not supported');
+    }
+    
+    return {
+        valid: errors.length === 0,
+        errors: errors
+    };
+}
+
+function showInfoCompressionProgress() {
+    document.getElementById('infoCompressionProgress').classList.remove('d-none');
+}
+
+function hideInfoCompressionProgress() {
+    document.getElementById('infoCompressionProgress').classList.add('d-none');
+}
+
+function updateInfoCompressionProgress(percent) {
+    const progressBar = document.getElementById('infoCompressionBar');
+    progressBar.style.width = percent + '%';
+}
+
+async function compressInfoFiles(files) {
+    const preview = document.getElementById('infoUploadPreview');
+    let processedCount = 0;
+    
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Create preview immediately
+        createInfoFilePreview(file, preview, 'compressing');
+        
+        try {
+            // Compress file using the same method as create-ticket
+            const compressedFile = await compressFileAsyncInfo(file);
+            window.infoCompressedFiles.push(compressedFile);
+            
+            // Update preview status and show compressed size
+            updateInfoFilePreviewStatus(file.name, 'compressed');
+            updateInfoFilePreviewSize(file.name, compressedFile.size);
+            
+        } catch (error) {
+            console.error('Compression failed for', file.name, error);
+            // Use original file if compression fails (fallback)
+            window.infoCompressedFiles.push(file);
+            updateInfoFilePreviewStatus(file.name, 'ready');
+        }
+        
+        processedCount++;
+        updateInfoCompressionProgress((processedCount / files.length) * 100);
+    }
+    
+    // Hide progress
+    hideInfoCompressionProgress();
+}
+
+function createInfoFilePreview(file, container, status = 'pending') {
+    const previewDiv = document.createElement('div');
+    previewDiv.className = 'file-preview mb-2';
+    previewDiv.dataset.fileName = file.name;
+    
+    const fileIcon = getInfoFileIcon(file.type);
+    const fileSize = formatInfoFileSize(file.size);
+    
+    previewDiv.innerHTML = `
+        <div class="d-flex align-items-center p-2 border rounded">
+            <div class="file-icon me-3">
+                <i class="${fileIcon} text-muted"></i>
+            </div>
+            <div class="file-info flex-grow-1">
+                <div class="fw-semibold">${file.name}</div>
+                <div class="text-muted small d-flex align-items-center">
+                    <span id="original-size-${file.name}">${fileSize}</span>
+                    <span id="compressed-size-${file.name}" class="ms-2" style="display: none;"></span>
+                </div>
+            </div>
+            <div class="file-status me-2">
+                <span class="badge badge-${getStatusBadgeClass(status)}" id="status-${file.name}">
+                    ${getStatusText(status)}
+                </span>
+            </div>
+            <div class="file-actions">
+                <button type="button" class="btn btn-link btn-sm text-danger" onclick="removeInfoFile('${file.name}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(previewDiv);
+}
+
+function updateInfoFilePreviewStatus(fileName, status) {
+    const statusElement = document.getElementById(`status-${fileName}`);
+    if (statusElement) {
+        switch(status) {
+            case 'compressed':
+                statusElement.className = 'badge badge-success';
+                statusElement.textContent = 'Ready';
+                break;
+            case 'error':
+                statusElement.className = 'badge badge-danger';
+                statusElement.textContent = 'Error';
+                break;
+            case 'ready':
+                statusElement.className = 'badge badge-success';
+                statusElement.textContent = 'Ready';
+                break;
+        }
+    }
+}
+
+function updateInfoFilePreviewSize(fileName, compressedSize) {
+    const compressedSizeElement = document.getElementById(`compressed-size-${fileName}`);
+    if (compressedSizeElement) {
+        const compressedSizeText = formatInfoFileSize(compressedSize);
+        compressedSizeElement.innerHTML = `<span class="text-success">→ ${compressedSizeText}</span>`;
+        compressedSizeElement.style.display = 'inline';
+    }
+}
+
+function getInfoFileIcon(mimeType) {
+    if (mimeType.startsWith('image/')) return 'fas fa-image text-primary';
+    if (mimeType === 'application/pdf') return 'fas fa-file-pdf text-danger';
+    if (mimeType.includes('word')) return 'fas fa-file-word text-primary';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fas fa-file-excel text-success';
+    if (mimeType === 'text/plain') return 'fas fa-file-alt text-muted';
+    return 'fas fa-file text-muted';
+}
+
+function formatInfoFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function getStatusBadgeClass(status) {
+    switch (status) {
+        case 'compressing': return 'warning';
+        case 'compressed': return 'success';
+        case 'error': return 'danger';
+        case 'ready': return 'success';
+        default: return 'secondary';
+    }
+}
+
+function getStatusText(status) {
+    switch (status) {
+        case 'compressing': return 'Compressing...';
+        case 'compressed': return 'Ready';
+        case 'error': return 'Error';
+        case 'ready': return 'Ready';
+        default: return 'Pending';
+    }
+}
+
+function removeInfoFile(fileName) {
+    // Remove from selected files
+    window.infoSelectedFiles = window.infoSelectedFiles.filter(file => file.name !== fileName);
+    
+    // Remove from compressed files
+    window.infoCompressedFiles = window.infoCompressedFiles.filter(file => file.name !== fileName);
+    
+    // Remove preview
+    const previewElement = document.querySelector(`[data-file-name="${fileName}"]`);
+    if (previewElement) {
+        previewElement.remove();
+    }
+    
+    // Update upload section availability
+    updateUploadSectionAvailability();
+}
+
+function compressFileAsyncInfo(file) {
+    return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('action', 'compress');
+        formData.append('csrf_token', '<?= $csrf_token ?>');
+        
+        fetch('<?= Config::getAppUrl() ?>/api/compress-file', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.compressed_data) {
+                try {
+                    // Convert base64 back to file
+                    const binaryString = atob(data.compressed_data);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                
+                    // Create a new File object from the compressed data
+                    const compressedFile = new File([bytes], file.name, {
+                        type: file.type,
+                        lastModified: Date.now()
+                    });
+                    resolve(compressedFile);
+                } catch (error) {
+                    reject(new Error('Failed to decode compressed data: ' + error.message));
+                }
+            } else {
+                reject(new Error(data.message || 'Compression failed'));
+            }
+        })
+        .catch(error => {
+            reject(error);
+        });
+    });
+}
+
+function submitAdditionalInfoWithFiles(data) {
+    const formData = new FormData();
+    formData.append('csrf_token', '<?= $csrf_token ?>');
+    formData.append('additional_info', data.additionalInfo);
+    
+    // Add compressed files
+    data.files.forEach((file, index) => {
+        formData.append(`supporting_files[]`, file);
+    });
+    
+    // Add removed existing files IDs
+    if (window.removedExistingFiles.length > 0) {
+        formData.append('removed_files', JSON.stringify(window.removedExistingFiles));
+    }
+    
+    fetch('<?= Config::getAppUrl() ?>/customer/tickets/<?= $ticket['complaint_id'] ?>/provide-info', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(responseData => {
+        if (responseData.success) {
+            window.SAMPARK.ui.showSuccess('Information Submitted', responseData.message);
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            window.SAMPARK.ui.showError('Submission Failed', responseData.message);
+        }
+    })
+    .catch(error => {
+        window.SAMPARK.ui.showError('Error', 'Failed to submit information. Please try again.');
     });
 }
 
@@ -935,6 +1573,38 @@ function getStatusIcon($status) {
     }
     50% { 
         box-shadow: 0 0 0 8px rgba(255, 193, 7, 0); 
+    }
+}
+
+/* Revert Message Alert Styling */
+.revert-message-alert {
+    border: 2px solid #ffc107 !important;
+    box-shadow: 0 0 20px rgba(255, 193, 7, 0.3);
+    animation: revertHighlight 4s ease-in-out;
+}
+
+.revert-message-alert .card-header {
+    background: linear-gradient(135deg, #ffc107, #e0a800) !important;
+    color: #212529 !important;
+    font-weight: 600;
+}
+
+@keyframes revertHighlight {
+    0%, 100% { 
+        box-shadow: 0 0 20px rgba(255, 193, 7, 0.3);
+        transform: scale(1);
+    }
+    25% { 
+        box-shadow: 0 0 30px rgba(255, 193, 7, 0.5);
+        transform: scale(1.008);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(255, 193, 7, 0.4);
+        transform: scale(1.005);
+    }
+    75% { 
+        box-shadow: 0 0 30px rgba(255, 193, 7, 0.5);
+        transform: scale(1.008);
     }
 }
 </style>

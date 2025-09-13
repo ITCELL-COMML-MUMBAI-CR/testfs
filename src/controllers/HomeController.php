@@ -109,7 +109,7 @@ class HomeController extends BaseController {
             ],
             [
                 'question' => 'Can I upload files with my support ticket?',
-                'answer' => 'Yes, you can upload up to 3 files (max 2MB each) in formats: JPG, PNG, PDF, DOC, DOCX to support your complaint.'
+                'answer' => 'Yes, you can upload up to 3 files (max 5MB each) in formats: JPG, PNG, PDF, DOC, DOCX to support your complaint.'
             ],
             [
                 'question' => 'How can I track the status of my ticket?',

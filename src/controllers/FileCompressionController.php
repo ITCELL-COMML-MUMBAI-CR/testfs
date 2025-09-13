@@ -26,42 +26,48 @@ class FileCompressionController extends BaseController {
         }
         
         $file = $_FILES['file'];
-        $maxSizeKB = 2048; // 2MB limit (2048 KB)
+        $maxSizeKB = 5120; // 5MB limit (5120 KB)
         
-        // Validate file type
-        $allowedTypes = [
-            'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp',
-            'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        ];
-        
-        if (!in_array($file['type'], $allowedTypes)) {
+        // Validate file type using FileCompressor's supported types
+        if (!FileCompressor::isTypeSupported($file['type'])) {
             $this->json([
                 'success' => false,
-                'message' => 'File type not supported'
+                'message' => 'File type not supported: ' . $file['type']
             ], 400);
             return;
         }
         
-        // Validate file size (max 20MB before compression)
-        if ($file['size'] > 20 * 1024 * 1024) {
+        // Validate file size (max 50MB before compression)
+        if ($file['size'] > 50 * 1024 * 1024) {
             $this->json([
                 'success' => false,
-                'message' => 'File too large (max 20MB before compression)'
+                'message' => 'File too large (max 50MB before compression)'
             ], 400);
             return;
         }
         
         try {
-            // Compress the file
-            $compressedPath = compressFile($file['tmp_name'], $maxSizeKB);
+            // Compress the file using the new FileCompressor class
+            $compressedPath = FileCompressor::compressFile($file['tmp_name'], $maxSizeKB);
             
             if (!$compressedPath) {
-                $this->json([
-                    'success' => false,
-                    'message' => 'File compression failed'
-                ], 500);
-                return;
+                // For very large images that can't be compressed to 5MB, try with higher fallback sizes
+                $fallbackSizes = [6144, 7168, 8192, 10240]; // 6MB, 7MB, 8MB, 10MB fallbacks
+                foreach ($fallbackSizes as $fallbackSize) {
+                    $compressedPath = FileCompressor::compressFile($file['tmp_name'], $fallbackSize);
+                    if ($compressedPath) {
+                        error_log("File compressed to {$fallbackSize}KB instead of {$maxSizeKB}KB");
+                        break;
+                    }
+                }
+                
+                if (!$compressedPath) {
+                    $this->json([
+                        'success' => false,
+                        'message' => 'File cannot be compressed to acceptable size. Please try a smaller image or different format.'
+                    ], 422);
+                    return;
+                }
             }
             
             // Read the compressed file
@@ -75,17 +81,27 @@ class FileCompressionController extends BaseController {
                 return;
             }
             
-            // Clean up temporary file
-            unlink($compressedPath);
+            // Calculate compression statistics
+            $originalSize = $file['size'];
+            $compressedSize = strlen($compressedData);
+            $compressionRatio = FileCompressor::getCompressionRatio($originalSize, $compressedSize);
+            
+            // Clean up temporary file if it's not the original
+            if ($compressedPath !== $file['tmp_name']) {
+                @unlink($compressedPath);
+            }
             
             // Return compressed file data
             $this->json([
                 'success' => true,
                 'message' => 'File compressed successfully',
-                'compressed_data' => base64_encode($compressedData),
-                'originalSize' => $file['size'],
-                'compressedSize' => strlen($compressedData),
-                'compressionRatio' => round((1 - strlen($compressedData) / $file['size']) * 100, 2)
+                'compressedData' => base64_encode($compressedData), // Keep consistent with frontend
+                'compressed_data' => base64_encode($compressedData), // Backward compatibility
+                'originalSize' => $originalSize,
+                'compressedSize' => $compressedSize,
+                'compressionRatio' => $compressionRatio,
+                'originalSizeFormatted' => FileCompressor::formatFileSize($originalSize),
+                'compressedSizeFormatted' => FileCompressor::formatFileSize($compressedSize)
             ]);
             
         } catch (Exception $e) {

@@ -205,7 +205,7 @@ ob_start();
                                         </button>
                                         <p class="mb-2 text-muted">or drag and drop files here</p>
                                         <small class="text-muted">
-                                            Maximum 3 files, 2MB each (auto-compressed)<br>
+                                            Maximum 3 files, Max 5MB each (auto-compressed)<br>
                                             Supported: Images (JPG, PNG, GIF, WebP, BMP), Documents (PDF, DOC, DOCX, TXT, XLS, XLSX)
                                         </small>
                                     </div>
@@ -510,7 +510,7 @@ function handleFileSelection(files) {
 }
 
 function validateFile(file) {
-    const maxSize = 20 * 1024 * 1024; // 20MB (will be compressed to 2MB)
+    const maxSize = 50 * 1024 * 1024; // 50MB (will be compressed to 5MB)
     const allowedTypes = [
         'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp',
         'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -611,19 +611,23 @@ function compressFileAsync(file) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Convert base64 data back to binary
-                const binaryString = atob(data.compressedData);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
+                try {
+                    // Convert base64 data back to binary
+                    const binaryString = atob(data.compressedData);
+                    const bytes = new Uint8Array(binaryString.length);
+                    for (let i = 0; i < binaryString.length; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    
+                    // Create a new File object from the compressed data
+                    const compressedFile = new File([bytes], file.name, {
+                        type: file.type,
+                        lastModified: Date.now()
+                    });
+                    resolve(compressedFile);
+                } catch (error) {
+                    reject(new Error('Failed to decode compressed data: ' + error.message));
                 }
-                
-                // Create a new File object from the compressed data
-                const compressedFile = new File([bytes], file.name, {
-                    type: file.type,
-                    lastModified: Date.now()
-                });
-                resolve(compressedFile);
             } else {
                 reject(new Error(data.message || 'Compression failed'));
             }

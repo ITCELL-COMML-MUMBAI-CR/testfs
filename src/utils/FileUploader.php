@@ -165,7 +165,7 @@ class FileUploader {
         if (strpos($mimeType, 'image/') === 0) {
             // Use FileCompressor to compress the image
             require_once __DIR__ . '/FileCompressor.php';
-            $compressedPath = compressFile($tempPath, 2048); // 2MB limit
+            $compressedPath = compressFile($tempPath, 5120); // 5MB limit
             
             if ($compressedPath && file_exists($compressedPath)) {
                 // Move compressed file to final location
@@ -207,7 +207,7 @@ class FileUploader {
         $errors = [];
         
         // Check file size - allow larger files since compression is handled by FileCompressor.php
-        $maxAllowedSize = 20 * 1024 * 1024; // 20MB (will be compressed to 2MB by FileCompressor)
+        $maxAllowedSize = 50 * 1024 * 1024; // 50MB (will be compressed to 5MB by FileCompressor)
         if ($file['size'] > $maxAllowedSize) {
             $errors[] = 'File size exceeds ' . ($maxAllowedSize / 1024 / 1024) . 'MB limit';
         }

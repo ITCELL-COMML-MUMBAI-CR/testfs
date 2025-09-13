@@ -267,14 +267,14 @@ class CustomerController extends BaseController {
             $currentTime = date('H:i:s');
             
             // Find controller_nodal in Commercial department for this division (per requirements)
-            $controllerNodal = $this->findControllerNodalForDivision($shedInfo['division'], 'Commercial');
+            $controllerNodal = $this->findControllerNodalForDivision($shedInfo['division'], 'CML');
             
             // Insert complaint - MUST route to controller_nodal as per requirements
             $sql = "INSERT INTO complaints (
                 complaint_id, category_id, date, time, shed_id, wagon_id,
                 description, customer_id, fnr_number, e_indent_number,
-                division, zone, status, priority, assigned_to_department, assigned_to_user_id, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'normal', 'Commercial', ?, NOW())";
+                division, zone, status, priority, assigned_to_department, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'normal', 'CML', NOW())";
             
             $params = [
                 $complaintId,
@@ -289,7 +289,6 @@ class CustomerController extends BaseController {
                 $_POST['e_indent_number'] ?? null,
                 $shedInfo['division'],
                 $shedInfo['zone'],
-                $controllerNodal
             ];
             
             $this->db->query($sql, $params);
@@ -726,7 +725,7 @@ class CustomerController extends BaseController {
     /**
      * Find controller_nodal for initial ticket assignment (per requirements)
      */
-    private function findControllerNodalForDivision($division, $department = 'Commercial') {
+    private function findControllerNodalForDivision($division, $department = 'CML') {
         // Per requirements: All tickets must initially flow through controller_nodal (Commercial Department)
         $sql = "SELECT id FROM users 
                 WHERE role = 'controller_nodal' 

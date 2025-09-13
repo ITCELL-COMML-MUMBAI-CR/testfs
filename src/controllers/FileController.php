@@ -536,9 +536,9 @@ class FileController extends BaseController {
             return ['success' => false, 'message' => 'Upload error: ' . $file['error']];
         }
         
-        // Check file size (max 2MB)
-        if ($file['size'] > 2 * 1024 * 1024) {
-            return ['success' => false, 'message' => 'File too large. Maximum size is 2MB.'];
+        // Check file size (max 5MB)
+        if ($file['size'] > 5 * 1024 * 1024) {
+            return ['success' => false, 'message' => 'File too large. Maximum size is 5MB.'];
         }
         
         // Check file type

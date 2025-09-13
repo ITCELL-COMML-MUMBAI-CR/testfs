@@ -170,7 +170,7 @@ o	Tank Wagon,
 o	Well Wagon
 •	Description: Text area (20-200 characters, with counter)
 •	File Upload: 
-o	Max 3 files, 2MB each
+o	Max 3 files, 5MB each
 o	Formats: JPG, JPEG, PNG, GIF, PDF, DOC, DOCX
 o	Drag-and-drop interface with preview
 o	Create an own model that will compress the file while submission.

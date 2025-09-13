@@ -280,11 +280,16 @@ class ControllerController extends BaseController {
             return;
         }
         
-        // Get ticket transactions
+        // Get ticket transactions - separate customer-facing from internal
         $transactionSql = "SELECT t.*, 
                                   u.name as user_name, u.role as user_role, u.department as user_department, 
                                   u.division as user_division, u.zone as user_zone,
-                                  cust.name as customer_name
+                                  cust.name as customer_name,
+                                  CASE 
+                                      WHEN t.remarks_type = 'customer_remarks' THEN 'customer_facing'
+                                      WHEN t.remarks_type = 'interim_remarks' AND t.transaction_type = 'interim_reply' THEN 'customer_facing'
+                                      ELSE 'internal_only'
+                                  END as visibility
                            FROM transactions t
                            LEFT JOIN users u ON t.created_by_id = u.id
                            LEFT JOIN customers cust ON t.created_by_customer_id = cust.customer_id
@@ -293,10 +298,12 @@ class ControllerController extends BaseController {
         
         $transactions = $this->db->fetchAll($transactionSql, [$ticketId]);
         
-        // Separate priority changes from regular transactions
+        // Separate priority changes from regular transactions and organize by visibility
         $regularTransactions = [];
         $priorityChanges = [];
+        $customerVisibleTransactions = [];
         $latestImportantRemark = null;
+        $latestInterimReply = null;
         
         foreach ($transactions as $transaction) {
             if ($transaction['remarks_type'] === 'priority_escalation') {
@@ -304,11 +311,22 @@ class ControllerController extends BaseController {
             } else {
                 $regularTransactions[] = $transaction;
                 
+                // Separate customer-facing transactions
+                if ($transaction['visibility'] === 'customer_facing') {
+                    $customerVisibleTransactions[] = $transaction;
+                    
+                    // Track latest interim reply for prominent display
+                    if ($transaction['transaction_type'] === 'interim_reply' && !$latestInterimReply) {
+                        $latestInterimReply = $transaction;
+                    }
+                }
+                
                 // Track latest important remark (excluding system and priority escalation)
                 if (!$latestImportantRemark && !in_array($transaction['remarks_type'], ['priority_escalation', 'system'])) {
                     // Prioritize certain remark types for display
-                    $importantTypes = ['admin_remarks', 'forwarding_remarks', 'interim_remarks', 'internal_remarks'];
-                    if (in_array($transaction['remarks_type'], $importantTypes) && !empty(trim($transaction['remarks']))) {
+                    $importantTypes = ['admin_remarks', 'forwarding_remarks', 'interim_remarks', 'internal_remarks', 'customer_remarks'];
+                    $remarksText = !empty($transaction['remarks']) ? $transaction['remarks'] : $transaction['internal_remarks'];
+                    if (in_array($transaction['remarks_type'], $importantTypes) && !empty(trim($remarksText))) {
                         $latestImportantRemark = $transaction;
                     }
                 }
@@ -319,7 +337,8 @@ class ControllerController extends BaseController {
         if (!$latestImportantRemark && !empty($regularTransactions)) {
             $reversed = array_reverse($regularTransactions);
             foreach ($reversed as $transaction) {
-                if (!empty(trim($transaction['remarks'])) && $transaction['remarks_type'] !== 'system') {
+                $remarksText = !empty($transaction['remarks']) ? $transaction['remarks'] : $transaction['internal_remarks'];
+                if (!empty(trim($remarksText)) && $transaction['remarks_type'] !== 'system') {
                     $latestImportantRemark = $transaction;
                     break;
                 }
@@ -384,7 +403,9 @@ class ControllerController extends BaseController {
             'ticket' => $ticket,
             'transactions' => $regularTransactions,
             'priority_changes' => $priorityChanges,
+            'customer_visible_transactions' => $customerVisibleTransactions,
             'latest_important_remark' => $latestImportantRemark,
+            'latest_interim_reply' => $latestInterimReply,
             'evidence' => $evidence,
             'available_users' => $availableUsers,
             'is_viewing_other_dept' => $isAssignedToOtherDept,
@@ -417,7 +438,7 @@ class ControllerController extends BaseController {
         // Set up validation rules based on user role
         $validationRules = [
             'department' => 'required',
-            'remarks' => 'required|min:10|max:1000'
+            'internal_remarks' => 'required|min:10|max:1000'
         ];
         
         // Nodal controllers need zone and division
@@ -550,10 +571,10 @@ class ControllerController extends BaseController {
             }
             
             // Create transaction record
-            $this->createTransaction($ticketId, 'forwarded', $_POST['remarks'], $user['id'], null, 'forwarding_remarks');
+            $this->createTransaction($ticketId, 'forwarded', $_POST['internal_remarks'], $user['id'], null, 'forwarding_remarks');
             
             // Send notifications to target department
-            $this->sendForwardNotifications($ticketId, $ticket, $user, $targetDivision, $_POST['remarks']);
+            $this->sendForwardNotifications($ticketId, $ticket, $user, $targetDivision, $_POST['internal_remarks']);
             
             $this->db->commit();
             
@@ -583,11 +604,10 @@ class ControllerController extends BaseController {
         
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
-            'reply' => 'required|min:20|max:2000',
-            'action_taken' => 'max:1000',
+            'action_taken' => 'required|min:20|max:2000',
+            'internal_remarks' => 'max:1000',
             'needs_approval' => 'boolean',
-            'is_interim_reply' => 'boolean',
-            'officer_remarks' => 'max:1000'
+            'is_interim_reply' => 'boolean'
         ]);
         
         if (!$isValid) {
@@ -628,42 +648,67 @@ class ControllerController extends BaseController {
             }
             
             $isInterimReply = isset($_POST['is_interim_reply']) && $_POST['is_interim_reply'];
-            $officerRemarks = isset($_POST['officer_remarks']) ? trim($_POST['officer_remarks']) : '';
+            $internalRemarks = isset($_POST['internal_remarks']) ? trim($_POST['internal_remarks']) : '';
             
             // Determine status based on reply type
             if ($isInterimReply) {
                 // Interim replies don't change status - just acknowledge receipt
                 $newStatus = $ticket['status']; // Keep current status
             } else {
-                $needsApproval = isset($_POST['needs_approval']) && $_POST['needs_approval'] && $user['role'] === 'controller';
-                $newStatus = $needsApproval ? 'awaiting_approval' : 'awaiting_feedback';
+                // All tickets need controller_nodal approval - no exceptions
+                $newStatus = 'awaiting_approval';
             }
             
             // Update ticket only if it's a final reply (not interim)
             if (!$isInterimReply && !empty($_POST['action_taken'])) {
-                $sql = "UPDATE complaints SET 
-                        action_taken = ?,
-                        status = ?,
-                        updated_at = NOW()
-                        WHERE complaint_id = ?";
+                // Check if this reply is closing the ticket (when status moves to awaiting_approval)
+                $isClosingTicket = ($newStatus === 'awaiting_approval');
                 
-                $this->db->query($sql, [
-                    trim($_POST['action_taken']),
-                    $newStatus,
-                    $ticketId
-                ]);
+                if ($isClosingTicket) {
+                    // When closing ticket: set department, reset forwarded_flag, set closed_at
+                    $sql = "UPDATE complaints SET 
+                            action_taken = ?,
+                            status = ?,
+                            department = ?,
+                            forwarded_flag = 0,
+                            closed_at = NOW(),
+                            updated_at = NOW()
+                            WHERE complaint_id = ?";
+                    
+                    $this->db->query($sql, [
+                        trim($_POST['action_taken']),
+                        $newStatus,
+                        $user['department'],
+                        $ticketId
+                    ]);
+                } else {
+                    // Regular reply update
+                    $sql = "UPDATE complaints SET 
+                            action_taken = ?,
+                            status = ?,
+                            updated_at = NOW()
+                            WHERE complaint_id = ?";
+                    
+                    $this->db->query($sql, [
+                        trim($_POST['action_taken']),
+                        $newStatus,
+                        $ticketId
+                    ]);
+                }
             }
             
-            // Create transaction record based on reply type
+            // Create transaction records - separate for action_taken and internal_remarks
             $transactionType = $isInterimReply ? 'interim_reply' : 'replied';
-            $transactionRemarks = $_POST['reply'];
             
-            // Add officer remarks if provided
-            if (!empty($officerRemarks)) {
-                $transactionRemarks .= "\n\nOfficer Remarks: " . $officerRemarks;
+            // Action taken goes to customer (customer-facing)
+            if (!empty($_POST['action_taken'])) {
+                $this->createTransaction($ticketId, $transactionType, $_POST['action_taken'], $user['id'], null, 'customer_remarks');
             }
             
-            $this->createTransaction($ticketId, $transactionType, $transactionRemarks, $user['id']);
+            // Internal remarks are internal only
+            if (!empty($internalRemarks)) {
+                $this->createTransaction($ticketId, $transactionType, $internalRemarks, $user['id'], null, 'internal_remarks');
+            }
             
             // Handle file uploads if any
             if (!empty($_FILES['attachments']['name'][0])) {
@@ -671,7 +716,7 @@ class ControllerController extends BaseController {
             }
             
             // Send notifications
-            $this->sendReplyNotifications($ticketId, $ticket, $user, $_POST['reply'], $newStatus);
+            $this->sendReplyNotifications($ticketId, $ticket, $user, $_POST['action_taken'], $newStatus);
             
             $this->db->commit();
             
@@ -738,17 +783,17 @@ class ControllerController extends BaseController {
                 return;
             }
             
-            // Update ticket status
+            // Update ticket status to closed after approval
             $sql = "UPDATE complaints SET 
-                    status = 'awaiting_feedback',
+                    status = 'closed',
                     updated_at = NOW()
                     WHERE complaint_id = ?";
             
             $this->db->query($sql, [$ticketId]);
             
-            // Stop escalation for tickets awaiting feedback
+            // Stop escalation for closed tickets
             $priorityService = new BackgroundPriorityService();
-            $priorityService->stopEscalationForStatus($ticketId, 'awaiting_feedback');
+            $priorityService->stopEscalationForStatus($ticketId, 'closed');
             
             // Create transaction record
             $remarks = 'Reply approved' . (trim($_POST['approval_remarks']) ? ': ' . trim($_POST['approval_remarks']) : '');
@@ -761,7 +806,7 @@ class ControllerController extends BaseController {
             
             $this->json([
                 'success' => true,
-                'message' => 'Reply approved and sent to customer'
+                'message' => 'Reply approved and ticket closed'
             ]);
             
         } catch (Exception $e) {
@@ -787,7 +832,7 @@ class ControllerController extends BaseController {
         
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
-            'rejection_reason' => 'required|min:10|max:500'
+            'internal_remarks' => 'required|min:10|max:500'
         ]);
         
         if (!$isValid) {
@@ -827,10 +872,10 @@ class ControllerController extends BaseController {
             $this->db->query($sql, [$ticketId]);
             
             // Create transaction record
-            $this->createTransaction($ticketId, 'rejected', 'Reply rejected: ' . trim($_POST['rejection_reason']), $user['id']);
+            $this->createTransaction($ticketId, 'rejected', trim($_POST['internal_remarks']), $user['id'], null, 'internal_remarks');
             
             // Send notifications
-            $this->sendApprovalNotifications($ticketId, $ticket, $user, 'rejected', $_POST['rejection_reason']);
+            $this->sendApprovalNotifications($ticketId, $ticket, $user, 'rejected', $_POST['internal_remarks']);
             
             $this->db->commit();
             
@@ -862,7 +907,7 @@ class ControllerController extends BaseController {
         
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
-            'revert_reason' => 'required|min:10|max:500'
+            'internal_remarks' => 'required|min:10|max:500'
         ]);
         
         if (!$isValid) {
@@ -903,10 +948,10 @@ class ControllerController extends BaseController {
             $this->db->query($sql, [$ticketId]);
             
             // Create transaction record
-            $this->createTransaction($ticketId, 'reverted', 'Ticket reverted: ' . trim($_POST['revert_reason']), $user['id']);
+            $this->createTransaction($ticketId, 'reverted', trim($_POST['internal_remarks']), $user['id'], null, 'internal_remarks');
             
             // Send notifications
-            $this->sendRevertNotifications($ticketId, $ticket, $user, $_POST['revert_reason']);
+            $this->sendRevertNotifications($ticketId, $ticket, $user, $_POST['internal_remarks']);
             
             $this->db->commit();
             
@@ -993,8 +1038,8 @@ class ControllerController extends BaseController {
             $priorityService->stopEscalationForStatus($ticketId, 'awaiting_info');
             
             // Create transaction record
-            $remarks = 'Additional information requested from customer: ' . trim($_POST['info_request']);
-            $this->createTransaction($ticketId, 'info_requested', $remarks, $user['id'], null, 'admin_remarks');
+            $remarks = 'Additional information requested: ' . trim($_POST['info_request']);
+            $this->createTransaction($ticketId, 'info_requested', $remarks, $user['id'], null, 'customer_remarks');
             
             // Send notification to customer
             $this->sendInfoRequestNotifications($ticketId, $ticket, $user, $_POST['info_request']);
@@ -1013,6 +1058,95 @@ class ControllerController extends BaseController {
             $this->json([
                 'success' => false,
                 'message' => 'Failed to send information request. Please try again.'
+            ], 500);
+        }
+    }
+    
+    public function closeTicket($ticketId) {
+        $this->validateCSRF();
+        $user = $this->getCurrentUser();
+        
+        $validator = new Validator();
+        $isValid = $validator->validate($_POST, [
+            'action_taken' => 'required|min:20|max:2000',
+            'internal_remarks' => 'max:1000'
+        ]);
+        
+        if (!$isValid) {
+            $this->json([
+                'success' => false,
+                'errors' => $validator->getErrors()
+            ], 400);
+            return;
+        }
+        
+        try {
+            $this->db->beginTransaction();
+            
+            // Verify ticket access
+            if ($user['role'] === 'controller') {
+                $accessCondition = "division = ? AND assigned_to_department = ?";
+                $accessParams = [$ticketId, $user['division'], $user['department']];
+            } else {
+                $accessCondition = "division = ?";
+                $accessParams = [$ticketId, $user['division']];
+            }
+            
+            $ticket = $this->db->fetch(
+                "SELECT * FROM complaints WHERE complaint_id = ? AND {$accessCondition} AND status IN ('pending', 'awaiting_info', 'awaiting_approval')",
+                $accessParams
+            );
+            
+            if (!$ticket) {
+                $this->json(['success' => false, 'message' => 'Invalid ticket or cannot close'], 400);
+                return;
+            }
+            
+            // Update ticket with action taken, set status to closed, set closing department, and reset forwarding flag
+            $sql = "UPDATE complaints SET 
+                    action_taken = ?,
+                    status = 'closed',
+                    department = ?,
+                    forwarded_flag = 0,
+                    closed_at = NOW(),
+                    updated_at = NOW()
+                    WHERE complaint_id = ?";
+            
+            $this->db->query($sql, [
+                trim($_POST['action_taken']),
+                $user['department'],
+                $ticketId
+            ]);
+            
+            // Create transaction records - separate for action_taken and internal_remarks
+            // Action taken goes to customer (customer-facing)
+            $this->createTransaction($ticketId, 'closed', $_POST['action_taken'], $user['id'], null, 'customer_remarks');
+            
+            // Internal remarks are internal only
+            if (!empty($_POST['internal_remarks'])) {
+                $this->createTransaction($ticketId, 'closed', $_POST['internal_remarks'], $user['id'], null, 'internal_remarks');
+            }
+            
+            // Create transaction for nodal approval workflow
+            $this->createTransaction($ticketId, 'awaiting_nodal_approval', 'Ticket closed and sent to Controller Nodal for approval', $user['id'], null, 'internal_remarks');
+            
+            // Send notifications
+            $this->sendCloseNotifications($ticketId, $ticket, $user, $_POST['action_taken']);
+            
+            $this->db->commit();
+            
+            $this->json([
+                'success' => true,
+                'message' => 'Ticket closed successfully and forwarded to Controller Nodal for approval'
+            ]);
+            
+        } catch (Exception $e) {
+            $this->db->rollback();
+            error_log("Close ticket error: " . $e->getMessage());
+            
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to close ticket. Please try again.'
             ], 500);
         }
     }
@@ -1674,16 +1808,27 @@ class ControllerController extends BaseController {
     
     private function createTransaction($complaintId, $type, $remarks, $fromUserId, $toUserId = null, $remarksType = 'internal_remarks') {
         $sql = "INSERT INTO transactions (
-            complaint_id, transaction_type, remarks, remarks_type,
+            complaint_id, transaction_type, remarks, internal_remarks, remarks_type,
             from_user_id, to_user_id, 
             created_by_id, created_by_type, created_by_role, 
             created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'user', ?, NOW())";
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'user', ?, NOW())";
+        
+        // Determine if this goes into remarks or internal_remarks column
+        $remarksField = null;
+        $internalRemarksField = null;
+        
+        if ($remarksType === 'customer_remarks') {
+            $remarksField = $remarks; // Customer-facing content
+        } else {
+            $internalRemarksField = $remarks; // Internal content
+        }
         
         $this->db->query($sql, [
             $complaintId,
             $type,
-            $remarks,
+            $remarksField,
+            $internalRemarksField,
             $remarksType,
             $fromUserId,
             $toUserId,
@@ -1897,6 +2042,57 @@ class ControllerController extends BaseController {
             ]];
             
             $notificationService->send('info_requested', $recipients, $data);
+        }
+    }
+    
+    private function sendCloseNotifications($ticketId, $ticket, $user, $actionTaken) {
+        $notificationService = new NotificationService();
+        
+        // Get customer info
+        $customer = $this->db->fetch(
+            "SELECT customer_id, name, email, mobile FROM customers WHERE customer_id = ?",
+            [$ticket['customer_id']]
+        );
+        
+        if ($customer) {
+            $data = [
+                'complaint_id' => $ticketId,
+                'customer_name' => $customer['name'],
+                'closed_by' => $user['name'],
+                'action_taken' => $actionTaken
+            ];
+            
+            $recipients = [[
+                'customer_id' => $customer['customer_id'],
+                'email' => $customer['email'],
+                'mobile' => $customer['mobile'],
+                'complaint_id' => $ticketId
+            ]];
+            
+            $notificationService->send('ticket_closed', $recipients, $data);
+        }
+        
+        // Notify controller_nodal for approval
+        $nodalController = $this->db->fetch(
+            "SELECT id, name, email, mobile FROM users WHERE role = 'controller_nodal' AND division = ? AND status = 'active' LIMIT 1",
+            [$user['division']]
+        );
+        
+        if ($nodalController) {
+            $data = [
+                'complaint_id' => $ticketId,
+                'closed_by' => $user['name'],
+                'department' => $user['department']
+            ];
+            
+            $recipients = [[
+                'user_id' => $nodalController['id'],
+                'email' => $nodalController['email'],
+                'mobile' => $nodalController['mobile'],
+                'complaint_id' => $ticketId
+            ]];
+            
+            $notificationService->send('closed_ticket_approval_needed', $recipients, $data);
         }
     }
     

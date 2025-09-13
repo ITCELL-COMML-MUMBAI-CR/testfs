@@ -655,16 +655,16 @@ $page_title = 'Ticket Details - SAMPARK';
             <form id="replyForm">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label-apple">Reply Message *</label>
-                        <textarea class="form-control-apple" name="reply" rows="6" required 
-                                  placeholder="Enter your detailed reply to the customer..."></textarea>
+                        <label class="form-label-apple">Action Taken *</label>
+                        <textarea class="form-control-apple" name="action_taken" rows="6" required 
+                                  placeholder="Enter the action taken - this will be sent to the customer..."></textarea>
                         <div class="form-text">This message will be sent to the customer.</div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label-apple">Action Taken *</label>
-                        <textarea class="form-control-apple" name="action_taken" rows="4" required 
-                                  placeholder="Describe the specific actions taken to resolve this issue..."></textarea>
-                        <div class="form-text">Internal record of actions taken.</div>
+                        <label class="form-label-apple">Internal Remarks</label>
+                        <textarea class="form-control-apple" name="internal_remarks" rows="4" 
+                                  placeholder="Add internal remarks (not visible to customer)..."></textarea>
+                        <div class="form-text">Internal record - not sent to customer.</div>
                     </div>
                     <?php if ($user['role'] === 'controller'): ?>
                     <div class="mb-3">
@@ -739,9 +739,9 @@ $page_title = 'Ticket Details - SAMPARK';
                     <?php endif; ?>
                     <!-- Priority will be auto-reset by system -->
                     <div class="mb-3">
-                        <label class="form-label-apple">Forwarding Remarks *</label>
-                        <textarea class="form-control-apple" name="remarks" rows="4" required 
-                                  placeholder="Add remarks for forwarding this ticket..."></textarea>
+                        <label class="form-label-apple">Internal Remarks *</label>
+                        <textarea class="form-control-apple" name="internal_remarks" rows="4" required 
+                                  placeholder="Add internal remarks for forwarding this ticket..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -768,8 +768,8 @@ $page_title = 'Ticket Details - SAMPARK';
             <form id="rejectForm">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label-apple">Rejection Reason *</label>
-                        <textarea class="form-control-apple" name="rejection_reason" rows="4" required 
+                        <label class="form-label-apple">Internal Remarks *</label>
+                        <textarea class="form-control-apple" name="internal_remarks" rows="4" required 
                                   placeholder="Explain why this reply is being rejected..."></textarea>
                     </div>
                 </div>

@@ -31,7 +31,7 @@ class Config {
     const SMS_SENDER_ID = 'SAMPARK';
     
     // File Upload Configuration
-    const MAX_FILE_SIZE = 2097152; // 2MB in bytes (final compressed size)
+    const MAX_FILE_SIZE = 5242880; // 5MB in bytes (final compressed size)
     const MAX_FILES_PER_TICKET = 3;
     const ALLOWED_FILE_TYPES = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx'];
     const UPLOAD_PATH = '/uploads/evidence/';
