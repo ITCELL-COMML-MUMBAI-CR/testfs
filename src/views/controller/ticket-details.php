@@ -560,12 +560,17 @@ $page_title = 'Ticket Details - SAMPARK';
                     <div class="action-section">
                         <h6 class="text-muted mb-3"><i class="fas fa-check-double me-2"></i>Approval Actions</h6>
                         <div class="row g-2">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <button class="btn btn-success w-100 action-btn-approval" onclick="approveReply()">
                                     <i class="fas fa-check me-2"></i>Approve Reply
                                 </button>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <button class="btn btn-primary w-100 action-btn-approval" onclick="editAndApproveReply()">
+                                    <i class="fas fa-edit me-2"></i>Edit & Approve
+                                </button>
+                            </div>
+                            <div class="col-md-4">
                                 <button class="btn btn-danger w-100 action-btn-approval" onclick="showRejectModal()">
                                     <i class="fas fa-times me-2"></i>Reject Reply
                                 </button>
@@ -636,10 +641,7 @@ $page_title = 'Ticket Details - SAMPARK';
                     <div class="mb-3">
                         <strong>Assigned To:</strong>
                         <div>
-                            <?= htmlspecialchars($ticket['assigned_user_name'] ?? 'Unassigned') ?>
-                            <?php if (isset($ticket['assigned_user_role']) && $ticket['assigned_user_role']): ?>
-                            <small class="text-muted d-block"><?= ucfirst($ticket['assigned_user_role']) ?></small>
-                            <?php endif; ?>
+                            <?= htmlspecialchars($ticket['assigned_to_department'] ?? 'Unassigned') ?>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -707,22 +709,6 @@ $page_title = 'Ticket Details - SAMPARK';
                         <textarea class="form-control-apple" name="internal_remarks" rows="4" 
                                   placeholder="Add internal remarks (not visible to customer)..."></textarea>
                         <div class="form-text">Internal record - not sent to customer.</div>
-                    </div>
-                    <?php if ($user['role'] === 'controller'): ?>
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="needs_approval" id="needsApproval">
-                            <label class="form-check-label" for="needsApproval">
-                                This reply requires nodal controller approval
-                            </label>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-                    <div class="mb-3">
-                        <label class="form-label-apple">Attach Files (Optional)</label>
-                        <input type="file" class="form-control-apple" name="attachments[]" multiple 
-                               accept=".jpg,.jpeg,.png,.pdf,.doc,.docx">
-                        <div class="form-text">Maximum 5 files, 10MB each. Supported: JPG, PNG, PDF, DOC, DOCX</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1148,7 +1134,11 @@ function approveReply() {
                 
                 if (apiResult.success) {
                     Swal.fire('Success', apiResult.message, 'success').then(() => {
-                        location.reload();
+                        if (apiResult.redirect) {
+                            window.location.href = apiResult.redirect;
+                        } else {
+                            location.reload();
+                        }
                     });
                 } else {
                     Swal.fire('Error', apiResult.message, 'error');
@@ -1156,6 +1146,80 @@ function approveReply() {
             } catch (error) {
                 hideLoading();
                 Swal.fire('Error', 'Failed to approve reply', 'error');
+            }
+        }
+    });
+}
+
+function editAndApproveReply() {
+    Swal.fire({
+        title: 'Edit and Approve Reply',
+        html: `
+            <div style="text-align: left;">
+                <label for="edit-action-taken" style="font-weight: bold; display: block; margin-bottom: 8px;">Edit Action Taken:</label>
+                <textarea id="edit-action-taken" class="swal2-textarea" placeholder="Edit the action taken..." style="height: 150px; width: 100%; margin-bottom: 15px;"><?= htmlspecialchars($ticket['action_taken'] ?? '') ?></textarea>
+
+                <label for="edit-approval-remarks" style="font-weight: bold; display: block; margin-bottom: 8px;">Approval Remarks (Optional):</label>
+                <textarea id="edit-approval-remarks" class="swal2-textarea" placeholder="Add approval remarks..." style="height: 80px; width: 100%;"></textarea>
+            </div>
+        `,
+        width: '600px',
+        showCancelButton: true,
+        confirmButtonText: 'Approve with Edits',
+        cancelButtonText: 'Cancel',
+        focusConfirm: false,
+        preConfirm: () => {
+            const editedAction = document.getElementById('edit-action-taken').value;
+            const approvalRemarks = document.getElementById('edit-approval-remarks').value;
+
+            if (!editedAction.trim()) {
+                Swal.showValidationMessage('Action taken cannot be empty');
+                return false;
+            }
+
+            if (editedAction.length > 2000) {
+                Swal.showValidationMessage('Action taken cannot exceed 2000 characters');
+                return false;
+            }
+
+            return {
+                editedAction: editedAction.trim(),
+                approvalRemarks: approvalRemarks.trim()
+            };
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const { editedAction, approvalRemarks } = result.value;
+
+            const formData = new FormData();
+            formData.append('csrf_token', CSRF_TOKEN);
+            formData.append('edited_action_taken', editedAction);
+            formData.append('approval_remarks', approvalRemarks);
+
+            try {
+                showLoading();
+                const response = await fetch(`${APP_URL}/controller/tickets/${ticketId}/approve`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const apiResult = await response.json();
+                hideLoading();
+
+                if (apiResult.success) {
+                    Swal.fire('Success', apiResult.message, 'success').then(() => {
+                        if (apiResult.redirect) {
+                            window.location.href = apiResult.redirect;
+                        } else {
+                            location.reload();
+                        }
+                    });
+                } else {
+                    Swal.fire('Error', apiResult.message, 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                Swal.fire('Error', 'Failed to approve reply with edits', 'error');
             }
         }
     });
@@ -1234,7 +1298,11 @@ function revertTicket() {
                 
                 if (apiResult.success) {
                     Swal.fire('Success', apiResult.message, 'success').then(() => {
-                        location.reload();
+                        if (apiResult.redirect) {
+                            window.location.href = apiResult.redirect;
+                        } else {
+                            location.reload();
+                        }
                     });
                 } else {
                     Swal.fire('Error', apiResult.message, 'error');
@@ -1283,7 +1351,11 @@ function revertBackToCustomer() {
                 
                 if (apiResult.success) {
                     Swal.fire('Success', apiResult.message, 'success').then(() => {
-                        location.reload();
+                        if (apiResult.redirect) {
+                            window.location.href = apiResult.redirect;
+                        } else {
+                            location.reload();
+                        }
                     });
                 } else {
                     Swal.fire('Error', apiResult.message, 'error');

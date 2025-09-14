@@ -687,7 +687,7 @@ class ControllerController extends BaseController {
         
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
-            'action_taken' => 'required|min:20|max:2000',
+            'action_taken' => 'required|min:10|max:2000',
             'internal_remarks' => 'max:1000',
             'needs_approval' => 'boolean',
             'is_interim_reply' => 'boolean'
@@ -749,15 +749,17 @@ class ControllerController extends BaseController {
                 
                 if ($isClosingTicket) {
                     // When closing ticket: set department, reset forwarded_flag, set closed_at
-                    $sql = "UPDATE complaints SET 
+                    // Set assigned_to_department to controller_nodal for approval workflow
+                    $sql = "UPDATE complaints SET
                             action_taken = ?,
                             status = ?,
                             department = ?,
+                            assigned_to_department = 'CML',
                             forwarded_flag = 0,
                             closed_at = NOW(),
                             updated_at = NOW()
                             WHERE complaint_id = ?";
-                    
+
                     $this->db->query($sql, [
                         trim($_POST['action_taken']),
                         $newStatus,
@@ -835,7 +837,8 @@ class ControllerController extends BaseController {
         
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
-            'approval_remarks' => 'max:500'
+            'approval_remarks' => 'max:500',
+            'edited_action_taken' => 'max:2000'
         ]);
         
         if (!$isValid) {
@@ -860,27 +863,54 @@ class ControllerController extends BaseController {
                 return;
             }
             
-            // Controller_nodal cannot approve replies for tickets assigned to other departments
-            if ($ticket['assigned_to_department'] !== $user['department']) {
-                $this->json(['success' => false, 'message' => 'Cannot approve replies for tickets assigned to other departments'], 403);
+            // Controller_nodal can only approve tickets assigned to controller_nodal
+            if ($ticket['assigned_to_department'] !== 'CML') {
+                $this->json(['success' => false, 'message' => 'This ticket is not ready for approval'], 400);
                 return;
             }
-            
-            // Update ticket status to closed after approval
-            $sql = "UPDATE complaints SET 
-                    status = 'closed',
-                    updated_at = NOW()
-                    WHERE complaint_id = ?";
-            
-            $this->db->query($sql, [$ticketId]);
-            
-            // Stop escalation for closed tickets
+
+            // Handle edited action_taken if provided
+            $editedActionTaken = trim($_POST['edited_action_taken'] ?? '');
+            if (!empty($editedActionTaken) && $editedActionTaken !== $ticket['action_taken']) {
+                // Save original reply as transaction before updating
+                $this->createTransaction($ticketId, 'original_reply_archived', $ticket['action_taken'], $user['id'], null, 'internal_remarks');
+
+                // Update with edited reply
+                $sql = "UPDATE complaints SET
+                        action_taken = ?,
+                        status = 'awaiting_feedback',
+                        updated_at = NOW()
+                        WHERE complaint_id = ?";
+
+                $this->db->query($sql, [$editedActionTaken, $ticketId]);
+
+                // Create transaction for new action taken (customer-facing)
+                $this->createTransaction($ticketId, 'approved', $editedActionTaken, $user['id'], null, 'customer_remarks');
+
+                // Create audit transaction for the edit
+                $editAuditMessage = "Edited action taken: " . $editedActionTaken . " - Edited by: " . $user['name'] . ", " .$user['department'] ;
+                $this->createTransaction($ticketId, 'edit_audit', $editAuditMessage, $user['id'], null, 'internal_remarks');
+            } else {
+                // No edits, just update status
+                $sql = "UPDATE complaints SET
+                        status = 'awaiting_feedback',
+                        updated_at = NOW()
+                        WHERE complaint_id = ?";
+
+                $this->db->query($sql, [$ticketId]);
+
+                // Create transaction for regular approval (customer-facing)
+                $this->createTransaction($ticketId, 'approved', $ticket['action_taken'], $user['id'], null, 'customer_remarks');
+            }
+
+            // Stop escalation for tickets awaiting feedback
             $priorityService = new BackgroundPriorityService();
-            $priorityService->stopEscalationForStatus($ticketId, 'closed');
-            
-            // Create transaction record
-            $remarks = 'Reply approved' . (trim($_POST['approval_remarks']) ? ': ' . trim($_POST['approval_remarks']) : '');
-            $this->createTransaction($ticketId, 'approved', $remarks, $user['id']);
+            $priorityService->stopEscalationForStatus($ticketId, 'awaiting_feedback');
+
+            // Create approval remarks transaction if provided
+            if (!empty(trim($_POST['approval_remarks']))) {
+                $this->createTransaction($ticketId, 'approval_remarks', trim($_POST['approval_remarks']), $user['id'], null, 'internal_remarks');
+            }
             
             // Send notifications
             $this->sendApprovalNotifications($ticketId, $ticket, $user, 'approved');
@@ -889,7 +919,8 @@ class ControllerController extends BaseController {
             
             $this->json([
                 'success' => true,
-                'message' => 'Reply approved and ticket closed'
+                'message' => 'Reply approved and ticket sent for customer feedback',
+                'redirect' => Config::get('APP_URL') . '/controller/tickets'
             ]);
             
         } catch (Exception $e) {
@@ -940,18 +971,20 @@ class ControllerController extends BaseController {
                 return;
             }
             
-            // Controller_nodal cannot reject replies for tickets assigned to other departments
-            if ($ticket['assigned_to_department'] !== $user['department']) {
-                $this->json(['success' => false, 'message' => 'Cannot reject replies for tickets assigned to other departments'], 403);
+            // Controller_nodal can only reject tickets assigned to controller_nodal
+            if ($ticket['assigned_to_department'] !== 'controller_nodal') {
+                $this->json(['success' => false, 'message' => 'This ticket is not ready for rejection'], 400);
                 return;
             }
             
-            // Update ticket status back to pending
-            $sql = "UPDATE complaints SET 
+            // Update ticket status back to pending, restore assigned_to_department, and set forwarded_flag
+            $sql = "UPDATE complaints SET
                     status = 'pending',
+                    assigned_to_department = department,
+                    forwarded_flag = 1,
                     updated_at = NOW()
                     WHERE complaint_id = ?";
-            
+
             $this->db->query($sql, [$ticketId]);
             
             // Create transaction record
@@ -964,7 +997,8 @@ class ControllerController extends BaseController {
             
             $this->json([
                 'success' => true,
-                'message' => 'Reply rejected and returned for revision'
+                'message' => 'Reply rejected and returned for revision',
+                'redirect' => Config::get('APP_URL') . '/controller/tickets'
             ]);
             
         } catch (Exception $e) {
