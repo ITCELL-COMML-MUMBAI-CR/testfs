@@ -1137,7 +1137,7 @@ function approveReply() {
                         if (apiResult.redirect) {
                             window.location.href = apiResult.redirect;
                         } else {
-                            location.reload();
+                            window.location.reload(true); // Force reload from server, not cache
                         }
                     });
                 } else {
@@ -1157,10 +1157,10 @@ function editAndApproveReply() {
         html: `
             <div style="text-align: left;">
                 <label for="edit-action-taken" style="font-weight: bold; display: block; margin-bottom: 8px;">Edit Action Taken:</label>
-                <textarea id="edit-action-taken" class="swal2-textarea" placeholder="Edit the action taken..." style="height: 150px; width: 100%; margin-bottom: 15px;"><?= htmlspecialchars($ticket['action_taken'] ?? '') ?></textarea>
+                <textarea id="edit-action-taken" class="swal2-textarea" placeholder="Edit the action taken..." style="height: 150px; width: 90%; margin-bottom: 15px;"><?= htmlspecialchars($ticket['action_taken'] ?? '') ?></textarea>
 
                 <label for="edit-approval-remarks" style="font-weight: bold; display: block; margin-bottom: 8px;">Approval Remarks (Optional):</label>
-                <textarea id="edit-approval-remarks" class="swal2-textarea" placeholder="Add approval remarks..." style="height: 80px; width: 100%;"></textarea>
+                <textarea id="edit-approval-remarks" class="swal2-textarea" placeholder="Add approval remarks..." style="height: 80px; width: 90%;"></textarea>
             </div>
         `,
         width: '600px',
@@ -1211,7 +1211,7 @@ function editAndApproveReply() {
                         if (apiResult.redirect) {
                             window.location.href = apiResult.redirect;
                         } else {
-                            location.reload();
+                            window.location.reload(true); // Force reload from server, not cache
                         }
                     });
                 } else {
@@ -1301,7 +1301,7 @@ function revertTicket() {
                         if (apiResult.redirect) {
                             window.location.href = apiResult.redirect;
                         } else {
-                            location.reload();
+                            window.location.reload(true); // Force reload from server, not cache
                         }
                     });
                 } else {
@@ -1354,7 +1354,7 @@ function revertBackToCustomer() {
                         if (apiResult.redirect) {
                             window.location.href = apiResult.redirect;
                         } else {
-                            location.reload();
+                            window.location.reload(true); // Force reload from server, not cache
                         }
                     });
                 } else {

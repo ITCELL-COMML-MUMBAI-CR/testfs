@@ -361,7 +361,7 @@ class ControllerController extends BaseController {
                 // Track latest important remark (excluding system and priority escalation)
                 if (!$latestImportantRemark && !in_array($transaction['remarks_type'], ['priority_escalation', 'system'])) {
                     // Prioritize certain remark types for display
-                    $importantTypes = ['admin_remarks', 'forwarding_remarks', 'interim_remarks', 'internal_remarks', 'customer_remarks'];
+                    $importantTypes = ['admin_remarks', 'forwarding_remarks', 'interim_remarks', 'internal_remarks', 'customer_remarks', 'edit_audit'];
                     $remarksText = !empty($transaction['remarks']) ? $transaction['remarks'] : $transaction['internal_remarks'];
                     if (in_array($transaction['remarks_type'], $importantTypes) && !empty(trim($remarksText))) {
                         $latestImportantRemark = $transaction;
@@ -885,7 +885,7 @@ class ControllerController extends BaseController {
                 $this->db->query($sql, [$editedActionTaken, $ticketId]);
 
                 // Create transaction for new action taken (customer-facing)
-                $this->createTransaction($ticketId, 'approved', $editedActionTaken, $user['id'], null, 'customer_remarks');
+                $this->createTransaction($ticketId, 'reply_approved_edited', $editedActionTaken, $user['id'], null, 'customer_remarks');
 
                 // Create audit transaction for the edit
                 $editAuditMessage = "Edited action taken: " . $editedActionTaken . " - Edited by: " . $user['name'] . ", " .$user['department'] ;
@@ -900,7 +900,7 @@ class ControllerController extends BaseController {
                 $this->db->query($sql, [$ticketId]);
 
                 // Create transaction for regular approval (customer-facing)
-                $this->createTransaction($ticketId, 'approved', $ticket['action_taken'], $user['id'], null, 'customer_remarks');
+                $this->createTransaction($ticketId, 'reply_approved', $ticket['action_taken'], $user['id'], null, 'customer_remarks');
             }
 
             // Stop escalation for tickets awaiting feedback
@@ -919,8 +919,7 @@ class ControllerController extends BaseController {
             
             $this->json([
                 'success' => true,
-                'message' => 'Reply approved and ticket sent for customer feedback',
-                'redirect' => Config::get('APP_URL') . '/controller/tickets'
+                'message' => 'Reply approved and ticket sent for customer feedback'
             ]);
             
         } catch (Exception $e) {
@@ -997,8 +996,7 @@ class ControllerController extends BaseController {
             
             $this->json([
                 'success' => true,
-                'message' => 'Reply rejected and returned for revision',
-                'redirect' => Config::get('APP_URL') . '/controller/tickets'
+                'message' => 'Reply rejected and returned for revision'
             ]);
             
         } catch (Exception $e) {

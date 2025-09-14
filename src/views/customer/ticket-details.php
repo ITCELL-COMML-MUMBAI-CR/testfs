@@ -52,20 +52,6 @@ ob_start();
         
         <!-- Latest Important Update for Customer -->
         <!-- Debug: Latest important remark data -->
-        <?php if (false): // Enable for debugging ?>
-            <div class="alert alert-info">
-                <strong>Debug - Latest Important Remark:</strong><br>
-                <?php if ($latest_important_remark): ?>
-                    Transaction Type: <?= htmlspecialchars($latest_important_remark['transaction_type'] ?? 'NULL') ?><br>
-                    Remarks Type: <?= htmlspecialchars($latest_important_remark['remarks_type'] ?? 'NULL') ?><br>
-                    Remarks: <?= htmlspecialchars($latest_important_remark['remarks'] ?? 'NULL') ?><br>
-                    Created: <?= htmlspecialchars($latest_important_remark['created_at'] ?? 'NULL') ?>
-                <?php else: ?>
-                    No latest important remark found
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-
         <?php if ($latest_important_remark): ?>
         <div class="card card-apple mb-4 customer-important-update">
             <div class="card-header bg-gradient-primary">
