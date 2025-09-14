@@ -260,7 +260,7 @@ $page_title = 'Ticket Details - SAMPARK';
                     <div class="mb-3">
                         <strong>Description:</strong>
                         <div class="mt-2 p-3 bg-light rounded">
-                            <?= nl2br(htmlspecialchars($ticket['complaint_message'] ?? 'No description provided')) ?>
+                            <?= nl2br(htmlspecialchars($ticket['description'] ?? 'No description provided')) ?>
                         </div>
                     </div>
                     
