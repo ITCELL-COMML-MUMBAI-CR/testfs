@@ -336,6 +336,23 @@ $page_title = 'Forwarded Tickets - SAMPARK';
                                             <i class="fas fa-clock text-warning ms-1" style="font-size: 0.7em;"></i>
                                             <?php endif; ?>
                                         </a>
+                                        
+                                        <?php 
+                                        // Show internal remarks button based on role and ticket assignment
+                                        $canAddInternalRemarks = false;
+                                        if ($user['role'] === 'controller_nodal' && $ticket['status'] === 'pending' && $ticket['division'] === $user['division']) {
+                                            $canAddInternalRemarks = true;
+                                        } elseif ($user['role'] === 'controller' && $ticket['status'] === 'pending' && $ticket['assigned_to_department'] === $user['department']) {
+                                            $canAddInternalRemarks = true;
+                                        }
+                                        
+                                        if ($canAddInternalRemarks):
+                                        ?>
+                                        <button class="action-btn action-btn-secondary action-btn-compact" 
+                                                onclick="addInternalRemarks(<?= $ticket['complaint_id'] ?>)" title="Add Internal Note">
+                                            <i class="fas fa-sticky-note"></i>
+                                        </button>
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
@@ -456,6 +473,64 @@ function forceRefresh() {
     setTimeout(() => {
         window.location.reload();
     }, 1000);
+}
+
+function addInternalRemarks(ticketId) {
+    Swal.fire({
+        title: 'Add Internal Note',
+        text: 'This note will be internal only and not visible to the customer.',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Add Note',
+        cancelButtonText: 'Cancel',
+        input: 'textarea',
+        inputPlaceholder: 'Enter internal note for team reference...',
+        inputAttributes: {
+            'aria-label': 'Internal remarks'
+        },
+        inputValidator: (value) => {
+            if (!value) {
+                return 'You need to provide internal remarks!'
+            }
+            if (value.length < 5) {
+                return 'Internal remarks must be at least 5 characters long!'
+            }
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const formData = new FormData();
+            formData.append('csrf_token', CSRF_TOKEN);
+            formData.append('internal_remarks', result.value);
+
+            try {
+                showLoading();
+                const response = await fetch(`${APP_URL}/controller/tickets/${ticketId}/internal-remarks`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const apiResult = await response.json();
+                hideLoading();
+
+                if (apiResult.success) {
+                    Swal.fire('Success', apiResult.message, 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    if (apiResult.errors) {
+                        const errors = Object.values(apiResult.errors).join('\n');
+                        Swal.fire('Validation Error', errors, 'error');
+                    } else {
+                        Swal.fire('Error', apiResult.message, 'error');
+                    }
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error adding internal remarks:', error);
+                Swal.fire('Error', 'An error occurred while adding internal remarks. Please try again.', 'error');
+            }
+        }
+    });
 }
 
 function initializeForwardedTicketsDataTable() {
