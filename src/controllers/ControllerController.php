@@ -46,17 +46,12 @@ class ControllerController extends BaseController {
         // Build query conditions based on user role and department access
         $conditions = [];
         $params = [];
-        
-        // Controller_nodal can see ALL tickets in their division, regardless of department
-        // Controllers can only see tickets assigned to their specific department
-        if ($user['role'] === 'controller_nodal') {
-            $conditions[] = 'c.division = ?';
-            $params[] = $user['division'];
-        } else {
-            $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
+
+        $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
             $params[] = $user['division'];
             $params[] = $user['department'];
-        }
+        
+        
 
         // Exclude closed complaints by default
         $conditions[] = "c.status != 'closed'";
@@ -602,16 +597,32 @@ class ControllerController extends BaseController {
                 return;
             }
 
-            // Determine forwarded_flag based on who is forwarding and where:
-            // - Controller_nodal forwards within division: forwarded_flag = 1 (shows in forwarded tickets)
-            // - Controller forwards back within division: forwarded_flag = 0 (shows in support tickets)
-            // - Anyone forwards to different division: forwarded_flag = 0 (ownership transfer)
+            // Determine forwarded_flag based on forwarding rules:
+            // 1. controller_nodal forwards to controller_nodal: forwarded_flag = 0
+            // 2. controller_nodal forwards to controller: forwarded_flag = 1
+            // 3. controller forwards to controller_nodal: forwarded_flag = 0
+            // 4. Cross-division forwarding: forwarded_flag = 0 (ownership transfer)
+
             if ($targetDivision !== $user['division']) {
                 // Cross-division forwarding - ownership transfer
                 $forwardedFlag = 0;
             } else {
-                // Intra-division forwarding - depends on role
-                $forwardedFlag = ($user['role'] === 'controller_nodal') ? 1 : 0;
+                // Intra-division forwarding - determine based on source and target roles
+                if ($user['role'] === 'controller_nodal') {
+                    // Controller_nodal forwarding within division
+                    // Assumption: if forwarding to same department, it's to another controller_nodal
+                    // if forwarding to different department, it's to a controller
+                    if ($departmentValue === $user['department']) {
+                        // Forwarding to same department (controller_nodal to controller_nodal)
+                        $forwardedFlag = 0;
+                    } else {
+                        // Forwarding to different department (controller_nodal to controller)
+                        $forwardedFlag = 1;
+                    }
+                } else {
+                    // Controller forwarding within division (controller to controller_nodal)
+                    $forwardedFlag = 0;
+                }
             }
 
             $sql = "UPDATE complaints SET
