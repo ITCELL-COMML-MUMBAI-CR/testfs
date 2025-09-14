@@ -47,13 +47,39 @@ class ControllerController extends BaseController {
         $conditions = [];
         $params = [];
         
-        // All controller_nodals in Commercial department can see tickets in their division/zone
-        $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
-        $params[] = $user['division'];
-        $params[] = $user['department'];
-        
+        // Controller_nodal can see ALL tickets in their division, regardless of department
+        // Controllers can only see tickets assigned to their specific department
+        if ($user['role'] === 'controller_nodal') {
+            $conditions[] = 'c.division = ?';
+            $params[] = $user['division'];
+        } else {
+            $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
+            $params[] = $user['division'];
+            $params[] = $user['department'];
+        }
+
         // Exclude closed complaints by default
         $conditions[] = "c.status != 'closed'";
+
+        // For controller_nodal: exclude tickets that were forwarded OUT to other divisions
+        // These should not appear anywhere in the original division
+        if ($user['role'] === 'controller_nodal') {
+            $conditions[] = 'NOT EXISTS (
+                SELECT 1 FROM transactions t
+                WHERE t.complaint_id = c.complaint_id
+                AND t.transaction_type = "forwarded"
+                AND t.from_division = ?
+                AND t.to_division != ?
+                AND t.created_at = (
+                    SELECT MAX(t2.created_at)
+                    FROM transactions t2
+                    WHERE t2.complaint_id = c.complaint_id
+                    AND t2.transaction_type = "forwarded"
+                )
+            )';
+            $params[] = $user['division']; // from_division
+            $params[] = $user['division']; // to_division (should be different)
+        }
         
         // Add filters
         if ($status) {
@@ -140,17 +166,33 @@ class ControllerController extends BaseController {
         $dateTo = $_GET['date_to'] ?? '';
         $department = $_GET['department'] ?? '';
         
-        // Build query conditions for forwarded tickets within the division
+        // Build query conditions for forwarded tickets
+        // Only show tickets that controller_nodal forwarded within the division
         $conditions = [];
         $params = [];
-        
-        // Only show tickets forwarded to departments within the user's division
+
+        // Only show tickets currently assigned to this division
         $conditions[] = 'c.division = ?';
         $params[] = $user['division'];
-        
-        // Only show tickets that have been forwarded (forwarded_flag = 1)
+
+        // Only show tickets that have been forwarded within the same division (forwarded_flag = 1)
         $conditions[] = 'c.forwarded_flag = 1';
-        
+
+        // Only show tickets forwarded BY controller_nodal (not controller forwards back)
+        $conditions[] = 'EXISTS (
+            SELECT 1 FROM transactions t
+            JOIN users u ON t.created_by_id = u.id
+            WHERE t.complaint_id = c.complaint_id
+            AND t.transaction_type = "forwarded"
+            AND u.role = "controller_nodal"
+            AND t.created_at = (
+                SELECT MAX(t2.created_at)
+                FROM transactions t2
+                WHERE t2.complaint_id = c.complaint_id
+                AND t2.transaction_type = "forwarded"
+            )
+        )';
+
         // Exclude closed complaints by default
         $conditions[] = "c.status != 'closed'";
         
@@ -364,9 +406,12 @@ class ControllerController extends BaseController {
                                    $ticket['forwarded_flag'] == 1 && 
                                    $ticket['assigned_to_department'] !== $user['department']);
         
-        // For controller_nodal: can only view tickets assigned to other departments (no actions)
-        $isAssignedToOtherDept = ($user['role'] === 'controller_nodal' && 
-                                  $ticket['assigned_to_department'] !== $user['department']);
+        // For controller_nodal: normally they can act on all tickets in their division
+        // Only restrict actions if this is a ticket forwarded FROM another division TO this division
+        // (i.e., tickets in forwarded tickets view should have limited actions)
+        $isAssignedToOtherDept = ($user['role'] === 'controller_nodal' &&
+                                  $ticket['assigned_to_department'] !== $user['department'] &&
+                                  $ticket['forwarded_flag'] == 1);
         
         // For controller_nodal: restrict actions on tickets awaiting customer response
         $isAwaitingCustomerInfo = ($user['role'] === 'controller_nodal' && 
@@ -393,9 +438,22 @@ class ControllerController extends BaseController {
                               in_array($ticket['status'], ['pending', 'awaiting_approval']) &&
                               !$isAssignedToOtherDept;
         
-        $canInterimRemarks = in_array($user['role'], ['admin', 'controller_nodal', 'controller']) && 
+        $canInterimRemarks = $user['role'] === 'controller_nodal' &&
                             $ticket['status'] === 'pending' &&
                             !$isAssignedToOtherDept;
+
+        // Internal remarks permissions based on role - these should NOT be restricted by $isAssignedToOtherDept
+        if ($user['role'] === 'controller_nodal') {
+            // Controller_nodal can add internal remarks to any pending ticket in their division
+            $canInternalRemarks = $ticket['status'] === 'pending' && 
+                                $ticket['division'] === $user['division'];
+        } elseif ($user['role'] === 'controller') {
+            // Controller can add internal remarks to tickets assigned to their department
+            $canInternalRemarks = $ticket['status'] === 'pending' && 
+                                $ticket['assigned_to_department'] === $user['department'];
+        } else {
+            $canInternalRemarks = false;
+        }
         
         $data = [
             'page_title' => 'Ticket #' . $ticketId . ' - SAMPARK',
@@ -417,7 +475,8 @@ class ControllerController extends BaseController {
                 'can_approve' => $canApprove,
                 'can_revert' => $canRevert,
                 'can_revert_to_customer' => $canRevertToCustomer,
-                'can_interim_remarks' => $canInterimRemarks
+                'can_interim_remarks' => $canInterimRemarks,
+                'can_internal_remarks' => $canInternalRemarks
             ],
             'csrf_token' => $this->session->getCSRFToken()
         ];
@@ -527,37 +586,50 @@ class ControllerController extends BaseController {
             // Priority is ALWAYS reset to normal when forwarding (no user control)
             $newPriority = 'normal';
             $resetEscalation = true;
-            
-            $sql = "UPDATE complaints SET 
-                    assigned_to_department = ?,
-                    division = ?,
-                    zone = ?,
-                    priority = ?,
-                    forwarded_flag = 1,
-                    " . ($resetEscalation ? "escalated_at = NULL," : "") . "
-                    updated_at = NOW()
-                    WHERE complaint_id = ?";
-            
+
             // Handle department field (could be department_code from new system)
             $departmentValue = $_POST['department'];
-            
+
             // Validate department exists
             $deptCheck = $this->db->fetch(
                 "SELECT department_code FROM departments WHERE department_code = ? AND is_active = 1",
                 [$departmentValue]
             );
-            
+
             if (!$deptCheck) {
                 $this->db->rollback();
                 $this->json(['success' => false, 'message' => 'Invalid department selected'], 400);
                 return;
             }
-            
+
+            // Determine forwarded_flag based on who is forwarding and where:
+            // - Controller_nodal forwards within division: forwarded_flag = 1 (shows in forwarded tickets)
+            // - Controller forwards back within division: forwarded_flag = 0 (shows in support tickets)
+            // - Anyone forwards to different division: forwarded_flag = 0 (ownership transfer)
+            if ($targetDivision !== $user['division']) {
+                // Cross-division forwarding - ownership transfer
+                $forwardedFlag = 0;
+            } else {
+                // Intra-division forwarding - depends on role
+                $forwardedFlag = ($user['role'] === 'controller_nodal') ? 1 : 0;
+            }
+
+            $sql = "UPDATE complaints SET
+                    assigned_to_department = ?,
+                    division = ?,
+                    zone = ?,
+                    priority = ?,
+                    forwarded_flag = ?,
+                    " . ($resetEscalation ? "escalated_at = NULL," : "") . "
+                    updated_at = NOW()
+                    WHERE complaint_id = ?";
+
             $this->db->query($sql, [
                 $departmentValue,
                 $targetDivision,
                 $targetZone,
                 $newPriority,
+                $forwardedFlag,
                 $ticketId
             ]);
             
@@ -1224,15 +1296,83 @@ class ControllerController extends BaseController {
         } catch (Exception $e) {
             $this->db->rollback();
             error_log("Interim remarks error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to add interim remarks. Please try again.'
             ], 500);
         }
     }
-    
-    
+
+    public function addInternalRemarks($ticketId) {
+        $this->validateCSRF();
+        $user = $this->getCurrentUser();
+
+        // Only controllers and nodal controllers can add internal remarks
+        if (!in_array($user['role'], ['controller', 'controller_nodal'])) {
+            $this->json(['success' => false, 'message' => 'Access denied'], 403);
+            return;
+        }
+
+        $validator = new Validator();
+        $isValid = $validator->validate($_POST, [
+            'internal_remarks' => 'required|min:5|max:1000'
+        ]);
+
+        if (!$isValid) {
+            $this->json([
+                'success' => false,
+                'errors' => $validator->getErrors()
+            ], 400);
+            return;
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            // Verify ticket access based on role
+            $accessConditions = "complaint_id = ? AND status = 'pending'";
+            $accessParams = [$ticketId];
+            
+            if ($user['role'] === 'controller_nodal') {
+                // Controller_nodal can add internal remarks to any pending ticket in their division
+                $accessConditions .= " AND division = ?";
+                $accessParams[] = $user['division'];
+            } elseif ($user['role'] === 'controller') {
+                // Controller can add internal remarks to tickets assigned to their department
+                $accessConditions .= " AND assigned_to_department = ?";
+                $accessParams[] = $user['department'];
+            }
+
+            $ticket = $this->db->fetch("SELECT * FROM complaints WHERE {$accessConditions}", $accessParams);
+
+            if (!$ticket) {
+                $this->db->rollback();
+                $this->json(['success' => false, 'message' => 'Invalid ticket, wrong status, or access denied'], 400);
+                return;
+            }
+
+            // Create transaction record for internal remarks (doesn't change ticket status)
+            $this->createTransaction($ticketId, 'internal_note', trim($_POST['internal_remarks']), $user['id'], null, 'internal_remarks');
+
+            $this->db->commit();
+
+            $this->json([
+                'success' => true,
+                'message' => 'Internal note added successfully'
+            ]);
+
+        } catch (Exception $e) {
+            $this->db->rollback();
+            error_log("Internal remarks error: " . $e->getMessage());
+
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to add internal note. Please try again.'
+            ], 500);
+        }
+    }
+
     public function printTicket($ticketId) {
         $user = $this->getCurrentUser();
         
@@ -1636,10 +1776,15 @@ class ControllerController extends BaseController {
     // Helper methods
     
     private function getTicketStats($user) {
-        $condition = $user['role'] === 'controller' ? 'c.assigned_to_user_id = ?' : 'c.division = ?';
-        $param = $user['role'] === 'controller' ? $user['id'] : $user['division'];
-        
-        $sql = "SELECT 
+        if ($user['role'] === 'controller') {
+            $condition = 'c.assigned_to_user_id = ?';
+            $param = $user['id'];
+        } else {
+            $condition = 'c.division = ?';
+            $param = $user['division'];
+        }
+
+        $sql = "SELECT
                     COUNT(*) as total,
                     SUM(CASE WHEN c.status = 'pending' THEN 1 ELSE 0 END) as pending,
                     SUM(CASE WHEN c.status = 'awaiting_info' THEN 1 ELSE 0 END) as awaiting_info,
@@ -1650,8 +1795,25 @@ class ControllerController extends BaseController {
                     SUM(CASE WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline AND c.status != 'closed' THEN 1 ELSE 0 END) as sla_violations
                 FROM complaints c
                 WHERE {$condition}";
-        
-        return $this->db->fetch($sql, [$param]);
+
+        $stats = $this->db->fetch($sql, [$param]);
+
+        // Add forwarded complaints count for controller_nodal
+        if ($user['role'] === 'controller_nodal') {
+            // Count tickets forwarded within this division (intra-division forwards only)
+            $forwardedSql = "SELECT COUNT(*) as forwarded_complaints
+                            FROM complaints c
+                            WHERE c.division = ?
+                            AND c.forwarded_flag = 1
+                            AND c.status IN ('pending', 'awaiting_info', 'awaiting_approval')";
+
+            $forwardedResult = $this->db->fetch($forwardedSql, [$user['division']]);
+            $stats['forwarded_complaints'] = $forwardedResult['forwarded_complaints'] ?? 0;
+        } else {
+            $stats['forwarded_complaints'] = 0;
+        }
+
+        return $stats;
     }
     
     private function getPendingTickets($user, $limit = 10) {

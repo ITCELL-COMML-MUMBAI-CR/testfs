@@ -111,6 +111,44 @@ $page_title = 'Support Hub - SAMPARK';
                 </div>
             </div>
         </div>
+
+        <!-- Additional Cards for Controller Nodal -->
+        <?php if ($user['role'] === 'controller_nodal'): ?>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-apple h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-info bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fas fa-share-alt text-info fa-lg"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small">Forwarded</div>
+                            <div class="h4 mb-0 fw-semibold" id="forwardedCount" data-stat="forwarded_complaints">
+                                <?= $ticket_stats['forwarded_complaints'] ?? 0 ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card card-apple h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-3 p-3 me-3">
+                            <i class="fas fa-hourglass-half text-primary fa-lg"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small">Awaiting Approval</div>
+                            <div class="h4 mb-0 fw-semibold" id="awaitingApprovalCount" data-stat="awaiting_approval">
+                                <?= $ticket_stats['awaiting_approval'] ?? 0 ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- Advanced Filters Panel -->
@@ -379,6 +417,23 @@ $page_title = 'Support Hub - SAMPARK';
                                         <button class="action-btn action-btn-warning action-btn-compact" 
                                                 onclick="forwardTicket(<?= $ticket['complaint_id'] ?>)" title="Forward">
                                             <i class="fas fa-share"></i>
+                                        </button>
+                                        <?php endif; ?>
+                                        
+                                        <?php 
+                                        // Show internal remarks button based on role and ticket assignment
+                                        $canAddInternalRemarks = false;
+                                        if ($user['role'] === 'controller_nodal' && $ticket['status'] === 'pending' && $ticket['division'] === $user['division']) {
+                                            $canAddInternalRemarks = true;
+                                        } elseif ($user['role'] === 'controller' && $ticket['status'] === 'pending' && $ticket['assigned_to_department'] === $user['department']) {
+                                            $canAddInternalRemarks = true;
+                                        }
+                                        
+                                        if ($canAddInternalRemarks):
+                                        ?>
+                                        <button class="action-btn action-btn-secondary action-btn-compact" 
+                                                onclick="addInternalRemarks(<?= $ticket['complaint_id'] ?>)" title="Add Internal Note">
+                                            <i class="fas fa-sticky-note"></i>
                                         </button>
                                         <?php endif; ?>
                                     </div>
@@ -776,6 +831,63 @@ function forwardTicket(ticketId) {
             new bootstrap.Modal(document.getElementById('forwardModal')).show();
         });
     }
+}
+
+function addInternalRemarks(ticketId) {
+    Swal.fire({
+        title: 'Add Internal Note',
+        text: 'This note will be internal only and not visible to the customer.',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Add Note',
+        cancelButtonText: 'Cancel',
+        input: 'textarea',
+        inputPlaceholder: 'Enter internal note for team reference...',
+        inputAttributes: {
+            'aria-label': 'Internal remarks'
+        },
+        inputValidator: (value) => {
+            if (!value) {
+                return 'You need to provide internal remarks!'
+            }
+            if (value.length < 5) {
+                return 'Internal remarks must be at least 5 characters long!'
+            }
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const formData = new FormData();
+            formData.append('csrf_token', CSRF_TOKEN);
+            formData.append('internal_remarks', result.value);
+
+            try {
+                showLoading();
+                const response = await fetch(`${APP_URL}/controller/tickets/${ticketId}/internal-remarks`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const apiResult = await response.json();
+                hideLoading();
+
+                if (apiResult.success) {
+                    Swal.fire('Success', apiResult.message, 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    if (apiResult.errors) {
+                        const errors = Object.values(apiResult.errors).join('\n');
+                        Swal.fire('Validation Error', errors, 'error');
+                    } else {
+                        Swal.fire('Error', apiResult.message, 'error');
+                    }
+                }
+            } catch (error) {
+                hideLoading();
+                Swal.fire('Error', 'Failed to add internal remarks', 'error');
+            }
+        }
+    });
 }
 
 async function loadZonesAndDivisions() {

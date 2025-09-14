@@ -41,7 +41,8 @@ $router->post('/controller/tickets/{id}/approve', 'Controller@approveReply', ['a
 $router->post('/controller/tickets/{id}/reject', 'Controller@rejectReply', ['auth', 'role:controller_nodal']);
 $router->post('/controller/tickets/{id}/revert', 'Controller@revertTicket', ['auth', 'role:controller_nodal']);
 $router->post('/controller/tickets/{id}/revert-to-customer', 'Controller@revertToCustomer', ['auth', 'role:controller_nodal']);
-$router->post('/controller/tickets/{id}/interim-remarks', 'Controller@addInterimRemarks', ['auth', 'role:admin,controller,controller_nodal']);
+$router->post('/controller/tickets/{id}/interim-remarks', 'Controller@addInterimRemarks', ['auth', 'role:controller_nodal']);
+$router->post('/controller/tickets/{id}/internal-remarks', 'Controller@addInternalRemarks', ['auth', 'role:controller,controller_nodal']);
 $router->get('/controller/tickets/{id}/print', 'Controller@printTicket', ['auth', 'role:controller,controller_nodal']);
 $router->get('/controller/tickets/{id}/export', 'Controller@exportTicket', ['auth', 'role:controller,controller_nodal']);
 $router->get('/controller/reports', 'Controller@reports', ['auth', 'role:controller,controller_nodal']);

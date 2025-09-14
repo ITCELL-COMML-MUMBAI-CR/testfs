@@ -104,7 +104,7 @@ $page_title = 'Ticket Details - SAMPARK';
             <?php if ($is_forwarded_ticket ?? false): ?>
                 This ticket was forwarded and no actions can be taken.
             <?php else: ?>
-                You can only view this ticket, actions are restricted to the assigned department.
+                You can only view this ticket and add internal notes. Other actions are restricted to the assigned department.
             <?php endif; ?>
         </div>
     </div>
@@ -181,7 +181,19 @@ $page_title = 'Ticket Details - SAMPARK';
                         - <?= date('M d, Y H:i', strtotime($latest_important_remark['created_at'])) ?>
                     </span>
                 </div>
-                <p class="mb-2 fs-6"><?= nl2br(htmlspecialchars($latest_important_remark['remarks'] ?? '')) ?></p>
+                <?php
+                $latestDisplayRemarks = '';
+                if (!empty($latest_important_remark['remarks'])) {
+                    $latestDisplayRemarks = $latest_important_remark['remarks'];
+                } elseif (!empty($latest_important_remark['internal_remarks'])) {
+                    $latestDisplayRemarks = $latest_important_remark['internal_remarks'];
+                }
+                ?>
+                <?php if (!empty(trim($latestDisplayRemarks))): ?>
+                <div class="bg-white p-3 rounded border mb-2">
+                    <?= nl2br(htmlspecialchars($latestDisplayRemarks)) ?>
+                </div>
+                <?php endif; ?>
                 <div class="text-muted small">
                     <i class="fas fa-user me-1"></i>
                     <?= htmlspecialchars($latest_important_remark['user_name'] ?? $latest_important_remark['customer_name'] ?? 'System') ?>
@@ -279,25 +291,35 @@ $page_title = 'Ticket Details - SAMPARK';
                             <div class="d-flex align-items-center p-3 border rounded">
                                 <div class="me-3">
                                     <?php
+                                    $extension = strtolower(pathinfo($file['original_name'], PATHINFO_EXTENSION));
+                                    $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']);
                                     $fileIcon = 'fa-file';
-                                    if (str_contains($file['file_type'], 'image')) $fileIcon = 'fa-file-image';
+                                    if ($isImage) $fileIcon = 'fa-file-image';
                                     elseif (str_contains($file['file_type'], 'pdf')) $fileIcon = 'fa-file-pdf';
                                     elseif (str_contains($file['file_type'], 'video')) $fileIcon = 'fa-file-video';
                                     ?>
-                                    <i class="fas <?= $fileIcon ?> fa-2x text-muted"></i>
+                                    <?php if ($isImage): ?>
+                                        <img src="<?= Config::getAppUrl() ?>/api/tickets/<?= $ticket['complaint_id'] ?>/evidence/<?= urlencode($file['file_name']) ?>"
+                                             alt="Evidence Image"
+                                             class="img-thumbnail"
+                                             style="max-height: 80px; max-width: 80px; cursor: pointer;"
+                                             onclick="viewImage('<?= Config::getAppUrl() ?>/api/tickets/<?= $ticket['complaint_id'] ?>/evidence/<?= urlencode($file['file_name']) ?>', '<?= htmlspecialchars($file['original_name']) ?>')">
+                                    <?php else: ?>
+                                        <i class="fas <?= $fileIcon ?> fa-2x text-muted"></i>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="flex-grow-1">
                                     <div class="fw-semibold"><?= htmlspecialchars($file['original_name']) ?></div>
                                     <small class="text-muted">
-                                        <?= number_format($file['file_size'] / 1024, 1) ?> KB • 
+                                        <?= number_format($file['file_size'] / 1024, 1) ?> KB •
                                         <?= date('M d, Y', strtotime($file['uploaded_at'])) ?>
                                     </small>
                                     <div class="mt-2">
-                                        <a href="<?= Config::getAppUrl() ?>/api/tickets/<?= $ticket['complaint_id'] ?>/evidence/<?= urlencode($file['file_name']) ?>" 
+                                        <a href="<?= Config::getAppUrl() ?>/api/tickets/<?= $ticket['complaint_id'] ?>/evidence/<?= urlencode($file['file_name']) ?>"
                                            class="btn btn-sm btn-apple-primary me-2" target="_blank">
                                             <i class="fas fa-eye me-1"></i>View
                                         </a>
-                                        <a href="<?= Config::getAppUrl() ?>/api/tickets/<?= $ticket['complaint_id'] ?>/evidence/<?= urlencode($file['file_name']) ?>?download=1" 
+                                        <a href="<?= Config::getAppUrl() ?>/api/tickets/<?= $ticket['complaint_id'] ?>/evidence/<?= urlencode($file['file_name']) ?>?download=1"
                                            class="btn btn-sm btn-apple-secondary">
                                             <i class="fas fa-download me-1"></i>Download
                                         </a>
@@ -407,7 +429,19 @@ $page_title = 'Ticket Details - SAMPARK';
                                             <span class="badge <?= $remarkTypeBadgeClass ?> ms-2"><?= $remarkTypeLabel ?></span>
                                             <?php endif; ?>
                                         </h6>
-                                        <p class="mb-2"><?= nl2br(htmlspecialchars($transaction['remarks'] ?? '')) ?></p>
+                                        <?php
+                                        $displayRemarks = '';
+                                        if (!empty($transaction['remarks'])) {
+                                            $displayRemarks = $transaction['remarks'];
+                                        } elseif (!empty($transaction['internal_remarks'])) {
+                                            $displayRemarks = $transaction['internal_remarks'];
+                                        }
+                                        ?>
+                                        <?php if (!empty(trim($displayRemarks))): ?>
+                                        <div class="bg-light p-3 rounded mb-2">
+                                            <?= nl2br(htmlspecialchars($displayRemarks)) ?>
+                                        </div>
+                                        <?php endif; ?>
                                         <div class="text-muted small">
                                             <i class="fas fa-user me-1"></i>
                                             <?= htmlspecialchars($transaction['user_name'] ?? $transaction['customer_name'] ?? 'System') ?>
@@ -449,7 +483,7 @@ $page_title = 'Ticket Details - SAMPARK';
 
 
             <!-- Action Panel -->
-            <?php if ($permissions['can_reply'] || $permissions['can_approve']): ?>
+            <?php if ($permissions['can_reply'] || $permissions['can_approve'] || $permissions['can_internal_remarks'] || $permissions['can_interim_remarks'] || $permissions['can_revert_to_customer'] || $permissions['can_revert']): ?>
             <div class="card card-apple">
                 <div class="card-header">
                     <h5 class="mb-0">
@@ -482,7 +516,7 @@ $page_title = 'Ticket Details - SAMPARK';
                     <?php endif; ?>
                     
                     <!-- Secondary Actions Section -->
-                    <?php if ($permissions['can_revert_to_customer'] || $permissions['can_interim_remarks'] || $permissions['can_revert']): ?>
+                    <?php if ($permissions['can_revert_to_customer'] || $permissions['can_internal_remarks'] || $permissions['can_interim_remarks'] || $permissions['can_revert']): ?>
                     <div class="action-section mb-4">
                         <h6 class="text-muted mb-3"><i class="fas fa-tools me-2"></i>Additional Actions</h6>
                         <div class="row g-2">
@@ -494,6 +528,14 @@ $page_title = 'Ticket Details - SAMPARK';
                             </div>
                             <?php endif; ?>
                             
+                            <?php if ($permissions['can_internal_remarks']): ?>
+                            <div class="col-md-6">
+                                <button class="btn btn-secondary w-100 action-btn-secondary" onclick="addInternalRemarks()">
+                                    <i class="fas fa-sticky-note me-2"></i>Internal Note
+                                </button>
+                            </div>
+                            <?php endif; ?>
+
                             <?php if ($permissions['can_interim_remarks']): ?>
                             <div class="col-md-6">
                                 <button class="btn btn-primary w-100 action-btn-secondary" onclick="addInterimRemarks()">
@@ -1254,6 +1296,63 @@ function revertBackToCustomer() {
     });
 }
 
+function addInternalRemarks() {
+    Swal.fire({
+        title: 'Add Internal Note',
+        text: 'This note will be internal only and not visible to the customer.',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Add Note',
+        cancelButtonText: 'Cancel',
+        input: 'textarea',
+        inputPlaceholder: 'Enter internal note for team reference...',
+        inputAttributes: {
+            'aria-label': 'Internal remarks'
+        },
+        inputValidator: (value) => {
+            if (!value) {
+                return 'You need to provide internal remarks!'
+            }
+            if (value.length < 5) {
+                return 'Internal remarks must be at least 5 characters long!'
+            }
+        }
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const formData = new FormData();
+            formData.append('csrf_token', CSRF_TOKEN);
+            formData.append('internal_remarks', result.value);
+
+            try {
+                showLoading();
+                const response = await fetch(`${APP_URL}/controller/tickets/${ticketId}/internal-remarks`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const apiResult = await response.json();
+                hideLoading();
+
+                if (apiResult.success) {
+                    Swal.fire('Success', apiResult.message, 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    if (apiResult.errors) {
+                        const errors = Object.values(apiResult.errors).join('\n');
+                        Swal.fire('Validation Error', errors, 'error');
+                    } else {
+                        Swal.fire('Error', apiResult.message, 'error');
+                    }
+                }
+            } catch (error) {
+                hideLoading();
+                Swal.fire('Error', 'Failed to add internal remarks', 'error');
+            }
+        }
+    });
+}
+
 function addInterimRemarks() {
     Swal.fire({
         title: 'Add Interim Remarks',
@@ -1280,17 +1379,17 @@ function addInterimRemarks() {
             const formData = new FormData();
             formData.append('csrf_token', CSRF_TOKEN);
             formData.append('interim_remarks', result.value);
-            
+
             try {
                 showLoading();
                 const response = await fetch(`${APP_URL}/controller/tickets/${ticketId}/interim-remarks`, {
                     method: 'POST',
                     body: formData
                 });
-                
+
                 const apiResult = await response.json();
                 hideLoading();
-                
+
                 if (apiResult.success) {
                     Swal.fire('Success', apiResult.message, 'success').then(() => {
                         location.reload();
@@ -1330,6 +1429,18 @@ function viewHistory() {
         title: 'Ticket History',
         text: 'Detailed history view coming soon',
         icon: 'info'
+    });
+}
+
+function viewImage(imageUrl, imageName) {
+    Swal.fire({
+        title: imageName,
+        imageUrl: imageUrl,
+        imageAlt: imageName,
+        showCloseButton: true,
+        showConfirmButton: false,
+        width: '80%',
+        padding: '1rem'
     });
 }
 
