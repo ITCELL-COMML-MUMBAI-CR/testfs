@@ -318,34 +318,62 @@ ob_start();
                 </div>
                 
                 <!-- Supporting Documents -->
-                <?php if (!empty($evidence)): ?>
-                    <div class="card-apple mb-4">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <i class="fas fa-paperclip text-apple-blue me-2"></i>
-                                Supporting Documents
-                            </h5>
-                            
+                <div class="card-apple mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <i class="fas fa-paperclip text-apple-blue me-2"></i>
+                            Supporting Documents
+                            <small class="text-muted">(<?= count($evidence ?? []) ?> files)</small>
+                        </h5>
+
+                        <?php if (empty($evidence)): ?>
+                            <div class="text-center py-4">
+                                <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                                <p class="text-muted mb-2">No supporting documents uploaded</p>
+                                <?php if ($ticket['status'] === 'awaiting_info'): ?>
+                                    <small class="text-info">You can upload additional files when providing additional information.</small>
+                                <?php else: ?>
+                                    <small class="text-muted">Files were not uploaded during ticket creation.</small>
+                                <?php endif; ?>
+                            </div>
+                        <?php else: ?>
+
+                            <?php if ($ticket['status'] === 'awaiting_info'): ?>
+                                <div class="alert alert-info mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Additional Information Required:</strong> You can upload additional supporting documents when providing the requested information.
+                                </div>
+                            <?php endif; ?>
+
                             <div class="row g-3">
                                 <?php foreach ($evidence as $file): ?>
                                     <div class="col-md-4">
                                         <div class="card-apple-glass h-100">
                                             <div class="card-body text-center p-3">
-                                                <?php 
+                                                <?php
                                                 $extension = strtolower(pathinfo($file['original_name'], PATHINFO_EXTENSION));
-                                                $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif']);
+                                                $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']);
+                                                $fileCategory = $file['file_category'] ?? 'initial';
                                                 ?>
-                                                
-                                                <?php if ($isImage): ?>
-                                                    <img src="<?= Config::getPublicUploadPath() ?><?= htmlspecialchars($file['file_name']) ?>" 
-                                                         alt="Supporting Document" 
-                                                         class="img-thumbnail mb-2" 
-                                                         style="max-height: 150px; cursor: pointer;"
-                                                         onclick="viewImage('<?= Config::getPublicUploadPath() ?><?= htmlspecialchars($file['file_name']) ?>', '<?= htmlspecialchars($file['original_name']) ?>')">
-                                                <?php else: ?>
-                                                    <i class="fas fa-file-<?= $extension === 'pdf' ? 'pdf' : 'alt' ?> fa-3x text-muted mb-2"></i>
-                                                <?php endif; ?>
-                                                
+
+                                                <!-- File Category Badge -->
+                                                <div class="position-relative mb-2">
+                                                    <span class="badge <?= $fileCategory === 'additional' ? 'bg-info' : 'bg-secondary' ?> position-absolute top-0 end-0"
+                                                          style="transform: translate(50%, -50%); z-index: 1;">
+                                                        <?= $fileCategory === 'additional' ? 'Additional' : 'Initial' ?>
+                                                    </span>
+
+                                                    <?php if ($isImage): ?>
+                                                        <img src="<?= Config::getPublicUploadPath() ?><?= htmlspecialchars($file['file_name']) ?>"
+                                                             alt="Supporting Document"
+                                                             class="img-thumbnail mb-2"
+                                                             style="max-height: 150px; cursor: pointer;"
+                                                             onclick="viewImage('<?= Config::getPublicUploadPath() ?><?= htmlspecialchars($file['file_name']) ?>', '<?= htmlspecialchars($file['original_name']) ?>')">
+                                                    <?php else: ?>
+                                                        <i class="fas fa-file-<?= $extension === 'pdf' ? 'pdf' : 'alt' ?> fa-3x text-muted mb-2"></i>
+                                                    <?php endif; ?>
+                                                </div>
+
                                                 <div class="small">
                                                     <div class="fw-medium text-truncate" title="<?= htmlspecialchars($file['original_name']) ?>">
                                                         <?= htmlspecialchars($file['original_name']) ?>
@@ -353,11 +381,16 @@ ob_start();
                                                     <small class="text-muted">
                                                         <?= number_format($file['file_size'] / 1024, 1) ?> KB
                                                     </small>
+                                                    <?php if ($fileCategory === 'additional' && !empty($file['uploaded_at'])): ?>
+                                                        <br><small class="text-info">
+                                                            Added: <?= date('M d, Y H:i', strtotime($file['uploaded_at'])) ?>
+                                                        </small>
+                                                    <?php endif; ?>
                                                 </div>
-                                                
+
                                                 <div class="mt-2">
-                                                    <a href="<?= Config::getPublicUploadPath() ?><?= htmlspecialchars($file['file_name']) ?>" 
-                                                       target="_blank" 
+                                                    <a href="<?= Config::getPublicUploadPath() ?><?= htmlspecialchars($file['file_name']) ?>"
+                                                       target="_blank"
                                                        class="btn btn-apple-glass btn-sm">
                                                         <i class="fas fa-eye me-1"></i>View
                                                     </a>
@@ -367,9 +400,9 @@ ob_start();
                                     </div>
                                 <?php endforeach; ?>
                             </div>
-                        </div>
+                        <?php endif; ?>
                     </div>
-                <?php endif; ?>
+                </div>
                 
                 <!-- Communication History -->
                 <div class="card-apple">

@@ -36,7 +36,7 @@
 
                     <!-- Existing Files Section -->
                     <div id="existingFilesSection" class="mb-4" style="display: none;">
-                        <label class="form-label">Current Supporting Documents (<span id="currentFileCount">0</span>/3)</label>
+                        <label class="form-label">Current Supporting Documents (<span id="currentFileCount">0</span> files uploaded during ticket creation)</label>
                         <div id="existingFilesContainer" class="border rounded p-3 bg-light">
                             <!-- Existing files will be populated here -->
                         </div>
@@ -45,7 +45,7 @@
                     <!-- File Upload Section -->
                     <div id="uploadSection" class="mb-4">
                         <label class="form-label">
-                            Add Supporting Documents (<span id="availableSlots">3</span> slots available)
+                            Add Additional Supporting Documents (Maximum 2 files)
                         </label>
                         <input type="file" class="d-none" id="fileInput"
                                accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.txt,.xls,.xlsx"
@@ -54,11 +54,11 @@
                         <div class="upload-zone border-2 border-dashed rounded p-4 text-center" id="uploadZone">
                             <div class="upload-placeholder">
                                 <i class="fas fa-cloud-upload-alt text-muted mb-3" style="font-size: 2.5rem;"></i>
-                                <p class="mb-2">Click to select files or drag and drop</p>
-                                <button type="button" class="btn btn-outline-primary btn-sm mb-2" onclick="document.getElementById('fileInput').click()">
+                                <p class="mb-2">Upload Additional Supporting Documents</p>
+                                <button type="button" class="btn btn-outline-primary btn-sm mb-2" onclick="selectAdditionalFiles()">
                                     <i class="fas fa-folder-open me-1"></i>Browse Files
                                 </button>
-                                <small class="text-muted d-block">Maximum 3 files total, 50MB each (auto-compressed)</small>
+                                <small class="text-muted d-block">Maximum 2 additional files, 50MB each (auto-compressed)</small>
                                 <small class="text-muted">Supported: Images, PDF, Word, Excel, Text files</small>
                             </div>
 
@@ -74,13 +74,25 @@
                                          role="progressbar" style="width: 0%" id="compressionBar"></div>
                                 </div>
                             </div>
+
+                            <!-- File Summary -->
+                            <div class="file-summary mt-3" id="fileSummary" style="display: none;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-muted">
+                                        <span id="fileCount">0</span> files selected
+                                    </span>
+                                    <button type="button" class="btn btn-link btn-sm text-danger" onclick="clearAllFiles()">
+                                        <i class="fas fa-trash me-1"></i>Clear All
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- File Limit Warning -->
                     <div id="fileLimitWarning" class="alert alert-warning mb-4" style="display: none;">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        You have reached the maximum limit of 3 files. Please remove existing files to add new ones.
+                        You have reached the maximum limit of 2 additional files.
                     </div>
                 </form>
             </div>

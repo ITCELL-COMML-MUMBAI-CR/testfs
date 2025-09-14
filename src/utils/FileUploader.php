@@ -132,7 +132,186 @@ class FileUploader {
             ];
         }
     }
+
+    /**
+     * Upload additional evidence files for a complaint (max 2 files)
+     */
+    public function uploadAdditionalEvidence($complaintId, $files, $uploaderType, $uploaderId) {
+        $uploadedFiles = [];
+        $errors = [];
+
+        try {
+            $db = Database::getInstance();
+
+            // Check if evidence exists for this complaint
+            $existingEvidence = $db->fetch(
+                "SELECT id, additional_file_name_1, additional_file_name_2 FROM evidence WHERE complaint_id = ?",
+                [$complaintId]
+            );
+
+            if (!$existingEvidence) {
+                return [
+                    'success' => false,
+                    'files' => [],
+                    'errors' => ['No evidence record found for this ticket']
+                ];
+            }
+
+            // Check if additional files already exist
+            $existingAdditionalFiles = 0;
+            if (!empty($existingEvidence['additional_file_name_1'])) $existingAdditionalFiles++;
+            if (!empty($existingEvidence['additional_file_name_2'])) $existingAdditionalFiles++;
+
+            $fileData = [];
+            $fileIndex = $existingAdditionalFiles + 1; // Start from next available slot
+
+            // Handle both array format and single file format
+            if (isset($files['name']) && is_array($files['name'])) {
+                // Standard PHP file upload format
+                for ($i = 0; $i < count($files['name']) && $fileIndex <= 2; $i++) {
+                    if ($files['error'][$i] === UPLOAD_ERR_OK) {
+                        $file = [
+                            'name' => $files['name'][$i],
+                            'type' => $files['type'][$i],
+                            'tmp_name' => $files['tmp_name'][$i],
+                            'size' => $files['size'][$i],
+                            'error' => $files['error'][$i]
+                        ];
+
+                        $result = $this->processAdditionalFile($file, $complaintId, $fileIndex);
+
+                        if ($result['success']) {
+                            $fileData["additional_file_name_$fileIndex"] = $result['filename'];
+                            $fileData["additional_file_type_$fileIndex"] = $result['file_type'];
+                            $fileData["additional_file_path_$fileIndex"] = $result['file_path'];
+                            $fileData["additional_compressed_size_$fileIndex"] = $result['compressed_size'];
+                            $uploadedFiles[] = $result;
+                            $fileIndex++;
+                        } else {
+                            $errors[] = "File {$file['name']}: " . $result['error'];
+                        }
+                    }
+                }
+            } else {
+                // Single file format
+                if (isset($files['name']) && $files['error'] === UPLOAD_ERR_OK && $fileIndex <= 2) {
+                    $result = $this->processAdditionalFile($files, $complaintId, $fileIndex);
+
+                    if ($result['success']) {
+                        $fileData["additional_file_name_$fileIndex"] = $result['filename'];
+                        $fileData["additional_file_type_$fileIndex"] = $result['file_type'];
+                        $fileData["additional_file_path_$fileIndex"] = $result['file_path'];
+                        $fileData["additional_compressed_size_$fileIndex"] = $result['compressed_size'];
+                        $uploadedFiles[] = $result;
+                    } else {
+                        $errors[] = "File {$files['name']}: " . $result['error'];
+                    }
+                }
+            }
+
+            // If we have files to save and no errors
+            if (!empty($fileData) && empty($errors)) {
+                // Update existing evidence record with additional files
+                $updateFields = [];
+                $params = [];
+
+                foreach ($fileData as $field => $value) {
+                    $updateFields[] = "$field = ?";
+                    $params[] = $value;
+                }
+
+                // Also update the additional files uploaded timestamp
+                $updateFields[] = "additional_files_uploaded_at = NOW()";
+                $params[] = $complaintId;
+
+                $sql = "UPDATE evidence SET " . implode(', ', $updateFields) . " WHERE complaint_id = ?";
+                $db->query($sql, $params);
+            }
+
+            return [
+                'success' => empty($errors),
+                'files' => $uploadedFiles,
+                'errors' => $errors
+            ];
+
+        } catch (Exception $e) {
+            error_log("Additional file upload error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'files' => [],
+                'errors' => ['Failed to upload additional files. Please try again.']
+            ];
+        }
+    }
     
+    /**
+     * Process additional file with proper naming
+     */
+    private function processAdditionalFile($file, $complaintId, $fileNumber) {
+        // Validate file
+        $validation = $this->validateFile($file);
+        if (!$validation['valid']) {
+            return [
+                'success' => false,
+                'error' => implode(', ', $validation['errors'])
+            ];
+        }
+
+        // Generate unique filename for additional files
+        $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $filename = $complaintId . '_additional_file_' . $fileNumber . '.' . $extension;
+        $filePath = $this->uploadPath . $filename;
+
+        // Move uploaded file to temp location first
+        $tempPath = $this->uploadPath . 'temp_' . $filename;
+        if (!move_uploaded_file($file['tmp_name'], $tempPath)) {
+            return [
+                'success' => false,
+                'error' => 'Failed to save file'
+            ];
+        }
+
+        // Compress the file if it's an image
+        $mimeType = mime_content_type($tempPath);
+        if (strpos($mimeType, 'image/') === 0) {
+            // Use FileCompressor to compress the image
+            require_once __DIR__ . '/FileCompressor.php';
+            $compressedPath = compressFile($tempPath, 5120); // 5MB limit
+
+            if ($compressedPath && file_exists($compressedPath)) {
+                // Move compressed file to final location
+                if (rename($compressedPath, $filePath)) {
+                    // Clean up temp file
+                    @unlink($tempPath);
+                } else {
+                    // If rename failed, copy and clean up
+                    copy($compressedPath, $filePath);
+                    @unlink($tempPath);
+                    @unlink($compressedPath);
+                }
+            } else {
+                // If compression failed, use original file
+                rename($tempPath, $filePath);
+            }
+        } else {
+            // For non-image files, just move to final location
+            rename($tempPath, $filePath);
+        }
+
+        // Get final file size
+        $finalSize = filesize($filePath);
+
+        return [
+            'success' => true,
+            'filename' => $filename,
+            'file_path' => $filename, // Store relative path
+            'file_type' => $extension,
+            'original_size' => $file['size'],
+            'compressed_size' => $finalSize,
+            'original_name' => $file['name']
+        ];
+    }
+
     /**
      * Process individual file
      */

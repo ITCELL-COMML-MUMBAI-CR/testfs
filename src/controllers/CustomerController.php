@@ -151,6 +151,29 @@ class CustomerController extends BaseController {
         $priorityChanges = [];
         $latestImportantRemark = null;
         
+        // First, check if customer has provided info after any info_requested transaction
+        $customerProvidedInfo = false;
+        $latestInfoRequestTime = null;
+
+        foreach ($transactions as $transaction) {
+            // Find the latest info_requested transaction
+            if ($transaction['transaction_type'] === 'info_requested') {
+                $latestInfoRequestTime = $transaction['created_at'];
+                break; // Since transactions are ordered by created_at DESC, first one is latest
+            }
+        }
+
+        if ($latestInfoRequestTime) {
+            // Check if customer provided info after the latest info request
+            foreach ($transactions as $transaction) {
+                if ($transaction['transaction_type'] === 'info_provided' &&
+                    $transaction['created_at'] > $latestInfoRequestTime) {
+                    $customerProvidedInfo = true;
+                    break;
+                }
+            }
+        }
+
         foreach ($transactions as $transaction) {
             if ($transaction['remarks_type'] === 'priority_escalation') {
                 $priorityChanges[] = $transaction;
@@ -167,6 +190,10 @@ class CustomerController extends BaseController {
                                       in_array($transaction['transaction_type'], ['closed', 'action_taken']));
 
                     if (in_array($transaction['remarks_type'], $importantTypes) && !empty(trim($remarksText))) {
+                        // Skip info_requested remarks if customer has already provided the info
+                        if ($transaction['transaction_type'] === 'info_requested' && $customerProvidedInfo) {
+                            continue;
+                        }
                         // Skip awaiting approval remarks that haven't been approved yet
                         if ($transaction['remarks_type'] === 'customer_remarks' &&
                             in_array($transaction['transaction_type'], ['awaiting_approval', 'replied'])) {
@@ -219,6 +246,10 @@ class CustomerController extends BaseController {
                 $remarksText = !empty($transaction['remarks']) ? $transaction['remarks'] : $transaction['internal_remarks'];
 
                 if (in_array($transaction['remarks_type'], $allowedTypes) && !empty(trim($remarksText))) {
+                    // Skip info_requested remarks if customer has already provided the info
+                    if ($transaction['transaction_type'] === 'info_requested' && $customerProvidedInfo) {
+                        continue;
+                    }
                     // Skip awaiting approval remarks that haven't been approved yet
                     if ($transaction['remarks_type'] === 'customer_remarks' &&
                         in_array($transaction['transaction_type'], ['awaiting_approval', 'replied'])) {
@@ -757,15 +788,15 @@ class CustomerController extends BaseController {
      */
     private function transformEvidenceForDisplay($evidenceRaw) {
         $evidence = [];
-        
+
         foreach ($evidenceRaw as $record) {
-            // Check all three file columns
+            // Check all three initial file columns
             for ($i = 1; $i <= 3; $i++) {
                 $fileNameField = "file_name_$i";
                 $fileTypeField = "file_type_$i";
                 $filePathField = "file_path_$i";
                 $compressedSizeField = "compressed_size_$i";
-                
+
                 if (!empty($record[$fileNameField])) {
                     $evidence[] = [
                         'id' => $record['id'] . '_' . $i, // Create a unique ID for each file slot
@@ -775,12 +806,35 @@ class CustomerController extends BaseController {
                         'file_path' => $record[$filePathField],
                         'file_size' => $record[$compressedSizeField] ?? 0,
                         'compressed_size' => $record[$compressedSizeField] ?? 0,
-                        'uploaded_at' => $record['uploaded_at']
+                        'uploaded_at' => $record['uploaded_at'],
+                        'file_category' => 'initial'
+                    ];
+                }
+            }
+
+            // Check additional file columns
+            for ($i = 1; $i <= 2; $i++) {
+                $fileNameField = "additional_file_name_$i";
+                $fileTypeField = "additional_file_type_$i";
+                $filePathField = "additional_file_path_$i";
+                $compressedSizeField = "additional_compressed_size_$i";
+
+                if (!empty($record[$fileNameField])) {
+                    $evidence[] = [
+                        'id' => $record['id'] . '_additional_' . $i, // Create a unique ID for each additional file slot
+                        'file_name' => $record[$fileNameField],
+                        'original_name' => $record[$fileNameField], // Use file_name as original_name
+                        'file_type' => $record[$fileTypeField],
+                        'file_path' => $record[$filePathField],
+                        'file_size' => $record[$compressedSizeField] ?? 0,
+                        'compressed_size' => $record[$compressedSizeField] ?? 0,
+                        'uploaded_at' => $record['additional_files_uploaded_at'] ?? $record['uploaded_at'],
+                        'file_category' => 'additional'
                     ];
                 }
             }
         }
-        
+
         return $evidence;
     }
     
@@ -807,6 +861,11 @@ class CustomerController extends BaseController {
     private function handleEvidenceUpload($complaintId, $files) {
         $uploader = new FileUploader();
         return $uploader->uploadEvidence($complaintId, $files, 'customer', $this->getCurrentUser()['customer_id']);
+    }
+
+    private function handleAdditionalEvidenceUpload($complaintId, $files) {
+        $uploader = new FileUploader();
+        return $uploader->uploadAdditionalEvidence($complaintId, $files, 'customer', $this->getCurrentUser()['customer_id']);
     }
 
     private function handleFileRemoval($complaintId, $removedFileIds) {
@@ -1267,10 +1326,10 @@ class CustomerController extends BaseController {
                 $this->handleFileRemoval($ticketId, $removedFiles);
             }
 
-            // Handle supporting files if any - use same logic as ticket creation
+            // Handle additional files if any
             $uploadResult = null;
-            if (!empty($_FILES['supporting_files'])) {
-                $uploadResult = $this->handleEvidenceUpload($ticketId, $_FILES['supporting_files']);
+            if (!empty($_FILES['additional_files'])) {
+                $uploadResult = $this->handleAdditionalEvidenceUpload($ticketId, $_FILES['additional_files']);
 
                 if (!$uploadResult['success']) {
                     $this->db->rollback();
