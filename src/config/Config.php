@@ -90,7 +90,6 @@ class Config {
     
     // User Roles
     const USER_ROLES = [
-        'customer' => 'Customer',
         'controller' => 'Controller',
         'controller_nodal' => 'Nodal Controller',
         'admin' => 'Administrator',

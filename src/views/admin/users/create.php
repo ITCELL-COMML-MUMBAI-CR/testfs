@@ -49,8 +49,8 @@ ob_start();
                                 </div>
                                 
                                 <div class="col-md-6">
-                                    <label for="mobile" class="form-label-apple">Phone Number</label>
-                                    <input type="tel" class="form-control form-control-apple" id="mobile" name="mobile" placeholder="Optional" required>
+                                    <label for="mobile" class="form-label-apple">Phone Number <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control form-control-apple" id="mobile" name="mobile" required>
                                     <div class="invalid-feedback">Please provide a valid phone number.</div>
                                 </div>
                                 
@@ -266,22 +266,84 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('createUserForm');
     
     form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
         if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
+            form.classList.add('was-validated');
+            return;
         }
-        
+
         // Check if passwords match
         const password = document.getElementById('password');
         const confirmPassword = document.getElementById('password_confirm');
-        
+
         if (password.value !== confirmPassword.value) {
             confirmPassword.setCustomValidity("Passwords don't match");
+            form.classList.add('was-validated');
+            return;
         } else {
             confirmPassword.setCustomValidity("");
         }
-        
-        form.classList.add('was-validated');
+
+        // Submit form via AJAX
+        const formData = new FormData(form);
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating User...';
+
+        fetch(form.action, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                if (window.SAMPARK && window.SAMPARK.ui && window.SAMPARK.ui.showToast) {
+                    window.SAMPARK.ui.showToast(data.message, 'success');
+                }
+                // Redirect to users page
+                setTimeout(() => {
+                    window.location.href = data.redirect || '<?= Config::getAppUrl() ?>/admin/users';
+                }, 1000);
+            } else {
+                if (window.SAMPARK && window.SAMPARK.ui && window.SAMPARK.ui.showToast) {
+                    window.SAMPARK.ui.showToast(data.message || 'Failed to create user', 'error');
+                } else {
+                    alert(data.message || 'Failed to create user');
+                }
+
+                // Handle validation errors
+                if (data.errors) {
+                    Object.keys(data.errors).forEach(field => {
+                        const input = form.querySelector(`[name="${field}"]`);
+                        if (input) {
+                            input.classList.add('is-invalid');
+                            const feedback = input.parentElement.querySelector('.invalid-feedback');
+                            if (feedback) {
+                                feedback.textContent = data.errors[field][0];
+                            }
+                        }
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            if (window.SAMPARK && window.SAMPARK.ui && window.SAMPARK.ui.showToast) {
+                window.SAMPARK.ui.showToast('An error occurred while creating user', 'error');
+            } else {
+                alert('An error occurred while creating user');
+            }
+        })
+        .finally(() => {
+            // Reset button state
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
     });
     
     // Toggle password visibility

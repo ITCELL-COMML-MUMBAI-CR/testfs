@@ -257,6 +257,14 @@ ob_start();
                                 </a>
                             </div>
                             <div class="col-6 col-sm-4">
+                                <a href="<?= Config::getAppUrl() ?>/admin/tickets" class="text-decoration-none">
+                                    <div class="card-apple-glass text-center py-3">
+                                        <i class="fas fa-ticket-alt text-danger mb-2" style="font-size: 1.5rem;"></i>
+                                        <h6 class="mb-0">Tickets</h6>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-6 col-sm-4">
                                 <a href="<?= Config::getAppUrl() ?>/admin/categories" class="text-decoration-none">
                                     <div class="card-apple-glass text-center py-3">
                                         <i class="fas fa-tags text-warning mb-2" style="font-size: 1.5rem;"></i>

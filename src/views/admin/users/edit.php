@@ -179,17 +179,6 @@ ob_start();
                                 </div>
                             </div>
                             
-                            <!-- Additional Settings -->
-                            <h4 class="mb-4">Additional Settings</h4>
-                            
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-12">
-                                    <label for="notes" class="form-label-apple">Administrative Notes</label>
-                                    <textarea class="form-control form-control-apple" id="notes" name="notes" rows="3"><?= htmlspecialchars($user_to_edit['notes'] ?? '') ?></textarea>
-                                    <div class="form-text">Internal notes about this user (not visible to the user).</div>
-                                </div>
-                            </div>
-                            
                             <!-- Form Actions -->
                             <div class="d-flex justify-content-end mt-4">
                                 <button type="button" class="btn btn-apple-glass me-2" onclick="location.href='<?= Config::getAppUrl() ?>/admin/users'">

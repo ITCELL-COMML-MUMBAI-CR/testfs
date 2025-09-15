@@ -92,9 +92,20 @@ $router->post('/admin/emails/send', 'Admin@sendBulkEmail', ['auth', 'role:admin,
 
 $router->get('/admin/reports', 'Admin@reports', ['auth', 'role:admin,superadmin']);
 
+// Admin ticket management routes
+$router->get('/admin/tickets', 'Admin@tickets', ['auth', 'role:admin,superadmin']);
+$router->get('/admin/tickets/debug', 'Admin@debug', ['auth', 'role:admin,superadmin']);
+$router->get('/admin/tickets/search', 'Admin@searchTickets', ['auth', 'role:admin,superadmin']);
+$router->post('/admin/tickets/data', 'Admin@getTicketsData', ['auth', 'role:admin,superadmin']);
+$router->post('/admin/tickets/search/data', 'Admin@getSearchTicketsData', ['auth', 'role:admin,superadmin']);
+$router->post('/admin/tickets/{id}/remarks', 'Admin@addAdminRemarks', ['auth', 'role:admin,superadmin']);
+
 // API Routes
 $router->get('/api/sheds/search', 'Api@searchSheds');
 $router->get('/api/categories/{type}/subtypes', 'Api@getSubtypes');
+$router->get('/api/categories/distinct', 'Admin@getCategoriesDistinct', ['auth', 'role:admin,superadmin']);
+$router->get('/api/categories/table-data', 'Admin@getCategoriesTableData', ['auth', 'role:admin,superadmin']);
+$router->get('/api/categories/{id}', 'Api@getCategory', ['auth']);
 $router->get('/api/zones', 'Api@getZones', ['auth']);
 $router->get('/api/divisions', 'Api@getDivisions', ['auth']);
 $router->get('/api/departments', 'Api@getDepartments', ['auth']);

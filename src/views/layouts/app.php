@@ -181,15 +181,35 @@
                                     <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="<?= Config::getAppUrl() ?>/admin/tickets">
+                                    <i class="fas fa-ticket-alt me-1"></i>Tickets
+                                </a>
+                            </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                     <i class="fas fa-cog me-1"></i>Management
                                 </a>
                             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-apple">
-                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/users">Users</a></li>
-                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/customers">Customers</a></li>
-                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/categories">Categories</a></li>
-                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/content">Content</a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/tickets">
+                                    <i class="fas fa-ticket-alt me-2"></i>Tickets
+                                </a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/tickets/search">
+                                    <i class="fas fa-search me-2"></i>Search Tickets
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/users">
+                                    <i class="fas fa-users me-2"></i>Users
+                                </a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/customers">
+                                    <i class="fas fa-building me-2"></i>Customers
+                                </a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/categories">
+                                    <i class="fas fa-tags me-2"></i>Categories
+                                </a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/content">
+                                    <i class="fas fa-edit me-2"></i>Content
+                                </a></li>
                             </ul>
                             </li>
                         <?php endif; ?>
@@ -223,10 +243,6 @@
                                 <li><a class="dropdown-item" href="#" onclick="showNotifications()">
                                     <i class="fas fa-bell me-2"></i>Notifications
                                     <span class="badge bg-danger ms-auto" id="notificationCount" style="display: none;">0</span>
-                                </a></li>
-                                <li><a class="dropdown-item" href="#" onclick="window.backgroundManager?.forceRefresh()">
-                                    <i class="fas fa-sync me-2"></i>Force Sync
-                                    <span class="badge bg-secondary ms-auto" id="background-status-indicator" title="Background sync status">●</span>
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="<?= Config::getAppUrl() ?>/logout">
@@ -326,7 +342,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     
     <!-- jQuery -->
-    <script src="<?= Config::getAppUrl() ?>/libs/jQuery/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     
     <!-- SweetAlert2 -->
     <script src="<?= Config::getAppUrl() ?>/libs/sweetalert2/sweetalert2.min.js"></script>

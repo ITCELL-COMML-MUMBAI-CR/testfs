@@ -43,23 +43,6 @@ $page_title = 'Controller Dashboard - SAMPARK';
                 <button class="btn btn-apple-secondary" onclick="refreshDashboard()">
                     <i class="fas fa-sync-alt me-2"></i>Refresh
                 </button>
-                <div class="dropdown">
-                    <button class="btn btn-apple-primary dropdown-toggle" data-bs-toggle="dropdown">
-                        <i class="fas fa-plus me-2"></i>Quick Actions
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/controller/tickets">
-                            <i class="fas fa-list me-2"></i>View All Tickets
-                        </a></li>
-                        <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/controller/reports">
-                            <i class="fas fa-chart-line me-2"></i>Generate Report
-                        </a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/controller/help">
-                            <i class="fas fa-question-circle me-2"></i>Help & Support
-                        </a></li>
-                    </ul>
-                </div>
             </div>
         </div>
     </div>
@@ -427,34 +410,6 @@ $page_title = 'Controller Dashboard - SAMPARK';
                 </div>
             </div>
 
-            <!-- Quick Actions -->
-            <div class="card card-apple mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-bolt me-2"></i>Quick Actions
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="<?= Config::getAppUrl() ?>/controller/tickets?status=pending" 
-                           class="btn btn-apple-primary">
-                            <i class="fas fa-clock me-2"></i>View Pending Tickets
-                        </a>
-                        <a href="<?= Config::getAppUrl() ?>/controller/tickets?priority=critical" 
-                           class="btn btn-apple-danger">
-                            <i class="fas fa-exclamation-circle me-2"></i>Critical Priority
-                        </a>
-                        <a href="<?= Config::getAppUrl() ?>/controller/tickets?status=awaiting_approval" 
-                           class="btn btn-apple-warning">
-                            <i class="fas fa-check-circle me-2"></i>Awaiting Approval
-                        </a>
-                        <a href="<?= Config::getAppUrl() ?>/controller/reports" 
-                           class="btn btn-apple-secondary">
-                            <i class="fas fa-chart-line me-2"></i>Generate Report
-                        </a>
-                    </div>
-                </div>
-            </div>
 
             <!-- System Status -->
             <div class="card card-apple mb-4">

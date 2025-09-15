@@ -98,17 +98,7 @@ ob_start();
                             </select>
                         </div>
                         
-                        <div class="col-md-3">
-                            <label for="search" class="form-label-apple small">Search</label>
-                            <input type="text" 
-                                   class="form-control form-control-apple" 
-                                   id="search" 
-                                   name="search" 
-                                   placeholder="Name, Email, Company or ID"
-                                   value="<?= isset($filters['search']) ? htmlspecialchars($filters['search']) : '' ?>">
-                        </div>
-                        
-                        <div class="col-md-3 d-flex gap-2">
+                        <div class="col-md-6 d-flex gap-2">
                             <button type="submit" class="btn btn-apple-primary flex-grow-1">
                                 <i class="fas fa-search me-1"></i>Filter
                             </button>

@@ -138,7 +138,7 @@ class CustomerController extends BaseController {
                            LEFT JOIN users u ON t.created_by_id = u.id
                            WHERE t.complaint_id = ?
                            AND t.transaction_type NOT IN ('forwarded')
-                           AND (t.remarks_type IS NULL OR t.remarks_type NOT IN ('internal_remarks', 'forwarding_remarks'))
+                           AND (t.remarks_type IS NULL OR t.remarks_type NOT IN ('internal_remarks', 'forwarding_remarks', 'admin_remarks'))
                            AND NOT (t.remarks_type = 'customer_remarks' AND t.transaction_type IN ('awaiting_approval', 'replied') AND
                                     NOT EXISTS (SELECT 1 FROM transactions t2 WHERE t2.complaint_id = t.complaint_id
                                                AND t2.transaction_type = 'approved' AND t2.created_at >= t.created_at))

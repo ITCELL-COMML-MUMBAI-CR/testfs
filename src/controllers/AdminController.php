@@ -36,32 +36,23 @@ class AdminController extends BaseController {
         $role = $_GET['role'] ?? '';
         $status = $_GET['status'] ?? '';
         $division = $_GET['division'] ?? '';
-        $search = $_GET['search'] ?? '';
-        
         // Build query conditions
         $conditions = ['1=1'];
         $params = [];
-        
+
         if ($role) {
             $conditions[] = 'role = ?';
             $params[] = $role;
         }
-        
+
         if ($status) {
             $conditions[] = 'status = ?';
             $params[] = $status;
         }
-        
+
         if ($division) {
             $conditions[] = 'division = ?';
             $params[] = $division;
-        }
-        
-        if ($search) {
-            $conditions[] = '(name LIKE ? OR email LIKE ? OR login_id LIKE ?)';
-            $params[] = "%{$search}%";
-            $params[] = "%{$search}%";
-            $params[] = "%{$search}%";
         }
         
         $whereClause = implode(' AND ', $conditions);
@@ -86,8 +77,7 @@ class AdminController extends BaseController {
             'filters' => [
                 'role' => $role,
                 'status' => $status,
-                'division' => $division,
-                'search' => $search
+                'division' => $division
             ],
             'roles' => Config::USER_ROLES,
             'status_options' => Config::USER_STATUS,
@@ -124,8 +114,8 @@ class AdminController extends BaseController {
         $isValid = $validator->validate($_POST, [
             'login_id' => 'required|min:4|max:50|unique:users,login_id',
             'name' => 'required|min:2|max:100',
-            'email' => 'required|email|unique:users,email',
-            'mobile' => 'required|phone|unique:users,mobile',
+            'email' => 'required|email',
+            'mobile' => 'required|phone',
             'role' => 'required|in:' . implode(',', array_keys(Config::USER_ROLES)),
             'department' => 'required|max:100',
             'division' => 'required|exists:shed,division',
@@ -249,8 +239,8 @@ class AdminController extends BaseController {
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'name' => 'required|min:2|max:100',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'mobile' => 'required|phone|unique:users,mobile,' . $id,
+            'email' => 'required|email',
+            'mobile' => 'required|phone',
             'role' => 'required|in:' . implode(',', array_keys(Config::USER_ROLES)),
             'department' => 'required|max:100',
             'division' => 'required|exists:shed,division',
@@ -471,33 +461,24 @@ class AdminController extends BaseController {
         $status = $_GET['status'] ?? '';
         $customer_type = $_GET['customer_type'] ?? '';
         $region = $_GET['region'] ?? '';
-        $search = $_GET['search'] ?? '';
-        
+
         // Build query conditions
         $conditions = ['1=1'];
         $params = [];
-        
+
         if ($status) {
             $conditions[] = 'c.status = ?';
             $params[] = $status;
         }
-        
+
         if ($customer_type) {
             $conditions[] = 'COALESCE(c.customer_type, "individual") = ?';
             $params[] = $customer_type;
         }
-        
+
         if ($region) {
             $conditions[] = 'c.division = ?';
             $params[] = $region;
-        }
-        
-        if ($search) {
-            $conditions[] = '(c.name LIKE ? OR c.email LIKE ? OR c.company_name LIKE ? OR c.customer_id LIKE ?)';
-            $params[] = "%{$search}%";
-            $params[] = "%{$search}%";
-            $params[] = "%{$search}%";
-            $params[] = "%{$search}%";
         }
         
         $whereClause = implode(' AND ', $conditions);
@@ -553,8 +534,7 @@ class AdminController extends BaseController {
                 'filters' => [
                     'status' => $status,
                     'customer_type' => $customer_type,
-                    'region' => $region,
-                    'search' => $search
+                    'region' => $region
                 ],
                 'regions' => $regions,
                 'csrf_token' => $this->session->getCSRFToken()
@@ -581,8 +561,7 @@ class AdminController extends BaseController {
                 'filters' => [
                     'status' => $status,
                     'customer_type' => $customer_type,
-                    'region' => $region,
-                    'search' => $search
+                    'region' => $region
                 ],
                 'regions' => [],
                 'csrf_token' => $this->session->getCSRFToken()
@@ -935,7 +914,11 @@ class AdminController extends BaseController {
         $user = $this->getCurrentUser();
         
         $categories = $this->db->fetchAll(
-            "SELECT * FROM complaint_categories ORDER BY category, type, subtype"
+            "SELECT *,
+             (SELECT COUNT(*) FROM complaint_categories sub WHERE sub.category = complaint_categories.category AND sub.type = complaint_categories.type AND sub.subtype IS NOT NULL AND sub.subtype != '') as subtype_count,
+             (SELECT COUNT(*) FROM complaints WHERE category_id = complaint_categories.category_id) as ticket_count
+             FROM complaint_categories
+             ORDER BY category, type, subtype"
         );
         
         $data = [
@@ -956,8 +939,7 @@ class AdminController extends BaseController {
         $isValid = $validator->validate($_POST, [
             'category' => 'required|max:100',
             'type' => 'required|max:100',
-            'subtype' => 'required|max:100',
-            'description' => 'max:500'
+            'subtype' => 'required|max:100'
         ]);
         
         if (!$isValid) {
@@ -969,25 +951,26 @@ class AdminController extends BaseController {
         }
         
         try {
+            $subtype = trim($_POST['subtype']);
+
             // Check for duplicate
             $existing = $this->db->fetch(
                 "SELECT category_id FROM complaint_categories WHERE category = ? AND type = ? AND subtype = ?",
-                [$_POST['category'], $_POST['type'], $_POST['subtype']]
+                [$_POST['category'], $_POST['type'], $subtype]
             );
-            
+
             if ($existing) {
                 $this->json(['success' => false, 'message' => 'Category combination already exists'], 400);
                 return;
             }
-            
-            $sql = "INSERT INTO complaint_categories (category, type, subtype, description, created_at) 
-                    VALUES (?, ?, ?, ?, NOW())";
-            
+
+            $sql = "INSERT INTO complaint_categories (category, type, subtype)
+                    VALUES (?, ?, ?)";
+
             $this->db->query($sql, [
                 trim($_POST['category']),
                 trim($_POST['type']),
-                trim($_POST['subtype']),
-                trim($_POST['description']) ?: null
+                $subtype
             ]);
             
             // Log activity
@@ -1020,9 +1003,7 @@ class AdminController extends BaseController {
         $isValid = $validator->validate($_POST, [
             'category' => 'required|max:100',
             'type' => 'required|max:100',
-            'subtype' => 'required|max:100',
-            'description' => 'max:500',
-            'is_active' => 'boolean'
+            'subtype' => 'required|max:100'
         ]);
         
         if (!$isValid) {
@@ -1044,17 +1025,14 @@ class AdminController extends BaseController {
                 return;
             }
             
-            $sql = "UPDATE complaint_categories SET 
-                    category = ?, type = ?, subtype = ?, description = ?, 
-                    is_active = ?, updated_at = NOW()
+            $sql = "UPDATE complaint_categories SET
+                    category = ?, type = ?, subtype = ?
                     WHERE category_id = ?";
-            
+
             $this->db->query($sql, [
                 trim($_POST['category']),
                 trim($_POST['type']),
                 trim($_POST['subtype']),
-                trim($_POST['description']) ?: null,
-                isset($_POST['is_active']) ? 1 : 0,
                 $categoryId
             ]);
             
@@ -1133,7 +1111,106 @@ class AdminController extends BaseController {
             ], 500);
         }
     }
-    
+
+
+    public function getCategoriesDistinct() {
+        try {
+            $categories = $this->db->fetchAll(
+                "SELECT DISTINCT category FROM complaint_categories WHERE category IS NOT NULL AND category != '' ORDER BY category"
+            );
+
+            $types = $this->db->fetchAll(
+                "SELECT DISTINCT type FROM complaint_categories WHERE type IS NOT NULL AND type != '' ORDER BY type"
+            );
+
+            $this->json([
+                'success' => true,
+                'categories' => array_column($categories, 'category'),
+                'types' => array_column($types, 'type')
+            ]);
+
+        } catch (Exception $e) {
+            Config::logError("Get distinct categories error: " . $e->getMessage());
+
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to load categories and types'
+            ], 500);
+        }
+    }
+
+    public function getCategoriesTableData() {
+        try {
+            $categories = $this->db->fetchAll(
+                "SELECT *,
+                 (SELECT COUNT(*) FROM complaint_categories sub WHERE sub.category = complaint_categories.category AND sub.type = complaint_categories.type AND sub.subtype IS NOT NULL AND sub.subtype != '') as subtype_count,
+                 (SELECT COUNT(*) FROM complaints WHERE category_id = complaint_categories.category_id) as ticket_count
+                 FROM complaint_categories
+                 ORDER BY category, type, subtype"
+            );
+
+            ob_start();
+            if (empty($categories)): ?>
+                <tr>
+                    <td colspan="4" class="text-center py-5">
+                        <div class="text-muted">
+                            <i class="fas fa-tags fa-3x mb-3"></i>
+                            <h5>No categories found</h5>
+                            <p>Click "Add Category" to create your first complaint category.</p>
+                        </div>
+                    </td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($categories as $category): ?>
+                <tr>
+                    <td>
+                        <div class="fw-semibold"><?= htmlspecialchars($category['category']) ?></div>
+                    </td>
+                    <td>
+                        <span class="badge bg-secondary">
+                            <?= ucfirst($category['type']) ?>
+                        </span>
+                    </td>
+                    <td>
+                        <?php if ($category['subtype']): ?>
+                            <span class="badge bg-primary"><?= htmlspecialchars($category['subtype']) ?></span>
+                        <?php else: ?>
+                            <span class="text-muted">No subtype</span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-apple-primary"
+                                    onclick="editCategory(<?= $category['category_id'] ?>)" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-apple-danger"
+                                    onclick="deleteCategory(<?= $category['category_id'] ?>)" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            <?php endif;
+
+            $html = ob_get_clean();
+
+            $this->json([
+                'success' => true,
+                'html' => $html
+            ]);
+
+        } catch (Exception $e) {
+            Config::logError("Get categories table data error: " . $e->getMessage());
+
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to load table data'
+            ], 500);
+        }
+    }
+
     public function sheds() {
         $user = $this->getCurrentUser();
         
@@ -1526,34 +1603,769 @@ class AdminController extends BaseController {
     public function deleteLink($id) {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         try {
             $link = $this->db->fetch("SELECT * FROM quick_links WHERE id = ?", [$id]);
-            
+
             if (!$link) {
                 $this->json(['success' => false, 'message' => 'Link not found'], 404);
                 return;
             }
-            
+
             $this->db->query("DELETE FROM quick_links WHERE id = ?", [$id]);
-            
+
             // Log activity
             $this->logActivity('quick_link_deleted', [
                 'link_id' => $id,
                 'title' => $link['title']
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'Link deleted successfully'
             ]);
-            
+
         } catch (Exception $e) {
             Config::logError("Link deletion error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to delete link. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Admin tickets view - shows tickets based on admin's department and division
+     */
+    public function tickets() {
+        $user = $this->getCurrentUser();
+        $page = $_GET['page'] ?? 1;
+        $status = $_GET['status'] ?? '';
+        $priority = $_GET['priority'] ?? '';
+        $dateFrom = $_GET['date_from'] ?? '';
+        $dateTo = $_GET['date_to'] ?? '';
+        $category = $_GET['category'] ?? '';
+
+        // Build query conditions based on admin's access level
+        $conditions = ['1=1'];
+        $params = [];
+
+        // Apply department and division filtering rules
+        if ($user['department'] === 'ADM') {
+            // ADM department sees all tickets in their division
+            if ($user['division'] === 'HQ') {
+                // ADM with division HQ sees all tickets in their zone
+                $conditions[] = 'c.zone = ?';
+                $params[] = $user['zone'];
+            } else {
+                // ADM with other divisions sees all tickets in that division
+                $conditions[] = 'c.division = ?';
+                $params[] = $user['division'];
+            }
+        } else {
+            // Other admins see tickets in their specific department and division
+            if ($user['division'] === 'HQ') {
+                // Non-ADM admin with HQ division sees tickets in their zone for their department
+                $conditions[] = 'c.zone = ? AND c.assigned_to_department = ?';
+                $params[] = $user['zone'];
+                $params[] = $user['department'];
+            } else {
+                // Other admins see tickets in their department and division
+                $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
+                $params[] = $user['division'];
+                $params[] = $user['department'];
+            }
+        }
+
+        // Apply additional filters
+        if ($status) {
+            $conditions[] = 'c.status = ?';
+            $params[] = $status;
+        }
+
+        if ($priority) {
+            $conditions[] = 'c.priority = ?';
+            $params[] = $priority;
+        }
+
+        if ($dateFrom) {
+            $conditions[] = 'c.date >= ?';
+            $params[] = $dateFrom;
+        }
+
+        if ($dateTo) {
+            $conditions[] = 'c.date <= ?';
+            $params[] = $dateTo;
+        }
+
+        if ($category) {
+            $conditions[] = 'cc.category = ?';
+            $params[] = $category;
+        }
+
+        $whereClause = implode(' AND ', $conditions);
+
+        $sql = "SELECT c.complaint_id, c.description, c.status, c.priority, c.date, c.time,
+                       c.division, c.zone, c.assigned_to_department, c.created_at,
+                       cc.category, cc.type, cc.subtype,
+                       s.name as shed_name, s.shed_code,
+                       cust.name as customer_name, cust.email as customer_email,
+                       cust.mobile as customer_mobile, cust.company_name,
+                       (SELECT COUNT(*) FROM transactions t
+                        WHERE t.complaint_id = c.complaint_id AND t.remarks_type = 'admin_remarks') as admin_remarks_count
+                FROM complaints c
+                LEFT JOIN complaint_categories cc ON c.category_id = cc.category_id
+                LEFT JOIN shed s ON c.shed_id = s.shed_id
+                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                WHERE {$whereClause}
+                ORDER BY c.created_at DESC";
+
+        try {
+            $tickets = $this->paginate($sql, $params, $page, 20);
+
+            $data = [
+                'page_title' => 'Admin Tickets - SAMPARK',
+                'user' => $user,
+                'tickets' => $tickets['data'],
+                'total_tickets' => $tickets['total'],
+                'current_page' => $tickets['page'],
+                'total_pages' => $tickets['total_pages'],
+                'has_next' => $tickets['has_next'],
+                'has_prev' => $tickets['has_prev'],
+                'filters' => [
+                    'status' => $status,
+                    'priority' => $priority,
+                    'date_from' => $dateFrom,
+                    'date_to' => $dateTo,
+                    'category' => $category
+                ],
+                'categories' => $this->getDistinctCategories(),
+                'status_options' => [
+                    'pending' => 'Pending',
+                    'awaiting_feedback' => 'Awaiting Feedback',
+                    'awaiting_info' => 'Awaiting Info',
+                    'awaiting_approval' => 'Awaiting Approval',
+                    'closed' => 'Closed'
+                ],
+                'priority_options' => [
+                    'normal' => 'Normal',
+                    'medium' => 'Medium',
+                    'high' => 'High',
+                    'critical' => 'Critical'
+                ],
+                'csrf_token' => $this->session->getCSRFToken()
+            ];
+
+            $this->view('admin/tickets/index', $data);
+
+        } catch (Exception $e) {
+            Config::logError("Admin tickets error: " . $e->getMessage());
+            $this->setFlash('error', 'Failed to load tickets. Please try again.');
+            $this->redirect(Config::getAppUrl() . '/admin/dashboard');
+        }
+    }
+
+    /**
+     * Debug page for testing admin access and data
+     */
+    public function debug() {
+        $user = $this->getCurrentUser();
+
+        try {
+            // Simple query to test data access
+            $sql = "SELECT COUNT(*) as total FROM complaints c";
+            $totalComplaints = $this->db->fetch($sql)['total'];
+
+            // Test user access conditions
+            $conditions = ['1=1'];
+            $params = [];
+
+            if ($user['department'] === 'ADM') {
+                if ($user['division'] === 'HQ') {
+                    $conditions[] = 'c.zone = ?';
+                    $params[] = $user['zone'];
+                } else {
+                    $conditions[] = 'c.division = ?';
+                    $params[] = $user['division'];
+                }
+            } else {
+                if ($user['division'] === 'HQ') {
+                    $conditions[] = 'c.zone = ? AND c.assigned_to_department = ?';
+                    $params[] = $user['zone'];
+                    $params[] = $user['department'];
+                } else {
+                    $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
+                    $params[] = $user['division'];
+                    $params[] = $user['department'];
+                }
+            }
+
+            $whereClause = implode(' AND ', $conditions);
+            $testSql = "SELECT COUNT(*) as accessible FROM complaints c WHERE {$whereClause}";
+            $accessibleComplaints = $this->db->fetch($testSql, $params)['accessible'];
+
+            // Get sample data
+            $sampleSql = "SELECT c.complaint_id, c.description, c.status, c.created_at
+                         FROM complaints c WHERE {$whereClause} LIMIT 5";
+            $sampleData = $this->db->fetchAll($sampleSql, $params);
+
+            $data = [
+                'page_title' => 'Admin Debug - SAMPARK',
+                'user' => $user,
+                'total_complaints' => $totalComplaints,
+                'accessible_complaints' => $accessibleComplaints,
+                'sample_data' => $sampleData,
+                'access_conditions' => $conditions,
+                'access_params' => $params
+            ];
+
+            $this->json($data);
+
+        } catch (Exception $e) {
+            $this->json([
+                'error' => $e->getMessage(),
+                'user' => $user
+            ]);
+        }
+    }
+
+    /**
+     * Admin search tickets page
+     */
+    public function searchTickets() {
+        $user = $this->getCurrentUser();
+
+        $complaintNumber = $_GET['complaint_number'] ?? '';
+        $dateFrom = $_GET['date_from'] ?? '';
+        $dateTo = $_GET['date_to'] ?? '';
+        $customerMobile = $_GET['customer_mobile'] ?? '';
+        $customerEmail = $_GET['customer_email'] ?? '';
+        $page = $_GET['page'] ?? 1;
+
+        $tickets = [];
+        $totalTickets = 0;
+        $hasSearch = false;
+
+        // Only search if at least one parameter is provided
+        if ($complaintNumber || $dateFrom || $dateTo || $customerMobile || $customerEmail) {
+            $hasSearch = true;
+
+            $conditions = ['1=1']; // Show all tickets regardless of status for admin search
+            $params = [];
+
+            if ($complaintNumber) {
+                $conditions[] = 'c.complaint_id LIKE ?';
+                $params[] = '%' . $complaintNumber . '%';
+            }
+
+            if ($dateFrom) {
+                $conditions[] = 'c.date >= ?';
+                $params[] = $dateFrom;
+            }
+
+            if ($dateTo) {
+                $conditions[] = 'c.date <= ?';
+                $params[] = $dateTo;
+            }
+
+            if ($customerMobile) {
+                $conditions[] = 'cust.mobile LIKE ?';
+                $params[] = '%' . $customerMobile . '%';
+            }
+
+            if ($customerEmail) {
+                $conditions[] = 'cust.email LIKE ?';
+                $params[] = '%' . $customerEmail . '%';
+            }
+
+            $whereClause = implode(' AND ', $conditions);
+
+            $sql = "SELECT c.complaint_id, c.description, c.status, c.priority, c.date, c.time,
+                           c.division, c.zone, c.assigned_to_department, c.created_at,
+                           cc.category, cc.type, cc.subtype,
+                           s.name as shed_name, s.shed_code,
+                           cust.name as customer_name, cust.email as customer_email,
+                           cust.mobile as customer_mobile, cust.company_name,
+                           (SELECT COUNT(*) FROM transactions t
+                            WHERE t.complaint_id = c.complaint_id AND t.remarks_type = 'admin_remarks') as admin_remarks_count
+                    FROM complaints c
+                    LEFT JOIN complaint_categories cc ON c.category_id = cc.category_id
+                    LEFT JOIN shed s ON c.shed_id = s.shed_id
+                    LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                    WHERE {$whereClause}
+                    ORDER BY c.created_at DESC";
+
+            try {
+                $result = $this->paginate($sql, $params, $page, 20);
+                $tickets = $result['data'];
+                $totalTickets = $result['total'];
+                $currentPage = $result['page'];
+                $totalPages = $result['total_pages'];
+                $hasNext = $result['has_next'];
+                $hasPrev = $result['has_prev'];
+
+            } catch (Exception $e) {
+                Config::logError("Admin search tickets error: " . $e->getMessage());
+                $this->setFlash('error', 'Search failed. Please try again.');
+            }
+        }
+
+        $data = [
+            'page_title' => 'Search Tickets - SAMPARK Admin',
+            'user' => $user,
+            'tickets' => $tickets,
+            'total_tickets' => $totalTickets,
+            'current_page' => $currentPage ?? 1,
+            'total_pages' => $totalPages ?? 1,
+            'has_next' => $hasNext ?? false,
+            'has_prev' => $hasPrev ?? false,
+            'has_search' => $hasSearch,
+            'search_params' => [
+                'complaint_number' => $complaintNumber,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'customer_mobile' => $customerMobile,
+                'customer_email' => $customerEmail
+            ],
+            'csrf_token' => $this->session->getCSRFToken()
+        ];
+
+        $this->view('admin/tickets/search', $data);
+    }
+
+    /**
+     * DataTables AJAX endpoint for admin tickets
+     */
+    public function getTicketsData() {
+        $user = $this->getCurrentUser();
+
+        // DataTables parameters
+        $draw = $_POST['draw'] ?? 1;
+        $start = $_POST['start'] ?? 0;
+        $length = $_POST['length'] ?? 10;
+        $searchValue = $_POST['search']['value'] ?? '';
+        $orderColumn = $_POST['order'][0]['column'] ?? 0;
+        $orderDir = $_POST['order'][0]['dir'] ?? 'desc';
+
+        // Get filters from POST
+        $status = $_POST['status'] ?? '';
+        $priority = $_POST['priority'] ?? '';
+        $dateFrom = $_POST['date_from'] ?? '';
+        $dateTo = $_POST['date_to'] ?? '';
+        $category = $_POST['category'] ?? '';
+
+        // Column mapping for ordering
+        $columns = [
+            'c.complaint_id',
+            'c.description',
+            'cust.name',
+            's.name',
+            'cc.category',
+            'c.status',
+            'c.priority',
+            'c.date',
+            'admin_remarks_count'
+        ];
+
+        try {
+            // Build query conditions based on admin's access level
+            $conditions = ['1=1'];
+            $params = [];
+
+            // Apply department and division filtering rules
+            if ($user['department'] === 'ADM') {
+                if ($user['division'] === 'HQ') {
+                    $conditions[] = 'c.zone = ?';
+                    $params[] = $user['zone'];
+                } else {
+                    $conditions[] = 'c.division = ?';
+                    $params[] = $user['division'];
+                }
+            } else {
+                if ($user['division'] === 'HQ') {
+                    $conditions[] = 'c.zone = ? AND c.assigned_to_department = ?';
+                    $params[] = $user['zone'];
+                    $params[] = $user['department'];
+                } else {
+                    $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
+                    $params[] = $user['division'];
+                    $params[] = $user['department'];
+                }
+            }
+
+            // Apply filters
+            if ($status) {
+                $conditions[] = 'c.status = ?';
+                $params[] = $status;
+            }
+            if ($priority) {
+                $conditions[] = 'c.priority = ?';
+                $params[] = $priority;
+            }
+            if ($dateFrom) {
+                $conditions[] = 'c.date >= ?';
+                $params[] = $dateFrom;
+            }
+            if ($dateTo) {
+                $conditions[] = 'c.date <= ?';
+                $params[] = $dateTo;
+            }
+            if ($category) {
+                $conditions[] = 'cc.category = ?';
+                $params[] = $category;
+            }
+
+            // Search functionality
+            if ($searchValue) {
+                $conditions[] = "(c.complaint_id LIKE ? OR c.description LIKE ? OR cust.name LIKE ? OR cust.mobile LIKE ? OR s.name LIKE ?)";
+                $searchParam = '%' . $searchValue . '%';
+                $params = array_merge($params, [$searchParam, $searchParam, $searchParam, $searchParam, $searchParam]);
+            }
+
+            $whereClause = implode(' AND ', $conditions);
+            $orderByClause = "ORDER BY " . $columns[$orderColumn] . " " . strtoupper($orderDir);
+
+            // Count total records
+            $countSql = "SELECT COUNT(*) as total
+                        FROM complaints c
+                        LEFT JOIN complaint_categories cc ON c.category_id = cc.category_id
+                        LEFT JOIN shed s ON c.shed_id = s.shed_id
+                        LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                        WHERE {$whereClause}";
+
+            $totalRecords = $this->db->fetch($countSql, $params)['total'];
+
+            // Get data with pagination
+            $sql = "SELECT c.complaint_id, c.description, c.status, c.priority, c.date, c.time,
+                           c.division, c.zone, c.assigned_to_department, c.created_at,
+                           cc.category, cc.type, cc.subtype,
+                           s.name as shed_name, s.shed_code,
+                           cust.name as customer_name, cust.email as customer_email,
+                           cust.mobile as customer_mobile, cust.company_name,
+                           (SELECT COUNT(*) FROM transactions t
+                            WHERE t.complaint_id = c.complaint_id AND t.remarks_type = 'admin_remarks') as admin_remarks_count
+                    FROM complaints c
+                    LEFT JOIN complaint_categories cc ON c.category_id = cc.category_id
+                    LEFT JOIN shed s ON c.shed_id = s.shed_id
+                    LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                    WHERE {$whereClause}
+                    {$orderByClause}
+                    LIMIT {$start}, {$length}";
+
+            $tickets = $this->db->fetchAll($sql, $params);
+
+            // Format data for DataTables
+            $data = [];
+            foreach ($tickets as $ticket) {
+                $statusBadge = $this->getStatusBadge($ticket['status']);
+                $priorityBadge = $this->getPriorityBadge($ticket['priority']);
+
+                $actionButton = '';
+                if ($ticket['status'] !== 'closed') {
+                    $actionButton = '<button class="btn btn-sm btn-primary" onclick="showRemarksModal(\'' . htmlspecialchars($ticket['complaint_id']) . '\')">
+                        <i class="fas fa-comment"></i> Add Remark
+                    </button>';
+                } else {
+                    $actionButton = '<span class="text-muted small">Closed</span>';
+                }
+
+                $data[] = [
+                    '<code>' . htmlspecialchars($ticket['complaint_id']) . '</code>',
+                    '<div class="text-truncate" style="max-width: 200px;" title="' . htmlspecialchars($ticket['description']) . '">' .
+                        htmlspecialchars(substr($ticket['description'], 0, 80)) .
+                        (strlen($ticket['description']) > 80 ? '...' : '') . '</div>',
+                    '<div class="small">
+                        <strong>' . htmlspecialchars($ticket['customer_name']) . '</strong><br>
+                        ' . htmlspecialchars($ticket['customer_mobile']) . '<br>
+                        <span class="text-muted">' . htmlspecialchars($ticket['company_name']) . '</span>
+                    </div>',
+                    '<div class="small">
+                        <strong>' . htmlspecialchars($ticket['shed_name']) . '</strong><br>
+                        <span class="text-muted">' . htmlspecialchars($ticket['division']) . ' / ' . htmlspecialchars($ticket['zone']) . '</span>
+                    </div>',
+                    '<div class="small">
+                        <span class="badge bg-secondary">' . htmlspecialchars($ticket['category']) . '</span><br>
+                        <span class="text-muted">' . htmlspecialchars($ticket['type']) . '</span>
+                    </div>',
+                    $statusBadge,
+                    $priorityBadge,
+                    '<div class="small">
+                        ' . date('d/m/Y', strtotime($ticket['date'])) . '<br>
+                        <span class="text-muted">' . date('H:i', strtotime($ticket['time'])) . '</span>
+                    </div>',
+                    $ticket['admin_remarks_count'] > 0 ?
+                        '<span class="badge bg-info">' . $ticket['admin_remarks_count'] . ' remark(s)</span>' :
+                        '<span class="text-muted">No remarks</span>',
+                    $actionButton
+                ];
+            }
+
+            $this->json([
+                'draw' => intval($draw),
+                'recordsTotal' => intval($totalRecords),
+                'recordsFiltered' => intval($totalRecords),
+                'data' => $data
+            ]);
+
+        } catch (Exception $e) {
+            Config::logError("Admin tickets DataTables error: " . $e->getMessage());
+            $this->json([
+                'draw' => intval($draw),
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'error' => 'Failed to load tickets'
+            ]);
+        }
+    }
+
+    /**
+     * DataTables AJAX endpoint for admin search tickets
+     */
+    public function getSearchTicketsData() {
+        // DataTables parameters
+        $draw = $_POST['draw'] ?? 1;
+        $start = $_POST['start'] ?? 0;
+        $length = $_POST['length'] ?? 10;
+        $searchValue = $_POST['search']['value'] ?? '';
+        $orderColumn = $_POST['order'][0]['column'] ?? 0;
+        $orderDir = $_POST['order'][0]['dir'] ?? 'desc';
+
+        // Get search parameters from POST
+        $complaintNumber = $_POST['complaint_number'] ?? '';
+        $dateFrom = $_POST['date_from'] ?? '';
+        $dateTo = $_POST['date_to'] ?? '';
+        $customerMobile = $_POST['customer_mobile'] ?? '';
+        $customerEmail = $_POST['customer_email'] ?? '';
+
+        // Column mapping for ordering
+        $columns = [
+            'c.complaint_id',
+            'c.description',
+            'cust.name',
+            's.name',
+            'cc.category',
+            'c.status',
+            'c.priority',
+            'c.date',
+            'admin_remarks_count'
+        ];
+
+        try {
+            // Only search if at least one parameter is provided
+            $hasSearchParams = $complaintNumber || $dateFrom || $dateTo || $customerMobile || $customerEmail;
+
+            if (!$hasSearchParams) {
+                $this->json([
+                    'draw' => intval($draw),
+                    'recordsTotal' => 0,
+                    'recordsFiltered' => 0,
+                    'data' => []
+                ]);
+                return;
+            }
+
+            $conditions = ['1=1']; // Show all tickets regardless of status for admin search
+            $params = [];
+
+            if ($complaintNumber) {
+                $conditions[] = 'c.complaint_id LIKE ?';
+                $params[] = '%' . $complaintNumber . '%';
+            }
+            if ($dateFrom) {
+                $conditions[] = 'c.date >= ?';
+                $params[] = $dateFrom;
+            }
+            if ($dateTo) {
+                $conditions[] = 'c.date <= ?';
+                $params[] = $dateTo;
+            }
+            if ($customerMobile) {
+                $conditions[] = 'cust.mobile LIKE ?';
+                $params[] = '%' . $customerMobile . '%';
+            }
+            if ($customerEmail) {
+                $conditions[] = 'cust.email LIKE ?';
+                $params[] = '%' . $customerEmail . '%';
+            }
+
+            // DataTables search functionality
+            if ($searchValue) {
+                $conditions[] = "(c.complaint_id LIKE ? OR c.description LIKE ? OR cust.name LIKE ? OR cust.mobile LIKE ? OR s.name LIKE ?)";
+                $searchParam = '%' . $searchValue . '%';
+                $params = array_merge($params, [$searchParam, $searchParam, $searchParam, $searchParam, $searchParam]);
+            }
+
+            $whereClause = implode(' AND ', $conditions);
+            $orderByClause = "ORDER BY " . $columns[$orderColumn] . " " . strtoupper($orderDir);
+
+            // Count total records
+            $countSql = "SELECT COUNT(*) as total
+                        FROM complaints c
+                        LEFT JOIN complaint_categories cc ON c.category_id = cc.category_id
+                        LEFT JOIN shed s ON c.shed_id = s.shed_id
+                        LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                        WHERE {$whereClause}";
+
+            $totalRecords = $this->db->fetch($countSql, $params)['total'];
+
+            // Get data with pagination
+            $sql = "SELECT c.complaint_id, c.description, c.status, c.priority, c.date, c.time,
+                           c.division, c.zone, c.assigned_to_department, c.created_at,
+                           cc.category, cc.type, cc.subtype,
+                           s.name as shed_name, s.shed_code,
+                           cust.name as customer_name, cust.email as customer_email,
+                           cust.mobile as customer_mobile, cust.company_name,
+                           (SELECT COUNT(*) FROM transactions t
+                            WHERE t.complaint_id = c.complaint_id AND t.remarks_type = 'admin_remarks') as admin_remarks_count
+                    FROM complaints c
+                    LEFT JOIN complaint_categories cc ON c.category_id = cc.category_id
+                    LEFT JOIN shed s ON c.shed_id = s.shed_id
+                    LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                    WHERE {$whereClause}
+                    {$orderByClause}
+                    LIMIT {$start}, {$length}";
+
+            $tickets = $this->db->fetchAll($sql, $params);
+
+            // Format data for DataTables
+            $data = [];
+            foreach ($tickets as $ticket) {
+                $statusBadge = $this->getStatusBadge($ticket['status']);
+                $priorityBadge = $this->getPriorityBadge($ticket['priority']);
+
+                $actionButton = '';
+                if ($ticket['status'] !== 'closed') {
+                    $actionButton = '<button class="btn btn-sm btn-primary" onclick="showRemarksModal(\'' . htmlspecialchars($ticket['complaint_id']) . '\')">
+                        <i class="fas fa-comment"></i> Add Remark
+                    </button>';
+                } else {
+                    $actionButton = '<span class="text-muted small">Closed</span>';
+                }
+
+                $data[] = [
+                    '<code>' . htmlspecialchars($ticket['complaint_id']) . '</code>',
+                    '<div class="text-truncate" style="max-width: 200px;" title="' . htmlspecialchars($ticket['description']) . '">' .
+                        htmlspecialchars(substr($ticket['description'], 0, 80)) .
+                        (strlen($ticket['description']) > 80 ? '...' : '') . '</div>',
+                    '<div class="small">
+                        <strong>' . htmlspecialchars($ticket['customer_name']) . '</strong><br>
+                        ' . htmlspecialchars($ticket['customer_mobile']) . '<br>
+                        <span class="text-muted">' . htmlspecialchars($ticket['company_name']) . '</span>
+                    </div>',
+                    '<div class="small">
+                        <strong>' . htmlspecialchars($ticket['shed_name']) . '</strong><br>
+                        <span class="text-muted">' . htmlspecialchars($ticket['division']) . ' / ' . htmlspecialchars($ticket['zone']) . '</span>
+                    </div>',
+                    '<div class="small">
+                        <span class="badge bg-secondary">' . htmlspecialchars($ticket['category']) . '</span><br>
+                        <span class="text-muted">' . htmlspecialchars($ticket['type']) . '</span>
+                    </div>',
+                    $statusBadge,
+                    $priorityBadge,
+                    '<div class="small">
+                        ' . date('d/m/Y', strtotime($ticket['date'])) . '<br>
+                        <span class="text-muted">' . date('H:i', strtotime($ticket['time'])) . '</span>
+                    </div>',
+                    $ticket['admin_remarks_count'] > 0 ?
+                        '<span class="badge bg-info">' . $ticket['admin_remarks_count'] . ' remark(s)</span>' :
+                        '<span class="text-muted">No remarks</span>',
+                    $actionButton
+                ];
+            }
+
+            $this->json([
+                'draw' => intval($draw),
+                'recordsTotal' => intval($totalRecords),
+                'recordsFiltered' => intval($totalRecords),
+                'data' => $data
+            ]);
+
+        } catch (Exception $e) {
+            Config::logError("Admin search tickets DataTables error: " . $e->getMessage());
+            $this->json([
+                'draw' => intval($draw),
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'error' => 'Failed to search tickets'
+            ]);
+        }
+    }
+
+    /**
+     * Add admin remarks to a ticket
+     */
+    public function addAdminRemarks($complaintId) {
+        $this->validateCSRF();
+        $user = $this->getCurrentUser();
+
+        $validator = new Validator();
+        $isValid = $validator->validate($_POST, [
+            'remarks' => 'required|min:10|max:1000'
+        ]);
+
+        if (!$isValid) {
+            $this->json([
+                'success' => false,
+                'errors' => $validator->getErrors()
+            ], 400);
+            return;
+        }
+
+        try {
+            // Check if ticket exists
+            $ticket = $this->db->fetch(
+                "SELECT * FROM complaints WHERE complaint_id = ?",
+                [$complaintId]
+            );
+
+            if (!$ticket) {
+                $this->json(['success' => false, 'message' => 'Ticket not found'], 404);
+                return;
+            }
+
+            // Check if ticket is closed
+            if ($ticket['status'] === 'closed') {
+                $this->json(['success' => false, 'message' => 'Cannot add remarks to closed tickets'], 400);
+                return;
+            }
+
+            $this->db->beginTransaction();
+
+            // Add admin remarks as transaction
+            $sql = "INSERT INTO transactions (
+                complaint_id, remarks, remarks_type, transaction_type,
+                from_user_id, created_at
+            ) VALUES (?, ?, 'admin_remarks', 'admin_remarks', ?, NOW())";
+
+            $this->db->query($sql, [
+                $complaintId,
+                trim($_POST['remarks']),
+                $user['id']
+            ]);
+
+            $this->db->commit();
+
+            // Log activity
+            $this->logActivity('admin_remarks_added', [
+                'complaint_id' => $complaintId,
+                'remarks_preview' => substr($_POST['remarks'], 0, 100)
+            ]);
+
+            $this->json([
+                'success' => true,
+                'message' => 'Admin remarks added successfully'
+            ]);
+
+        } catch (Exception $e) {
+            $this->db->rollback();
+            Config::logError("Admin remarks error: " . $e->getMessage());
+
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to add remarks. Please try again.'
             ], 500);
         }
     }
@@ -1825,6 +2637,50 @@ class AdminController extends BaseController {
     private function getZoneFromDivision($division) {
         $sql = "SELECT zone FROM shed WHERE division = ? LIMIT 1";
         return $this->db->fetch($sql, [$division]);
+    }
+
+    private function getDistinctCategories() {
+        try {
+            $sql = "SELECT DISTINCT category FROM complaint_categories ORDER BY category";
+            return $this->db->fetchAll($sql);
+        } catch (Exception $e) {
+            return [];
+        }
+    }
+
+    private function getStatusBadge($status) {
+        $statusClasses = [
+            'pending' => 'warning',
+            'awaiting_feedback' => 'info',
+            'awaiting_info' => 'info',
+            'awaiting_approval' => 'primary',
+            'closed' => 'success'
+        ];
+
+        $statusLabels = [
+            'pending' => 'Pending',
+            'awaiting_feedback' => 'Awaiting Feedback',
+            'awaiting_info' => 'Awaiting Info',
+            'awaiting_approval' => 'Awaiting Approval',
+            'closed' => 'Closed'
+        ];
+
+        $class = $statusClasses[$status] ?? 'secondary';
+        $label = $statusLabels[$status] ?? ucfirst($status);
+
+        return '<span class="badge bg-' . $class . '">' . $label . '</span>';
+    }
+
+    private function getPriorityBadge($priority) {
+        $priorityClasses = [
+            'normal' => 'success',
+            'medium' => 'warning',
+            'high' => 'danger',
+            'critical' => 'dark'
+        ];
+
+        $class = $priorityClasses[$priority] ?? 'secondary';
+        return '<span class="badge bg-' . $class . '">' . ucfirst($priority) . '</span>';
     }
     
     private function sendWelcomeEmail($userId, $email, $name, $loginId) {

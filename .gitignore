@@ -1,3 +1,7 @@
 /.claude
 logs/error.log
 public/uploads
+.htaccess
+public/.htaccess
+src/config/config.php
+src/config/database.php

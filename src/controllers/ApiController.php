@@ -1303,4 +1303,29 @@ class ApiController extends BaseController {
             $this->json(['error' => 'Failed to fetch files'], 500);
         }
     }
+
+    /**
+     * Get a single category by ID
+     */
+    public function getCategory($categoryId) {
+        $this->requireAuth();
+
+        try {
+            $category = $this->db->fetch(
+                "SELECT * FROM complaint_categories WHERE category_id = ?",
+                [$categoryId]
+            );
+
+            if (!$category) {
+                $this->json(['error' => 'Category not found'], 404);
+                return;
+            }
+
+            $this->json($category);
+
+        } catch (Exception $e) {
+            error_log("Get category error: " . $e->getMessage());
+            $this->json(['error' => 'Failed to fetch category'], 500);
+        }
+    }
 }
