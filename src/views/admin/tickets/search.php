@@ -108,7 +108,6 @@ $user = $data['user'];
                                 <th>Status</th>
                                 <th>Priority</th>
                                 <th>Date</th>
-                                <th>Admin Remarks</th>
                                 <th width="120">Actions</th>
                             </tr>
                         </thead>
@@ -122,42 +121,6 @@ $user = $data['user'];
     </div>
 </div>
 
-<!-- Admin Remarks Modal -->
-<div class="modal fade" id="remarksModal" tabindex="-1" aria-labelledby="remarksModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="remarksModalLabel">Add Admin Remarks</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="remarksForm" onsubmit="submitRemarks(event)">
-                <div class="modal-body">
-                    <input type="hidden" name="csrf_token" value="<?= $data['csrf_token'] ?>">
-                    <input type="hidden" id="ticketId" name="ticket_id">
-
-                    <div class="mb-3">
-                        <label for="remarks" class="form-label">Remarks <span class="text-danger">*</span></label>
-                        <textarea id="remarks" name="remarks" class="form-control" rows="4"
-                                  placeholder="Enter your admin remarks here..." required minlength="10" maxlength="1000"></textarea>
-                        <div class="form-text">Minimum 10 characters, maximum 1000 characters.</div>
-                    </div>
-
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <strong>Note:</strong> Admin remarks are internal and will not be visible to customers.
-                        They will be shown separately on the controller's ticket details page.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-comment"></i> Add Remarks
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 <!-- Include DataTables CSS (JS is loaded in layout) -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
@@ -206,8 +169,7 @@ document.addEventListener('DOMContentLoaded', function() {
             { data: 5, name: 'status', orderable: true },
             { data: 6, name: 'priority', orderable: true },
             { data: 7, name: 'date', orderable: true },
-            { data: 8, name: 'admin_remarks_count', orderable: false },
-            { data: 9, name: 'actions', orderable: false, searchable: false }
+            { data: 8, name: 'actions', orderable: false, searchable: false }
         ],
         order: [[7, 'desc']], // Order by date column
         pageLength: 25,
@@ -265,82 +227,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }); // End jQuery ready
 }); // End DOMContentLoaded
 
-function showRemarksModal(ticketId) {
-    document.getElementById('ticketId').value = ticketId;
-    document.getElementById('remarks').value = '';
-    document.getElementById('remarksModalLabel').textContent = 'Add Admin Remarks - ' + ticketId;
-
-    const modal = new bootstrap.Modal(document.getElementById('remarksModal'));
-    modal.show();
-}
-
-function submitRemarks(event) {
-    event.preventDefault();
-
-    const form = event.target;
-    const formData = new FormData(form);
-    const ticketId = formData.get('ticket_id');
-
-    const submitButton = form.querySelector('button[type="submit"]');
-    const originalText = submitButton.innerHTML;
-    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
-    submitButton.disabled = true;
-
-    fetch(`<?= Config::getAppUrl() ?>/admin/tickets/${ticketId}/remarks`, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('remarksModal'));
-            modal.hide();
-
-            // Show success message
-            const alert = document.createElement('div');
-            alert.className = 'alert alert-success alert-dismissible fade show';
-            alert.innerHTML = `
-                <i class="fas fa-check-circle"></i> ${data.message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            document.querySelector('.container-xl').insertBefore(alert, document.querySelector('.container-xl').firstElementChild);
-
-            // Refresh DataTable
-            searchTicketsTable.ajax.reload(null, false);
-
-            // Remove alert after 3 seconds
-            setTimeout(() => alert.remove(), 3000);
-        } else {
-            // Show error message
-            let errorMessage = data.message || 'Failed to add remarks';
-            if (data.errors) {
-                errorMessage = Object.values(data.errors).join(', ');
-            }
-
-            const alert = document.createElement('div');
-            alert.className = 'alert alert-danger alert-dismissible fade show';
-            alert.innerHTML = `
-                <i class="fas fa-exclamation-circle"></i> ${errorMessage}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            `;
-            form.insertBefore(alert, form.firstElementChild);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        const alert = document.createElement('div');
-        alert.className = 'alert alert-danger alert-dismissible fade show';
-        alert.innerHTML = `
-            <i class="fas fa-exclamation-circle"></i> An error occurred. Please try again.
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        form.insertBefore(alert, form.firstElementChild);
-    })
-    .finally(() => {
-        submitButton.innerHTML = originalText;
-        submitButton.disabled = false;
-    });
-}
 </script>
 
 <?php

@@ -2148,8 +2148,7 @@ class AdminController extends BaseController {
             'cc.category',
             'c.status',
             'c.priority',
-            'c.date',
-            'admin_remarks_count'
+            'c.date'
         ];
 
         try {
@@ -2216,9 +2215,7 @@ class AdminController extends BaseController {
                            cc.category, cc.type, cc.subtype,
                            s.name as shed_name, s.shed_code,
                            cust.name as customer_name, cust.email as customer_email,
-                           cust.mobile as customer_mobile, cust.company_name,
-                           (SELECT COUNT(*) FROM transactions t
-                            WHERE t.complaint_id = c.complaint_id AND t.remarks_type = 'admin_remarks') as admin_remarks_count
+                           cust.mobile as customer_mobile, cust.company_name
                     FROM complaints c
                     LEFT JOIN complaint_categories cc ON c.category_id = cc.category_id
                     LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -2235,14 +2232,10 @@ class AdminController extends BaseController {
                 $statusBadge = $this->getStatusBadge($ticket['status']);
                 $priorityBadge = $this->getPriorityBadge($ticket['priority']);
 
-                $actionButton = '';
-                if ($ticket['status'] !== 'closed') {
-                    $actionButton = '<button class="btn btn-sm btn-primary" onclick="showRemarksModal(\'' . htmlspecialchars($ticket['complaint_id']) . '\')">
-                        <i class="fas fa-comment"></i> Add Remark
-                    </button>';
-                } else {
-                    $actionButton = '<span class="text-muted small">Closed</span>';
-                }
+                // View-only ticket details link
+                $actionButton = '<a href="' . Config::getAppUrl() . '/admin/tickets/' . htmlspecialchars($ticket['complaint_id']) . '/view" class="btn btn-sm btn-info">
+                    <i class="fas fa-eye"></i> View Details
+                </a>';
 
                 $data[] = [
                     '<code>' . htmlspecialchars($ticket['complaint_id']) . '</code>',
@@ -2268,9 +2261,6 @@ class AdminController extends BaseController {
                         ' . date('d/m/Y', strtotime($ticket['date'])) . '<br>
                         <span class="text-muted">' . date('H:i', strtotime($ticket['time'])) . '</span>
                     </div>',
-                    $ticket['admin_remarks_count'] > 0 ?
-                        '<span class="badge bg-info">' . $ticket['admin_remarks_count'] . ' remark(s)</span>' :
-                        '<span class="text-muted">No remarks</span>',
                     $actionButton
                 ];
             }
@@ -3085,5 +3075,95 @@ class AdminController extends BaseController {
             Config::logError("Failed to send announcement notifications: " . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * View ticket details for admin (read-only)
+     */
+    public function viewTicket($complaintId) {
+        $user = $this->getCurrentUser();
+
+        // Get ticket details
+        $ticket = $this->db->fetch(
+            "SELECT c.*, cat.category, cat.type, cat.subtype,
+                    s.name as shed_name, s.shed_code,
+                    cust.name as customer_name, cust.email as customer_email,
+                    cust.mobile as customer_mobile, cust.company_name,
+                    TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
+                    (CASE
+                        WHEN c.priority = 'critical' AND TIMESTAMPDIFF(HOUR, c.created_at, NOW()) > 4 THEN 1
+                        WHEN c.priority = 'high' AND TIMESTAMPDIFF(HOUR, c.created_at, NOW()) > 24 THEN 1
+                        WHEN c.priority = 'medium' AND TIMESTAMPDIFF(HOUR, c.created_at, NOW()) > 72 THEN 1
+                        WHEN c.priority = 'normal' AND TIMESTAMPDIFF(HOUR, c.created_at, NOW()) > 168 THEN 1
+                        ELSE 0
+                    END) as is_sla_violated
+            FROM complaints c
+            LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
+            LEFT JOIN shed s ON c.shed_id = s.shed_id
+            LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+            WHERE c.complaint_id = ?",
+            [$complaintId]
+        );
+
+        if (!$ticket) {
+            $this->redirect('/admin/tickets/search', 'Ticket not found', 'error');
+            return;
+        }
+
+        // Get evidence files
+        $evidence = $this->db->fetchAll(
+            "SELECT * FROM evidence WHERE complaint_id = ? ORDER BY uploaded_at ASC",
+            [$complaintId]
+        );
+
+        // Get transaction history
+        $transactions = $this->db->fetchAll(
+            "SELECT t.*, u.name as user_name, u.department as user_department,
+                    u.division as user_division, u.zone as user_zone,
+                    cust.name as customer_name
+            FROM transactions t
+            LEFT JOIN users u ON t.created_by_id = u.id
+            LEFT JOIN customers cust ON t.created_by_customer_id = cust.customer_id
+            WHERE t.complaint_id = ?
+            ORDER BY t.created_at DESC",
+            [$complaintId]
+        );
+
+        // Get latest important remark (admin remarks, forwarding remarks, etc.)
+        $latest_important_remark = $this->db->fetch(
+            "SELECT t.*, u.name as user_name, u.department as user_department,
+                    u.division as user_division
+            FROM transactions t
+            LEFT JOIN users u ON t.created_by_id = u.id
+            WHERE t.complaint_id = ?
+            AND t.remarks_type IN ('admin_remarks', 'forwarding_remarks', 'interim_remarks', 'internal_remarks')
+            AND (t.remarks IS NOT NULL AND t.remarks != '' OR t.internal_remarks IS NOT NULL AND t.internal_remarks != '')
+            ORDER BY t.created_at DESC
+            LIMIT 1",
+            [$complaintId]
+        );
+
+        $data = [
+            'page_title' => 'View Ticket #' . $complaintId . ' - Admin',
+            'user' => $user,
+            'ticket' => $ticket,
+            'evidence' => $evidence,
+            'transactions' => $transactions,
+            'latest_important_remark' => $latest_important_remark,
+            'is_viewing_other_dept' => false,
+            'is_forwarded_ticket' => false,
+            'is_awaiting_customer_info' => $ticket['status'] === 'awaiting_info',
+            'permissions' => [
+                'can_reply' => false,
+                'can_forward' => false,
+                'can_approve' => false,
+                'can_internal_remarks' => false,
+                'can_interim_remarks' => false,
+                'can_revert_to_customer' => false,
+                'can_revert' => false
+            ]
+        ];
+
+        $this->view('admin/tickets/view', $data);
     }
 }

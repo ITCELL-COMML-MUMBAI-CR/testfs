@@ -96,6 +96,7 @@ $router->get('/admin/reports', 'Admin@reports', ['auth', 'role:admin,superadmin'
 $router->get('/admin/tickets', 'Admin@tickets', ['auth', 'role:admin,superadmin']);
 $router->get('/admin/tickets/debug', 'Admin@debug', ['auth', 'role:admin,superadmin']);
 $router->get('/admin/tickets/search', 'Admin@searchTickets', ['auth', 'role:admin,superadmin']);
+$router->get('/admin/tickets/{id}/view', 'Admin@viewTicket', ['auth', 'role:admin,superadmin']);
 $router->post('/admin/tickets/data', 'Admin@getTicketsData', ['auth', 'role:admin,superadmin']);
 $router->post('/admin/tickets/search/data', 'Admin@getSearchTicketsData', ['auth', 'role:admin,superadmin']);
 $router->post('/admin/tickets/{id}/remarks', 'Admin@addAdminRemarks', ['auth', 'role:admin,superadmin']);
