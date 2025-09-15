@@ -345,6 +345,9 @@ class ControllerController extends BaseController {
         foreach ($transactions as $transaction) {
             if ($transaction['remarks_type'] === 'priority_escalation') {
                 $priorityChanges[] = $transaction;
+            } elseif ($transaction['remarks_type'] === 'admin_remarks') {
+                // Skip admin remarks - they are displayed separately
+                continue;
             } else {
                 $regularTransactions[] = $transaction;
                 
@@ -358,10 +361,10 @@ class ControllerController extends BaseController {
                     }
                 }
                 
-                // Track latest important remark (excluding system and priority escalation)
-                if (!$latestImportantRemark && !in_array($transaction['remarks_type'], ['priority_escalation', 'system'])) {
+                // Track latest important remark (excluding system, priority escalation, and admin remarks)
+                if (!$latestImportantRemark && !in_array($transaction['remarks_type'], ['priority_escalation', 'system', 'admin_remarks'])) {
                     // Prioritize certain remark types for display
-                    $importantTypes = ['admin_remarks', 'forwarding_remarks', 'interim_remarks', 'internal_remarks', 'customer_remarks', 'edit_audit'];
+                    $importantTypes = ['forwarding_remarks', 'interim_remarks', 'internal_remarks', 'customer_remarks', 'edit_audit'];
                     $remarksText = !empty($transaction['remarks']) ? $transaction['remarks'] : $transaction['internal_remarks'];
                     if (in_array($transaction['remarks_type'], $importantTypes) && !empty(trim($remarksText))) {
                         $latestImportantRemark = $transaction;
@@ -385,9 +388,20 @@ class ControllerController extends BaseController {
         // Get evidence files
         $evidenceSql = "SELECT * FROM evidence WHERE complaint_id = ? ORDER BY uploaded_at ASC";
         $evidenceRaw = $this->db->fetchAll($evidenceSql, [$ticketId]);
-        
+
         // Transform evidence data for display
         $evidence = $this->transformEvidenceForDisplay($evidenceRaw);
+
+        // Get admin remarks history
+        $adminRemarksSql = "SELECT t.*, u.name as user_name, u.role as user_role, u.department as user_department,
+                                   u.division as user_division, u.zone as user_zone
+                           FROM transactions t
+                           LEFT JOIN users u ON t.created_by_id = u.id
+                           WHERE t.complaint_id = ?
+                           AND t.remarks_type = 'admin_remarks'
+                           AND t.remarks IS NOT NULL AND t.remarks != ''
+                           ORDER BY t.created_at DESC";
+        $adminRemarks = $this->db->fetchAll($adminRemarksSql, [$ticketId]);
         
         // Get available users for forwarding (if nodal controller)
         $availableUsers = [];
@@ -459,6 +473,7 @@ class ControllerController extends BaseController {
             'customer_visible_transactions' => $customerVisibleTransactions,
             'latest_important_remark' => $latestImportantRemark,
             'latest_interim_reply' => $latestInterimReply,
+            'admin_remarks' => $adminRemarks,
             'evidence' => $evidence,
             'available_users' => $availableUsers,
             'is_viewing_other_dept' => $isAssignedToOtherDept,

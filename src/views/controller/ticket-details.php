@@ -196,23 +196,110 @@ $page_title = 'Ticket Details - SAMPARK';
                 <?php endif; ?>
                 <div class="text-muted small">
                     <i class="fas fa-user me-1"></i>
-                    <?= htmlspecialchars($latest_important_remark['user_name'] ?? $latest_important_remark['customer_name'] ?? 'System') ?>
-                    <?php if ($latest_important_remark['user_department'] || $latest_important_remark['user_division']): ?>
-                    <span class="ms-2">
+                    <strong><?= htmlspecialchars($latest_important_remark['user_name'] ?? $latest_important_remark['customer_name'] ?? 'System') ?></strong>
+                    <?php if ($latest_important_remark['user_role'] || $latest_important_remark['user_department'] || $latest_important_remark['user_division'] || $latest_important_remark['user_zone']): ?>
+                    <br>
+                    <span class="ms-3">
+                        <?php if ($latest_important_remark['user_role']): ?>
+                        <i class="fas fa-user-tag me-1"></i>
+                        Role: <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $latest_important_remark['user_role']))) ?>
+                        <?php endif; ?>
                         <?php if ($latest_important_remark['user_department']): ?>
-                        <i class="fas fa-building me-1"></i>
-                        <?= htmlspecialchars($latest_important_remark['user_department']) ?>
+                        <span class="ms-2">
+                            <i class="fas fa-building me-1"></i>
+                            Dept: <?= htmlspecialchars($latest_important_remark['user_department']) ?>
+                        </span>
                         <?php endif; ?>
                         <?php if ($latest_important_remark['user_division']): ?>
                         <span class="ms-2">
                             <i class="fas fa-sitemap me-1"></i>
-                            <?= htmlspecialchars($latest_important_remark['user_division']) ?>
+                            Div: <?= htmlspecialchars($latest_important_remark['user_division']) ?>
+                        </span>
+                        <?php endif; ?>
+                        <?php if ($latest_important_remark['user_zone']): ?>
+                        <span class="ms-2">
+                            <i class="fas fa-map me-1"></i>
+                            Zone: <?= htmlspecialchars($latest_important_remark['user_zone']) ?>
                         </span>
                         <?php endif; ?>
                     </span>
                     <?php endif; ?>
                 </div>
             </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- Admin Remarks History -->
+    <?php if (!empty($admin_remarks)): ?>
+    <div class="card card-apple mb-4">
+        <div class="card-header bg-gradient-warning">
+            <h5 class="mb-0 d-flex align-items-center">
+                <i class="fas fa-user-shield me-2"></i>
+                Admin Remarks History
+                <span class="badge bg-dark ms-2"><?= count($admin_remarks) ?> remark(s)</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            <?php foreach ($admin_remarks as $index => $remark): ?>
+            <div class="admin-remark-item <?= $index === 0 ? 'latest-admin-remark' : '' ?>">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold text-primary">
+                            <i class="fas fa-comment me-1"></i>
+                            Admin Remark #<?= count($admin_remarks) - $index ?>
+                            <?php if ($index === 0): ?>
+                            <span class="badge bg-success ms-2">Latest</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="text-muted small">
+                            <i class="fas fa-clock me-1"></i>
+                            <?= date('M d, Y H:i', strtotime($remark['created_at'])) ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-warning bg-opacity-10 p-3 rounded border-start border-warning border-4 mb-3">
+                    <?= nl2br(htmlspecialchars($remark['remarks'])) ?>
+                </div>
+
+                <div class="text-muted small border-top pt-2">
+                    <i class="fas fa-user me-1"></i>
+                    <strong><?= htmlspecialchars($remark['user_name'] ?? 'System') ?></strong>
+                    <?php if ($remark['user_role'] || $remark['user_department'] || $remark['user_division'] || $remark['user_zone']): ?>
+                    <br>
+                    <span class="ms-3">
+                        <?php if ($remark['user_role']): ?>
+                        <i class="fas fa-user-tag me-1"></i>
+                        Role: <?= htmlspecialchars(ucfirst(str_replace('_', ' ', $remark['user_role']))) ?>
+                        <?php endif; ?>
+                        <?php if ($remark['user_department']): ?>
+                        <span class="ms-2">
+                            <i class="fas fa-building me-1"></i>
+                            Dept: <?= htmlspecialchars($remark['user_department']) ?>
+                        </span>
+                        <?php endif; ?>
+                        <?php if ($remark['user_division']): ?>
+                        <span class="ms-2">
+                            <i class="fas fa-sitemap me-1"></i>
+                            Div: <?= htmlspecialchars($remark['user_division']) ?>
+                        </span>
+                        <?php endif; ?>
+                        <?php if ($remark['user_zone']): ?>
+                        <span class="ms-2">
+                            <i class="fas fa-map me-1"></i>
+                            Zone: <?= htmlspecialchars($remark['user_zone']) ?>
+                        </span>
+                        <?php endif; ?>
+                    </span>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <?php if ($index < count($admin_remarks) - 1): ?>
+            <hr class="my-3">
+            <?php endif; ?>
+            <?php endforeach; ?>
         </div>
     </div>
     <?php endif; ?>
@@ -1661,6 +1748,18 @@ function viewImage(imageUrl, imageName) {
 
 .alert.alert-success {
     border-left: 4px solid var(--bs-success);
+}
+
+/* Admin Remarks Styling */
+.admin-remark-item {
+    position: relative;
+}
+
+.latest-admin-remark {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05));
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid rgba(255, 193, 7, 0.3);
 }
 
 .alert.alert-info {

@@ -137,7 +137,7 @@ $priority_options = $data['priority_options'] ?? [];
                             <th>Priority</th>
                             <th>Date</th>
                             <th>Admin Remarks</th>
-                            <th width="120">Actions</th>
+                            <th width="180">Actions</th>
                         </tr>
                     </thead>
                     <tbody>

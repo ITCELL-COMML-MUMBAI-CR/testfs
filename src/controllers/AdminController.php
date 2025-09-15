@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Admin Controller for SAMPARK
  * Handles admin dashboard, user management, customer approval, system settings
@@ -9,11 +10,13 @@ require_once __DIR__ . '/../utils/Validator.php';
 require_once __DIR__ . '/../utils/NotificationService.php';
 
 
-class AdminController extends BaseController {
-    
-    public function dashboard() {
+class AdminController extends BaseController
+{
+
+    public function dashboard()
+    {
         $user = $this->getCurrentUser();
-        
+
         $data = [
             'page_title' => 'Admin Dashboard - SAMPARK',
             'user' => $user,
@@ -26,11 +29,12 @@ class AdminController extends BaseController {
             'system_alerts' => $this->getSystemAlerts(),
             'csrf_token' => $this->session->getCSRFToken()
         ];
-        
+
         $this->view('admin/dashboard', $data);
     }
-    
-    public function users() {
+
+    public function users()
+    {
         $user = $this->getCurrentUser();
         $page = $_GET['page'] ?? 1;
         $role = $_GET['role'] ?? '';
@@ -54,17 +58,17 @@ class AdminController extends BaseController {
             $conditions[] = 'division = ?';
             $params[] = $division;
         }
-        
+
         $whereClause = implode(' AND ', $conditions);
-        
+
         $sql = "SELECT id, login_id, name, email, mobile, role, department, 
                        division, zone, status, created_at, updated_at
                 FROM users 
                 WHERE {$whereClause}
                 ORDER BY created_at DESC";
-        
+
         $users = $this->paginate($sql, $params, $page, 20);
-        
+
         $data = [
             'page_title' => 'User Management - SAMPARK',
             'user' => $user,
@@ -84,15 +88,16 @@ class AdminController extends BaseController {
             'divisions' => $this->getDivisions(),
             'csrf_token' => $this->session->getCSRFToken()
         ];
-        
+
         $this->view('admin/users/index', $data);
     }
-    
-    public function createUser() {
+
+    public function createUser()
+    {
         $user = $this->getCurrentUser();
-        
+
         $regions = []; // Add logic to get regions if needed
-        
+
         $data = [
             'page_title' => 'Create User - SAMPARK',
             'user' => $user,
@@ -102,14 +107,15 @@ class AdminController extends BaseController {
             'regions' => $regions,
             'csrf_token' => $this->session->getCSRFToken()
         ];
-        
+
         $this->view('admin/users/create', $data);
     }
-    
-    public function storeUser() {
+
+    public function storeUser()
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'login_id' => 'required|min:4|max:50|unique:users,login_id',
@@ -122,7 +128,7 @@ class AdminController extends BaseController {
             'password' => 'required|password',
             'password_confirm' => 'required'
         ]);
-        
+
         if (!$isValid) {
             $this->json([
                 'success' => false,
@@ -130,25 +136,25 @@ class AdminController extends BaseController {
             ], 400);
             return;
         }
-        
+
         // Check password confirmation
         if ($_POST['password'] !== $_POST['password_confirm']) {
             $this->json(['success' => false, 'message' => 'Password confirmation does not match'], 400);
             return;
         }
-        
+
         try {
             $this->db->beginTransaction();
-            
+
             // Get zone from division
             $zoneInfo = $this->getZoneFromDivision($_POST['division']);
-            
+
             // Insert user
             $sql = "INSERT INTO users (
                 login_id, password, role, department, division, zone,
                 name, email, mobile, status, created_by, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, NOW())";
-            
+
             $params = [
                 trim($_POST['login_id']),
                 password_hash($_POST['password'], PASSWORD_DEFAULT),
@@ -161,53 +167,53 @@ class AdminController extends BaseController {
                 trim($_POST['mobile']),
                 $user['id']
             ];
-            
+
             $this->db->query($sql, $params);
             $newUserId = $this->db->lastInsertId();
-            
+
             $this->db->commit();
-            
+
             // Log activity
             $this->logActivity('user_created', [
                 'new_user_id' => $newUserId,
                 'new_user_login' => $_POST['login_id'],
                 'new_user_role' => $_POST['role']
             ]);
-            
+
             // Send welcome email
             $this->sendWelcomeEmail($newUserId, $_POST['email'], $_POST['name'], $_POST['login_id']);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'User created successfully',
                 'redirect' => Config::getAppUrl() . '/admin/users'
             ]);
-            
         } catch (Exception $e) {
             $this->db->rollback();
             Config::logError("User creation error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to create user. Please try again.'
             ], 500);
         }
     }
-    
-    public function editUser($id) {
+
+    public function editUser($id)
+    {
         $user = $this->getCurrentUser();
-        
+
         $userToEdit = $this->db->fetch(
             "SELECT * FROM users WHERE id = ?",
             [$id]
         );
-        
+
         if (!$userToEdit) {
             $this->setFlash('error', 'User not found');
             $this->redirect(Config::getAppUrl() . '/admin/users');
             return;
         }
-        
+
         $data = [
             'page_title' => 'Edit User - SAMPARK',
             'user' => $user,
@@ -218,24 +224,25 @@ class AdminController extends BaseController {
             'status_options' => Config::USER_STATUS,
             'csrf_token' => $this->session->getCSRFToken()
         ];
-        
+
         $this->view('admin/users/edit', $data);
     }
-    
-    public function updateUser($id) {
+
+    public function updateUser($id)
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         $userToEdit = $this->db->fetch(
             "SELECT * FROM users WHERE id = ?",
             [$id]
         );
-        
+
         if (!$userToEdit) {
             $this->json(['success' => false, 'message' => 'User not found'], 404);
             return;
         }
-        
+
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'name' => 'required|min:2|max:100',
@@ -246,7 +253,7 @@ class AdminController extends BaseController {
             'division' => 'required|exists:shed,division',
             'status' => 'required|in:' . implode(',', array_keys(Config::USER_STATUS))
         ]);
-        
+
         if (!$isValid) {
             $this->json([
                 'success' => false,
@@ -254,20 +261,20 @@ class AdminController extends BaseController {
             ], 400);
             return;
         }
-        
+
         try {
             $this->db->beginTransaction();
-            
+
             // Get zone from division
             $zoneInfo = $this->getZoneFromDivision($_POST['division']);
-            
+
             // Update user
             $sql = "UPDATE users SET 
                     name = ?, email = ?, mobile = ?, role = ?, 
                     department = ?, division = ?, zone = ?, status = ?,
                     updated_at = NOW()
                     WHERE id = ?";
-            
+
             $params = [
                 trim($_POST['name']),
                 trim($_POST['email']),
@@ -279,61 +286,61 @@ class AdminController extends BaseController {
                 $_POST['status'],
                 $id
             ];
-            
+
             $this->db->query($sql, $params);
-            
+
             // Update password if provided
             if (!empty($_POST['new_password'])) {
                 if ($_POST['new_password'] !== $_POST['password_confirmation']) {
                     $this->json(['success' => false, 'message' => 'Password confirmation does not match'], 400);
                     return;
                 }
-                
+
                 $this->db->query(
                     "UPDATE users SET password = ? WHERE id = ?",
                     [password_hash($_POST['new_password'], PASSWORD_DEFAULT), $id]
                 );
             }
-            
+
             $this->db->commit();
-            
+
             // Log activity
             $this->logActivity('user_updated', [
                 'updated_user_id' => $id,
                 'updated_user_login' => $userToEdit['login_id'],
                 'changes' => array_diff_assoc($_POST, $userToEdit)
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'User updated successfully'
             ]);
-            
         } catch (Exception $e) {
             $this->db->rollback();
             Config::logError("User update error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to update user. Please try again.'
             ], 500);
         }
     }
-    
-    public function viewUser($id) {
+
+    public function viewUser($id)
+    {
         $user = $this->getCurrentUser();
-        
+
         $userToView = $this->db->fetch(
             "SELECT * FROM users WHERE id = ?",
             [$id]
         );
-        
+
         if (!$userToView) {
             $this->setFlash('error', 'User not found');
             $this->redirect(Config::getAppUrl() . '/admin/users');
             return;
         }
-        
+
         $data = [
             'page_title' => 'User Details - SAMPARK',
             'user' => $user,
@@ -342,28 +349,29 @@ class AdminController extends BaseController {
             'status_options' => Config::USER_STATUS,
             'csrf_token' => $this->session->getCSRFToken()
         ];
-        
+
         $this->view('admin/users/view', $data);
     }
-    
-    public function toggleUser($id) {
-        
+
+    public function toggleUser($id)
+    {
+
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         $userToToggle = $this->db->fetch(
             "SELECT * FROM users WHERE id = ?",
             [$id]
         );
-        
+
         if (!$userToToggle) {
             $this->json(['success' => false, 'message' => 'User not found'], 404);
             return;
         }
-        
+
         try {
             $newStatus = $userToToggle['status'] === 'active' ? 'inactive' : 'active';
-            
+
             // Check if status is explicitly provided in the request (for AJAX toggle)
             if (isset($_POST['status']) || (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false)) {
                 // Get JSON input for API calls
@@ -372,12 +380,12 @@ class AdminController extends BaseController {
                     $newStatus = $jsonInput['status'];
                 }
             }
-            
+
             $this->db->query(
                 "UPDATE users SET status = ?, updated_at = NOW() WHERE id = ?",
                 [$newStatus, $id]
             );
-            
+
             // Log activity
             $this->logActivity('user_status_changed', [
                 'user_id' => $id,
@@ -385,77 +393,77 @@ class AdminController extends BaseController {
                 'old_status' => $userToToggle['status'],
                 'new_status' => $newStatus
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => "User {$newStatus} successfully",
                 'new_status' => $newStatus
             ]);
-            
         } catch (Exception $e) {
             Config::logError("User toggle error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to update user status. Please try again.'
             ], 500);
         }
     }
-    
-    public function resetUserPassword($id) {
+
+    public function resetUserPassword($id)
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         // For AJAX requests
         if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
             $jsonInput = json_decode(file_get_contents('php://input'), true);
             $_POST = array_merge($_POST, $jsonInput ?? []);
         }
-        
+
         $userToReset = $this->db->fetch(
             "SELECT * FROM users WHERE id = ?",
             [$id]
         );
-        
+
         if (!$userToReset) {
             $this->json(['success' => false, 'message' => 'User not found'], 404);
             return;
         }
-        
+
         // Generate a secure random password
         $newPassword = bin2hex(random_bytes(6)); // 12 characters
-        
+
         try {
             // Update the password
             $this->db->query(
                 "UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?",
                 [password_hash($newPassword, PASSWORD_DEFAULT), $id]
             );
-            
+
             // Log activity
             $this->logActivity('user_password_reset', [
                 'user_id' => $id,
                 'user_login' => $userToReset['login_id'],
                 'reset_by' => $user['id']
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'Password has been reset successfully',
                 'new_password' => $newPassword
             ]);
-            
         } catch (Exception $e) {
             Config::logError("Password reset error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to reset password. Please try again.'
             ], 500);
         }
     }
-    
-    public function customers() {
+
+    public function customers()
+    {
         $user = $this->getCurrentUser();
         $page = $_GET['page'] ?? 1;
         $status = $_GET['status'] ?? '';
@@ -480,9 +488,9 @@ class AdminController extends BaseController {
             $conditions[] = 'c.division = ?';
             $params[] = $region;
         }
-        
+
         $whereClause = implode(' AND ', $conditions);
-        
+
         // Enhanced query with ticket counts and customer type
         $sql = "SELECT c.customer_id, c.name, c.email, c.mobile, c.company_name, 
                        c.designation, c.gstin, c.division, c.zone, c.status, c.created_at,
@@ -499,18 +507,18 @@ class AdminController extends BaseController {
                 ) t ON c.customer_id = t.customer_id
                 WHERE {$whereClause}
                 ORDER BY c.created_at DESC";
-        
+
         try {
             $customers = $this->paginate($sql, $params, $page, 20);
-            
+
             // Ensure customers data is an array even if empty
             if (!isset($customers['data']) || !is_array($customers['data'])) {
                 $customers['data'] = [];
             }
-            
+
             // Get statistics
             $stats = $this->getCustomerStats();
-            
+
             // Get regions for filter - convert to proper format
             $divisions = $this->getDivisions();
             $regions = [];
@@ -520,7 +528,7 @@ class AdminController extends BaseController {
                     'name' => $division['division']
                 ];
             }
-            
+
             $data = [
                 'page_title' => 'Customer Management - SAMPARK',
                 'user' => $user,
@@ -541,7 +549,7 @@ class AdminController extends BaseController {
             ];
         } catch (\Exception $e) {
             error_log("Error in customers method: " . $e->getMessage());
-            
+
             // Provide default data
             $data = [
                 'page_title' => 'Customer Management - SAMPARK',
@@ -567,13 +575,14 @@ class AdminController extends BaseController {
                 'csrf_token' => $this->session->getCSRFToken()
             ];
         }
-        
+
         $this->view('admin/customers/index', $data);
     }
-    
-    public function viewCustomer($customerId) {
+
+    public function viewCustomer($customerId)
+    {
         $user = $this->getCurrentUser();
-        
+
         $customer = $this->db->fetch(
             "SELECT c.*, 
                     COALESCE(t.total_tickets, 0) as total_tickets,
@@ -591,13 +600,13 @@ class AdminController extends BaseController {
              WHERE c.customer_id = ?",
             [$customerId]
         );
-        
+
         if (!$customer) {
             $this->setFlash('error', 'Customer not found');
             $this->redirect(Config::getAppUrl() . '/admin/customers');
             return;
         }
-        
+
         // Get recent tickets for this customer
         $recentTickets = $this->db->fetchAll(
             "SELECT complaint_id, description, status, priority, created_at 
@@ -607,7 +616,7 @@ class AdminController extends BaseController {
              LIMIT 10",
             [$customerId]
         );
-        
+
         $data = [
             'page_title' => 'Customer Details - SAMPARK',
             'user' => $user,
@@ -615,24 +624,25 @@ class AdminController extends BaseController {
             'recent_tickets' => $recentTickets,
             'csrf_token' => $this->session->getCSRFToken()
         ];
-        
+
         $this->view('admin/customers/view', $data);
     }
-    
-    public function editCustomer($customerId) {
+
+    public function editCustomer($customerId)
+    {
         $user = $this->getCurrentUser();
-        
+
         $customer = $this->db->fetch(
             "SELECT * FROM customers WHERE customer_id = ?",
             [$customerId]
         );
-        
+
         if (!$customer) {
             $this->setFlash('error', 'Customer not found');
             $this->redirect(Config::getAppUrl() . '/admin/customers');
             return;
         }
-        
+
         $data = [
             'page_title' => 'Edit Customer - SAMPARK',
             'user' => $user,
@@ -651,24 +661,25 @@ class AdminController extends BaseController {
             ],
             'csrf_token' => $this->session->getCSRFToken()
         ];
-        
+
         $this->view('admin/customers/edit', $data);
     }
-    
-    public function updateCustomer($customerId) {
+
+    public function updateCustomer($customerId)
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         $customer = $this->db->fetch(
             "SELECT * FROM customers WHERE customer_id = ?",
             [$customerId]
         );
-        
+
         if (!$customer) {
             $this->json(['success' => false, 'message' => 'Customer not found'], 404);
             return;
         }
-        
+
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'name' => 'required|min:2|max:100',
@@ -682,7 +693,7 @@ class AdminController extends BaseController {
             'zone' => 'required|max:50',
             'status' => 'required|in:pending,approved,rejected,suspended'
         ]);
-        
+
         if (!$isValid) {
             $this->json([
                 'success' => false,
@@ -690,16 +701,16 @@ class AdminController extends BaseController {
             ], 400);
             return;
         }
-        
+
         try {
             $this->db->beginTransaction();
-            
+
             $sql = "UPDATE customers SET 
                     name = ?, email = ?, mobile = ?, company_name = ?, 
                     designation = ?, gstin = ?, customer_type = ?, 
                     division = ?, zone = ?, status = ?, updated_at = NOW()
                     WHERE customer_id = ?";
-            
+
             $params = [
                 trim($_POST['name']),
                 trim($_POST['email']),
@@ -713,83 +724,83 @@ class AdminController extends BaseController {
                 $_POST['status'],
                 $customerId
             ];
-            
+
             $this->db->query($sql, $params);
-            
+
             $this->db->commit();
-            
+
             // Log activity
             $this->logActivity('customer_updated', [
                 'customer_id' => $customerId,
                 'customer_name' => $_POST['name'],
                 'changes' => array_diff_assoc($_POST, $customer)
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'Customer updated successfully'
             ]);
-            
         } catch (Exception $e) {
             $this->db->rollback();
             Config::logError("Customer update error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to update customer. Please try again.'
             ], 500);
         }
     }
-    
-    public function approveCustomer($customerId) {
+
+    public function approveCustomer($customerId)
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         try {
             $customer = $this->db->fetch(
                 "SELECT * FROM customers WHERE customer_id = ? AND status = 'pending'",
                 [$customerId]
             );
-            
+
             if (!$customer) {
                 $this->json(['success' => false, 'message' => 'Customer not found or already processed'], 404);
                 return;
             }
-            
+
             $this->db->query(
                 "UPDATE customers SET status = 'approved', updated_at = NOW() WHERE customer_id = ?",
                 [$customerId]
             );
-            
+
             // Log activity
             $this->logActivity('customer_approved', [
                 'customer_id' => $customerId,
                 'customer_name' => $customer['name'],
                 'customer_email' => $customer['email']
             ]);
-            
+
             // Send approval email
             $this->sendCustomerApprovalEmail($customer, 'approved');
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'Customer approved successfully'
             ]);
-            
         } catch (Exception $e) {
             Config::logError("Customer approval error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to approve customer. Please try again.'
             ], 500);
         }
     }
-    
-    public function updateCustomerStatus($customerId) {
+
+    public function updateCustomerStatus($customerId)
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         // For AJAX requests
         if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
             $jsonInput = json_decode(file_get_contents('php://input'), true);
@@ -797,12 +808,12 @@ class AdminController extends BaseController {
                 $_POST['status'] = $jsonInput['status'];
             }
         }
-        
+
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'status' => 'required|in:pending,approved,rejected,suspended'
         ]);
-        
+
         if (!$isValid) {
             $this->json([
                 'success' => false,
@@ -810,23 +821,23 @@ class AdminController extends BaseController {
             ], 400);
             return;
         }
-        
+
         try {
             $customer = $this->db->fetch(
                 "SELECT * FROM customers WHERE customer_id = ?",
                 [$customerId]
             );
-            
+
             if (!$customer) {
                 $this->json(['success' => false, 'message' => 'Customer not found'], 404);
                 return;
             }
-            
+
             $this->db->query(
                 "UPDATE customers SET status = ?, updated_at = NOW() WHERE customer_id = ?",
                 [$_POST['status'], $customerId]
             );
-            
+
             // Log activity
             $this->logActivity('customer_status_changed', [
                 'customer_id' => $customerId,
@@ -834,32 +845,32 @@ class AdminController extends BaseController {
                 'old_status' => $customer['status'],
                 'new_status' => $_POST['status']
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'Customer status updated successfully',
                 'new_status' => $_POST['status']
             ]);
-            
         } catch (Exception $e) {
             Config::logError("Customer status update error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to update customer status. Please try again.'
             ], 500);
         }
     }
-    
-    public function rejectCustomer($customerId) {
+
+    public function rejectCustomer($customerId)
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'rejection_reason' => 'required|min:10|max:500'
         ]);
-        
+
         if (!$isValid) {
             $this->json([
                 'success' => false,
@@ -867,23 +878,23 @@ class AdminController extends BaseController {
             ], 400);
             return;
         }
-        
+
         try {
             $customer = $this->db->fetch(
                 "SELECT * FROM customers WHERE customer_id = ? AND status = 'pending'",
                 [$customerId]
             );
-            
+
             if (!$customer) {
                 $this->json(['success' => false, 'message' => 'Customer not found or already processed'], 404);
                 return;
             }
-            
+
             $this->db->query(
                 "UPDATE customers SET status = 'rejected', updated_at = NOW() WHERE customer_id = ?",
                 [$customerId]
             );
-            
+
             // Log activity
             $this->logActivity('customer_rejected', [
                 'customer_id' => $customerId,
@@ -891,28 +902,28 @@ class AdminController extends BaseController {
                 'customer_email' => $customer['email'],
                 'rejection_reason' => $_POST['rejection_reason']
             ]);
-            
+
             // Send rejection email
             $this->sendCustomerApprovalEmail($customer, 'rejected', $_POST['rejection_reason']);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'Customer rejected successfully'
             ]);
-            
         } catch (Exception $e) {
             Config::logError("Customer rejection error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to reject customer. Please try again.'
             ], 500);
         }
     }
-    
-    public function categories() {
+
+    public function categories()
+    {
         $user = $this->getCurrentUser();
-        
+
         $categories = $this->db->fetchAll(
             "SELECT *,
              (SELECT COUNT(*) FROM complaint_categories sub WHERE sub.category = complaint_categories.category AND sub.type = complaint_categories.type AND sub.subtype IS NOT NULL AND sub.subtype != '') as subtype_count,
@@ -920,28 +931,29 @@ class AdminController extends BaseController {
              FROM complaint_categories
              ORDER BY category, type, subtype"
         );
-        
+
         $data = [
             'page_title' => 'Complaint Categories - SAMPARK',
             'user' => $user,
             'categories' => $categories,
             'csrf_token' => $this->session->getCSRFToken()
         ];
-        
+
         $this->view('admin/categories', $data);
     }
-    
-    public function storeCategory() {
+
+    public function storeCategory()
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'category' => 'required|max:100',
             'type' => 'required|max:100',
             'subtype' => 'required|max:100'
         ]);
-        
+
         if (!$isValid) {
             $this->json([
                 'success' => false,
@@ -949,7 +961,7 @@ class AdminController extends BaseController {
             ], 400);
             return;
         }
-        
+
         try {
             $subtype = trim($_POST['subtype']);
 
@@ -972,40 +984,40 @@ class AdminController extends BaseController {
                 trim($_POST['type']),
                 $subtype
             ]);
-            
+
             // Log activity
             $this->logActivity('category_created', [
                 'category' => $_POST['category'],
                 'type' => $_POST['type'],
                 'subtype' => $_POST['subtype']
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'Category created successfully'
             ]);
-            
         } catch (Exception $e) {
             Config::logError("Category creation error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to create category. Please try again.'
             ], 500);
         }
     }
-    
-    public function updateCategory($categoryId) {
+
+    public function updateCategory($categoryId)
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'category' => 'required|max:100',
             'type' => 'required|max:100',
             'subtype' => 'required|max:100'
         ]);
-        
+
         if (!$isValid) {
             $this->json([
                 'success' => false,
@@ -1013,18 +1025,18 @@ class AdminController extends BaseController {
             ], 400);
             return;
         }
-        
+
         try {
             $category = $this->db->fetch(
                 "SELECT * FROM complaint_categories WHERE category_id = ?",
                 [$categoryId]
             );
-            
+
             if (!$category) {
                 $this->json(['success' => false, 'message' => 'Category not found'], 404);
                 return;
             }
-            
+
             $sql = "UPDATE complaint_categories SET
                     category = ?, type = ?, subtype = ?
                     WHERE category_id = ?";
@@ -1035,60 +1047,60 @@ class AdminController extends BaseController {
                 trim($_POST['subtype']),
                 $categoryId
             ]);
-            
+
             // Log activity
             $this->logActivity('category_updated', [
                 'category_id' => $categoryId,
                 'old_category' => $category['category'],
                 'new_category' => $_POST['category']
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'Category updated successfully'
             ]);
-            
         } catch (Exception $e) {
             Config::logError("Category update error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to update category. Please try again.'
             ], 500);
         }
     }
-    
-    public function deleteCategory($categoryId) {
+
+    public function deleteCategory($categoryId)
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         try {
             // Check if category is in use
             $inUse = $this->db->fetch(
                 "SELECT COUNT(*) as count FROM complaints WHERE category_id = ?",
                 [$categoryId]
             );
-            
+
             if ($inUse['count'] > 0) {
                 $this->json(['success' => false, 'message' => 'Cannot delete category that is in use by tickets'], 400);
                 return;
             }
-            
+
             $category = $this->db->fetch(
                 "SELECT * FROM complaint_categories WHERE category_id = ?",
                 [$categoryId]
             );
-            
+
             if (!$category) {
                 $this->json(['success' => false, 'message' => 'Category not found'], 404);
                 return;
             }
-            
+
             $this->db->query(
                 "DELETE FROM complaint_categories WHERE category_id = ?",
                 [$categoryId]
             );
-            
+
             // Log activity
             $this->logActivity('category_deleted', [
                 'category_id' => $categoryId,
@@ -1096,15 +1108,14 @@ class AdminController extends BaseController {
                 'type' => $category['type'],
                 'subtype' => $category['subtype']
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'Category deleted successfully'
             ]);
-            
         } catch (Exception $e) {
             Config::logError("Category deletion error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to delete category. Please try again.'
@@ -1113,7 +1124,8 @@ class AdminController extends BaseController {
     }
 
 
-    public function getCategoriesDistinct() {
+    public function getCategoriesDistinct()
+    {
         try {
             $categories = $this->db->fetchAll(
                 "SELECT DISTINCT category FROM complaint_categories WHERE category IS NOT NULL AND category != '' ORDER BY category"
@@ -1128,7 +1140,6 @@ class AdminController extends BaseController {
                 'categories' => array_column($categories, 'category'),
                 'types' => array_column($types, 'type')
             ]);
-
         } catch (Exception $e) {
             Config::logError("Get distinct categories error: " . $e->getMessage());
 
@@ -1139,7 +1150,8 @@ class AdminController extends BaseController {
         }
     }
 
-    public function getCategoriesTableData() {
+    public function getCategoriesTableData()
+    {
         try {
             $categories = $this->db->fetchAll(
                 "SELECT *,
@@ -1162,37 +1174,37 @@ class AdminController extends BaseController {
                 </tr>
             <?php else: ?>
                 <?php foreach ($categories as $category): ?>
-                <tr>
-                    <td>
-                        <div class="fw-semibold"><?= htmlspecialchars($category['category']) ?></div>
-                    </td>
-                    <td>
-                        <span class="badge bg-secondary">
-                            <?= ucfirst($category['type']) ?>
-                        </span>
-                    </td>
-                    <td>
-                        <?php if ($category['subtype']): ?>
-                            <span class="badge bg-primary"><?= htmlspecialchars($category['subtype']) ?></span>
-                        <?php else: ?>
-                            <span class="text-muted">No subtype</span>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <div class="btn-group" role="group">
-                            <button class="btn btn-sm btn-apple-primary"
+                    <tr>
+                        <td>
+                            <div class="fw-semibold"><?= htmlspecialchars($category['category']) ?></div>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">
+                                <?= ucfirst($category['type']) ?>
+                            </span>
+                        </td>
+                        <td>
+                            <?php if ($category['subtype']): ?>
+                                <span class="badge bg-primary"><?= htmlspecialchars($category['subtype']) ?></span>
+                            <?php else: ?>
+                                <span class="text-muted">No subtype</span>
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-apple-primary"
                                     onclick="editCategory(<?= $category['category_id'] ?>)" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-apple-danger"
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-apple-danger"
                                     onclick="deleteCategory(<?= $category['category_id'] ?>)" title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                 <?php endforeach; ?>
-            <?php endif;
+<?php endif;
 
             $html = ob_get_clean();
 
@@ -1200,7 +1212,6 @@ class AdminController extends BaseController {
                 'success' => true,
                 'html' => $html
             ]);
-
         } catch (Exception $e) {
             Config::logError("Get categories table data error: " . $e->getMessage());
 
@@ -1211,13 +1222,14 @@ class AdminController extends BaseController {
         }
     }
 
-    public function sheds() {
+    public function sheds()
+    {
         $user = $this->getCurrentUser();
-        
+
         $sheds = $this->db->fetchAll(
             "SELECT * FROM shed ORDER BY division, zone, name"
         );
-        
+
         $data = [
             'page_title' => 'Shed Management - SAMPARK',
             'user' => $user,
@@ -1226,14 +1238,15 @@ class AdminController extends BaseController {
             'zones' => $this->getZones(),
             'csrf_token' => $this->session->getCSRFToken()
         ];
-        
+
         $this->view('admin/sheds', $data);
     }
-    
-    public function storeShed() {
+
+    public function storeShed()
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'shed_code' => 'required|max:10|unique:shed,shed_code',
@@ -1243,7 +1256,7 @@ class AdminController extends BaseController {
             'terminal' => 'required|max:150',
             'type' => 'required|in:goods_shed,container_depot,private_siding,public_siding'
         ]);
-        
+
         if (!$isValid) {
             $this->json([
                 'success' => false,
@@ -1251,11 +1264,11 @@ class AdminController extends BaseController {
             ], 400);
             return;
         }
-        
+
         try {
             $sql = "INSERT INTO shed (shed_code, name, division, zone, terminal, type, created_at) 
                     VALUES (?, ?, ?, ?, ?, ?, NOW())";
-            
+
             $this->db->query($sql, [
                 strtoupper(trim($_POST['shed_code'])),
                 trim($_POST['name']),
@@ -1264,33 +1277,33 @@ class AdminController extends BaseController {
                 trim($_POST['terminal']),
                 $_POST['type']
             ]);
-            
+
             // Log activity
             $this->logActivity('shed_created', [
                 'shed_code' => $_POST['shed_code'],
                 'name' => $_POST['name'],
                 'division' => $_POST['division']
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'Shed created successfully'
             ]);
-            
         } catch (Exception $e) {
             Config::logError("Shed creation error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to create shed. Please try again.'
             ], 500);
         }
     }
-    
-    public function updateShed($shedId) {
+
+    public function updateShed($shedId)
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'shed_code' => 'required|max:10|unique:shed,shed_code,' . $shedId,
@@ -1301,7 +1314,7 @@ class AdminController extends BaseController {
             'type' => 'required|in:goods_shed,container_depot,private_siding,public_siding',
             'is_active' => 'boolean'
         ]);
-        
+
         if (!$isValid) {
             $this->json([
                 'success' => false,
@@ -1309,23 +1322,23 @@ class AdminController extends BaseController {
             ], 400);
             return;
         }
-        
+
         try {
             $shed = $this->db->fetch(
                 "SELECT * FROM shed WHERE shed_id = ?",
                 [$shedId]
             );
-            
+
             if (!$shed) {
                 $this->json(['success' => false, 'message' => 'Shed not found'], 404);
                 return;
             }
-            
+
             $sql = "UPDATE shed SET 
                     shed_code = ?, name = ?, division = ?, zone = ?, 
                     terminal = ?, type = ?, is_active = ?, updated_at = NOW()
                     WHERE shed_id = ?";
-            
+
             $this->db->query($sql, [
                 strtoupper(trim($_POST['shed_code'])),
                 trim($_POST['name']),
@@ -1336,32 +1349,32 @@ class AdminController extends BaseController {
                 isset($_POST['is_active']) ? 1 : 0,
                 $shedId
             ]);
-            
+
             // Log activity
             $this->logActivity('shed_updated', [
                 'shed_id' => $shedId,
                 'shed_code' => $_POST['shed_code'],
                 'name' => $_POST['name']
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'Shed updated successfully'
             ]);
-            
         } catch (Exception $e) {
             Config::logError("Shed update error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to update shed. Please try again.'
             ], 500);
         }
     }
-    
-    public function content() {
+
+    public function content()
+    {
         $user = $this->getCurrentUser();
-        
+
         // Get all content types for DataTables
         $news = $this->db->fetchAll(
             "SELECT n.*, u.name as created_by_name 
@@ -1369,11 +1382,11 @@ class AdminController extends BaseController {
              LEFT JOIN users u ON n.created_by = u.id 
              ORDER BY n.publish_date DESC"
         );
-        
+
         $quickLinks = $this->db->fetchAll(
             "SELECT * FROM quick_links ORDER BY sort_order, title"
         );
-        
+
         // Get announcements (news with type = 'announcement')
         $announcements = $this->db->fetchAll(
             "SELECT n.*, u.name as created_by_name 
@@ -1382,7 +1395,7 @@ class AdminController extends BaseController {
              WHERE n.type = 'announcement' 
              ORDER BY n.publish_date DESC"
         );
-        
+
         $data = [
             'page_title' => 'Content Management - SAMPARK',
             'user' => $user,
@@ -1393,14 +1406,15 @@ class AdminController extends BaseController {
             'zones' => $this->getZones(),
             'csrf_token' => $this->session->getCSRFToken()
         ];
-        
+
         $this->view('admin/content', $data);
     }
-    
-    public function storeNews() {
+
+    public function storeNews()
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'title' => 'required|max:255',
@@ -1411,7 +1425,7 @@ class AdminController extends BaseController {
             'publish_date' => 'required|date',
             'expire_date' => 'date|after:publish_date'
         ]);
-        
+
         if (!$isValid) {
             $this->json([
                 'success' => false,
@@ -1419,14 +1433,14 @@ class AdminController extends BaseController {
             ], 400);
             return;
         }
-        
+
         try {
             $sql = "INSERT INTO news (
                 title, content, short_description, type, priority,
                 publish_date, expire_date, division_specific, zone_specific,
                 show_on_homepage, show_on_marquee, created_by, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
-            
+
             $this->db->query($sql, [
                 trim($_POST['title']),
                 trim($_POST['content']),
@@ -1441,33 +1455,33 @@ class AdminController extends BaseController {
                 isset($_POST['show_on_marquee']) ? 1 : 0,
                 $user['id']
             ]);
-            
+
             // Log activity
             $this->logActivity('news_created', [
                 'title' => $_POST['title'],
                 'type' => $_POST['type'],
                 'priority' => $_POST['priority']
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'News/Announcement created successfully'
             ]);
-            
         } catch (Exception $e) {
             Config::logError("News creation error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to create news. Please try again.'
             ], 500);
         }
     }
-    
-    public function storeLink() {
+
+    public function storeLink()
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'title' => 'required|max:100',
@@ -1477,7 +1491,7 @@ class AdminController extends BaseController {
             'target' => 'required|in:_self,_blank',
             'sort_order' => 'integer|min:0'
         ]);
-        
+
         if (!$isValid) {
             $this->json([
                 'success' => false,
@@ -1485,12 +1499,12 @@ class AdminController extends BaseController {
             ], 400);
             return;
         }
-        
+
         try {
             $sql = "INSERT INTO quick_links (
                 title, description, url, icon, target, sort_order, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, NOW())";
-            
+
             $this->db->query($sql, [
                 trim($_POST['title']),
                 trim($_POST['description']) ?: null,
@@ -1499,108 +1513,108 @@ class AdminController extends BaseController {
                 $_POST['target'],
                 $_POST['sort_order'] ?? 0
             ]);
-            
+
             // Log activity
             $this->logActivity('quick_link_created', [
                 'title' => $_POST['title'],
                 'url' => $_POST['url']
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'Quick link created successfully'
             ]);
-            
         } catch (Exception $e) {
             Config::logError("Quick link creation error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to create quick link. Please try again.'
             ], 500);
         }
     }
-    
+
     /**
      * Delete news item
      */
-    public function deleteNews($id) {
+    public function deleteNews($id)
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         try {
             $news = $this->db->fetch("SELECT * FROM news WHERE id = ?", [$id]);
-            
+
             if (!$news) {
                 $this->json(['success' => false, 'message' => 'News item not found'], 404);
                 return;
             }
-            
+
             $this->db->query("DELETE FROM news WHERE id = ?", [$id]);
-            
+
             // Log activity
             $this->logActivity('news_deleted', [
                 'news_id' => $id,
                 'title' => $news['title']
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'News item deleted successfully'
             ]);
-            
         } catch (Exception $e) {
             Config::logError("News deletion error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to delete news item. Please try again.'
             ], 500);
         }
     }
-    
+
     /**
      * Delete announcement
      */
-    public function deleteAnnouncement($id) {
+    public function deleteAnnouncement($id)
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         try {
             $announcement = $this->db->fetch("SELECT * FROM news WHERE id = ? AND type = 'announcement'", [$id]);
-            
+
             if (!$announcement) {
                 $this->json(['success' => false, 'message' => 'Announcement not found'], 404);
                 return;
             }
-            
+
             $this->db->query("DELETE FROM news WHERE id = ?", [$id]);
-            
+
             // Log activity
             $this->logActivity('announcement_deleted', [
                 'announcement_id' => $id,
                 'title' => $announcement['title']
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'Announcement deleted successfully'
             ]);
-            
         } catch (Exception $e) {
             Config::logError("Announcement deletion error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to delete announcement. Please try again.'
             ], 500);
         }
     }
-    
+
     /**
      * Delete quick link
      */
-    public function deleteLink($id) {
+    public function deleteLink($id)
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
 
@@ -1624,7 +1638,6 @@ class AdminController extends BaseController {
                 'success' => true,
                 'message' => 'Link deleted successfully'
             ]);
-
         } catch (Exception $e) {
             Config::logError("Link deletion error: " . $e->getMessage());
 
@@ -1638,7 +1651,8 @@ class AdminController extends BaseController {
     /**
      * Admin tickets view - shows tickets based on admin's department and division
      */
-    public function tickets() {
+    public function tickets()
+    {
         $user = $this->getCurrentUser();
         $page = $_GET['page'] ?? 1;
         $status = $_GET['status'] ?? '';
@@ -1652,30 +1666,18 @@ class AdminController extends BaseController {
         $params = [];
 
         // Apply department and division filtering rules
-        if ($user['department'] === 'ADM') {
-            // ADM department sees all tickets in their division
-            if ($user['division'] === 'HQ') {
-                // ADM with division HQ sees all tickets in their zone
-                $conditions[] = 'c.zone = ?';
-                $params[] = $user['zone'];
-            } else {
-                // ADM with other divisions sees all tickets in that division
-                $conditions[] = 'c.division = ?';
-                $params[] = $user['division'];
-            }
+        if (!in_array($user['department'], ['CML', 'ADM'])) {
+            $conditions[] = 'c.assigned_to_department = ? OR c.department = ?';
+            $params[] = $user['department'];
+            $params[] = $user['department'];
+        }
+
+        if ($user['division'] === 'HQ') {
+            $conditions[] = 'c.zone = ?';
+            $params[] = $user['zone'];
         } else {
-            // Other admins see tickets in their specific department and division
-            if ($user['division'] === 'HQ') {
-                // Non-ADM admin with HQ division sees tickets in their zone for their department
-                $conditions[] = 'c.zone = ? AND c.assigned_to_department = ?';
-                $params[] = $user['zone'];
-                $params[] = $user['department'];
-            } else {
-                // Other admins see tickets in their department and division
-                $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
-                $params[] = $user['division'];
-                $params[] = $user['department'];
-            }
+            $conditions[] = 'c.division = ?';
+            $params[] = $user['division'];
         }
 
         // Apply additional filters
@@ -1758,7 +1760,6 @@ class AdminController extends BaseController {
             ];
 
             $this->view('admin/tickets/index', $data);
-
         } catch (Exception $e) {
             Config::logError("Admin tickets error: " . $e->getMessage());
             $this->setFlash('error', 'Failed to load tickets. Please try again.');
@@ -1769,7 +1770,8 @@ class AdminController extends BaseController {
     /**
      * Debug page for testing admin access and data
      */
-    public function debug() {
+    public function debug()
+    {
         $user = $this->getCurrentUser();
 
         try {
@@ -1821,7 +1823,6 @@ class AdminController extends BaseController {
             ];
 
             $this->json($data);
-
         } catch (Exception $e) {
             $this->json([
                 'error' => $e->getMessage(),
@@ -1833,7 +1834,8 @@ class AdminController extends BaseController {
     /**
      * Admin search tickets page
      */
-    public function searchTickets() {
+    public function searchTickets()
+    {
         $user = $this->getCurrentUser();
 
         $complaintNumber = $_GET['complaint_number'] ?? '';
@@ -1904,7 +1906,6 @@ class AdminController extends BaseController {
                 $totalPages = $result['total_pages'];
                 $hasNext = $result['has_next'];
                 $hasPrev = $result['has_prev'];
-
             } catch (Exception $e) {
                 Config::logError("Admin search tickets error: " . $e->getMessage());
                 $this->setFlash('error', 'Search failed. Please try again.');
@@ -1937,7 +1938,8 @@ class AdminController extends BaseController {
     /**
      * DataTables AJAX endpoint for admin tickets
      */
-    public function getTicketsData() {
+    public function getTicketsData()
+    {
         $user = $this->getCurrentUser();
 
         // DataTables parameters
@@ -1973,26 +1975,20 @@ class AdminController extends BaseController {
             $conditions = ['1=1'];
             $params = [];
 
-            // Apply department and division filtering rules
-            if ($user['department'] === 'ADM') {
-                if ($user['division'] === 'HQ') {
-                    $conditions[] = 'c.zone = ?';
-                    $params[] = $user['zone'];
-                } else {
-                    $conditions[] = 'c.division = ?';
-                    $params[] = $user['division'];
-                }
-            } else {
-                if ($user['division'] === 'HQ') {
-                    $conditions[] = 'c.zone = ? AND c.assigned_to_department = ?';
-                    $params[] = $user['zone'];
-                    $params[] = $user['department'];
-                } else {
-                    $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
-                    $params[] = $user['division'];
-                    $params[] = $user['department'];
-                }
-            }
+            // Department and division filtering
+        if (!in_array($user['department'], ['CML', 'ADM'])) {
+            $conditions[] = 'c.assigned_to_department = ? OR c.department = ?';
+            $params[] = $user['department'];
+            $params[] = $user['department'];
+        }
+
+        if ($user['division'] === 'HQ') {
+            $conditions[] = 'c.zone = ?';
+            $params[] = $user['zone'];
+        } else {
+            $conditions[] = 'c.division = ?';
+            $params[] = $user['division'];
+        }
 
             // Apply filters
             if ($status) {
@@ -2061,13 +2057,15 @@ class AdminController extends BaseController {
                 $statusBadge = $this->getStatusBadge($ticket['status']);
                 $priorityBadge = $this->getPriorityBadge($ticket['priority']);
 
-                $actionButton = '';
+                $viewButton = '<a href="' . Config::getAppUrl() . '/admin/tickets/' . htmlspecialchars($ticket['complaint_id']) . '/view" class="btn btn-sm btn-info me-1">
+                    <i class="fas fa-eye"></i> View
+                </a>';
+
+                $actionButton = $viewButton;
                 if ($ticket['status'] !== 'closed') {
-                    $actionButton = '<button class="btn btn-sm btn-primary" onclick="showRemarksModal(\'' . htmlspecialchars($ticket['complaint_id']) . '\')">
+                    $actionButton .= '<button class="btn btn-sm btn-primary" onclick="showRemarksModal(\'' . htmlspecialchars($ticket['complaint_id']) . '\')">
                         <i class="fas fa-comment"></i> Add Remark
                     </button>';
-                } else {
-                    $actionButton = '<span class="text-muted small">Closed</span>';
                 }
 
                 $data[] = [
@@ -2107,7 +2105,6 @@ class AdminController extends BaseController {
                 'recordsFiltered' => intval($totalRecords),
                 'data' => $data
             ]);
-
         } catch (Exception $e) {
             Config::logError("Admin tickets DataTables error: " . $e->getMessage());
             $this->json([
@@ -2123,7 +2120,8 @@ class AdminController extends BaseController {
     /**
      * DataTables AJAX endpoint for admin search tickets
      */
-    public function getSearchTicketsData() {
+    public function getSearchTicketsData()
+    {
         // DataTables parameters
         $draw = $_POST['draw'] ?? 1;
         $start = $_POST['start'] ?? 0;
@@ -2271,7 +2269,6 @@ class AdminController extends BaseController {
                 'recordsFiltered' => intval($totalRecords),
                 'data' => $data
             ]);
-
         } catch (Exception $e) {
             Config::logError("Admin search tickets DataTables error: " . $e->getMessage());
             $this->json([
@@ -2287,7 +2284,8 @@ class AdminController extends BaseController {
     /**
      * Add admin remarks to a ticket
      */
-    public function addAdminRemarks($complaintId) {
+    public function addAdminRemarks($complaintId)
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
 
@@ -2327,13 +2325,14 @@ class AdminController extends BaseController {
             // Add admin remarks as transaction
             $sql = "INSERT INTO transactions (
                 complaint_id, remarks, remarks_type, transaction_type,
-                from_user_id, created_at
-            ) VALUES (?, ?, 'admin_remarks', 'admin_remarks', ?, NOW())";
+                created_by_id, created_by_type, created_by_role, created_at
+            ) VALUES (?, ?, 'admin_remarks', 'admin_remarks', ?, 'user', ?, NOW())";
 
             $this->db->query($sql, [
                 $complaintId,
                 trim($_POST['remarks']),
-                $user['id']
+                $user['id'],
+                $user['role']
             ]);
 
             $this->db->commit();
@@ -2348,7 +2347,6 @@ class AdminController extends BaseController {
                 'success' => true,
                 'message' => 'Admin remarks added successfully'
             ]);
-
         } catch (Exception $e) {
             $this->db->rollback();
             Config::logError("Admin remarks error: " . $e->getMessage());
@@ -2359,58 +2357,59 @@ class AdminController extends BaseController {
             ], 500);
         }
     }
-    
+
     /**
      * Toggle content status (active/inactive)
      */
-    public function toggleContentStatus($type, $id) {
+    public function toggleContentStatus($type, $id)
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         try {
             $table = ($type === 'link') ? 'quick_links' : 'news';
             $field = ($type === 'link') ? 'is_active' : 'is_active';
-            
+
             $item = $this->db->fetch("SELECT * FROM {$table} WHERE id = ?", [$id]);
-            
+
             if (!$item) {
                 $this->json(['success' => false, 'message' => ucfirst($type) . ' not found'], 404);
                 return;
             }
-            
+
             $newStatus = $item[$field] ? 0 : 1;
-            
+
             $this->db->query("UPDATE {$table} SET {$field} = ? WHERE id = ?", [$newStatus, $id]);
-            
+
             // Log activity
             $this->logActivity("{$type}_status_toggled", [
                 'item_id' => $id,
                 'new_status' => $newStatus ? 'active' : 'inactive'
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => ucfirst($type) . ' status updated successfully',
                 'new_status' => $newStatus
             ]);
-            
         } catch (Exception $e) {
             Config::logError("Content status toggle error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to update status. Please try again.'
             ], 500);
         }
     }
-    
-    public function reports() {
+
+    public function reports()
+    {
         $user = $this->getCurrentUser();
-        
+
         $reportType = $_GET['type'] ?? 'overview';
         $dateFrom = $_GET['date_from'] ?? date('Y-m-01');
         $dateTo = $_GET['date_to'] ?? date('Y-m-t');
-        
+
         $data = [
             'page_title' => 'System Reports - SAMPARK',
             'user' => $user,
@@ -2418,7 +2417,7 @@ class AdminController extends BaseController {
             'date_range' => ['from' => $dateFrom, 'to' => $dateTo],
             'csrf_token' => $this->session->getCSRFToken()
         ];
-        
+
         switch ($reportType) {
             case 'overview':
                 $data['report_data'] = $this->getSystemOverviewReport($dateFrom, $dateTo);
@@ -2433,46 +2432,48 @@ class AdminController extends BaseController {
                 $data['report_data'] = $this->getUserActivityReport($dateFrom, $dateTo);
                 break;
         }
-        
+
         $this->view('admin/reports', $data);
     }
-    
+
     // Helper methods
-    
-    private function getSystemStats() {
+
+    private function getSystemStats()
+    {
         $stats = [];
-        
+
         // Total users
         $stats['total_users'] = $this->db->fetch("SELECT COUNT(*) as count FROM users")['count'];
         $stats['active_users'] = $this->db->fetch("SELECT COUNT(*) as count FROM users WHERE status = 'active'")['count'];
-        
+
         // Total customers
         $stats['total_customers'] = $this->db->fetch("SELECT COUNT(*) as count FROM customers")['count'];
         $stats['approved_customers'] = $this->db->fetch("SELECT COUNT(*) as count FROM customers WHERE status = 'approved'")['count'];
         $stats['pending_customers'] = $this->db->fetch("SELECT COUNT(*) as count FROM customers WHERE status = 'pending'")['count'];
-        
+
         // Total tickets
         $stats['total_tickets'] = $this->db->fetch("SELECT COUNT(*) as count FROM complaints")['count'];
         $stats['open_tickets'] = $this->db->fetch("SELECT COUNT(*) as count FROM complaints WHERE status != 'closed'")['count'];
         $stats['closed_tickets'] = $this->db->fetch("SELECT COUNT(*) as count FROM complaints WHERE status = 'closed'")['count'];
-        
+
         return $stats;
     }
-    
-    private function getCustomerStats() {
+
+    private function getCustomerStats()
+    {
         $stats = [];
-        
+
         try {
             // Total customers
             $result = $this->db->fetch("SELECT COUNT(*) as count FROM customers");
             $stats['total_customers'] = isset($result['count']) ? $result['count'] : 0;
-            
+
             $result = $this->db->fetch("SELECT COUNT(*) as count FROM customers WHERE status = 'approved'");
             $stats['active_customers'] = isset($result['count']) ? $result['count'] : 0;
-            
+
             $result = $this->db->fetch("SELECT COUNT(*) as count FROM customers WHERE status = 'pending'");
             $stats['pending_verification'] = isset($result['count']) ? $result['count'] : 0;
-            
+
             // New customers this month
             $result = $this->db->fetch(
                 "SELECT COUNT(*) as count FROM customers WHERE MONTH(created_at) = MONTH(NOW()) AND YEAR(created_at) = YEAR(NOW())"
@@ -2480,50 +2481,53 @@ class AdminController extends BaseController {
             $stats['new_this_month'] = isset($result['count']) ? $result['count'] : 0;
         } catch (\Exception $e) {
             error_log("Error in getCustomerStats: " . $e->getMessage());
-            
+
             // Provide default values
             $stats['total_customers'] = 0;
             $stats['active_customers'] = 0;
             $stats['pending_verification'] = 0;
             $stats['new_this_month'] = 0;
         }
-        
+
         return $stats;
     }
-    
-    private function getRecentRegistrations($limit = 10) {
+
+    private function getRecentRegistrations($limit = 10)
+    {
         $sql = "SELECT customer_id, name, email, company_name, division, status, created_at
                 FROM customers 
                 ORDER BY created_at DESC 
                 LIMIT ?";
-        
+
         return $this->db->fetchAll($sql, [$limit]);
     }
-    
-    private function getSystemHealth() {
+
+    private function getSystemHealth()
+    {
         $health = [
             'database' => 'healthy',
             'storage' => 'healthy',
             'emails' => 'healthy'
         ];
-        
+
         // Check database
         try {
             $this->db->fetch("SELECT 1");
         } catch (Exception $e) {
             $health['database'] = 'unhealthy';
         }
-        
+
         // Check storage
         $uploadPath = Config::getUploadPath();
         if (!is_dir($uploadPath) || !is_writable($uploadPath)) {
             $health['storage'] = 'warning';
         }
-        
+
         return $health;
     }
-    
-    private function getTicketSummary() {
+
+    private function getTicketSummary()
+    {
         $sql = "SELECT 
                     division,
                     COUNT(*) as total,
@@ -2534,39 +2538,42 @@ class AdminController extends BaseController {
                 WHERE division IS NOT NULL
                 GROUP BY division 
                 ORDER BY total DESC";
-        
+
         return $this->db->fetchAll($sql);
     }
-    
-    private function getRecentUserActivity($limit = 20) {
+
+    private function getRecentUserActivity($limit = 20)
+    {
         $sql = "SELECT a.action, a.description, a.created_at, 
                        u.name as user_name, u.role as user_role
                 FROM activity_logs a
                 LEFT JOIN users u ON a.user_id = u.id
                 ORDER BY a.created_at DESC 
                 LIMIT ?";
-        
+
         return $this->db->fetchAll($sql, [$limit]);
     }
-    
-    private function getPendingApprovals() {
+
+    private function getPendingApprovals()
+    {
         $sql = "SELECT customer_id, name, email, company_name, division, created_at
                 FROM customers 
                 WHERE status = 'pending' 
                 ORDER BY created_at ASC";
-        
+
         return $this->db->fetchAll($sql);
     }
-    
-    private function getSystemAlerts() {
+
+    private function getSystemAlerts()
+    {
         $alerts = [];
-        
+
         // Check for SLA violations
         $slaViolations = $this->db->fetch(
             "SELECT COUNT(*) as count FROM complaints 
              WHERE sla_deadline IS NOT NULL AND NOW() > sla_deadline AND status != 'closed'"
         )['count'];
-        
+
         if ($slaViolations > 0) {
             $alerts[] = [
                 'type' => 'warning',
@@ -2574,12 +2581,12 @@ class AdminController extends BaseController {
                 'action_url' => '/admin/reports?type=sla'
             ];
         }
-        
+
         // Check for pending customer approvals
         $pendingApprovals = $this->db->fetch(
             "SELECT COUNT(*) as count FROM customers WHERE status = 'pending'"
         )['count'];
-        
+
         if ($pendingApprovals > 0) {
             $alerts[] = [
                 'type' => 'info',
@@ -2587,11 +2594,12 @@ class AdminController extends BaseController {
                 'action_url' => '/admin/customers?status=pending'
             ];
         }
-        
+
         return $alerts;
     }
-    
-    private function getDivisions() {
+
+    private function getDivisions()
+    {
         try {
             $sql = "SELECT DISTINCT division FROM shed WHERE is_active = 1 ORDER BY division";
             $result = $this->db->fetchAll($sql);
@@ -2601,8 +2609,9 @@ class AdminController extends BaseController {
             return [];
         }
     }
-    
-    private function getZones() {
+
+    private function getZones()
+    {
         try {
             $sql = "SELECT DISTINCT zone FROM shed WHERE is_active = 1 ORDER BY zone";
             $result = $this->db->fetchAll($sql);
@@ -2612,8 +2621,9 @@ class AdminController extends BaseController {
             return [];
         }
     }
-    
-    private function getDepartments() {
+
+    private function getDepartments()
+    {
         try {
             $sql = "SELECT DISTINCT department FROM users WHERE department IS NOT NULL ORDER BY department";
             $result = $this->db->fetchAll($sql);
@@ -2623,13 +2633,15 @@ class AdminController extends BaseController {
             return [];
         }
     }
-    
-    private function getZoneFromDivision($division) {
+
+    private function getZoneFromDivision($division)
+    {
         $sql = "SELECT zone FROM shed WHERE division = ? LIMIT 1";
         return $this->db->fetch($sql, [$division]);
     }
 
-    private function getDistinctCategories() {
+    private function getDistinctCategories()
+    {
         try {
             $sql = "SELECT DISTINCT category FROM complaint_categories ORDER BY category";
             return $this->db->fetchAll($sql);
@@ -2638,7 +2650,8 @@ class AdminController extends BaseController {
         }
     }
 
-    private function getStatusBadge($status) {
+    private function getStatusBadge($status)
+    {
         $statusClasses = [
             'pending' => 'warning',
             'awaiting_feedback' => 'info',
@@ -2661,7 +2674,8 @@ class AdminController extends BaseController {
         return '<span class="badge bg-' . $class . '">' . $label . '</span>';
     }
 
-    private function getPriorityBadge($priority) {
+    private function getPriorityBadge($priority)
+    {
         $priorityClasses = [
             'normal' => 'success',
             'medium' => 'warning',
@@ -2672,43 +2686,50 @@ class AdminController extends BaseController {
         $class = $priorityClasses[$priority] ?? 'secondary';
         return '<span class="badge bg-' . $class . '">' . ucfirst($priority) . '</span>';
     }
-    
-    private function sendWelcomeEmail($userId, $email, $name, $loginId) {
+
+    private function sendWelcomeEmail($userId, $email, $name, $loginId)
+    {
         $notificationService = new NotificationService();
         // Implementation for sending welcome email
     }
-    
-    private function sendCustomerApprovalEmail($customer, $status, $reason = null) {
+
+    private function sendCustomerApprovalEmail($customer, $status, $reason = null)
+    {
         $notificationService = new NotificationService();
         // Implementation for sending customer approval/rejection email
     }
-    
-    private function getSystemOverviewReport($dateFrom, $dateTo) {
+
+    private function getSystemOverviewReport($dateFrom, $dateTo)
+    {
         // Implementation for system overview report
         return [];
     }
-    
-    private function getTicketAnalyticsReport($dateFrom, $dateTo) {
+
+    private function getTicketAnalyticsReport($dateFrom, $dateTo)
+    {
         // Implementation for ticket analytics report
         return [];
     }
-    
-    private function getSystemPerformanceReport($dateFrom, $dateTo) {
+
+    private function getSystemPerformanceReport($dateFrom, $dateTo)
+    {
         // Implementation for system performance report
         return [];
     }
-    
-    private function getUserActivityReport($dateFrom, $dateTo) {
+
+    private function getUserActivityReport($dateFrom, $dateTo)
+    {
         // Implementation for user activity report
         return [];
     }
-    
+
     /**
      * Display email management dashboard
      */
-    public function emails() {
+    public function emails()
+    {
         $user = $this->getCurrentUser();
-        
+
         $data = [
             'page_title' => 'Email Management - SAMPARK Admin',
             'user' => $user,
@@ -2717,16 +2738,17 @@ class AdminController extends BaseController {
             'email_templates' => $this->getEmailTemplatesList(),
             'csrf_token' => $this->session->getCSRFToken()
         ];
-        
+
         $this->view('admin/emails', $data);
     }
-    
+
     /**
      * Display email templates management
      */
-    public function emailTemplates() {
+    public function emailTemplates()
+    {
         $user = $this->getCurrentUser();
-        
+
         $data = [
             'page_title' => 'Email Templates - SAMPARK Admin',
             'user' => $user,
@@ -2744,17 +2766,18 @@ class AdminController extends BaseController {
             ],
             'csrf_token' => $this->session->getCSRFToken()
         ];
-        
+
         $this->view('admin/email-templates', $data);
     }
-    
+
     /**
      * Send bulk email to users
      */
-    public function sendBulkEmail() {
+    public function sendBulkEmail()
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'subject' => 'required|min:5|max:200',
@@ -2763,7 +2786,7 @@ class AdminController extends BaseController {
             'template_id' => 'optional|numeric',
             'send_immediately' => 'optional|boolean'
         ]);
-        
+
         if (!$isValid) {
             $this->json([
                 'success' => false,
@@ -2771,17 +2794,17 @@ class AdminController extends BaseController {
             ], 400);
             return;
         }
-        
+
         try {
             $subject = $this->sanitize($_POST['subject']);
             $message = $_POST['message']; // Keep HTML formatting
             $recipientType = $_POST['recipient_type'];
             $templateId = $_POST['template_id'] ?? null;
             $sendImmediately = isset($_POST['send_immediately']) && $_POST['send_immediately'];
-            
+
             // Get recipients based on type
             $recipients = $this->getBulkEmailRecipients($recipientType);
-            
+
             if (empty($recipients)) {
                 $this->json([
                     'success' => false,
@@ -2789,7 +2812,7 @@ class AdminController extends BaseController {
                 ], 400);
                 return;
             }
-            
+
             // Create bulk email job
             $emailJobId = $this->createBulkEmailJob([
                 'subject' => $subject,
@@ -2800,7 +2823,7 @@ class AdminController extends BaseController {
                 'created_by' => $user['id'],
                 'send_immediately' => $sendImmediately
             ]);
-            
+
             if ($sendImmediately) {
                 // Process immediately
                 $this->processBulkEmailJob($emailJobId);
@@ -2809,7 +2832,7 @@ class AdminController extends BaseController {
                 // Queue for later processing
                 $message = 'Bulk email queued successfully. It will be processed shortly.';
             }
-            
+
             // Log activity
             $this->log('info', 'Bulk email created', [
                 'email_job_id' => $emailJobId,
@@ -2817,31 +2840,31 @@ class AdminController extends BaseController {
                 'recipient_type' => $recipientType,
                 'admin_id' => $user['id']
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => $message,
                 'job_id' => $emailJobId,
                 'recipient_count' => count($recipients)
             ]);
-            
         } catch (Exception $e) {
             Config::logError("Bulk email creation error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to create bulk email. Please try again.'
             ], 500);
         }
     }
-    
+
     /**
      * Store new announcement
      */
-    public function storeAnnouncement() {
+    public function storeAnnouncement()
+    {
         $this->validateCSRF();
         $user = $this->getCurrentUser();
-        
+
         $validator = new Validator();
         $isValid = $validator->validate($_POST, [
             'title' => 'required|min:5|max:200',
@@ -2852,7 +2875,7 @@ class AdminController extends BaseController {
             'is_active' => 'optional|boolean',
             'priority' => 'optional|in:low,medium,high,urgent'
         ]);
-        
+
         if (!$isValid) {
             $this->json([
                 'success' => false,
@@ -2860,7 +2883,7 @@ class AdminController extends BaseController {
             ], 400);
             return;
         }
-        
+
         try {
             $title = $this->sanitize($_POST['title']);
             $content = $_POST['content']; // Keep HTML formatting
@@ -2869,7 +2892,7 @@ class AdminController extends BaseController {
             $expiresAt = !empty($_POST['expires_at']) ? $_POST['expires_at'] : null;
             $isActive = isset($_POST['is_active']) && $_POST['is_active'];
             $priority = $_POST['priority'] ?? 'medium';
-            
+
             // Create announcement
             $announcementId = $this->createAnnouncement([
                 'title' => $title,
@@ -2881,12 +2904,12 @@ class AdminController extends BaseController {
                 'priority' => $priority,
                 'created_by' => $user['id']
             ]);
-            
+
             if ($announcementId && $isActive) {
                 // Send notifications to target audience
                 $this->sendAnnouncementNotifications($announcementId, $title, $content, $targetAudience, $priority);
             }
-            
+
             // Log activity
             $this->log('info', 'Announcement created', [
                 'announcement_id' => $announcementId,
@@ -2895,26 +2918,26 @@ class AdminController extends BaseController {
                 'target_audience' => $targetAudience,
                 'admin_id' => $user['id']
             ]);
-            
+
             $this->json([
                 'success' => true,
                 'message' => 'Announcement created successfully',
                 'announcement_id' => $announcementId
             ]);
-            
         } catch (Exception $e) {
             Config::logError("Announcement creation error: " . $e->getMessage());
-            
+
             $this->json([
                 'success' => false,
                 'message' => 'Failed to create announcement. Please try again.'
             ], 500);
         }
     }
-    
+
     // Helper methods for email management
-    
-    private function getEmailStats() {
+
+    private function getEmailStats()
+    {
         try {
             $sql = "SELECT 
                         COUNT(*) as total_sent,
@@ -2923,7 +2946,7 @@ class AdminController extends BaseController {
                         COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending
                     FROM email_logs 
                     WHERE created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
-            
+
             return $this->db->fetch($sql) ?: [
                 'total_sent' => 0,
                 'successfully_sent' => 0,
@@ -2939,8 +2962,9 @@ class AdminController extends BaseController {
             ];
         }
     }
-    
-    private function getRecentEmails($limit = 10) {
+
+    private function getRecentEmails($limit = 10)
+    {
         try {
             $sql = "SELECT * FROM email_logs ORDER BY created_at DESC LIMIT ?";
             return $this->db->fetchAll($sql, [$limit]);
@@ -2948,8 +2972,9 @@ class AdminController extends BaseController {
             return [];
         }
     }
-    
-    private function getEmailTemplatesList() {
+
+    private function getEmailTemplatesList()
+    {
         try {
             $sql = "SELECT id, name, type, subject FROM email_templates WHERE is_active = 1 ORDER BY name";
             return $this->db->fetchAll($sql);
@@ -2957,8 +2982,9 @@ class AdminController extends BaseController {
             return [];
         }
     }
-    
-    private function getAllEmailTemplates() {
+
+    private function getAllEmailTemplates()
+    {
         try {
             $sql = "SELECT * FROM email_templates ORDER BY type, name";
             return $this->db->fetchAll($sql);
@@ -2966,44 +2992,46 @@ class AdminController extends BaseController {
             return [];
         }
     }
-    
-    private function getBulkEmailRecipients($recipientType) {
+
+    private function getBulkEmailRecipients($recipientType)
+    {
         try {
             $recipients = [];
-            
+
             switch ($recipientType) {
                 case 'all':
                     $customers = $this->db->fetchAll("SELECT customer_id as id, email, name, 'customer' as type FROM customers WHERE status = 'active' AND email IS NOT NULL");
                     $staff = $this->db->fetchAll("SELECT id, email, name, user_type as type FROM users WHERE status = 'active' AND email IS NOT NULL");
                     $recipients = array_merge($customers, $staff);
                     break;
-                    
+
                 case 'customers':
                     $recipients = $this->db->fetchAll("SELECT customer_id as id, email, name, 'customer' as type FROM customers WHERE status = 'active' AND email IS NOT NULL");
                     break;
-                    
+
                 case 'staff':
                     $recipients = $this->db->fetchAll("SELECT id, email, name, user_type as type FROM users WHERE status = 'active' AND email IS NOT NULL AND user_type IN ('controller', 'controller_nodal')");
                     break;
-                    
+
                 case 'admins':
                     $recipients = $this->db->fetchAll("SELECT id, email, name, user_type as type FROM users WHERE status = 'active' AND email IS NOT NULL AND user_type IN ('admin', 'superadmin')");
                     break;
             }
-            
+
             return $recipients;
         } catch (Exception $e) {
             return [];
         }
     }
-    
-    private function createBulkEmailJob($data) {
+
+    private function createBulkEmailJob($data)
+    {
         try {
             $sql = "INSERT INTO bulk_email_jobs (
                         subject, message, recipient_type, template_id, 
                         recipient_data, created_by, status, created_at
                     ) VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())";
-            
+
             $this->db->query($sql, [
                 $data['subject'],
                 $data['message'],
@@ -3012,14 +3040,15 @@ class AdminController extends BaseController {
                 json_encode($data['recipients']),
                 $data['created_by']
             ]);
-            
+
             return $this->db->lastInsertId();
         } catch (Exception $e) {
             throw $e;
         }
     }
-    
-    private function processBulkEmailJob($jobId) {
+
+    private function processBulkEmailJob($jobId)
+    {
         // This would be implemented to actually send the emails
         // For now, just update the status
         try {
@@ -3030,14 +3059,15 @@ class AdminController extends BaseController {
             return false;
         }
     }
-    
-    private function createAnnouncement($data) {
+
+    private function createAnnouncement($data)
+    {
         try {
             $sql = "INSERT INTO announcements (
                         title, content, type, target_audience, expires_at, 
                         is_active, priority, created_by, created_at
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
-            
+
             $this->db->query($sql, [
                 $data['title'],
                 $data['content'],
@@ -3048,19 +3078,20 @@ class AdminController extends BaseController {
                 $data['priority'],
                 $data['created_by']
             ]);
-            
+
             return $this->db->lastInsertId();
         } catch (Exception $e) {
             throw $e;
         }
     }
-    
-    private function sendAnnouncementNotifications($announcementId, $title, $content, $targetAudience, $priority) {
+
+    private function sendAnnouncementNotifications($announcementId, $title, $content, $targetAudience, $priority)
+    {
         try {
             // Use the NotificationModel to create notifications
             require_once __DIR__ . '/../models/NotificationModel.php';
             $notificationModel = new NotificationModel();
-            
+
             // Create system announcement notifications
             $notificationModel->createSystemAnnouncement(
                 $title,
@@ -3069,7 +3100,7 @@ class AdminController extends BaseController {
                 null, // No expiry for notifications
                 $priority
             );
-            
+
             return true;
         } catch (Exception $e) {
             Config::logError("Failed to send announcement notifications: " . $e->getMessage());
@@ -3080,7 +3111,8 @@ class AdminController extends BaseController {
     /**
      * View ticket details for admin (read-only)
      */
-    public function viewTicket($complaintId) {
+    public function viewTicket($complaintId)
+    {
         $user = $this->getCurrentUser();
 
         // Get ticket details
@@ -3117,8 +3149,8 @@ class AdminController extends BaseController {
         );
 
         // Get transaction history
-        $transactions = $this->db->fetchAll(
-            "SELECT t.*, u.name as user_name, u.department as user_department,
+        $allTransactions = $this->db->fetchAll(
+            "SELECT t.*, u.name as user_name, u.role as user_role, u.department as user_department,
                     u.division as user_division, u.zone as user_zone,
                     cust.name as customer_name
             FROM transactions t
@@ -3129,17 +3161,35 @@ class AdminController extends BaseController {
             [$complaintId]
         );
 
-        // Get latest important remark (admin remarks, forwarding remarks, etc.)
+        // Filter out admin remarks from main transaction history
+        $transactions = array_filter($allTransactions, function($transaction) {
+            return $transaction['remarks_type'] !== 'admin_remarks';
+        });
+
+        // Get latest important remark (excluding admin remarks)
         $latest_important_remark = $this->db->fetch(
-            "SELECT t.*, u.name as user_name, u.department as user_department,
-                    u.division as user_division
+            "SELECT t.*, u.name as user_name, u.role as user_role, u.department as user_department,
+                    u.division as user_division, u.zone as user_zone
             FROM transactions t
             LEFT JOIN users u ON t.created_by_id = u.id
             WHERE t.complaint_id = ?
-            AND t.remarks_type IN ('admin_remarks', 'forwarding_remarks', 'interim_remarks', 'internal_remarks')
+            AND t.remarks_type IN ('forwarding_remarks', 'interim_remarks', 'internal_remarks')
             AND (t.remarks IS NOT NULL AND t.remarks != '' OR t.internal_remarks IS NOT NULL AND t.internal_remarks != '')
             ORDER BY t.created_at DESC
             LIMIT 1",
+            [$complaintId]
+        );
+
+        // Get admin remarks history
+        $admin_remarks = $this->db->fetchAll(
+            "SELECT t.*, u.name as user_name, u.role as user_role, u.department as user_department,
+                    u.division as user_division, u.zone as user_zone
+            FROM transactions t
+            LEFT JOIN users u ON t.created_by_id = u.id
+            WHERE t.complaint_id = ?
+            AND t.remarks_type = 'admin_remarks'
+            AND t.remarks IS NOT NULL AND t.remarks != ''
+            ORDER BY t.created_at DESC",
             [$complaintId]
         );
 
@@ -3150,6 +3200,7 @@ class AdminController extends BaseController {
             'evidence' => $evidence,
             'transactions' => $transactions,
             'latest_important_remark' => $latest_important_remark,
+            'admin_remarks' => $admin_remarks,
             'is_viewing_other_dept' => false,
             'is_forwarded_ticket' => false,
             'is_awaiting_customer_info' => $ticket['status'] === 'awaiting_info',
