@@ -12,7 +12,13 @@ require_once __DIR__ . '/../utils/NotificationService.php';
 
 class AdminController extends BaseController
 {
-
+    /**
+     * Sanitize input string to prevent XSS and trim whitespace
+     */
+    private function sanitize($value)
+    {
+        return htmlspecialchars(trim($value), ENT_QUOTES, 'UTF-8');
+    }
     public function dashboard()
     {
         $user = $this->getCurrentUser();
@@ -1976,19 +1982,19 @@ class AdminController extends BaseController
             $params = [];
 
             // Department and division filtering
-        if (!in_array($user['department'], ['CML', 'ADM'])) {
-            $conditions[] = 'c.assigned_to_department = ? OR c.department = ?';
-            $params[] = $user['department'];
-            $params[] = $user['department'];
-        }
+            if (!in_array($user['department'], ['CML', 'ADM'])) {
+                $conditions[] = 'c.assigned_to_department = ? OR c.department = ?';
+                $params[] = $user['department'];
+                $params[] = $user['department'];
+            }
 
-        if ($user['division'] === 'HQ') {
-            $conditions[] = 'c.zone = ?';
-            $params[] = $user['zone'];
-        } else {
-            $conditions[] = 'c.division = ?';
-            $params[] = $user['division'];
-        }
+            if ($user['division'] === 'HQ') {
+                $conditions[] = 'c.zone = ?';
+                $params[] = $user['zone'];
+            } else {
+                $conditions[] = 'c.division = ?';
+                $params[] = $user['division'];
+            }
 
             // Apply filters
             if ($status) {
@@ -2723,6 +2729,8 @@ class AdminController extends BaseController
         return [];
     }
 
+
+
     /**
      * Display email management dashboard
      */
@@ -3162,7 +3170,7 @@ class AdminController extends BaseController
         );
 
         // Filter out admin remarks from main transaction history
-        $transactions = array_filter($allTransactions, function($transaction) {
+        $transactions = array_filter($allTransactions, function ($transaction) {
             return $transaction['remarks_type'] !== 'admin_remarks';
         });
 
