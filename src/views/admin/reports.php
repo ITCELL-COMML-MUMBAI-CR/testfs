@@ -152,29 +152,74 @@ $status_legend = [
                                     </div>
                                 </div>
 
-                                <div class="col-md-2">
+                                <!-- Enhanced Date Range Filters -->
+                                <div class="col-md-3">
+                                    <label class="form-label-apple">Date Range</label>
+                                    <select class="form-control-apple" id="dateRangeSelector" onchange="applyDateRange(this.value)">
+                                        <option value="custom">Custom Range</option>
+                                        <option value="last_7_days">Last 7 Days</option>
+                                        <option value="last_month">Last Month</option>
+                                        <option value="all_time">All Time</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2" id="dateFromContainer">
                                     <label class="form-label-apple">Date From</label>
-                                    <input type="date" class="form-control-apple" name="date_from" value="<?= $date_from ?>">
+                                    <input type="date" class="form-control-apple" name="date_from" id="dateFrom" value="<?= $date_from ?>">
                                 </div>
 
-                                <div class="col-md-2">
+                                <div class="col-md-2" id="dateToContainer">
                                     <label class="form-label-apple">Date To</label>
-                                    <input type="date" class="form-control-apple" name="date_to" value="<?= $date_to ?>">
+                                    <input type="date" class="form-control-apple" name="date_to" id="dateTo" value="<?= $date_to ?>">
                                 </div>
 
+                                <!-- Role-based Division/Jurisdiction Filter -->
                                 <div class="col-md-2">
-                                    <label class="form-label-apple">Division Filter</label>
+                                    <label class="form-label-apple">
+                                        <?php
+                                        // Determine label based on user role
+                                        $user_role = $user['role'] ?? 'admin';
+                                        if ($user_role === 'controller_nodal') {
+                                            echo 'Department (All in Division)';
+                                        } elseif ($user_role === 'controller') {
+                                            echo 'Division/Department';
+                                        } else {
+                                            echo 'Division Filter';
+                                        }
+                                        ?>
+                                    </label>
                                     <select class="form-control-apple" name="division">
-                                        <option value="">All Divisions</option>
-                                        <?php if ($user_division === 'HQ'): ?>
-                                            <option value="Northern" <?= $division_filter === 'Northern' ? 'selected' : '' ?>>Northern</option>
-                                            <option value="Southern" <?= $division_filter === 'Southern' ? 'selected' : '' ?>>Southern</option>
-                                            <option value="Eastern" <?= $division_filter === 'Eastern' ? 'selected' : '' ?>>Eastern</option>
-                                            <option value="Western" <?= $division_filter === 'Western' ? 'selected' : '' ?>>Western</option>
-                                            <option value="Central" <?= $division_filter === 'Central' ? 'selected' : '' ?>>Central</option>
-                                        <?php else: ?>
-                                            <option value="<?= htmlspecialchars($user_division) ?>" selected><?= htmlspecialchars($user_division) ?></option>
-                                        <?php endif; ?>
+                                        <option value="">
+                                            <?php
+                                            if ($user_role === 'controller_nodal') {
+                                                echo 'All Departments in Division';
+                                            } elseif ($user_role === 'controller') {
+                                                echo 'Own Department + HQ';
+                                            } else {
+                                                echo 'All Divisions';
+                                            }
+                                            ?>
+                                        </option>
+                                        <?php
+                                        // Role-based filtering as per requirements
+                                        if ($user_role === 'admin' || $user_role === 'superadmin') {
+                                            // Admin – Data from all Departments and Zones, but default show own zone
+                                            echo '<option value="Northern"' . ($division_filter === 'Northern' ? ' selected' : '') . '>Northern Division</option>';
+                                            echo '<option value="Southern"' . ($division_filter === 'Southern' ? ' selected' : '') . '>Southern Division</option>';
+                                            echo '<option value="Eastern"' . ($division_filter === 'Eastern' ? ' selected' : '') . '>Eastern Division</option>';
+                                            echo '<option value="Western"' . ($division_filter === 'Western' ? ' selected' : '') . '>Western Division</option>';
+                                            echo '<option value="Central"' . ($division_filter === 'Central' ? ' selected' : '') . '>Central Division</option>';
+                                        } elseif ($user_role === 'controller_nodal') {
+                                            // Controller Nodal - All Departments in their specific Division
+                                            echo '<option value="' . htmlspecialchars($user_division) . '" selected>' . htmlspecialchars($user_division) . ' Division (All Departments)</option>';
+                                        } elseif ($user_role === 'controller') {
+                                            // Controller – Only data from specific department and division, for HQ data from all divisions in same zone
+                                            echo '<option value="' . htmlspecialchars($user_division) . '"' . ($division_filter === $user_division ? ' selected' : '') . '>' . htmlspecialchars($user_division) . ' Division</option>';
+                                            if ($user_division !== 'HQ') {
+                                                echo '<option value="HQ"' . ($division_filter === 'HQ' ? ' selected' : '') . '>HQ (Same Zone)</option>';
+                                            }
+                                        }
+                                        ?>
                                     </select>
                                 </div>
 
@@ -251,6 +296,127 @@ $status_legend = [
         </div>
         <?php endif; ?>
 
+        <?php if ($current_tab === 'scheduled'): ?>
+        <!-- Scheduled Report Generation -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card-apple">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-file-pdf text-apple-blue me-2"></i>
+                            Generate Comprehensive Report
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-8">
+                                <p class="text-muted mb-4">
+                                    Generate a comprehensive, multi-page PDF report perfect for printing, sharing, or offline analysis.
+                                    The report includes customer summary with charts, complaint duration analysis, division vs status summary, and detailed complaint listings.
+                                </p>
+
+                                <form id="scheduledReportForm" onsubmit="generateScheduledReport(event)">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label-apple">Division and Zone</label>
+                                            <select class="form-control-apple" name="report_division" required>
+                                                <option value="">Select Division</option>
+                                                <option value="all">All Divisions</option>
+                                                <?php
+                                                $divisions = ['Northern', 'Southern', 'Eastern', 'Western', 'Central'];
+                                                foreach ($divisions as $div): ?>
+                                                    <option value="<?= $div ?>"><?= $div ?> Division</option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label-apple">Date Range</label>
+                                            <select class="form-control-apple" id="reportDateRange" name="report_date_range" onchange="toggleCustomDates(this.value)" required>
+                                                <option value="last_7_days">Last 7 Days</option>
+                                                <option value="last_month" selected>Last Month</option>
+                                                <option value="current_month">Current Month</option>
+                                                <option value="last_3_months">Last 3 Months</option>
+                                                <option value="custom">Custom Range</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-6" id="customDateFromContainer" style="display: none;">
+                                            <label class="form-label-apple">Custom From Date</label>
+                                            <input type="date" class="form-control-apple" name="report_date_from" id="reportDateFrom">
+                                        </div>
+
+                                        <div class="col-md-6" id="customDateToContainer" style="display: none;">
+                                            <label class="form-label-apple">Custom To Date</label>
+                                            <input type="date" class="form-control-apple" name="report_date_to" id="reportDateTo">
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <button type="submit" class="btn btn-apple-primary btn-lg">
+                                            <i class="fas fa-file-export me-2"></i>Generate Report
+                                        </button>
+                                        <button type="button" class="btn btn-apple-glass ms-2" onclick="previewReport()">
+                                            <i class="fas fa-eye me-2"></i>Preview
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="col-lg-4">
+                                <div class="bg-light rounded-3 p-4">
+                                    <h6 class="fw-semibold mb-3">
+                                        <i class="fas fa-info-circle text-primary me-2"></i>
+                                        Report Includes
+                                    </h6>
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-2">
+                                            <i class="fas fa-chart-bar text-success me-2"></i>
+                                            <strong>Customer Summary:</strong> New registrations with bar charts
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-clock text-info me-2"></i>
+                                            <strong>Duration Analysis:</strong> Resolution time metrics and comparisons
+                                        </li>
+                                        <li class="mb-2">
+                                            <i class="fas fa-table text-warning me-2"></i>
+                                            <strong>Status Summary:</strong> Division vs complaint status pivot table
+                                        </li>
+                                        <li class="mb-0">
+                                            <i class="fas fa-list text-primary me-2"></i>
+                                            <strong>Detailed List:</strong> Complete complaint records with color coding
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Generation Status -->
+        <div class="row" id="reportStatusContainer" style="display: none;">
+            <div class="col-12">
+                <div class="card-apple">
+                    <div class="card-body text-center">
+                        <div id="reportGenerationSpinner" class="mb-3">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Generating report...</span>
+                            </div>
+                        </div>
+                        <h5 id="reportStatusText">Generating your comprehensive report...</h5>
+                        <p class="text-muted mb-0" id="reportStatusDetails">This may take a few moments depending on the data range selected.</p>
+                        <div class="progress mt-3" style="height: 8px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" id="reportProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($current_tab === 'detailed'): ?>
         <!-- Table Functionality and Content -->
         <div class="row">
             <div class="col-12">
@@ -304,12 +470,13 @@ $status_legend = [
                                             <th class="border-0 action-col">Action Taken</th>
                                             <th class="border-0">Status</th>
                                             <th class="border-0">Priority</th>
+                                            <th class="border-0">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if (empty($complaints_data)): ?>
                                         <tr>
-                                            <td colspan="13" class="text-center py-5">
+                                            <td colspan="14" class="text-center py-5">
                                                 <div class="text-muted">
                                                     <i class="fas fa-search fa-2x mb-3"></i>
                                                     <h5>No complaints found</h5>
@@ -370,6 +537,22 @@ $status_legend = [
                                                     <span class="badge bg-<?= $priority_class ?>">
                                                         <?= ucfirst($complaint['priority']) ?>
                                                     </span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-primary btn-sm"
+                                                                onclick="event.stopPropagation(); viewComplaintDetails('<?= $complaint['complaint_id'] ?>')"
+                                                                title="View Details">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <?php if ($complaint['status'] !== 'closed'): ?>
+                                                        <button class="btn btn-outline-success btn-sm"
+                                                                onclick="event.stopPropagation(); quickReply('<?= $complaint['complaint_id'] ?>')"
+                                                                title="Quick Reply">
+                                                            <i class="fas fa-reply"></i>
+                                                        </button>
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </td>
                                             </tr>
                                             <?php endforeach; ?>
@@ -515,9 +698,51 @@ $status_legend = [
                 </div>
             </div>
         </div>
+        <?php endif; ?>
 
     </div>
 </section>
+
+<!-- Quick Reply Modal -->
+<div class="modal fade" id="quickReplyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Reply - Ticket #<span id="replyTicketId"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="quickReplyForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label-apple">Reply Message</label>
+                        <textarea class="form-control-apple" name="reply" rows="4" required
+                                  placeholder="Enter your reply to the customer..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-apple">Action Taken</label>
+                        <textarea class="form-control-apple" name="action_taken" rows="3" required
+                                  placeholder="Describe the action taken to resolve this issue..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-apple">Status Update</label>
+                        <select class="form-control-apple" name="new_status" required>
+                            <option value="">Select Status</option>
+                            <option value="awaiting_feedback">Awaiting Customer Feedback</option>
+                            <option value="awaiting_info">Awaiting Additional Information</option>
+                            <option value="closed">Resolve and Close</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-apple-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-apple-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Send Reply & Update
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <script>
 // Report data and functionality
@@ -528,9 +753,13 @@ const reportData = {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-    initializeDataTables();
-    setupColumnSelector();
-    setupRowClickHandlers();
+    // Add small delay to ensure all DOM elements are properly rendered
+    setTimeout(function() {
+        initializeDataTables();
+        setupColumnSelector();
+        setupRowClickHandlers();
+        setupQuickReplyModal();
+    }, 100);
 });
 
 function initializeDataTables() {
@@ -545,26 +774,68 @@ function initializeDataTables() {
     const table = $(tableId);
 
     if (table.length && table.is(':visible')) {
-        try {
-            table.DataTable({
-                pageLength: 25,
-                lengthMenu: [10, 25, 50, 100],
-                responsive: true,
-                dom: '<"top"lf>rt<"bottom"ip><"clear">',
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Search records..."
-                },
-                order: [[1, 'desc']], // Default order by first sortable column
-                columnDefs: [
-                    {
-                        targets: 'no-sort',
-                        orderable: false
+        // Check if table has any rows with data
+        const tbody = table.find('tbody');
+        const dataRows = tbody.find('tr').not('.dataTables_empty');
+
+        // Only initialize if we have valid table structure
+        if (tbody.length > 0) {
+            try {
+                // Validate table structure before initialization
+                const headerCells = table.find('thead tr:first th').length;
+                let validStructure = true;
+
+                // Skip initialization if only the "no data" row exists
+                if (dataRows.length === 0) {
+                    const allRows = tbody.find('tr');
+                    if (allRows.length === 1) {
+                        const firstRowCells = allRows.first().find('td').length;
+                        if (firstRowCells === 1 && allRows.first().find('td').attr('colspan')) {
+                            // This is likely the "no data found" row, skip DataTables
+                            console.log('Table contains only "no data" message, skipping DataTables initialization');
+                            return;
+                        }
                     }
-                ]
-            });
-        } catch (error) {
-            console.error('DataTables initialization error:', error);
+                }
+
+                // Check each data row has correct number of cells
+                dataRows.each(function() {
+                    const cellCount = $(this).find('td').length;
+                    if (cellCount !== headerCells && cellCount > 0) {
+                        console.warn(`Row has ${cellCount} cells, expected ${headerCells}`);
+                        validStructure = false;
+                    }
+                });
+
+                if (validStructure && dataRows.length > 0) {
+                    table.DataTable({
+                        pageLength: 25,
+                        lengthMenu: [10, 25, 50, 100],
+                        responsive: true,
+                        dom: '<"top"lf>rt<"bottom"ip><"clear">',
+                        language: {
+                            search: "_INPUT_",
+                            searchPlaceholder: "Search records..."
+                        },
+                        order: [[1, 'desc']], // Default order by first sortable column
+                        columnDefs: [
+                            {
+                                targets: 'no-sort',
+                                orderable: false
+                            },
+                            {
+                                targets: -1, // Last column (Actions)
+                                orderable: false,
+                                searchable: false
+                            }
+                        ]
+                    });
+                } else {
+                    console.error('Table structure validation failed - column count mismatch');
+                }
+            } catch (error) {
+                console.error('DataTables initialization error:', error);
+            }
         }
     }
 }
@@ -588,7 +859,8 @@ function setupColumnSelector() {
             {id: 'description', label: 'Description', default: true},
             {id: 'action_taken', label: 'Action Taken', default: true},
             {id: 'status', label: 'Status', default: true},
-            {id: 'priority', label: 'Priority', default: true}
+            {id: 'priority', label: 'Priority', default: true},
+            {id: 'actions', label: 'Actions', default: true}
         ],
         transactions: [
             {id: 'serial', label: 'Serial No.', default: true},
@@ -659,6 +931,83 @@ function getColumnIndex(columnId) {
     return -1;
 }
 
+// Date range selector functionality
+function applyDateRange(range) {
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    const dateFromContainer = document.getElementById('dateFromContainer');
+    const dateToContainer = document.getElementById('dateToContainer');
+
+    const today = new Date();
+    let fromDate, toDate;
+
+    switch(range) {
+        case 'last_7_days':
+            fromDate = new Date(today);
+            fromDate.setDate(today.getDate() - 7);
+            toDate = today;
+            dateFromContainer.style.display = 'none';
+            dateToContainer.style.display = 'none';
+            break;
+
+        case 'last_month':
+            fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            toDate = new Date(today.getFullYear(), today.getMonth(), 0);
+            dateFromContainer.style.display = 'none';
+            dateToContainer.style.display = 'none';
+            break;
+
+        case 'all_time':
+            fromDate = new Date('2020-01-01'); // Set a reasonable start date
+            toDate = today;
+            dateFromContainer.style.display = 'none';
+            dateToContainer.style.display = 'none';
+            break;
+
+        case 'custom':
+        default:
+            dateFromContainer.style.display = 'block';
+            dateToContainer.style.display = 'block';
+            return; // Don't auto-set dates for custom range
+    }
+
+    // Set the date inputs
+    dateFrom.value = fromDate.toISOString().split('T')[0];
+    dateTo.value = toDate.toISOString().split('T')[0];
+}
+
+// Initialize date range on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if current dates match any preset range and update selector
+    const dateFrom = document.getElementById('dateFrom');
+    const dateTo = document.getElementById('dateTo');
+    const selector = document.getElementById('dateRangeSelector');
+
+    if (dateFrom && dateTo && selector) {
+        const fromVal = dateFrom.value;
+        const toVal = dateTo.value;
+        const today = new Date().toISOString().split('T')[0];
+
+        // Check if it matches last 7 days
+        const last7Days = new Date();
+        last7Days.setDate(last7Days.getDate() - 7);
+        if (fromVal === last7Days.toISOString().split('T')[0] && toVal === today) {
+            selector.value = 'last_7_days';
+            applyDateRange('last_7_days');
+        }
+        // Check if it matches last month
+        else {
+            const lastMonthStart = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
+            const lastMonthEnd = new Date(new Date().getFullYear(), new Date().getMonth(), 0);
+            if (fromVal === lastMonthStart.toISOString().split('T')[0] &&
+                toVal === lastMonthEnd.toISOString().split('T')[0]) {
+                selector.value = 'last_month';
+                applyDateRange('last_month');
+            }
+        }
+    }
+});
+
 function changeDataView(view) {
     const url = new URL(window.location);
     url.searchParams.set('view', view);
@@ -714,7 +1063,7 @@ function exportData(format) {
 }
 
 function viewComplaintDetails(complaintId) {
-    window.location.href = `${APP_URL}/admin/tickets/${complaintId}`;
+    window.location.href = `${APP_URL}/admin/tickets/${complaintId}/view`;
 }
 
 function viewTransactionDetails(transactionId) {
@@ -726,13 +1075,26 @@ function viewCustomerDetails(customerId) {
     window.location.href = `${APP_URL}/admin/customers/${customerId}`;
 }
 
+function quickReply(complaintId) {
+    const replyTicketId = document.getElementById('replyTicketId');
+    const quickReplyForm = document.getElementById('quickReplyForm');
+    const quickReplyModal = document.getElementById('quickReplyModal');
+
+    if (!replyTicketId || !quickReplyForm || !quickReplyModal) {
+        console.error('Quick reply modal elements not found');
+        return;
+    }
+
+    replyTicketId.textContent = complaintId;
+    quickReplyForm.dataset.complaintId = complaintId;
+    new bootstrap.Modal(quickReplyModal).show();
+}
+
 function scheduleReport() {
-    // Implementation for report scheduling
-    Swal.fire({
-        title: 'Schedule Report',
-        text: 'Report scheduling feature coming soon',
-        icon: 'info'
-    });
+    // Navigate to scheduled report tab
+    const url = new URL(window.location);
+    url.searchParams.set('tab', 'scheduled');
+    window.location.href = url.toString();
 }
 
 function setupRowClickHandlers() {
@@ -746,6 +1108,203 @@ function setupRowClickHandlers() {
         });
     });
 }
+
+function setupQuickReplyModal() {
+    const quickReplyForm = document.getElementById('quickReplyForm');
+    if (!quickReplyForm) {
+        console.warn('Quick reply form not found');
+        return;
+    }
+
+    quickReplyForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const complaintId = this.dataset.complaintId;
+        const formData = new FormData(this);
+        formData.append('csrf_token', CSRF_TOKEN);
+
+        try {
+            const response = await fetch(`${APP_URL}/admin/tickets/${complaintId}/reply`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                Swal.fire('Success', result.message, 'success').then(() => {
+                    bootstrap.Modal.getInstance(document.getElementById('quickReplyModal')).hide();
+                    location.reload(); // Refresh to show updated data
+                });
+            } else {
+                Swal.fire('Error', result.message, 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Failed to send reply', 'error');
+        }
+    });
+}
+
+// Scheduled Report Functions
+function switchToScheduledReports() {
+    const url = new URL(window.location);
+    url.searchParams.set('tab', 'scheduled');
+    window.location.href = url.toString();
+}
+
+function switchToDetailedReports() {
+    const url = new URL(window.location);
+    url.searchParams.delete('tab');
+    window.location.href = url.toString();
+}
+
+function toggleCustomDates(range) {
+    const customFromContainer = document.getElementById('customDateFromContainer');
+    const customToContainer = document.getElementById('customDateToContainer');
+    const reportDateFrom = document.getElementById('reportDateFrom');
+    const reportDateTo = document.getElementById('reportDateTo');
+
+    if (range === 'custom') {
+        customFromContainer.style.display = 'block';
+        customToContainer.style.display = 'block';
+        reportDateFrom.setAttribute('required', 'required');
+        reportDateTo.setAttribute('required', 'required');
+    } else {
+        customFromContainer.style.display = 'none';
+        customToContainer.style.display = 'none';
+        reportDateFrom.removeAttribute('required');
+        reportDateTo.removeAttribute('required');
+    }
+}
+
+function generateScheduledReport(event) {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+    const reportStatusContainer = document.getElementById('reportStatusContainer');
+    const reportProgress = document.getElementById('reportProgress');
+    const reportStatusText = document.getElementById('reportStatusText');
+    const reportStatusDetails = document.getElementById('reportStatusDetails');
+
+    // Show status container
+    reportStatusContainer.style.display = 'block';
+
+    // Add CSRF token
+    formData.append('csrf_token', CSRF_TOKEN);
+    formData.append('action', 'generate_scheduled_report');
+
+    // Simulate progress
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 90) progress = 90;
+        reportProgress.style.width = progress + '%';
+    }, 500);
+
+    // Update status messages
+    setTimeout(() => {
+        reportStatusText.textContent = 'Collecting complaint data...';
+        reportStatusDetails.textContent = 'Gathering complaints based on your filters.';
+    }, 1000);
+
+    setTimeout(() => {
+        reportStatusText.textContent = 'Analyzing customer metrics...';
+        reportStatusDetails.textContent = 'Calculating registration statistics and trends.';
+    }, 3000);
+
+    setTimeout(() => {
+        reportStatusText.textContent = 'Generating charts and tables...';
+        reportStatusDetails.textContent = 'Creating visual representations of the data.';
+    }, 5000);
+
+    // Make the actual request
+    fetch(`${APP_URL}/admin/reports/generate-scheduled`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.blob();
+        }
+        throw new Error('Report generation failed');
+    })
+    .then(blob => {
+        clearInterval(progressInterval);
+        reportProgress.style.width = '100%';
+        reportStatusText.textContent = 'Report generated successfully!';
+        reportStatusDetails.textContent = 'Your comprehensive report is ready for download.';
+
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `SAMPARK_Comprehensive_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        // Hide status after 3 seconds
+        setTimeout(() => {
+            reportStatusContainer.style.display = 'none';
+            reportProgress.style.width = '0%';
+        }, 3000);
+    })
+    .catch(error => {
+        clearInterval(progressInterval);
+        reportStatusText.textContent = 'Report generation failed';
+        reportStatusDetails.textContent = 'Please try again or contact support if the problem persists.';
+
+        Swal.fire({
+            title: 'Error',
+            text: 'Failed to generate report. Please try again.',
+            icon: 'error'
+        });
+
+        setTimeout(() => {
+            reportStatusContainer.style.display = 'none';
+            reportProgress.style.width = '0%';
+        }, 3000);
+    });
+}
+
+function previewReport() {
+    const form = document.getElementById('scheduledReportForm');
+    const formData = new FormData(form);
+    formData.append('csrf_token', CSRF_TOKEN);
+    formData.append('action', 'preview_scheduled_report');
+
+    fetch(`${APP_URL}/admin/reports/preview-scheduled`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                title: 'Report Preview',
+                html: data.preview_html,
+                width: '80%',
+                showConfirmButton: true,
+                confirmButtonText: 'Generate Full Report',
+                showCancelButton: true,
+                cancelButtonText: 'Close'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    generateScheduledReport({
+                        preventDefault: () => {},
+                        target: form
+                    });
+                }
+            });
+        } else {
+            Swal.fire('Error', data.message || 'Preview failed', 'error');
+        }
+    })
+    .catch(error => {
+        Swal.fire('Error', 'Failed to generate preview', 'error');
+    });
+}
 </script>
 
 <style>
@@ -756,6 +1315,27 @@ function setupRowClickHandlers() {
     border-radius: 12px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
+}
+
+/* Scheduled Report Styles */
+.progress {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar-striped {
+    background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent);
+    background-size: 1rem 1rem;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+#reportStatusContainer .card-apple {
+    border: 1px solid rgba(var(--bs-primary-rgb), 0.2);
+    background: linear-gradient(135deg, rgba(var(--bs-primary-rgb), 0.05), rgba(var(--bs-primary-rgb), 0.1));
 }
 
 .clickable-row {
@@ -846,6 +1426,34 @@ function setupRowClickHandlers() {
     margin-bottom: 0;
     cursor: pointer;
     width: 100%;
+    padding: 0.25rem 0;
+}
+
+/* Quick Reply Modal */
+.modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border-bottom: 1px solid #eee;
+    padding: 1.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #eee;
+    padding: 1rem 1.5rem;
+}
+
+/* Action buttons in table */
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.775rem;
 }
 
 /* Table responsive improvements */

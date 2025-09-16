@@ -93,6 +93,9 @@ $router->get('/admin/emails/templates', 'Admin@emailTemplates', ['auth', 'role:a
 $router->post('/admin/emails/send', 'Admin@sendBulkEmail', ['auth', 'role:admin,superadmin']);
 
 $router->get('/admin/reports', 'Admin@reports', ['auth', 'role:admin,superadmin']);
+$router->post('/admin/reports/generate-scheduled', 'Admin@generateScheduledReport', ['auth', 'role:admin,superadmin']);
+$router->post('/admin/reports/preview-scheduled', 'Admin@previewScheduledReport', ['auth', 'role:admin,superadmin']);
+$router->post('/admin/reports/export', 'Admin@exportReport', ['auth', 'role:admin,superadmin']);
 
 // Admin ticket management routes
 $router->get('/admin/tickets', 'Admin@tickets', ['auth', 'role:admin,superadmin']);
