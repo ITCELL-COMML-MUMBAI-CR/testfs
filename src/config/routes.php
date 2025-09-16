@@ -102,6 +102,9 @@ $router->post('/admin/reports/generate-scheduled', 'Admin@generateScheduledRepor
 $router->post('/admin/reports/preview-scheduled', 'Admin@previewScheduledReport', ['auth', 'role:admin,superadmin']);
 $router->post('/admin/reports/export', 'Admin@exportReport', ['auth', 'role:admin,superadmin']);
 
+// Admin notification management
+$router->get('/admin/notifications', 'Admin@notifications', ['auth', 'role:admin,superadmin']);
+
 // Admin ticket management routes
 $router->get('/admin/tickets', 'Admin@tickets', ['auth', 'role:admin,superadmin']);
 $router->get('/admin/tickets/debug', 'Admin@debug', ['auth', 'role:admin,superadmin']);
@@ -127,9 +130,17 @@ $router->post('/api/tickets/{id}/upload', 'Api@uploadEvidence', ['auth']);
 $router->get('/api/tickets/{id}/evidence/{file}', 'Api@getEvidence', ['auth']);
 $router->get('/api/tickets/{id}/files', 'Api@getTicketFiles', ['auth']);
 $router->get('/api/tickets/{id}/additional-info-modal', 'Api@getAdditionalInfoModal', ['auth', 'role:customer']);
+
+// Notification API routes
+$router->get('/api/notifications', 'Notification@getNotifications', ['auth']);
+$router->get('/api/notifications/count', 'Notification@getNotificationCount', ['auth']);
+$router->post('/api/notifications/{id}/read', 'Notification@markAsRead', ['auth']);
+$router->post('/api/notifications/{id}/dismiss', 'Notification@dismissNotification', ['auth']);
+$router->post('/api/notifications/mark-all-read', 'Notification@markAllAsRead', ['auth']);
+$router->post('/api/notifications/create', 'Notification@createNotification', ['auth', 'role:admin,superadmin']);
+$router->post('/api/notifications/{id}/remarks', 'Notification@addAdminRemarks', ['auth', 'role:admin,superadmin']);
+$router->get('/api/notifications/stats', 'Notification@getNotificationStats', ['auth', 'role:admin,superadmin']);
 $router->get('/api/tickets/updates', 'Api@getTicketUpdates', ['auth']);
-$router->get('/api/notifications', 'Api@getNotifications', ['auth']);
-$router->post('/api/notifications/{id}/mark-read', 'Api@markNotificationRead', ['auth']);
 $router->post('/api/compress-file', 'FileCompression@compressFile', ['auth']);
 
 // Background automation and refresh endpoints

@@ -1,0 +1,123 @@
+<h1>Full Notification System Test (Post-Migration)</h1>
+<h2>1. Verify Migration Success</h2>
+- priority: ✅ EXISTS<br>
+- user_type: ✅ EXISTS<br>
+- related_id: ✅ EXISTS<br>
+- related_type: ✅ EXISTS<br>
+- dismissed_at: ✅ EXISTS<br>
+- metadata: ✅ EXISTS<br>
+- expires_at: ✅ EXISTS<br>
+✅ All enhanced columns present - migration successful!<br>
+<h2>2. Check New Tables</h2>
+- notification_settings: ✅ EXISTS<br>
+- notification_templates: ✅ EXISTS<br>
+- notification_logs: ✅ EXISTS<br>
+<h2>3. Initialize Enhanced Services</h2>
+✅ NotificationService initialized<br>
+✅ NotificationModel initialized<br>
+✅ BackgroundPriorityService initialized<br>
+<h2>4. Test Enhanced Notification Creation</h2>
+❌ Failed to create enhanced notification<br>
+<h2>5. Test Enhanced Notification Counts</h2>
+Error getting notification counts: Database query failed
+📊 Enhanced notification counts for admin user ID 1:<br>
+- Total: 0<br>
+- Unread: 0<br>
+- Active: 0<br>
+- High Priority: 0<br>
+<h2>6. Test Priority Escalation Notification</h2>
+<h2>❌ Test Failed</h2>
+<p style='color: red;'>Error: Database query failed</p>
+<p>Stack trace:</p>
+<pre style='background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto;'>#0 D:\Apps\xampp\htdocs\testfs\src\config\database.php(120): Database-&gt;query(&#039;SELECT id as us...&#039;, Array)
+#1 D:\Apps\xampp\htdocs\testfs\src\utils\NotificationService.php(560): Database-&gt;fetchAll(&#039;SELECT id as us...&#039;)
+#2 D:\Apps\xampp\htdocs\testfs\src\utils\NotificationService.php(522): NotificationService-&gt;getEscalationRecipients(Array, &#039;critical&#039;)
+#3 D:\Apps\xampp\htdocs\testfs\src\utils\NotificationService.php(448): NotificationService-&gt;createPriorityEscalationNotifications(&#039;202509150001&#039;, &#039;critical&#039;, Array, Array)
+#4 D:\Apps\xampp\htdocs\testfs\public\test_full_notifications.php(93): NotificationService-&gt;sendPriorityEscalated(&#039;202509150001&#039;, Array, &#039;critical&#039;, &#039;medium&#039;, &#039;Automated test ...&#039;)
+#5 {main}</pre>
+<h3>🔧 Troubleshooting:</h3>
+<ul>
+<li>Ensure the database migration completed successfully</li>
+<li>Check that all required columns were added to the notifications table</li>
+<li>Verify that new tables (notification_settings, notification_templates, notification_logs) were created</li>
+<li>Clear any PHP cache/opcache if changes aren't taking effect</li>
+</ul>
+
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px;
+    line-height: 1.6;
+    background: #f8f9fa;
+}
+
+h1 {
+    color: #007bff;
+    border-bottom: 3px solid #007bff;
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+}
+
+h2 {
+    color: #28a745;
+    margin-top: 40px;
+    border-left: 5px solid #28a745;
+    padding-left: 15px;
+    background: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+h3, h4 {
+    color: #495057;
+    margin-top: 25px;
+}
+
+ul, ol {
+    background: white;
+    padding: 20px 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 15px 0;
+}
+
+pre {
+    background: #2d3748;
+    color: #e2e8f0;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 14px;
+}
+
+a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+.success-box {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border: 2px solid #28a745;
+    padding: 25px;
+    border-radius: 12px;
+    margin: 25px 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.error-box {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    border: 2px solid #dc3545;
+    padding: 25px;
+    border-radius: 12px;
+    margin: 25px 0;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+</style>

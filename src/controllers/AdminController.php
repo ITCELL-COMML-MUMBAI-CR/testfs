@@ -4317,4 +4317,25 @@ class AdminController extends BaseController
 
         return $columns;
     }
+
+    /**
+     * Admin notifications management page
+     */
+    public function notifications()
+    {
+        $user = $this->getCurrentUser();
+
+        // Only allow admin/superadmin
+        if (!in_array($user['user_type'], ['admin', 'superadmin'])) {
+            $this->redirect('/dashboard');
+            return;
+        }
+
+        $this->render('admin/notifications', [
+            'page_title' => 'Notification Management - SAMPARK Admin',
+            'user' => $user,
+            'user_name' => $user['name'] ?? 'Admin',
+            'user_role' => $user['user_type']
+        ]);
+    }
 }

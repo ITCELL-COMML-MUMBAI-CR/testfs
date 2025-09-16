@@ -84,10 +84,8 @@ class BackgroundPriorityService {
                 $remarks = "Priority automatically escalated from {$currentPriority} to {$newPriority} after {$hoursElapsed} hours";
                 $this->createSystemTransaction($ticket['complaint_id'], 'priority_escalated', $remarks, 'priority_escalation');
                 
-                // Send critical priority notification to department admins if escalated to critical
-                if ($newPriority === 'critical') {
-                    $this->sendCriticalPriorityNotification($ticket['complaint_id'], $ticket);
-                }
+                // Send priority escalation notification using enhanced NotificationService
+                $this->sendPriorityEscalationNotification($ticket['complaint_id'], $ticket, $newPriority, $currentPriority, $hoursElapsed);
                 
                 $this->db->commit();
                 
@@ -196,42 +194,30 @@ class BackgroundPriorityService {
     }
     
     /**
-     * Send critical priority notification to department admins
+     * Send priority escalation notification using enhanced service
      */
-    private function sendCriticalPriorityNotification($ticketId, $ticket) {
-        // Get admin users from the same department and division as the ticket
-        $admins = $this->db->fetchAll(
-            "SELECT id, name, email, mobile FROM users 
-             WHERE role = 'admin' 
-             AND status = 'active' 
-             AND department = ? 
-             AND division = ?",
-            [$ticket['assigned_to_department'], $ticket['division']]
+    private function sendPriorityEscalationNotification($ticketId, $ticket, $newPriority, $oldPriority, $hoursElapsed) {
+        $customer = [
+            'name' => $ticket['customer_name'] ?? 'Unknown Customer',
+            'customer_id' => $ticket['customer_id'] ?? null
+        ];
+
+        $escalationReason = "Automatic escalation after {$hoursElapsed} hours";
+
+        $result = $this->notificationService->sendPriorityEscalated(
+            $ticketId,
+            $customer,
+            $newPriority,
+            $oldPriority,
+            $escalationReason
         );
-        
-        if (!empty($admins)) {
-            $data = [
-                'complaint_id' => $ticketId,
-                'priority' => 'critical',
-                'escalation_time' => date('Y-m-d H:i:s'),
-                'division' => $ticket['division'],
-                'zone' => $ticket['zone'],
-                'department' => $ticket['assigned_to_department'],
-                'customer_name' => $ticket['customer_name'] ?? 'N/A'
-            ];
-            
-            $recipients = [];
-            foreach ($admins as $admin) {
-                $recipients[] = [
-                    'user_id' => $admin['id'],
-                    'email' => $admin['email'],
-                    'mobile' => $admin['mobile'],
-                    'complaint_id' => $ticketId
-                ];
-            }
-            
-            $this->notificationService->send('critical_priority_notification', $recipients, $data);
+
+        // Log the notification attempt
+        if (!$result['success']) {
+            error_log("Failed to send priority escalation notification for ticket {$ticketId}: " . ($result['error'] ?? 'Unknown error'));
         }
+
+        return $result;
     }
     
     /**

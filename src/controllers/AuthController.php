@@ -111,7 +111,10 @@ class AuthController extends BaseController {
             'mobile' => $customer['mobile'],
             'company_name' => $customer['company_name']
         ]);
-        
+
+        // Ensure session activity is properly set after login
+        $this->session->refreshActivity();
+
         // Update last login
         $this->updateLastLogin('customers', 'customer_id', $customer['customer_id']);
         
@@ -180,7 +183,10 @@ class AuthController extends BaseController {
             'division' => $user['division'],
             'zone' => $user['zone']
         ]);
-        
+
+        // Ensure session activity is properly set after login
+        $this->session->refreshActivity();
+
         // Update last login
         $this->updateLastLogin('users', 'id', $user['id']);
         

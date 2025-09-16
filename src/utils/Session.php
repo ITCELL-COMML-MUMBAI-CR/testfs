@@ -14,11 +14,13 @@ class Session {
             session_start();
         }
         
-        // Regenerate session ID periodically for security
-        if (!isset($_SESSION['last_regeneration'])) {
-            $this->regenerateId();
-        } elseif (time() - $_SESSION['last_regeneration'] > 300) { // 5 minutes
-            $this->regenerateId();
+        // Regenerate session ID periodically for security (only if logged in)
+        if (isset($_SESSION['logged_in']) && $_SESSION['logged_in']) {
+            if (!isset($_SESSION['last_regeneration'])) {
+                $this->regenerateId();
+            } elseif (time() - $_SESSION['last_regeneration'] > 1800) { // 30 minutes instead of 5
+                $this->regenerateId();
+            }
         }
         
         // Check session timeout
@@ -27,13 +29,14 @@ class Session {
     
     private function configureSession() {
         // Set secure session configuration
-        ini_set('session.cookie_lifetime', 0);
+        ini_set('session.cookie_lifetime', Config::SESSION_TIMEOUT); // Use actual session timeout
         ini_set('session.cookie_secure', isset($_SERVER['HTTPS']) ? 1 : 0);
         ini_set('session.cookie_httponly', 1);
-        ini_set('session.cookie_samesite', 'Strict');
+        ini_set('session.cookie_samesite', 'Lax'); // Changed from Strict to Lax for better compatibility
         ini_set('session.use_only_cookies', 1);
         ini_set('session.use_strict_mode', 1);
-        
+        ini_set('session.gc_maxlifetime', Config::SESSION_TIMEOUT);
+
         // Set session name
         session_name('SAMPARK_SESSION');
     }
@@ -46,24 +49,28 @@ class Session {
     private function checkTimeout() {
         $currentTime = time();
 
+        // Always set last_activity if not set
+        if (!isset($_SESSION['last_activity'])) {
+            $_SESSION['last_activity'] = $currentTime;
+            return;
+        }
+
         // Only check timeout if user is logged in
         if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
             $_SESSION['last_activity'] = $currentTime;
             return;
         }
 
-        if (isset($_SESSION['last_activity'])) {
-            $inactiveTime = $currentTime - $_SESSION['last_activity'];
+        $inactiveTime = $currentTime - $_SESSION['last_activity'];
 
-            // Only destroy session if user has been truly inactive
-            if ($inactiveTime > Config::SESSION_TIMEOUT) {
-                error_log("Session expired for user " . ($_SESSION['user_email'] ?? 'unknown') . " after {$inactiveTime} seconds of inactivity");
-                $this->destroy();
-                return;
-            }
+        // Only destroy session if user has been truly inactive (add 60 second buffer)
+        if ($inactiveTime > (Config::SESSION_TIMEOUT + 60)) {
+            error_log("Session expired for user " . ($_SESSION['user_email'] ?? 'unknown') . " after {$inactiveTime} seconds of inactivity");
+            $this->destroy();
+            return;
         }
 
-        // Update last activity only on actual page requests, not AJAX heartbeats
+        // Update last activity on all requests except heartbeats to prevent premature timeouts
         if (!$this->isHeartbeatRequest()) {
             $_SESSION['last_activity'] = $currentTime;
         }
@@ -209,16 +216,28 @@ class Session {
         return $isAjax && (
             strpos($requestUri, '/api/session-heartbeat') !== false ||
             strpos($requestUri, '/api/heartbeat') !== false ||
-            strpos($requestUri, '/api/background-tasks') !== false
+            strpos($requestUri, '/api/background-tasks') !== false ||
+            strpos($requestUri, '/api/session-status') !== false ||
+            strpos($requestUri, '/api/refresh-session') !== false
         );
     }
 
     public function refreshTimeout() {
-        $_SESSION['last_activity'] = time();
+        if ($this->isLoggedIn()) {
+            $_SESSION['last_activity'] = time();
+        }
     }
 
     public function refreshActivity() {
-        $_SESSION['last_activity'] = time();
+        if ($this->isLoggedIn()) {
+            $_SESSION['last_activity'] = time();
+        }
+    }
+
+    public function updateActivity() {
+        if ($this->isLoggedIn()) {
+            $_SESSION['last_activity'] = time();
+        }
     }
 
     public function isExpired() {

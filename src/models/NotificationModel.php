@@ -11,6 +11,7 @@ class NotificationModel extends BaseModel {
     protected $table = 'notifications';
     protected $fillable = [
         'user_id',
+        'customer_id',
         'user_type',
         'title',
         'message',
@@ -18,10 +19,13 @@ class NotificationModel extends BaseModel {
         'priority',
         'related_id',
         'related_type',
+        'complaint_id',
         'is_read',
+        'action_url',
         'read_at',
         'expires_at',
-        'metadata'
+        'metadata',
+        'dismissed_at'
     ];
     
     // Notification types
@@ -46,20 +50,44 @@ class NotificationModel extends BaseModel {
      * Get notifications for a specific user
      */
     public function getUserNotifications($userId, $userType, $limit = 20, $unreadOnly = false) {
-        $sql = "SELECT * FROM {$this->table} 
-                WHERE user_id = ? AND user_type = ? 
-                AND (expires_at IS NULL OR expires_at > NOW())";
-        
-        $params = [$userId, $userType];
-        
-        if ($unreadOnly) {
-            $sql .= " AND is_read = 0";
+        try {
+            // Check if enhanced columns exist
+            $hasEnhancedColumns = $this->checkEnhancedColumns();
+
+            if ($hasEnhancedColumns) {
+                // Use enhanced query with new columns
+                $sql = "SELECT * FROM {$this->table}
+                        WHERE ";
+
+                if ($userType === 'customer') {
+                    $sql .= "customer_id = ?";
+                } else {
+                    $sql .= "(user_id = ? OR user_type = ?)";
+                }
+
+                $sql .= " AND (expires_at IS NULL OR expires_at > NOW())";
+
+                $params = $userType === 'customer' ? [$userId] : [$userId, $userType];
+            } else {
+                // Use basic query for backward compatibility
+                $whereClause = $userType === 'customer' ? 'customer_id = ?' : 'user_id = ?';
+                $sql = "SELECT * FROM {$this->table} WHERE {$whereClause}";
+                $params = [$userId];
+            }
+
+            if ($unreadOnly) {
+                $sql .= " AND is_read = 0";
+            }
+
+            $sql .= " ORDER BY created_at DESC LIMIT ?";
+            $params[] = $limit;
+
+            return $this->db->fetchAll($sql, $params);
+
+        } catch (Exception $e) {
+            error_log("Error getting user notifications: " . $e->getMessage());
+            return [];
         }
-        
-        $sql .= " ORDER BY created_at DESC LIMIT ?";
-        $params[] = $limit;
-        
-        return $this->db->fetchAll($sql, $params);
     }
     
     /**
@@ -112,13 +140,14 @@ class NotificationModel extends BaseModel {
         $data['is_read'] = 0;
         $data['priority'] = $data['priority'] ?? self::PRIORITY_MEDIUM;
         $data['type'] = $data['type'] ?? self::TYPE_SYSTEM_ANNOUNCEMENT;
-        
+
         // Encode metadata if it's an array
         if (isset($data['metadata']) && is_array($data['metadata'])) {
             $data['metadata'] = json_encode($data['metadata']);
         }
-        
-        return $this->create($data);
+
+        $result = $this->create($data);
+        return $result ? $result['id'] : false;
     }
     
     /**
@@ -328,19 +357,17 @@ class NotificationModel extends BaseModel {
     private function getUsersByType($userType) {
         switch ($userType) {
             case 'customer':
-                $sql = "SELECT id FROM customers WHERE status = 'active'";
-                break;
+                $sql = "SELECT customer_id as id FROM customers WHERE status = 'active'";
+                return $this->db->fetchAll($sql);
             case 'controller':
             case 'controller_nodal':
             case 'admin':
             case 'superadmin':
-                $sql = "SELECT id FROM users WHERE user_type = ? AND status = 'active'";
+                $sql = "SELECT id FROM users WHERE role = ? AND status = 'active'";
                 return $this->db->fetchAll($sql, [$userType]);
             default:
                 return [];
         }
-        
-        return $this->db->fetchAll($sql);
     }
     
     /**
@@ -386,5 +413,18 @@ class NotificationModel extends BaseModel {
         }
         
         return $notification;
+    }
+
+    /**
+     * Check if enhanced notification columns exist
+     */
+    private function checkEnhancedColumns() {
+        try {
+            // Try to query for the priority column - if it exists, we have enhanced columns
+            $result = $this->db->fetch("SHOW COLUMNS FROM {$this->table} LIKE 'priority'");
+            return !empty($result);
+        } catch (Exception $e) {
+            return false;
+        }
     }
 }

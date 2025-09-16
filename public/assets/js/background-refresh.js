@@ -458,7 +458,7 @@ class BackgroundRefreshManager {
         const events = ['click', 'keypress', 'scroll', 'mousemove'];
 
         let lastRefresh = 0;
-        const throttleTime = 30000; // 30 seconds
+        const throttleTime = 60000; // 1 minute (less aggressive)
 
         events.forEach(eventType => {
             document.addEventListener(eventType, () => {
@@ -535,9 +535,17 @@ class BackgroundRefreshManager {
         // Clear all timers
         this.destroy();
 
-        // Redirect to login page
-        const baseUrl = window.APP_URL || '';
-        window.location.href = `${baseUrl}/login?session_expired=1`;
+        // Show user-friendly message before redirect
+        if (confirm('Your session has expired. Click OK to return to the login page.')) {
+            const baseUrl = window.APP_URL || '';
+            window.location.href = `${baseUrl}/login?session_expired=1`;
+        } else {
+            // If user cancels, still redirect after a delay
+            setTimeout(() => {
+                const baseUrl = window.APP_URL || '';
+                window.location.href = `${baseUrl}/login?session_expired=1`;
+            }, 5000);
+        }
     }
 
     /**
@@ -581,12 +589,13 @@ class BackgroundRefreshManager {
 // Global instance
 window.backgroundRefreshManager = null;
 
-// Auto-initialize when DOM is ready
+// Auto-initialize when DOM is ready - TEMPORARILY DISABLED TO FIX LOGIN ISSUES
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize background refresh manager
-    window.backgroundRefreshManager = new BackgroundRefreshManager({
-        debug: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    });
+    // DISABLED: Initialize background refresh manager
+    console.log('Background refresh manager disabled to resolve login issues');
+    // window.backgroundRefreshManager = new BackgroundRefreshManager({
+    //     debug: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    // });
 });
 
 // Export for use in other scripts

@@ -4,6 +4,8 @@
  * Handles SMTP email sending that works on both XAMPP and Hostinger
  */
 
+require_once __DIR__ . '/../config/Config.php';
+
 class EmailService {
 
     private $smtpHost;

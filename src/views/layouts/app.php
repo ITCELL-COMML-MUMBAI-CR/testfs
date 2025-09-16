@@ -221,6 +221,9 @@
                                 <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/email-templates/editor">
                                     <i class="fas fa-paint-brush me-2"></i>Email Templates
                                 </a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/notifications">
+                                    <i class="fas fa-bell me-2"></i>Notifications
+                                </a></li>
                             </ul>
                             </li>
                         <?php endif; ?>
@@ -231,7 +234,15 @@
                                 <i class="fas fa-question-circle me-1"></i>Help
                             </a>
                         </li>
-                        
+
+                        <!-- Notification Center - Checking migration status -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= Config::getAppUrl() ?>/check_migration.php" title="Check notification system status">
+                                <i class="fas fa-bell text-warning"></i>
+                                <span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">FIX</span>
+                            </a>
+                        </li>
+
                         <!-- User Profile Dropdown -->
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
@@ -250,10 +261,6 @@
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/<?= $userRole === 'customer' ? 'customer' : ($userRole === 'admin' || $userRole === 'superadmin' ? 'admin' : 'controller') ?>/profile">
                                     <i class="fas fa-user-circle me-2"></i>Profile
-                                </a></li>
-                                <li><a class="dropdown-item" href="#" onclick="showNotifications()">
-                                    <i class="fas fa-bell me-2"></i>Notifications
-                                    <span class="badge bg-danger ms-auto" id="notificationCount" style="display: none;">0</span>
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item text-danger" href="<?= Config::getAppUrl() ?>/logout">
@@ -444,7 +451,7 @@
             if (!notifications || notifications.length === 0) {
                 return '<p class="text-muted">No new notifications.</p>';
             }
-            
+
             return notifications.map(notification => `
                 <div class="notification-item border-bottom py-2">
                     <div class="d-flex justify-content-between">
@@ -454,6 +461,30 @@
                     <p class="mb-1">${notification.message}</p>
                 </div>
             `).join('');
+        }
+
+        function showMigrationNotice() {
+            Swal.fire({
+                title: 'Notification System',
+                html: `
+                    <div class="text-center">
+                        <i class="fas fa-database fa-3x text-warning mb-3"></i>
+                        <h5>Database Migration Required</h5>
+                        <p class="text-muted">The enhanced notification system requires a database migration to be activated.</p>
+                        <div class="alert alert-info text-start mt-3">
+                            <strong>To activate notifications:</strong><br>
+                            1. Run the database migration<br>
+                            2. Execute: <code>database/migrations/update_notifications_simple.sql</code><br>
+                            3. Refresh the page
+                        </div>
+                        <p><a href="test_basic_notifications.php" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-flask"></i> Test Basic System
+                        </a></p>
+                    </div>
+                `,
+                showCloseButton: true,
+                showConfirmButton: false
+            });
         }
         
         // Auto-hide alerts after 5 seconds

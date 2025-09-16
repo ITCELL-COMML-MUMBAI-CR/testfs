@@ -4,6 +4,9 @@
  * Handles email and SMS notifications
  */
 
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/Config.php';
+
 class NotificationService {
 
     private $db;
@@ -420,17 +423,59 @@ class NotificationService {
     }
     
     /**
-     * Send priority escalation notification
+     * Send priority escalation notification with RBAC
      */
-    public function sendPriorityEscalated($complaintId, $customer, $newPriority, $recipients) {
+    public function sendPriorityEscalated($complaintId, $customer, $newPriority, $oldPriority = null, $escalationReason = 'Automatic escalation') {
+        // Get ticket details
+        $ticket = $this->getTicketDetails($complaintId);
+        if (!$ticket) {
+            return ['success' => false, 'error' => 'Ticket not found'];
+        }
+
         $data = [
-            'complaint_id' => $complaintId,
-            'customer_name' => $customer['name'],
+            'ticket_id' => $complaintId,
+            'customer_name' => $customer['name'] ?? $ticket['customer_name'],
             'priority' => ucfirst($newPriority),
-            'escalation_time' => date('Y-m-d H:i:s')
+            'old_priority' => $oldPriority ? ucfirst($oldPriority) : 'Unknown',
+            'escalation_time' => date('Y-m-d H:i:s'),
+            'escalation_reason' => $escalationReason,
+            'division' => $ticket['division'] ?? 'N/A',
+            'department' => $ticket['assigned_to_department'] ?? 'N/A'
         ];
-        
-        return $this->send('priority_escalated', $recipients, $data);
+
+        try {
+            // Create persistent browser notifications based on RBAC
+            $this->createPriorityEscalationNotifications($complaintId, $newPriority, $data, $ticket);
+
+            // Send email/SMS notifications to relevant users
+            $recipients = $this->getEscalationRecipients($ticket, $newPriority);
+            $results = $this->send('priority_escalated', $recipients, $data);
+
+            // Check if any notifications were sent successfully
+            $successCount = 0;
+            $errorCount = 0;
+            foreach ($results as $result) {
+                if ($result['email_sent'] || $result['sms_sent']) {
+                    $successCount++;
+                } else {
+                    $errorCount++;
+                }
+            }
+
+            return [
+                'success' => true,
+                'message' => "Priority escalation notifications processed",
+                'notifications_sent' => $successCount,
+                'errors' => $errorCount,
+                'details' => $results
+            ];
+
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'error' => 'Failed to send priority escalation notifications: ' . $e->getMessage()
+            ];
+        }
     }
     
     /**
@@ -492,21 +537,241 @@ class NotificationService {
     }
     
     /**
+     * Create priority escalation notifications with RBAC
+     */
+    private function createPriorityEscalationNotifications($complaintId, $priority, $data, $ticket) {
+        require_once __DIR__ . '/../models/NotificationModel.php';
+        $notificationModel = new NotificationModel();
+
+        // Get all users who should receive notifications based on RBAC
+        $recipients = $this->getEscalationRecipients($ticket, $priority);
+
+        foreach ($recipients as $recipient) {
+            // Generate role-appropriate URL
+            $actionUrl = $this->generateTicketUrl($complaintId, $recipient['user_type']);
+
+            $notificationData = [
+                'user_id' => $recipient['user_id'] ?? null,
+                'user_type' => $recipient['user_type'],
+                'title' => "Ticket #{$complaintId} Priority Escalated",
+                'message' => "Ticket #{$complaintId} from {$data['customer_name']} has been escalated to {$priority} priority.",
+                'type' => 'priority_escalated',
+                'priority' => $priority,
+                'related_id' => $complaintId,
+                'related_type' => 'ticket',
+                'action_url' => $actionUrl,
+                'metadata' => json_encode([
+                    'old_priority' => $data['old_priority'],
+                    'escalation_reason' => $data['escalation_reason'],
+                    'division' => $data['division'],
+                    'department' => $data['department']
+                ])
+            ];
+
+            // Set customer_id if recipient is customer
+            if ($recipient['user_type'] === 'customer') {
+                $notificationData['customer_id'] = $recipient['customer_id'];
+            }
+
+            $notificationModel->createNotification($notificationData);
+        }
+    }
+
+    /**
+     * Get escalation recipients based on RBAC and priority level
+     */
+    private function getEscalationRecipients($ticket, $priority) {
+        $recipients = [];
+
+        // Critical priority notifications go to admin/superadmin
+        if ($priority === 'critical') {
+            $adminUsers = $this->db->fetchAll(
+                "SELECT id as user_id, role as user_type, email, mobile, name
+                 FROM users
+                 WHERE role IN ('admin', 'superadmin')
+                 AND status = 'active'"
+            );
+            $recipients = array_merge($recipients, $adminUsers);
+        }
+
+        // High priority notifications go to controllers and admins
+        if (in_array($priority, ['high', 'critical'])) {
+            $controllerUsers = $this->db->fetchAll(
+                "SELECT id as user_id, role as user_type, email, mobile, name
+                 FROM users
+                 WHERE role IN ('controller', 'controller_nodal')
+                 AND status = 'active'
+                 AND (division = ? OR role = 'controller_nodal')",
+                [$ticket['division'] ?? '']
+            );
+            $recipients = array_merge($recipients, $controllerUsers);
+        }
+
+        // Always notify assigned user if exists
+        if (!empty($ticket['assigned_to_user_id'])) {
+            $assignedUser = $this->db->fetch(
+                "SELECT id as user_id, role as user_type, email, mobile, name
+                 FROM users
+                 WHERE id = ? AND status = 'active'",
+                [$ticket['assigned_to_user_id']]
+            );
+            if ($assignedUser) {
+                $recipients[] = $assignedUser;
+            }
+        }
+
+        // Always notify the customer
+        if (!empty($ticket['customer_id'])) {
+            $customer = $this->db->fetch(
+                "SELECT customer_id, 'customer' as user_type, email, mobile, name
+                 FROM customers
+                 WHERE customer_id = ? AND status = 'active'",
+                [$ticket['customer_id']]
+            );
+            if ($customer) {
+                $recipients[] = $customer;
+            }
+        }
+
+        return array_unique($recipients, SORT_REGULAR);
+    }
+
+    /**
+     * Get ticket details for notifications
+     */
+    private function getTicketDetails($complaintId) {
+        return $this->db->fetch(
+            "SELECT c.*, cust.name as customer_name, cust.email as customer_email
+             FROM complaints c
+             LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+             WHERE c.complaint_id = ?",
+            [$complaintId]
+        );
+    }
+
+    /**
+     * Get user notifications with RBAC filtering
+     */
+    public function getUserNotifications($userId, $userType, $limit = 20, $unreadOnly = false) {
+        require_once __DIR__ . '/../models/NotificationModel.php';
+        $notificationModel = new NotificationModel();
+
+        return $notificationModel->getUserNotifications($userId, $userType, $limit, $unreadOnly);
+    }
+
+    /**
+     * Mark notification as dismissed (different from read)
+     */
+    public function dismissNotification($notificationId, $userId, $userType) {
+        $whereClause = $userType === 'customer' ? 'customer_id = ?' : 'user_id = ?';
+
+        $sql = "UPDATE notifications
+                SET dismissed_at = NOW(), updated_at = NOW()
+                WHERE id = ? AND {$whereClause} AND dismissed_at IS NULL";
+
+        return $this->db->query($sql, [$notificationId, $userId]);
+    }
+
+    /**
+     * Get notification count including dismissed status
+     */
+    public function getNotificationCounts($userId, $userType) {
+        try {
+            // Check if enhanced columns exist
+            $hasEnhancedColumns = $this->checkEnhancedColumns();
+
+            $whereClause = $userType === 'customer' ? 'customer_id = ?' : 'user_id = ?';
+
+            if ($hasEnhancedColumns) {
+                // Use enhanced query with new columns
+                $sql = "SELECT
+                            COUNT(*) as total,
+                            COUNT(CASE WHEN is_read = 0 AND dismissed_at IS NULL THEN 1 END) as unread,
+                            COUNT(CASE WHEN dismissed_at IS NULL THEN 1 END) as active,
+                            COUNT(CASE WHEN priority IN ('high', 'critical', 'urgent') AND dismissed_at IS NULL THEN 1 END) as high_priority
+                        FROM notifications
+                        WHERE {$whereClause}
+                        AND (expires_at IS NULL OR expires_at > NOW())";
+            } else {
+                // Use basic query for backward compatibility
+                $sql = "SELECT
+                            COUNT(*) as total,
+                            COUNT(CASE WHEN is_read = 0 THEN 1 END) as unread,
+                            COUNT(*) as active,
+                            0 as high_priority
+                        FROM notifications
+                        WHERE {$whereClause}";
+            }
+
+            $result = $this->db->fetch($sql, [$userId]);
+            return $result ?: ['total' => 0, 'unread' => 0, 'active' => 0, 'high_priority' => 0];
+
+        } catch (Exception $e) {
+            error_log("Error getting notification counts: " . $e->getMessage());
+            return ['total' => 0, 'unread' => 0, 'active' => 0, 'high_priority' => 0];
+        }
+    }
+
+    /**
+     * Clean up expired notifications
+     */
+    public function cleanupExpiredNotifications() {
+        $sql = "DELETE FROM notifications
+                WHERE expires_at IS NOT NULL
+                AND expires_at < NOW()";
+
+        return $this->db->query($sql);
+    }
+
+    /**
+     * Check if enhanced notification columns exist
+     */
+    private function checkEnhancedColumns() {
+        try {
+            // Try to query for the priority column - if it exists, we have enhanced columns
+            $result = $this->db->fetch("SHOW COLUMNS FROM notifications LIKE 'priority'");
+            return !empty($result);
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    /**
      * Get system setting
      */
     private function getSetting($key, $default = null) {
         try {
             $sql = "SELECT setting_value FROM system_settings WHERE setting_key = ?";
             $result = $this->db->fetch($sql, [$key]);
-            
+
             if ($result) {
                 return $result['setting_value'] === '1' ? true : ($result['setting_value'] === '0' ? false : $result['setting_value']);
             }
-            
+
             return $default;
-            
+
         } catch (Exception $e) {
             return $default;
+        }
+    }
+
+    /**
+     * Generate appropriate ticket URL based on user type
+     */
+    private function generateTicketUrl($ticketId, $userType) {
+        $baseUrl = Config::getAppUrl();
+
+        switch ($userType) {
+            case 'customer':
+                return $baseUrl . '/customer/tickets/' . $ticketId;
+            case 'controller':
+            case 'controller_nodal':
+                return $baseUrl . '/controller/tickets/' . $ticketId;
+            case 'admin':
+            case 'superadmin':
+                return $baseUrl . '/admin/tickets/' . $ticketId . '/view';
+            default:
+                return $baseUrl . '/customer/tickets/' . $ticketId;
         }
     }
 }
