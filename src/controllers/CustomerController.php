@@ -920,9 +920,21 @@ class CustomerController extends BaseController {
     }
 
     private function sendTicketCreatedNotifications($complaintId, $customer, $shedInfo) {
-        // Send notifications to all controller_nodals in Commercial dept of the division
-        // Implementation for sending email/SMS notifications
-        // This would use the notification service to notify all relevant users
+        try {
+            // Initialize notification service
+            require_once '../src/utils/NotificationService.php';
+            $notificationService = new NotificationService();
+
+            // Send notification to customer
+            $notificationService->sendTicketCreated($complaintId, $customer);
+
+            // Optional: Send notifications to assigned staff (future enhancement)
+            // This could notify the controller_nodal for the division
+
+        } catch (Exception $e) {
+            // Log error but don't fail ticket creation
+            error_log("Ticket notification error: " . $e->getMessage());
+        }
     }
     
     /**

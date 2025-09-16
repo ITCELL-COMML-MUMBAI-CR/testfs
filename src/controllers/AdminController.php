@@ -2812,8 +2812,20 @@ class AdminController extends BaseController
 
     private function sendCustomerApprovalEmail($customer, $status, $reason = null)
     {
-        $notificationService = new NotificationService();
-        // Implementation for sending customer approval/rejection email
+        try {
+            require_once '../src/utils/NotificationService.php';
+            $notificationService = new NotificationService();
+
+            if ($status === 'approved') {
+                // Send approval notification
+                $notificationService->sendSignupApproved($customer);
+            }
+            // Note: Rejection email could be added later if needed
+
+        } catch (Exception $e) {
+            // Log error but don't fail the approval process
+            error_log("Customer approval email error: " . $e->getMessage());
+        }
     }
 
     private function getSystemOverviewReport($dateFrom, $dateTo)

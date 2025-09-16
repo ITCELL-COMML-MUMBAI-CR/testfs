@@ -1162,7 +1162,14 @@ class ControllerController extends BaseController {
             $this->createTransaction($ticketId, 'info_requested', $remarks, $user['id'], null, 'customer_remarks');
             
             // Send notification to customer
-            $this->sendInfoRequestNotifications($ticketId, $ticket, $user, $_POST['info_request']);
+            $customer = $this->db->fetch(
+                "SELECT customer_id, name, email, mobile, company_name FROM customers WHERE customer_id = ?",
+                [$ticket['customer_id']]
+            );
+
+            if ($customer) {
+                $this->sendInfoRequestNotification($ticketId, $customer, $_POST['info_request']);
+            }
             
             $this->db->commit();
             
@@ -2074,55 +2081,39 @@ class ControllerController extends BaseController {
     }
     
     private function sendReplyNotifications($ticketId, $ticket, $user, $reply, $status) {
-        $notificationService = new NotificationService();
-        
-        if ($status === 'awaiting_feedback') {
-            // Get customer info
-            $customer = $this->db->fetch(
-                "SELECT customer_id, name, email, mobile FROM customers WHERE customer_id = ?",
-                [$ticket['customer_id']]
-            );
-            
-            if ($customer) {
-                $data = [
-                    'complaint_id' => $ticketId,
-                    'customer_name' => $customer['name'],
-                    'reply_from' => $user['name'],
-                    'reply_text' => $reply
-                ];
-                
-                $recipients = [[
-                    'customer_id' => $customer['customer_id'],
-                    'email' => $customer['email'],
-                    'mobile' => $customer['mobile'],
-                    'complaint_id' => $ticketId
-                ]];
-                
-                $notificationService->send('ticket_reply', $recipients, $data);
+        try {
+            require_once '../src/utils/NotificationService.php';
+            $notificationService = new NotificationService();
+
+            if ($status === 'awaiting_feedback') {
+                // Get customer info
+                $customer = $this->db->fetch(
+                    "SELECT customer_id, name, email, mobile, company_name FROM customers WHERE customer_id = ?",
+                    [$ticket['customer_id']]
+                );
+
+                if ($customer) {
+                    // Send awaiting feedback notification
+                    $notificationService->sendTicketAwaitingFeedback($ticketId, $customer, $reply);
+                }
             }
-        } else {
-            // Notify nodal controller for approval
-            $nodalController = $this->db->fetch(
-                "SELECT id, name, email, mobile FROM users WHERE role = 'controller_nodal' AND division = ? AND status = 'active' LIMIT 1",
-                [$user['division']]
-            );
-            
-            if ($nodalController) {
-                $data = [
-                    'complaint_id' => $ticketId,
-                    'reply_from' => $user['name'],
-                    'department' => $user['department']
-                ];
-                
-                $recipients = [[
-                    'user_id' => $nodalController['id'],
-                    'email' => $nodalController['email'],
-                    'mobile' => $nodalController['mobile'],
-                    'complaint_id' => $ticketId
-                ]];
-                
-                $notificationService->send('reply_approval_needed', $recipients, $data);
-            }
+        } catch (Exception $e) {
+            // Log error but don't fail the reply process
+            error_log("Reply notification error: " . $e->getMessage());
+        }
+    }
+
+    private function sendInfoRequestNotification($ticketId, $customer, $infoRequest) {
+        try {
+            require_once '../src/utils/NotificationService.php';
+            $notificationService = new NotificationService();
+
+            // Send awaiting info notification
+            $notificationService->sendTicketAwaitingInfo($ticketId, $customer, $infoRequest);
+
+        } catch (Exception $e) {
+            // Log error but don't fail the info request process
+            error_log("Info request notification error: " . $e->getMessage());
         }
     }
     

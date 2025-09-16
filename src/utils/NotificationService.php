@@ -5,15 +5,22 @@
  */
 
 class NotificationService {
-    
+
     private $db;
     private $emailEnabled;
     private $smsEnabled;
-    
+    private $emailService;
+
     public function __construct() {
         $this->db = Database::getInstance();
         $this->emailEnabled = $this->getSetting('enable_email', true);
         $this->smsEnabled = $this->getSetting('enable_sms', false);
+
+        // Include EmailService if not already loaded
+        if (!class_exists('EmailService')) {
+            require_once __DIR__ . '/EmailService.php';
+        }
+        $this->emailService = new EmailService();
     }
     
     /**
@@ -92,28 +99,17 @@ class NotificationService {
     }
     
     /**
-     * Send email
+     * Send email using SMTP service
      */
     private function sendEmail($to, $subject, $bodyHtml, $bodyText = null) {
         try {
-            // Use PHPMailer or similar library in production
-            // For now, using basic PHP mail() function
-            
-            $headers = [
-                'MIME-Version: 1.0',
-                'Content-type: text/html; charset=UTF-8',
-                'From: ' . Config::FROM_NAME . ' <' . Config::FROM_EMAIL . '>',
-                'Reply-To: ' . Config::FROM_EMAIL,
-                'X-Mailer: SAMPARK v' . Config::APP_VERSION
-            ];
-            
-            $success = mail($to, $subject, $bodyHtml, implode("\r\n", $headers));
-            
+            $result = $this->emailService->sendEmail($to, $subject, $bodyHtml, true);
+
             return [
-                'success' => $success,
-                'error' => $success ? null : 'Failed to send email'
+                'success' => $result['success'],
+                'error' => $result['error']
             ];
-            
+
         } catch (Exception $e) {
             return [
                 'success' => false,
@@ -304,9 +300,10 @@ class NotificationService {
             'complaint_id' => $complaintId,
             'customer_name' => $customer['name'],
             'customer_email' => $customer['email'],
-            'company_name' => $customer['company_name']
+            'company_name' => $customer['company_name'],
+            'view_url' => Config::getAppUrl() . '/customer/ticket/' . $complaintId
         ];
-        
+
         $recipients = [
             [
                 'customer_id' => $customer['customer_id'],
@@ -314,7 +311,7 @@ class NotificationService {
                 'mobile' => $customer['mobile']
             ]
         ];
-        
+
         // Add assigned user to recipients
         if ($assignedUser) {
             $recipients[] = [
@@ -323,8 +320,80 @@ class NotificationService {
                 'mobile' => $assignedUser['mobile'] ?? null
             ];
         }
-        
+
         return $this->send('ticket_created', $recipients, $data);
+    }
+
+    /**
+     * Send customer signup approved notification
+     */
+    public function sendSignupApproved($customer) {
+        $data = [
+            'customer_name' => $customer['name'],
+            'customer_email' => $customer['email'],
+            'company_name' => $customer['company_name'],
+            'login_url' => Config::getAppUrl() . '/login'
+        ];
+
+        $recipients = [
+            [
+                'customer_id' => $customer['customer_id'],
+                'email' => $customer['email'],
+                'mobile' => $customer['mobile']
+            ]
+        ];
+
+        return $this->send('signup_approved', $recipients, $data);
+    }
+
+    /**
+     * Send ticket status awaiting info notification
+     */
+    public function sendTicketAwaitingInfo($complaintId, $customer, $message = '') {
+        $data = [
+            'complaint_id' => $complaintId,
+            'customer_name' => $customer['name'],
+            'customer_email' => $customer['email'],
+            'company_name' => $customer['company_name'],
+            'message' => $message,
+            'view_url' => Config::getAppUrl() . '/customer/ticket/' . $complaintId,
+            'login_url' => Config::getAppUrl() . '/login'
+        ];
+
+        $recipients = [
+            [
+                'customer_id' => $customer['customer_id'],
+                'email' => $customer['email'],
+                'mobile' => $customer['mobile']
+            ]
+        ];
+
+        return $this->send('ticket_awaiting_info', $recipients, $data);
+    }
+
+    /**
+     * Send ticket status awaiting feedback notification
+     */
+    public function sendTicketAwaitingFeedback($complaintId, $customer, $message = '') {
+        $data = [
+            'complaint_id' => $complaintId,
+            'customer_name' => $customer['name'],
+            'customer_email' => $customer['email'],
+            'company_name' => $customer['company_name'],
+            'message' => $message,
+            'view_url' => Config::getAppUrl() . '/customer/ticket/' . $complaintId,
+            'login_url' => Config::getAppUrl() . '/login'
+        ];
+
+        $recipients = [
+            [
+                'customer_id' => $customer['customer_id'],
+                'email' => $customer['email'],
+                'mobile' => $customer['mobile']
+            ]
+        ];
+
+        return $this->send('ticket_awaiting_feedback', $recipients, $data);
     }
     
     /**
