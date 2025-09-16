@@ -200,14 +200,49 @@
                     <!-- Recipient Selection -->
                     <div class="mb-3">
                         <label for="recipient_type" class="form-label">Recipients</label>
-                        <select class="form-select" id="recipient_type" name="recipient_type" required>
+                        <select class="form-select" id="recipient_type" name="recipient_type" required onchange="toggleCustomerSelection()">
                             <option value="">Choose recipients...</option>
                             <option value="all">All Users (Customers & Staff)</option>
                             <option value="customers">All Customers</option>
+                            <option value="selected_customers">Selected Customers</option>
                             <option value="staff">Railway Staff</option>
                             <option value="admins">Administrators Only</option>
                         </select>
                         <div class="form-text">Select who should receive this email.</div>
+                    </div>
+
+                    <!-- Customer Selection (shown when "Selected Customers" is chosen) -->
+                    <div class="mb-3" id="customer_selection_container" style="display: none;">
+                        <label class="form-label">Select Customers</label>
+                        <div class="border rounded p-3" style="max-height: 300px; overflow-y: auto;">
+                            <div class="row">
+                                <div class="col-12 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="select_all_customers" onchange="toggleAllCustomers()">
+                                        <label class="form-check-label fw-bold" for="select_all_customers">
+                                            Select All Customers
+                                        </label>
+                                    </div>
+                                    <hr>
+                                </div>
+                            </div>
+                            <div class="row" id="customers_list">
+                                <!-- Customers will be loaded here via AJAX -->
+                                <div class="col-12 text-center py-3">
+                                    <div class="spinner-border spinner-border-sm" role="status"></div>
+                                    <span class="ms-2">Loading customers...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-text">Select specific customers to receive this email.</div>
+                    </div>
+
+                    <!-- CC Options -->
+                    <div class="mb-3">
+                        <label class="form-label">CC (Additional Recipients)</label>
+                        <input type="email" class="form-control" id="cc_emails" name="cc_emails"
+                               placeholder="Enter email addresses separated by commas" multiple>
+                        <div class="form-text">Enter additional email addresses to CC, separated by commas.</div>
                     </div>
                     
                     <!-- Email Template -->
@@ -360,8 +395,73 @@ document.addEventListener('DOMContentLoaded', function() {
     tooltipTriggerList.map(function(tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
-    
+
 });
+
+// Toggle customer selection visibility
+function toggleCustomerSelection() {
+    const recipientType = document.getElementById('recipient_type').value;
+    const customerContainer = document.getElementById('customer_selection_container');
+
+    if (recipientType === 'selected_customers') {
+        customerContainer.style.display = 'block';
+        loadCustomers();
+    } else {
+        customerContainer.style.display = 'none';
+    }
+}
+
+// Load customers for selection
+function loadCustomers() {
+    fetch('/api/customers/list', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const customersList = document.getElementById('customers_list');
+
+        if (data.success && data.customers) {
+            let customersHtml = '';
+            data.customers.forEach(customer => {
+                customersHtml += `
+                    <div class="col-md-6 mb-2">
+                        <div class="form-check">
+                            <input class="form-check-input customer-checkbox" type="checkbox"
+                                   name="selected_customers[]" value="${customer.customer_id}"
+                                   id="customer_${customer.customer_id}">
+                            <label class="form-check-label" for="customer_${customer.customer_id}">
+                                <strong>${customer.name}</strong><br>
+                                <small class="text-muted">${customer.email}</small><br>
+                                <small class="text-muted">${customer.company_name}</small>
+                            </label>
+                        </div>
+                    </div>
+                `;
+            });
+            customersList.innerHTML = customersHtml;
+        } else {
+            customersList.innerHTML = '<div class="col-12 text-center py-3 text-muted">No customers found</div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error loading customers:', error);
+        const customersList = document.getElementById('customers_list');
+        customersList.innerHTML = '<div class="col-12 text-center py-3 text-danger">Error loading customers</div>';
+    });
+}
+
+// Toggle all customers selection
+function toggleAllCustomers() {
+    const selectAllCheckbox = document.getElementById('select_all_customers');
+    const customerCheckboxes = document.querySelectorAll('.customer-checkbox');
+
+    customerCheckboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+    });
+}
 
 // View email details function
 function viewEmailDetails(emailId) {

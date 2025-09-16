@@ -1119,7 +1119,7 @@ class ApiController extends BaseController {
                     SUM(CASE WHEN status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
                     SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
                     SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed,
-                    SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as `high_priority`,
+                    SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as `high_priority`
                 FROM complaints 
                 WHERE {$condition}";
         

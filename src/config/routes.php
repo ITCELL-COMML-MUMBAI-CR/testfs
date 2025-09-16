@@ -133,6 +133,7 @@ $router->post('/api/background-tasks', 'Api@processBackgroundTasks', ['auth']);
 $router->get('/api/tickets/refresh', 'Api@getRefreshedTickets', ['auth']);
 $router->get('/api/heartbeat', 'Api@heartbeat'); // No auth for heartbeat
 $router->get('/api/system-stats', 'Api@getSystemStats', ['auth']);
+$router->get('/api/customers/list', 'Admin@getCustomersList', ['auth', 'role:admin,superadmin']);
 
 // Session management endpoints
 $router->get('/api/session-status', 'Api@getSessionStatus'); // No auth required to check status

@@ -1846,7 +1846,7 @@ class ControllerController extends BaseController {
                     SUM(CASE WHEN c.status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
                     SUM(CASE WHEN c.status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
                     SUM(CASE WHEN c.status = 'closed' THEN 1 ELSE 0 END) as closed,
-                    SUM(CASE WHEN c.priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority_count,
+                    SUM(CASE WHEN c.priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority_count
                 FROM complaints c
                 WHERE {$condition}";
 
@@ -2172,30 +2172,24 @@ class ControllerController extends BaseController {
     }
     
     private function sendRevertNotifications($ticketId, $ticket, $user, $reason) {
-        $notificationService = new NotificationService();
-        
-        // Get customer info
-        $customer = $this->db->fetch(
-            "SELECT customer_id, name, email, mobile FROM customers WHERE customer_id = ?",
-            [$ticket['customer_id']]
-        );
-        
-        if ($customer) {
-            $data = [
-                'complaint_id' => $ticketId,
-                'customer_name' => $customer['name'],
-                'reverted_by' => $user['name'],
-                'reason' => $reason
-            ];
-            
-            $recipients = [[
-                'customer_id' => $customer['customer_id'],
-                'email' => $customer['email'],
-                'mobile' => $customer['mobile'],
-                'complaint_id' => $ticketId
-            ]];
-            
-            $notificationService->send('ticket_reverted', $recipients, $data);
+        try {
+            require_once '../src/utils/NotificationService.php';
+            $notificationService = new NotificationService();
+
+            // Get customer info
+            $customer = $this->db->fetch(
+                "SELECT customer_id, name, email, mobile, company_name FROM customers WHERE customer_id = ?",
+                [$ticket['customer_id']]
+            );
+
+            if ($customer) {
+                // Send awaiting info notification (revert means asking for more info)
+                $notificationService->sendTicketAwaitingInfo($ticketId, $customer, $reason);
+            }
+
+        } catch (Exception $e) {
+            // Log error but don't fail the revert process
+            error_log("Revert notification error: " . $e->getMessage());
         }
     }
     

@@ -215,6 +215,9 @@
                                 <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/content">
                                     <i class="fas fa-edit me-2"></i>Content
                                 </a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/emails">
+                                    <i class="fas fa-envelope me-2"></i>Email Management
+                                </a></li>
                             </ul>
                             </li>
                         <?php endif; ?>

@@ -2903,6 +2903,30 @@ class AdminController extends BaseController
     /**
      * Send bulk email to users
      */
+    public function getCustomersList()
+    {
+        try {
+            $sql = "SELECT customer_id, name, email, company_name, status
+                    FROM customers
+                    WHERE status = 'approved'
+                    ORDER BY name ASC";
+
+            $customers = $this->db->fetchAll($sql);
+
+            $this->json([
+                'success' => true,
+                'customers' => $customers
+            ]);
+
+        } catch (Exception $e) {
+            Config::logError("Get customers list error: " . $e->getMessage());
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to load customers'
+            ], 500);
+        }
+    }
+
     public function sendBulkEmail()
     {
         $this->validateCSRF();
@@ -2912,9 +2936,11 @@ class AdminController extends BaseController
         $isValid = $validator->validate($_POST, [
             'subject' => 'required|min:5|max:200',
             'message' => 'required|min:10',
-            'recipient_type' => 'required|in:all,customers,staff,admins',
+            'recipient_type' => 'required|in:all,customers,staff,admins,selected_customers',
             'template_id' => 'optional|numeric',
-            'send_immediately' => 'optional|boolean'
+            'send_immediately' => 'optional|boolean',
+            'selected_customers' => 'optional|array',
+            'cc_emails' => 'optional|string'
         ]);
 
         if (!$isValid) {
@@ -2933,7 +2959,22 @@ class AdminController extends BaseController
             $sendImmediately = isset($_POST['send_immediately']) && $_POST['send_immediately'];
 
             // Get recipients based on type
-            $recipients = $this->getBulkEmailRecipients($recipientType);
+            $recipients = $this->getBulkEmailRecipients($recipientType, $_POST['selected_customers'] ?? []);
+
+            // Add CC recipients if provided
+            if (!empty($_POST['cc_emails'])) {
+                $ccEmails = array_map('trim', explode(',', $_POST['cc_emails']));
+                foreach ($ccEmails as $ccEmail) {
+                    if (filter_var($ccEmail, FILTER_VALIDATE_EMAIL)) {
+                        $recipients[] = [
+                            'id' => 'cc_' . md5($ccEmail),
+                            'email' => $ccEmail,
+                            'name' => 'CC Recipient',
+                            'type' => 'cc'
+                        ];
+                    }
+                }
+            }
 
             if (empty($recipients)) {
                 $this->json([
@@ -3123,24 +3164,32 @@ class AdminController extends BaseController
         }
     }
 
-    private function getBulkEmailRecipients($recipientType)
+    private function getBulkEmailRecipients($recipientType, $selectedCustomers = [])
     {
         try {
             $recipients = [];
 
             switch ($recipientType) {
                 case 'all':
-                    $customers = $this->db->fetchAll("SELECT customer_id as id, email, name, 'customer' as type FROM customers WHERE status = 'active' AND email IS NOT NULL");
-                    $staff = $this->db->fetchAll("SELECT id, email, name, user_type as type FROM users WHERE status = 'active' AND email IS NOT NULL");
+                    $customers = $this->db->fetchAll("SELECT customer_id as id, email, name, 'customer' as type FROM customers WHERE status = 'approved' AND email IS NOT NULL");
+                    $staff = $this->db->fetchAll("SELECT id, email, name, role as type FROM users WHERE status = 'active' AND email IS NOT NULL");
                     $recipients = array_merge($customers, $staff);
                     break;
 
                 case 'customers':
-                    $recipients = $this->db->fetchAll("SELECT customer_id as id, email, name, 'customer' as type FROM customers WHERE status = 'active' AND email IS NOT NULL");
+                    $recipients = $this->db->fetchAll("SELECT customer_id as id, email, name, 'customer' as type FROM customers WHERE status = 'approved' AND email IS NOT NULL");
+                    break;
+
+                case 'selected_customers':
+                    if (!empty($selectedCustomers)) {
+                        $placeholders = str_repeat('?,', count($selectedCustomers) - 1) . '?';
+                        $sql = "SELECT customer_id as id, email, name, 'customer' as type FROM customers WHERE customer_id IN ($placeholders) AND status = 'approved' AND email IS NOT NULL";
+                        $recipients = $this->db->fetchAll($sql, $selectedCustomers);
+                    }
                     break;
 
                 case 'staff':
-                    $recipients = $this->db->fetchAll("SELECT id, email, name, user_type as type FROM users WHERE status = 'active' AND email IS NOT NULL AND user_type IN ('controller', 'controller_nodal')");
+                    $recipients = $this->db->fetchAll("SELECT id, email, name, role as type FROM users WHERE status = 'active' AND email IS NOT NULL AND role IN ('controller', 'controller_nodal')");
                     break;
 
                 case 'admins':

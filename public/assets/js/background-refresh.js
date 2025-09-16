@@ -537,7 +537,7 @@ class BackgroundRefreshManager {
 
         // Redirect to login page
         const baseUrl = window.APP_URL || '';
-        window.location.href = `${baseUrl}/auth/login?session_expired=1`;
+        window.location.href = `${baseUrl}/login?session_expired=1`;
     }
 
     /**
