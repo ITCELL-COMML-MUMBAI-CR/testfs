@@ -20,6 +20,10 @@ class BackgroundRefreshManager {
         this.dataTables = new Map(); // Store DataTable instances
         this.lastRefreshTime = null;
         this.isRefreshing = false;
+        this.sessionCheckInterval = null;
+        this.lastSessionCheck = null;
+        this.failureCount = 0;
+        this.maxFailures = 3;
         
         this.init();
     }
@@ -38,7 +42,10 @@ class BackgroundRefreshManager {
         if (this.options.enableDataRefresh) {
             this.startDataRefresh();
         }
-        
+
+        // Start session monitoring
+        this.startSessionMonitoring();
+
         // Handle page visibility changes
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
@@ -47,10 +54,13 @@ class BackgroundRefreshManager {
                 this.resumeRefresh();
             }
         });
-        
+
         // Handle window focus/blur
         window.addEventListener('focus', () => this.onWindowFocus());
         window.addEventListener('blur', () => this.onWindowBlur());
+
+        // Handle user interactions to refresh session
+        this.setupSessionRefreshTriggers();
     }
     
     /**
@@ -113,21 +123,37 @@ class BackgroundRefreshManager {
                 },
                 credentials: 'same-origin'
             });
-            
+
+            // Check for session expiry
+            if (response.status === 401 || response.status === 403) {
+                this.handleSessionExpiry();
+                return;
+            }
+
             const data = await response.json();
-            
+
+            // Reset failure count on success
+            this.failureCount = 0;
+
             if (this.options.debug && data.processed) {
                 console.log('Heartbeat processed automation tasks', data);
             }
-            
+
             // Update stats if automation ran
             if (data.processed && this.options.enableStatsRefresh) {
                 this.refreshStats();
             }
-            
+
         } catch (error) {
+            this.failureCount++;
+
             if (this.options.debug) {
                 console.warn('Heartbeat failed:', error);
+            }
+
+            // Stop background sync after too many failures
+            if (this.failureCount >= this.maxFailures) {
+                this.handleRepeatedFailures();
             }
         }
     }
@@ -271,17 +297,23 @@ class BackgroundRefreshManager {
                 },
                 credentials: 'same-origin'
             });
-            
+
+            // Check for session expiry
+            if (response.status === 401 || response.status === 403) {
+                this.handleSessionExpiry();
+                return;
+            }
+
             const data = await response.json();
-            
+
             if (data.success) {
                 this.updateStatsDisplay(data.stats);
-                
+
                 if (this.options.debug) {
                     console.log('Stats refreshed', data.stats);
                 }
             }
-            
+
         } catch (error) {
             if (this.options.debug) {
                 console.error('Stats refresh error:', error);
@@ -405,6 +437,125 @@ class BackgroundRefreshManager {
     }
     
     /**
+     * Start session monitoring
+     */
+    startSessionMonitoring() {
+        if (this.sessionCheckInterval) {
+            clearInterval(this.sessionCheckInterval);
+        }
+
+        // Check session status every 5 minutes
+        this.sessionCheckInterval = setInterval(() => {
+            this.checkSessionStatus();
+        }, 300000);
+    }
+
+    /**
+     * Setup session refresh triggers on user interactions
+     */
+    setupSessionRefreshTriggers() {
+        // Refresh session on any user interaction
+        const events = ['click', 'keypress', 'scroll', 'mousemove'];
+
+        let lastRefresh = 0;
+        const throttleTime = 30000; // 30 seconds
+
+        events.forEach(eventType => {
+            document.addEventListener(eventType, () => {
+                const now = Date.now();
+                if (now - lastRefresh > throttleTime) {
+                    this.refreshSession();
+                    lastRefresh = now;
+                }
+            }, { passive: true });
+        });
+    }
+
+    /**
+     * Check session status
+     */
+    async checkSessionStatus() {
+        try {
+            const baseUrl = window.APP_URL || '';
+            const response = await fetch(`${baseUrl}/api/session-status`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                this.handleSessionExpiry();
+                return;
+            }
+
+            const data = await response.json();
+
+            if (!data.success || data.expired) {
+                this.handleSessionExpiry();
+            }
+
+        } catch (error) {
+            if (this.options.debug) {
+                console.warn('Session status check failed:', error);
+            }
+        }
+    }
+
+    /**
+     * Refresh session timeout
+     */
+    async refreshSession() {
+        try {
+            const baseUrl = window.APP_URL || '';
+            await fetch(`${baseUrl}/api/refresh-session`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin'
+            });
+
+        } catch (error) {
+            if (this.options.debug) {
+                console.warn('Session refresh failed:', error);
+            }
+        }
+    }
+
+    /**
+     * Handle session expiry
+     */
+    handleSessionExpiry() {
+        if (this.options.debug) {
+            console.log('Session expired, redirecting to login');
+        }
+
+        // Clear all timers
+        this.destroy();
+
+        // Redirect to login page
+        const baseUrl = window.APP_URL || '';
+        window.location.href = `${baseUrl}/auth/login?session_expired=1`;
+    }
+
+    /**
+     * Handle repeated failures
+     */
+    handleRepeatedFailures() {
+        if (this.options.debug) {
+            console.log('Too many failures, stopping background sync');
+        }
+
+        // Clear timers but don't redirect immediately
+        this.pauseRefresh();
+
+        // Check if session is still valid
+        this.checkSessionStatus();
+    }
+
+    /**
      * Destroy the refresh manager
      */
     destroy() {
@@ -412,12 +563,17 @@ class BackgroundRefreshManager {
             clearInterval(this.refreshTimer);
             this.refreshTimer = null;
         }
-        
+
         if (this.heartbeatTimer) {
             clearInterval(this.heartbeatTimer);
             this.heartbeatTimer = null;
         }
-        
+
+        if (this.sessionCheckInterval) {
+            clearInterval(this.sessionCheckInterval);
+            this.sessionCheckInterval = null;
+        }
+
         this.dataTables.clear();
     }
 }

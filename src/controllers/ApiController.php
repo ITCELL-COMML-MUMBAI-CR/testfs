@@ -712,7 +712,6 @@ class ApiController extends BaseController {
                 'closed' => 0,
                 'total' => 0,
                 'high_priority' => 0,
-                'sla_violations' => 0,
                 'resolved_today' => 0
             ];
             
@@ -753,14 +752,6 @@ class ApiController extends BaseController {
             $highPriorityResult = $this->db->fetch($highPrioritySql, $params);
             $stats['high_priority'] = (int)($highPriorityResult['count'] ?? 0);
             
-            // Get SLA violations count
-            $slaViolationsSql = "SELECT COUNT(*) as count FROM complaints 
-                                {$whereClause}
-                                AND sla_deadline IS NOT NULL 
-                                AND NOW() > sla_deadline 
-                                AND status != 'closed'";
-            $slaViolationsResult = $this->db->fetch($slaViolationsSql, $params);
-            $stats['sla_violations'] = (int)($slaViolationsResult['count'] ?? 0);
             
             // Get resolved today count
             $resolvedTodaySql = "SELECT COUNT(*) as count FROM complaints 
@@ -1129,7 +1120,6 @@ class ApiController extends BaseController {
                     SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
                     SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed,
                     SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as `high_priority`,
-                    SUM(CASE WHEN sla_deadline IS NOT NULL AND NOW() > sla_deadline AND status != 'closed' THEN 1 ELSE 0 END) as sla_violations
                 FROM complaints 
                 WHERE {$condition}";
         
@@ -1148,7 +1138,6 @@ class ApiController extends BaseController {
                     SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
                     SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed,
                     SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as `high_priority`,
-                    SUM(CASE WHEN sla_deadline IS NOT NULL AND NOW() > sla_deadline AND status != 'closed' THEN 1 ELSE 0 END) as sla_violations,
                     SUM(CASE WHEN escalated_at IS NOT NULL AND status != 'closed' THEN 1 ELSE 0 END) as escalated
                 FROM complaints";
 
@@ -1326,6 +1315,57 @@ class ApiController extends BaseController {
         } catch (Exception $e) {
             error_log("Get category error: " . $e->getMessage());
             $this->json(['error' => 'Failed to fetch category'], 500);
+        }
+    }
+
+    /**
+     * Check session status
+     */
+    public function getSessionStatus() {
+        try {
+            if (!$this->session->isLoggedIn()) {
+                $this->json(['success' => false, 'expired' => true], 401);
+                return;
+            }
+
+            $sessionInfo = $this->session->getSessionInfo();
+
+            $this->json([
+                'success' => true,
+                'expired' => $sessionInfo['is_expired'],
+                'remaining_time' => $sessionInfo['remaining_time'],
+                'user_type' => $sessionInfo['user_type'],
+                'user_role' => $sessionInfo['user_role']
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Session status error: " . $e->getMessage());
+            $this->json(['success' => false, 'expired' => true], 500);
+        }
+    }
+
+    /**
+     * Refresh session timeout
+     */
+    public function refreshSession() {
+        try {
+            if (!$this->session->isLoggedIn()) {
+                $this->json(['success' => false, 'expired' => true], 401);
+                return;
+            }
+
+            // Refresh the session timeout
+            $this->session->refreshTimeout();
+
+            $this->json([
+                'success' => true,
+                'remaining_time' => $this->session->getTimeRemaining(),
+                'refreshed_at' => time()
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Session refresh error: " . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Failed to refresh session'], 500);
         }
     }
 }

@@ -19,6 +19,13 @@ ob_start();
                             <p class="text-muted">Sign in to access your SAMPARK account</p>
                         </div>
 
+                        <?php if (isset($_GET['session_expired']) && $_GET['session_expired'] == '1'): ?>
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <i class="fas fa-clock me-2"></i>Your session has expired. Please sign in again to continue.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        <?php endif; ?>
+
                         <?php if (!empty($errors)): ?>
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                 <?= is_array($errors) ? implode('<br>', $errors) : $errors ?>

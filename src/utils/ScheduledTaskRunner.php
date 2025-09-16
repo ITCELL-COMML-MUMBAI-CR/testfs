@@ -507,7 +507,6 @@ class ScheduledTaskRunner {
         $sql = "SELECT 
                     COUNT(*) as total_open,
                     SUM(CASE WHEN priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority_count,
-                    SUM(CASE WHEN NOW() > sla_deadline THEN 1 ELSE 0 END) as sla_violations,
                     SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_assignment
                 FROM complaints 
                 WHERE division = ? AND status != 'closed'";
@@ -519,7 +518,6 @@ class ScheduledTaskRunner {
         $sql = "SELECT 
                     COUNT(*) as total_open,
                     SUM(CASE WHEN priority = 'critical' THEN 1 ELSE 0 END) as critical,
-                    SUM(CASE WHEN NOW() > sla_deadline THEN 1 ELSE 0 END) as sla_violations,
                     COUNT(DISTINCT division) as divisions_with_tickets
                 FROM complaints 
                 WHERE status != 'closed'";

@@ -29,7 +29,6 @@ class ControllerController extends BaseController {
             'escalated_tickets' => $this->getEscalatedTickets($user),
             'recent_activities' => $this->getRecentActivities($user),
             'performance_metrics' => $this->getPerformanceMetrics($user),
-            'sla_violations' => $this->getSLAViolations($user),
             'csrf_token' => $this->session->getCSRFToken()
         ];
         
@@ -106,10 +105,7 @@ class ControllerController extends BaseController {
                        cust.company_name, cust.mobile as customer_mobile,
                        d.department_name as assigned_department_name,
                        TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
-                       CASE 
-                           WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
-                           ELSE 0
-                       END as is_sla_violated
+                       0 as is_sla_violated
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -226,10 +222,7 @@ class ControllerController extends BaseController {
                        cust.company_name, cust.mobile as customer_mobile,
                        d.department_name as assigned_department_name,
                        TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
-                       CASE 
-                           WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
-                           ELSE 0
-                       END as is_sla_violated
+                       0 as is_sla_violated
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -288,10 +281,7 @@ class ControllerController extends BaseController {
                        cust.mobile as customer_mobile, cust.company_name,
                        d.department_name as assigned_department_name,
                        TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
-                       CASE 
-                           WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
-                           ELSE 0
-                       END as is_sla_violated
+                       0 as is_sla_violated
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -1850,7 +1840,6 @@ class ControllerController extends BaseController {
                     SUM(CASE WHEN c.status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
                     SUM(CASE WHEN c.status = 'closed' THEN 1 ELSE 0 END) as closed,
                     SUM(CASE WHEN c.priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority_count,
-                    SUM(CASE WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline AND c.status != 'closed' THEN 1 ELSE 0 END) as sla_violations
                 FROM complaints c
                 WHERE {$condition}";
 
@@ -1978,20 +1967,8 @@ class ControllerController extends BaseController {
         $condition = $user['role'] === 'controller' ? 'c.assigned_to_user_id = ?' : 'c.division = ?';
         $param = $user['role'] === 'controller' ? $user['id'] : $user['division'];
         
-        $sql = "SELECT c.complaint_id, c.priority, c.created_at, c.sla_deadline,
-                       cat.category, cat.subtype,
-                       cust.name as customer_name,
-                       TIMESTAMPDIFF(HOUR, c.sla_deadline, NOW()) as hours_overdue
-                FROM complaints c
-                LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
-                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                WHERE {$condition} 
-                  AND c.sla_deadline IS NOT NULL 
-                  AND NOW() > c.sla_deadline 
-                  AND c.status != 'closed'
-                ORDER BY c.sla_deadline ASC";
-        
-        return $this->db->fetchAll($sql, [$param]);
+        // No longer tracking SLA violations - return empty array
+        return [];
     }
     
     private function getDivisions() {
@@ -2017,13 +1994,7 @@ class ControllerController extends BaseController {
             [$priority]
         );
         
-        if ($slaInfo) {
-            $deadline = date('Y-m-d H:i:s', strtotime("+{$slaInfo['resolution_hours']} hours"));
-            $this->db->query(
-                "UPDATE complaints SET sla_deadline = ? WHERE complaint_id = ?",
-                [$deadline, $ticketId]
-            );
-        }
+        // No longer tracking SLA deadlines
     }
     
     private function createTransaction($complaintId, $type, $remarks, $fromUserId, $toUserId = null, $remarksType = 'internal_remarks') {

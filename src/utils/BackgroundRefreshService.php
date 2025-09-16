@@ -128,7 +128,6 @@ class BackgroundRefreshService {
             // Add real-time indicators
             foreach ($tickets as &$ticket) {
                 $ticket['is_urgent'] = $this->isTicketUrgent($ticket);
-                $ticket['sla_status'] = $this->getSLAStatus($ticket);
                 $ticket['last_activity'] = $this->getLastActivity($ticket['complaint_id']);
                 $ticket['priority_class'] = $this->getPriorityClass($ticket['priority']);
                 $ticket['status_class'] = $this->getStatusClass($ticket['status']);
@@ -181,11 +180,8 @@ class BackgroundRefreshService {
         try {
             // Send digest emails for priority tickets
             $digestResult = $this->sendPriorityTicketDigest();
-            
-            // Send SLA violation alerts
-            $alertResult = $this->sendSLAViolationAlerts();
-            
-            return ['success' => true, 'notifications_sent' => ($digestResult + $alertResult)];
+
+            return ['success' => true, 'notifications_sent' => $digestResult];
             
         } catch (Exception $e) {
             return ['success' => false, 'error' => $e->getMessage()];
@@ -214,10 +210,7 @@ class BackgroundRefreshService {
                            WHEN c.status = 'awaiting_feedback' THEN TIMESTAMPDIFF(DAY, c.updated_at, NOW())
                            ELSE 0
                        END as days_since_revert,
-                       CASE 
-                           WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
-                           ELSE 0
-                       END as is_sla_violated
+                       0 as is_sla_violated
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -259,10 +252,7 @@ class BackgroundRefreshService {
                            WHEN c.status = 'awaiting_feedback' THEN TIMESTAMPDIFF(DAY, c.updated_at, NOW())
                            ELSE 0
                        END as days_since_revert,
-                       CASE 
-                           WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
-                           ELSE 0
-                       END as is_sla_violated
+                       0 as is_sla_violated
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -297,10 +287,7 @@ class BackgroundRefreshService {
                            WHEN c.status = 'awaiting_feedback' THEN TIMESTAMPDIFF(DAY, c.updated_at, NOW())
                            ELSE 0
                        END as days_since_revert,
-                       CASE 
-                           WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
-                           ELSE 0
-                       END as is_sla_violated
+                       0 as is_sla_violated
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -352,32 +339,10 @@ class BackgroundRefreshService {
      */
     private function isTicketUrgent($ticket) {
         return in_array($ticket['priority'], ['high', 'critical']) || 
-               $ticket['is_sla_violated'] || 
+ 
                ($ticket['status'] === 'awaiting_feedback' && $ticket['days_since_revert'] >= 2);
     }
     
-    /**
-     * Get SLA status
-     */
-    private function getSLAStatus($ticket) {
-        if (empty($ticket['sla_deadline'])) {
-            return 'no_sla';
-        }
-        
-        $now = time();
-        $deadline = strtotime($ticket['sla_deadline']);
-        $timeLeft = $deadline - $now;
-        
-        if ($timeLeft <= 0) {
-            return 'violated';
-        } elseif ($timeLeft <= 3600) { // 1 hour
-            return 'critical';
-        } elseif ($timeLeft <= 7200) { // 2 hours
-            return 'warning';
-        } else {
-            return 'safe';
-        }
-    }
     
     /**
      * Get last activity for ticket
@@ -441,26 +406,6 @@ class BackgroundRefreshService {
         return $count;
     }
     
-    /**
-     * Send SLA violation alerts
-     */
-    private function sendSLAViolationAlerts() {
-        // Get SLA violations that need notification  
-        $sql = "SELECT COUNT(*) as count FROM complaints 
-                WHERE sla_deadline IS NOT NULL 
-                  AND NOW() > sla_deadline 
-                  AND status NOT IN ('closed')";
-        
-        $result = $this->db->fetch($sql);
-        $count = $result ? $result['count'] : 0;
-        
-        // For now, just log the count - actual notification sending would be implemented here
-        if ($count > 0) {
-            error_log("SLA violation alert: {$count} tickets have violated SLA");
-        }
-        
-        return $count;
-    }
     
     /**
      * Update system statistics
@@ -470,7 +415,6 @@ class BackgroundRefreshService {
         $stats = [
             'total_active_tickets' => $this->db->fetch("SELECT COUNT(*) as count FROM complaints WHERE status != 'closed'")['count'],
             'high_priority_tickets' => $this->db->fetch("SELECT COUNT(*) as count FROM complaints WHERE priority IN ('high', 'critical') AND status != 'closed'")['count'],
-            'sla_violations' => $this->db->fetch("SELECT COUNT(*) as count FROM complaints WHERE sla_deadline IS NOT NULL AND NOW() > sla_deadline AND status != 'closed'")['count'],
             'updated_at' => date('Y-m-d H:i:s')
         ];
         

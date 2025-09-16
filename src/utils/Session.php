@@ -185,6 +185,25 @@ class Session {
         return isset($_SESSION['flash'][$type]);
     }
     
+    public function refreshTimeout() {
+        $_SESSION['last_activity'] = time();
+    }
+
+    public function isExpired() {
+        if (!isset($_SESSION['last_activity'])) {
+            return true;
+        }
+        return (time() - $_SESSION['last_activity']) > Config::SESSION_TIMEOUT;
+    }
+
+    public function getTimeRemaining() {
+        if (!isset($_SESSION['last_activity'])) {
+            return 0;
+        }
+        $remaining = Config::SESSION_TIMEOUT - (time() - $_SESSION['last_activity']);
+        return max(0, $remaining);
+    }
+
     public function getSessionInfo() {
         return [
             'id' => session_id(),
@@ -193,7 +212,8 @@ class Session {
             'user_role' => $this->getUserRole(),
             'login_time' => $this->get('login_time'),
             'last_activity' => $this->get('last_activity'),
-            'remaining_time' => Config::SESSION_TIMEOUT - (time() - $this->get('last_activity', time()))
+            'remaining_time' => $this->getTimeRemaining(),
+            'is_expired' => $this->isExpired()
         ];
     }
     

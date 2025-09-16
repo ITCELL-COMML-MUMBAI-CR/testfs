@@ -134,6 +134,10 @@ $router->get('/api/tickets/refresh', 'Api@getRefreshedTickets', ['auth']);
 $router->get('/api/heartbeat', 'Api@heartbeat'); // No auth for heartbeat
 $router->get('/api/system-stats', 'Api@getSystemStats', ['auth']);
 
+// Session management endpoints
+$router->get('/api/session-status', 'Api@getSessionStatus'); // No auth required to check status
+$router->post('/api/refresh-session', 'Api@refreshSession', ['auth']);
+
 // File serving
 $router->get('/uploads/evidence/{file}', 'FileController@serveEvidence', ['auth']);
 

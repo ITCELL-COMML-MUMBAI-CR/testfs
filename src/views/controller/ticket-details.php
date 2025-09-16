@@ -761,12 +761,6 @@ $page_title = 'Ticket Details - SAMPARK';
                             <?= $ticket['hours_elapsed'] ?> hours
                         </div>
                     </div>
-                    <?php if ($ticket['sla_deadline']): ?>
-                    <div class="mb-3">
-                        <strong>SLA Deadline:</strong>
-                        <div><?= date('M d, Y H:i', strtotime($ticket['sla_deadline'])) ?></div>
-                    </div>
-                    <?php endif; ?>
                 </div>
             </div>
 
