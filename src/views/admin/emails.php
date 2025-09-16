@@ -1,5 +1,7 @@
-<?php include '../src/views/layouts/header.php'; ?>
 
+<?php
+ob_start();
+?>
 <main class="main-content">
     <div class="container-fluid">
         <div class="row">
@@ -531,5 +533,7 @@ function retryEmail(emailId) {
     }
 }
 </script>
-
-<?php include '../src/views/layouts/footer.php'; ?>
+<?php
+$content = ob_get_clean();
+include '../src/views/layouts/app.php';
+?>
