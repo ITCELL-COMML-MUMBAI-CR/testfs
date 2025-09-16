@@ -428,6 +428,210 @@ window.SAMPARK = {
             };
             reader.readAsDataURL(file);
         }
+    },
+
+    // Session management
+    session: {
+        heartbeatInterval: 60000, // 1 minute
+        warningThreshold: 300, // 5 minutes before expiry
+        heartbeatTimer: null,
+        isActive: true,
+        lastActivity: Date.now(),
+        warningShown: false,
+
+        init: function() {
+            if (!window.USER_LOGGED_IN && !document.body.classList.contains('logged-in')) {
+                return; // Don't initialize session management for non-authenticated users
+            }
+
+            console.log('Session management initialized');
+            this.setupActivityTracking();
+            this.startHeartbeat();
+
+            // Handle page visibility changes
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    this.pauseHeartbeat();
+                } else {
+                    this.resumeHeartbeat();
+                    this.refreshActivity();
+                }
+            });
+        },
+
+        setupActivityTracking: function() {
+            const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+            const activityHandler = window.SAMPARK.utils.debounce(() => {
+                this.refreshActivity();
+            }, 1000);
+
+            events.forEach(event => {
+                document.addEventListener(event, activityHandler, true);
+            });
+        },
+
+        refreshActivity: function() {
+            this.lastActivity = Date.now();
+            this.isActive = true;
+
+            if (this.warningShown) {
+                this.hideWarning();
+            }
+        },
+
+        startHeartbeat: function() {
+            if (this.heartbeatTimer) return;
+
+            this.heartbeatTimer = setInterval(() => {
+                this.sendHeartbeat();
+            }, this.heartbeatInterval);
+
+            // Send initial heartbeat
+            this.sendHeartbeat();
+        },
+
+        stopHeartbeat: function() {
+            if (this.heartbeatTimer) {
+                clearInterval(this.heartbeatTimer);
+                this.heartbeatTimer = null;
+            }
+        },
+
+        pauseHeartbeat: function() {
+            this.isActive = false;
+            console.log('Session heartbeat paused (tab hidden)');
+        },
+
+        resumeHeartbeat: function() {
+            this.isActive = true;
+            console.log('Session heartbeat resumed (tab visible)');
+        },
+
+        sendHeartbeat: function() {
+            if (!this.isActive || document.hidden) {
+                return;
+            }
+
+            window.SAMPARK.api.post('/api/session-heartbeat', {})
+                .then(data => {
+                    if (data.success) {
+                        this.handleHeartbeatSuccess(data);
+                    } else {
+                        if (data.expired) {
+                            this.handleSessionExpired();
+                        } else {
+                            console.warn('Session heartbeat failed:', data.error);
+                        }
+                    }
+                })
+                .catch(error => {
+                    if (error.message.includes('401') || error.message.includes('403')) {
+                        this.handleSessionExpired();
+                    } else {
+                        console.warn('Session heartbeat error:', error);
+                    }
+                });
+        },
+
+        handleHeartbeatSuccess: function(data) {
+            if (data.remaining_time !== undefined) {
+                const remainingTime = data.remaining_time;
+
+                if (remainingTime <= this.warningThreshold && !this.warningShown) {
+                    this.showExpiryWarning(remainingTime);
+                }
+            }
+        },
+
+        showExpiryWarning: function(remainingTime) {
+            this.warningShown = true;
+            const minutes = Math.ceil(remainingTime / 60);
+
+            window.SAMPARK.ui.confirm(
+                'Session Expiring Soon',
+                `Your session will expire in ${minutes} minute(s). Would you like to extend it?`,
+                'Extend Session',
+                'Logout'
+            ).then((result) => {
+                if (result.isConfirmed) {
+                    this.extendSession();
+                } else if (result.isDismissed) {
+                    // Check if user is recently active before auto-extending
+                    if (this.isUserRecentlyActive()) {
+                        this.extendSession();
+                    } else {
+                        this.logout();
+                    }
+                }
+            });
+        },
+
+        hideWarning: function() {
+            this.warningShown = false;
+            if (window.Swal) {
+                Swal.close();
+            }
+        },
+
+        isUserRecentlyActive: function() {
+            const inactiveTime = Date.now() - this.lastActivity;
+            return inactiveTime < (5 * 60 * 1000); // Active within last 5 minutes
+        },
+
+        extendSession: function() {
+            window.SAMPARK.api.post('/api/extend-session', {})
+                .then(data => {
+                    if (data.success) {
+                        this.warningShown = false;
+                        window.SAMPARK.ui.showToast('Session extended successfully', 'success');
+                        console.log('Session extended successfully');
+                    } else {
+                        throw new Error(data.error || 'Failed to extend session');
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to extend session:', error);
+                    window.SAMPARK.ui.showToast('Failed to extend session', 'error');
+                });
+        },
+
+        handleSessionExpired: function() {
+            this.stopHeartbeat();
+
+            window.SAMPARK.ui.showInfo(
+                'Session Expired',
+                'Your session has expired. You will be redirected to the login page.'
+            ).then(() => {
+                this.redirectToLogin();
+            });
+        },
+
+        logout: function() {
+            this.stopHeartbeat();
+
+            fetch(`${window.SAMPARK.config.app_url}/logout`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': window.SAMPARK.config.csrf_token
+                },
+                credentials: 'same-origin'
+            }).finally(() => {
+                this.redirectToLogin();
+            });
+        },
+
+        redirectToLogin: function() {
+            window.location.href = `${window.SAMPARK.config.app_url}/login`;
+        },
+
+        getStatus: function() {
+            return {
+                isActive: this.isActive,
+                lastActivity: this.lastActivity,
+                warningShown: this.warningShown,
+                heartbeatRunning: !!this.heartbeatTimer
+            };
+        }
     }
 };
 
@@ -436,6 +640,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips and popovers
     window.SAMPARK.ui.initTooltips();
     window.SAMPARK.ui.initPopovers();
+
+    // Initialize session management
+    window.SAMPARK.session.init();
     
     // Auto-resize textareas
     document.querySelectorAll('textarea[data-auto-resize]').forEach(textarea => {

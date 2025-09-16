@@ -44,13 +44,29 @@ class Session {
     }
     
     private function checkTimeout() {
+        $currentTime = time();
+
+        // Only check timeout if user is logged in
+        if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
+            $_SESSION['last_activity'] = $currentTime;
+            return;
+        }
+
         if (isset($_SESSION['last_activity'])) {
-            if (time() - $_SESSION['last_activity'] > Config::SESSION_TIMEOUT) {
+            $inactiveTime = $currentTime - $_SESSION['last_activity'];
+
+            // Only destroy session if user has been truly inactive
+            if ($inactiveTime > Config::SESSION_TIMEOUT) {
+                error_log("Session expired for user " . ($_SESSION['user_email'] ?? 'unknown') . " after {$inactiveTime} seconds of inactivity");
                 $this->destroy();
                 return;
             }
         }
-        $_SESSION['last_activity'] = time();
+
+        // Update last activity only on actual page requests, not AJAX heartbeats
+        if (!$this->isHeartbeatRequest()) {
+            $_SESSION['last_activity'] = $currentTime;
+        }
     }
     
     public function set($key, $value) {
@@ -185,7 +201,23 @@ class Session {
         return isset($_SESSION['flash'][$type]);
     }
     
+    private function isHeartbeatRequest() {
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        $isAjax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+                  strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+        return $isAjax && (
+            strpos($requestUri, '/api/session-heartbeat') !== false ||
+            strpos($requestUri, '/api/heartbeat') !== false ||
+            strpos($requestUri, '/api/background-tasks') !== false
+        );
+    }
+
     public function refreshTimeout() {
+        $_SESSION['last_activity'] = time();
+    }
+
+    public function refreshActivity() {
         $_SESSION['last_activity'] = time();
     }
 

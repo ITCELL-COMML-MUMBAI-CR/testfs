@@ -137,6 +137,8 @@ $router->post('/api/background-automation', 'Api@processBackgroundAutomation', [
 $router->post('/api/background-tasks', 'Api@processBackgroundTasks', ['auth']);
 $router->get('/api/tickets/refresh', 'Api@getRefreshedTickets', ['auth']);
 $router->get('/api/heartbeat', 'Api@heartbeat'); // No auth for heartbeat
+$router->post('/api/session-heartbeat', 'Api@sessionHeartbeat', ['auth']); // Session management heartbeat
+$router->post('/api/extend-session', 'Api@extendSession', ['auth']); // Extend session endpoint
 $router->get('/api/system-stats', 'Api@getSystemStats', ['auth']);
 $router->get('/api/customers/list', 'Admin@getCustomersList', ['auth', 'role:admin,superadmin']);
 

@@ -966,44 +966,98 @@ class ApiController extends BaseController {
      * Heartbeat endpoint for silent automation
      * Called periodically to trigger background processes
      */
+    public function sessionHeartbeat() {
+        try {
+            // Require authentication for session heartbeat
+            if (!$this->session->isLoggedIn()) {
+                $this->json(['success' => false, 'expired' => true, 'error' => 'Session not authenticated'], 401);
+                return;
+            }
+
+            // Check if session is expired
+            if ($this->session->isExpired()) {
+                $this->json(['success' => false, 'expired' => true, 'error' => 'Session expired'], 401);
+                return;
+            }
+
+            // Refresh session activity
+            $this->session->refreshActivity();
+
+            // Return session status
+            $this->json([
+                'success' => true,
+                'remaining_time' => $this->session->getTimeRemaining(),
+                'session_timeout' => Config::SESSION_TIMEOUT,
+                'message' => 'Session refreshed'
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Session heartbeat error: " . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Internal error'], 500);
+        }
+    }
+
+    public function extendSession() {
+        try {
+            // Require authentication
+            if (!$this->session->isLoggedIn()) {
+                $this->json(['success' => false, 'error' => 'Not authenticated'], 401);
+                return;
+            }
+
+            // Extend session by refreshing activity
+            $this->session->refreshActivity();
+
+            $this->json([
+                'success' => true,
+                'remaining_time' => $this->session->getTimeRemaining(),
+                'message' => 'Session extended successfully'
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Extend session error: " . $e->getMessage());
+            $this->json(['success' => false, 'error' => 'Failed to extend session'], 500);
+        }
+    }
+
     public function heartbeat() {
         // Start output buffering to catch any unwanted output
         ob_start();
-        
+
         try {
             // No auth required for heartbeat - it's called silently
             // Suppress any PHP errors/warnings that might generate HTML
             $originalErrorLevel = error_reporting(E_ERROR);
-            
+
             $backgroundService = new BackgroundRefreshService();
-            
+
             // Check if automation is needed (every 30 seconds)
             $lastRun = $this->db->fetch(
                 "SELECT cache_data FROM system_cache WHERE cache_key = 'last_heartbeat'"
             );
-            
+
             $shouldRun = true;
             if ($lastRun) {
                 $lastRunData = json_decode($lastRun['cache_data'], true);
                 $timeDiff = time() - strtotime($lastRunData['timestamp']);
                 $shouldRun = $timeDiff >= 30; // 30 seconds
             }
-            
+
             if ($shouldRun) {
                 // Run light automation tasks
                 $automationResult = $backgroundService->processAutomationTasks();
-                
+
                 // Update heartbeat timestamp
                 $this->db->query(
-                    "INSERT INTO system_cache (cache_key, cache_data, updated_at) VALUES ('last_heartbeat', ?, NOW()) 
+                    "INSERT INTO system_cache (cache_key, cache_data, updated_at) VALUES ('last_heartbeat', ?, NOW())
                      ON DUPLICATE KEY UPDATE cache_data = VALUES(cache_data), updated_at = VALUES(updated_at)",
                     [json_encode(['timestamp' => date('Y-m-d H:i:s')])]
                 );
-                
+
                 // Clean any unwanted output and restore error reporting
                 ob_clean();
                 error_reporting($originalErrorLevel);
-                
+
                 $this->json([
                     'success' => true,
                     'processed' => true,
@@ -1013,7 +1067,7 @@ class ApiController extends BaseController {
                 // Clean any unwanted output and restore error reporting
                 ob_clean();
                 error_reporting($originalErrorLevel);
-                
+
                 $this->json([
                     'success' => true,
                     'processed' => false,

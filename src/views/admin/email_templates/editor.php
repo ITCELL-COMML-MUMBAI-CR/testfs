@@ -72,10 +72,11 @@ ob_start();
             blockManager: {
                 appendTo: '#blocks',
                 blocks: [
+                    // Basic components
                     {
                         id: 'text',
                         label: 'Text',
-                        content: '<div data-gjs-type="text">Insert your text here</div>',
+                        content: '<div data-gjs-type="text" style="padding: 10px;">Insert your text here</div>',
                         category: 'Basic',
                     },
                     {
@@ -85,6 +86,108 @@ ob_start();
                         content: { type: 'image' },
                         category: 'Basic',
                         activate: true,
+                    },
+                    {
+                        id: 'button',
+                        label: 'Button',
+                        content: '<a href="#" style="display: inline-block; padding: 12px 24px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Click Here</a>',
+                        category: 'Basic',
+                    },
+                    {
+                        id: 'divider',
+                        label: 'Divider',
+                        content: '<hr style="border: none; height: 1px; background-color: #ddd; margin: 20px 0;">',
+                        category: 'Basic',
+                    },
+
+                    // Layout components
+                    {
+                        id: 'section',
+                        label: 'Section',
+                        content: '<section style="padding: 20px; margin: 10px 0;"><h2>Section Title</h2><p>Section content goes here...</p></section>',
+                        category: 'Layout',
+                    },
+                    {
+                        id: 'container',
+                        label: 'Container',
+                        content: '<div style="max-width: 600px; margin: 0 auto; padding: 20px; background: #ffffff;"></div>',
+                        category: 'Layout',
+                    },
+                    {
+                        id: '2-columns',
+                        label: '2 Columns',
+                        content: '<div style="display: flex; gap: 20px;"><div style="flex: 1; padding: 15px; border: 1px dashed #ddd;">Column 1</div><div style="flex: 1; padding: 15px; border: 1px dashed #ddd;">Column 2</div></div>',
+                        category: 'Layout',
+                    },
+                    {
+                        id: '3-columns',
+                        label: '3 Columns',
+                        content: '<div style="display: flex; gap: 15px;"><div style="flex: 1; padding: 10px; border: 1px dashed #ddd;">Col 1</div><div style="flex: 1; padding: 10px; border: 1px dashed #ddd;">Col 2</div><div style="flex: 1; padding: 10px; border: 1px dashed #ddd;">Col 3</div></div>',
+                        category: 'Layout',
+                    },
+
+                    // Email-specific components
+                    {
+                        id: 'header',
+                        label: 'Header',
+                        content: '<header style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center;"><h1 style="margin: 0; font-size: 28px;">{{app_name}}</h1><p style="margin: 5px 0 0 0; opacity: 0.9;">Support & Mediation Portal</p></header>',
+                        category: 'Email',
+                    },
+                    {
+                        id: 'footer',
+                        label: 'Footer',
+                        content: '<footer style="background-color: #333; color: white; text-align: center; padding: 20px; font-size: 12px;"><p><strong>{{app_name}} Support Team</strong></p><p>This is an automated message. Please do not reply directly to this email.</p></footer>',
+                        category: 'Email',
+                    },
+                    {
+                        id: 'greeting',
+                        label: 'Greeting',
+                        content: '<div style="padding: 20px;"><h2 style="color: #007bff;">Dear {{customer_name}},</h2></div>',
+                        category: 'Email',
+                    },
+                    {
+                        id: 'info-box',
+                        label: 'Info Box',
+                        content: '<div style="background-color: #f8f9fa; border-left: 4px solid #007bff; padding: 15px; margin: 20px 0;"><strong>Information:</strong><br>Important details go here.</div>',
+                        category: 'Email',
+                    },
+                    {
+                        id: 'alert-box',
+                        label: 'Alert Box',
+                        content: '<div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 20px 0; border-left: 4px solid #ffc107;"><h3 style="margin-top: 0; color: #856404;">⚠️ Attention Required</h3><p style="margin-bottom: 0;">This is an important alert message.</p></div>',
+                        category: 'Email',
+                    },
+                    {
+                        id: 'success-box',
+                        label: 'Success Box',
+                        content: '<div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;"><h2 style="color: #155724; margin-top: 0;">🎉 Success!</h2><p style="font-size: 16px; margin-bottom: 0;">Operation completed successfully.</p></div>',
+                        category: 'Email',
+                    },
+
+                    // SAMPARK specific components
+                    {
+                        id: 'ticket-info',
+                        label: 'Ticket Info',
+                        content: '<div style="background-color: #f8f9fa; border-left: 4px solid #17a2b8; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;"><strong>Ticket Number:</strong> {{complaint_id}}<br><strong>Company:</strong> {{company_name}}</div>',
+                        category: 'SAMPARK',
+                    },
+                    {
+                        id: 'action-button',
+                        label: 'Action Button',
+                        content: '<div style="text-align: center; margin: 30px 0;"><a href="{{view_url}}" style="display: inline-block; background-color: #007bff; color: white; padding: 15px 35px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">View My Ticket</a></div>',
+                        category: 'SAMPARK',
+                    },
+                    {
+                        id: 'features-list',
+                        label: 'Features List',
+                        content: '<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;"><h3 style="margin-top: 0; color: #007bff;">You can now:</h3><ul style="margin: 0; padding-left: 20px;"><li style="margin: 8px 0;">Create and track support tickets</li><li style="margin: 8px 0;">View your complete ticket history</li><li style="margin: 8px 0;">Update your profile information</li><li style="margin: 8px 0;">Access all SAMPARK services</li></ul></div>',
+                        category: 'SAMPARK',
+                    },
+                    {
+                        id: 'login-buttons',
+                        label: 'Login Buttons',
+                        content: '<div style="text-align: center; margin: 30px 0;"><a href="{{view_url}}" style="display: inline-block; background-color: #17a2b8; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 5px;">📋 View & Update Ticket</a><a href="{{login_url}}" style="display: inline-block; background-color: #6c757d; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 15px 5px;">🔐 Login First</a></div>',
+                        category: 'SAMPARK',
                     }
                 ]
             },
