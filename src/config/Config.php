@@ -17,13 +17,13 @@ class Config {
     // Use Config::getAppUrl() and Config::getBasePath() instead of constants
     
     // Email Configuration
-    const FROM_EMAIL = 'noreply@sampark.railway.gov.in';
+    const FROM_EMAIL = 'admin@itcellbbcr.in';
     const FROM_NAME = 'SAMPARK Support System';
-    const SMTP_HOST = 'localhost';
-    const SMTP_PORT = 587;
-    const SMTP_USERNAME = '';
-    const SMTP_PASSWORD = '';
-    const SMTP_ENCRYPTION = 'tls';
+    const SMTP_HOST = 'smtp.hostinger.com';
+    const SMTP_PORT = 465;
+    const SMTP_USERNAME = 'admin@itcellbbcr.in';
+    const SMTP_PASSWORD = '4|272mK&4Ca';
+    const SMTP_ENCRYPTION = 'ssl';
     
     // SMS Configuration
     const SMS_API_URL = '';
@@ -145,37 +145,6 @@ class Config {
         'warning' => 'Warning',
         'error' => 'Error',
         'escalation' => 'Escalation'
-    ];
-    
-    // Railway Divisions (These would typically be loaded from database)
-    const RAILWAY_DIVISIONS = [
-        'CENTRAL' => 'Central Railway',
-        'WESTERN' => 'Western Railway',
-        'NORTHERN' => 'Northern Railway',
-        'SOUTHERN' => 'Southern Railway',
-        'EASTERN' => 'Eastern Railway',
-        'NORTHEASTERN' => 'Northeastern Railway',
-        'NORTHCENTRAL' => 'North Central Railway',
-        'EASTCENTRAL' => 'East Central Railway',
-        'WESTCENTRAL' => 'West Central Railway',
-        'SOUTHCENTRAL' => 'South Central Railway',
-        'SOUTHEAST' => 'Southeast Railway',
-        'SOUTHWEST' => 'Southwest Railway',
-        'NORTHWESTSERN' => 'Northwestern Railway',
-        'EASTCOAST' => 'East Coast Railway',
-        'NORTHEASTFRONTIER' => 'Northeast Frontier Railway',
-        'SOUTHEASTCENTRAL' => 'Southeast Central Railway',
-        'SOUTHWESTCENTRAL' => 'Southwest Central Railway'
-    ];
-    
-    // Railway Zones
-    const RAILWAY_ZONES = [
-        'CENTRAL' => 'Central Zone',
-        'WESTERN' => 'Western Zone',
-        'NORTHERN' => 'Northern Zone',
-        'SOUTHERN' => 'Southern Zone',
-        'EASTERN' => 'Eastern Zone',
-        'NORTHEASTERN' => 'Northeastern Zone'
     ];
     
     // Business Hours
