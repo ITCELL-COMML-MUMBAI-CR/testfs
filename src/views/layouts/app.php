@@ -186,6 +186,11 @@
                                     <i class="fas fa-ticket-alt me-1"></i>Tickets
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="<?= Config::getAppUrl() ?>/admin/reports">
+                                    <i class="fas fa-chart-line me-1"></i>Reports
+                                </a>
+                            </li>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                     <i class="fas fa-cog me-1"></i>Management

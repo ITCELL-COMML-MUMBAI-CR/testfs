@@ -8,6 +8,8 @@
 $router->get('/', 'Home@index');
 $router->get('/login', 'Auth@showLogin');
 $router->post('/login', 'Auth@login');
+$router->get('/change-password', 'Auth@showChangePassword');
+$router->post('/change-password', 'Auth@changePassword');
 $router->get('/signup', 'Auth@showSignup');
 $router->post('/signup', 'Auth@signup');
 $router->get('/logout', 'Auth@logout');

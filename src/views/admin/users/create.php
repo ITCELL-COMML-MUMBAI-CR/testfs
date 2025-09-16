@@ -155,6 +155,15 @@ ob_start();
                                         </label>
                                     </div>
                                 </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-check mt-4">
+                                        <input class="form-check-input" type="checkbox" id="forcePasswordChange" name="force_password_change">
+                                        <label class="form-check-label" for="forcePasswordChange">
+                                            Force password change on first login
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                             
                             <!-- Form Actions -->

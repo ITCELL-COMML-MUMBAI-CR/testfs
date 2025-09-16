@@ -65,6 +65,12 @@ class AdminController extends BaseController
             $params[] = $division;
         }
 
+        // Hide SUPERADMIN users from regular admins
+        if ($user['role'] !== 'superadmin') {
+            $conditions[] = 'role != ?';
+            $params[] = 'superadmin';
+        }
+
         $whereClause = implode(' AND ', $conditions);
 
         $sql = "SELECT id, login_id, name, email, mobile, role, department, 
@@ -74,6 +80,12 @@ class AdminController extends BaseController
                 ORDER BY created_at DESC";
 
         $users = $this->paginate($sql, $params, $page, 20);
+
+        // Filter roles for non-superadmin users
+        $availableRoles = Config::USER_ROLES;
+        if ($user['role'] !== 'superadmin') {
+            unset($availableRoles['superadmin']);
+        }
 
         $data = [
             'page_title' => 'User Management - SAMPARK',
@@ -89,7 +101,7 @@ class AdminController extends BaseController
                 'status' => $status,
                 'division' => $division
             ],
-            'roles' => Config::USER_ROLES,
+            'roles' => $availableRoles,
             'status_options' => Config::USER_STATUS,
             'divisions' => $this->getDivisions(),
             'csrf_token' => $this->session->getCSRFToken()
@@ -104,10 +116,16 @@ class AdminController extends BaseController
 
         $regions = []; // Add logic to get regions if needed
 
+        // Filter roles for non-superadmin users
+        $availableRoles = Config::USER_ROLES;
+        if ($user['role'] !== 'superadmin') {
+            unset($availableRoles['superadmin']);
+        }
+
         $data = [
             'page_title' => 'Create User - SAMPARK',
             'user' => $user,
-            'roles' => Config::USER_ROLES,
+            'roles' => $availableRoles,
             'divisions' => $this->getDivisions(),
             'departments' => $this->getDepartments(),
             'regions' => $regions,
@@ -158,8 +176,10 @@ class AdminController extends BaseController
             // Insert user
             $sql = "INSERT INTO users (
                 login_id, password, role, department, division, zone,
-                name, email, mobile, status, created_by, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, NOW())";
+                name, email, mobile, status, force_password_change, created_by, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?, NOW())";
+
+            $forcePasswordChange = isset($_POST['force_password_change']) ? 1 : 0;
 
             $params = [
                 trim($_POST['login_id']),
@@ -171,6 +191,7 @@ class AdminController extends BaseController
                 trim($_POST['name']),
                 trim($_POST['email']),
                 trim($_POST['mobile']),
+                $forcePasswordChange,
                 $user['id']
             ];
 
@@ -220,11 +241,24 @@ class AdminController extends BaseController
             return;
         }
 
+        // Prevent regular admins from editing SUPERADMIN users
+        if ($user['role'] !== 'superadmin' && $userToEdit['role'] === 'superadmin') {
+            $this->setFlash('error', 'Access denied');
+            $this->redirect(Config::getAppUrl() . '/admin/users');
+            return;
+        }
+
+        // Filter roles for non-superadmin users
+        $availableRoles = Config::USER_ROLES;
+        if ($user['role'] !== 'superadmin') {
+            unset($availableRoles['superadmin']);
+        }
+
         $data = [
             'page_title' => 'Edit User - SAMPARK',
             'user' => $user,
             'user_to_edit' => $userToEdit,
-            'roles' => Config::USER_ROLES,
+            'roles' => $availableRoles,
             'divisions' => $this->getDivisions(),
             'departments' => $this->getDepartments(),
             'status_options' => Config::USER_STATUS,
@@ -245,7 +279,22 @@ class AdminController extends BaseController
         );
 
         if (!$userToEdit) {
-            $this->json(['success' => false, 'message' => 'User not found'], 404);
+            $this->setFlash('error', 'User not found');
+            $this->redirect(Config::getAppUrl() . '/admin/users');
+            return;
+        }
+
+        // Prevent regular admins from updating SUPERADMIN users
+        if ($user['role'] !== 'superadmin' && $userToEdit['role'] === 'superadmin') {
+            $this->setFlash('error', 'Access denied');
+            $this->redirect(Config::getAppUrl() . '/admin/users');
+            return;
+        }
+
+        // Prevent regular admins from setting role to superadmin
+        if ($user['role'] !== 'superadmin' && $_POST['role'] === 'superadmin') {
+            $this->setFlash('error', 'Cannot assign superadmin role');
+            $this->redirect(Config::getAppUrl() . '/admin/users/' . $id . '/edit');
             return;
         }
 
@@ -261,10 +310,9 @@ class AdminController extends BaseController
         ]);
 
         if (!$isValid) {
-            $this->json([
-                'success' => false,
-                'errors' => $validator->getErrors()
-            ], 400);
+            $this->setFlash('error', 'Please check the form for errors.');
+            $this->setFlash('errors', $validator->getErrors());
+            $this->redirect(Config::getAppUrl() . '/admin/users/' . $id . '/edit');
             return;
         }
 
@@ -275,11 +323,13 @@ class AdminController extends BaseController
             $zoneInfo = $this->getZoneFromDivision($_POST['division']);
 
             // Update user
-            $sql = "UPDATE users SET 
-                    name = ?, email = ?, mobile = ?, role = ?, 
-                    department = ?, division = ?, zone = ?, status = ?,
+            $sql = "UPDATE users SET
+                    name = ?, email = ?, mobile = ?, role = ?,
+                    department = ?, division = ?, zone = ?, status = ?, force_password_change = ?,
                     updated_at = NOW()
                     WHERE id = ?";
+
+            $forcePasswordChange = isset($_POST['force_password_change']) ? 1 : 0;
 
             $params = [
                 trim($_POST['name']),
@@ -290,6 +340,7 @@ class AdminController extends BaseController
                 $_POST['division'],
                 $zoneInfo['zone'],
                 $_POST['status'],
+                $forcePasswordChange,
                 $id
             ];
 
@@ -298,7 +349,8 @@ class AdminController extends BaseController
             // Update password if provided
             if (!empty($_POST['new_password'])) {
                 if ($_POST['new_password'] !== $_POST['password_confirmation']) {
-                    $this->json(['success' => false, 'message' => 'Password confirmation does not match'], 400);
+                    $this->setFlash('error', 'Password confirmation does not match');
+                    $this->redirect(Config::getAppUrl() . '/admin/users/' . $id . '/edit');
                     return;
                 }
 
@@ -317,18 +369,14 @@ class AdminController extends BaseController
                 'changes' => array_diff_assoc($_POST, $userToEdit)
             ]);
 
-            $this->json([
-                'success' => true,
-                'message' => 'User updated successfully'
-            ]);
+            $this->setFlash('success', 'User updated successfully');
+            $this->redirect(Config::getAppUrl() . '/admin/users');
         } catch (Exception $e) {
             $this->db->rollback();
             Config::logError("User update error: " . $e->getMessage());
 
-            $this->json([
-                'success' => false,
-                'message' => 'Failed to update user. Please try again.'
-            ], 500);
+            $this->setFlash('error', 'Failed to update user. Please try again.');
+            $this->redirect(Config::getAppUrl() . '/admin/users/' . $id . '/edit');
         }
     }
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * New Controller Dashboard - SAMPARK
+ * New Admin Dashboard - SAMPARK
  * Implementation based on prompt.md specifications
  * Shows comprehensive overview cards, performance metrics, and detailed analytics
  */
@@ -9,10 +9,9 @@
 ob_start();
 
 // Prepare user info
-$controller_name = htmlspecialchars($user['name'] ?? 'Controller');
-$user_division = $user['division'] ?? '';
+$admin_name = htmlspecialchars($user['name'] ?? 'Administrator');
+$user_division = $user['division'] ?? 'HQ';
 $user_department = $user['department'] ?? '';
-$user_role = $user['role'] ?? 'controller';
 
 // Get current data
 $current_date = date('Y-m-d');
@@ -25,14 +24,6 @@ $performance_data = $performance_data ?? [];
 $division_stats = $division_stats ?? [];
 $terminal_stats = $terminal_stats ?? [];
 $customer_registration_stats = $customer_registration_stats ?? [];
-
-// Filter data based on user's division and department
-$filtered_division_stats = [];
-if ($user_division && $user_division !== 'HQ') {
-    $filtered_division_stats[$user_division] = $division_stats[$user_division] ?? [];
-} else {
-    $filtered_division_stats = $division_stats;
-}
 ?>
 
 <section class="py-4">
@@ -43,18 +34,12 @@ if ($user_division && $user_division !== 'HQ') {
             <div class="col-12">
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
                     <div>
-                        <h1 class="display-4 mb-2 fw-light">
-                            <?= $user_role === 'controller_nodal' ? 'Nodal Controller' : 'Controller' ?> Dashboard
-                        </h1>
+                        <h1 class="display-4 mb-2 fw-light">Controller Dashboard</h1>
                         <p class="text-muted mb-0">
-                            <i class="fas fa-user-tie me-2"></i><?= $controller_name ?>
-                            <?php if ($user_division): ?>
+                            <i class="fas fa-user-shield me-2"></i><?= $admin_name ?>
+                            <?php if ($user_division !== 'HQ'): ?>
                                 <span class="mx-2">•</span>
                                 <i class="fas fa-building me-2"></i><?= htmlspecialchars($user_division) ?> Division
-                            <?php endif; ?>
-                            <?php if ($user_department): ?>
-                                <span class="mx-2">•</span>
-                                <i class="fas fa-briefcase me-2"></i><?= htmlspecialchars($user_department) ?> Department
                             <?php endif; ?>
                             <span class="mx-2">•</span>
                             <i class="fas fa-calendar me-2"></i><?= date('F d, Y') ?>
@@ -64,7 +49,7 @@ if ($user_division && $user_division !== 'HQ') {
                         <button class="btn btn-apple-glass me-2" onclick="refreshDashboard()">
                             <i class="fas fa-sync-alt me-2"></i>Refresh
                         </button>
-                        <a href="<?= Config::getAppUrl() ?>/controller/reports" class="btn btn-apple-primary">
+                        <a href="<?= Config::getAppUrl() ?>/admin/reports" class="btn btn-apple-primary">
                             <i class="fas fa-chart-line me-2"></i>Detailed Reports
                         </a>
                     </div>
@@ -78,9 +63,6 @@ if ($user_division && $user_division !== 'HQ') {
                 <h3 class="fw-semibold mb-3">
                     <i class="fas fa-chart-bar text-apple-blue me-2"></i>
                     Overview of Complaints
-                    <?php if ($user_division && $user_division !== 'HQ'): ?>
-                        <small class="text-muted">- <?= htmlspecialchars($user_division) ?> Division</small>
-                    <?php endif; ?>
                 </h3>
             </div>
 
@@ -98,7 +80,7 @@ if ($user_division && $user_division !== 'HQ') {
                         <h6 class="text-muted mb-0">Total Complaints Lodged</h6>
                         <small class="text-success">
                             <i class="fas fa-calendar me-1"></i>
-                            In Your Division
+                            Current Period
                         </small>
                     </div>
                 </div>
@@ -164,7 +146,7 @@ if ($user_division && $user_division !== 'HQ') {
                 </div>
             </div>
 
-            <!-- Total Registered Customers (in division) -->
+            <!-- Total Registered Customers -->
             <div class="col-sm-6 col-lg-3">
                 <div class="card-apple h-100 clickable-card"
                      onclick="showDetailedReport('registered_customers')">
@@ -178,7 +160,7 @@ if ($user_division && $user_division !== 'HQ') {
                         <h6 class="text-muted mb-0">Total Registered Customers</h6>
                         <small class="text-info">
                             <i class="fas fa-user-plus me-1"></i>
-                            In Your Division
+                            Active Users
                         </small>
                     </div>
                 </div>
@@ -285,18 +267,14 @@ if ($user_division && $user_division !== 'HQ') {
             </div>
         </div>
 
-        <!-- 3) Division vs Status of Complaints (filtered for user's division) -->
+        <!-- 3) Division vs Status of Complaints -->
         <div class="row g-4 mb-5">
             <div class="col-12">
                 <div class="card-apple">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="card-title mb-0">
                             <i class="fas fa-chart-pie text-apple-blue me-2"></i>
-                            <?php if ($user_division && $user_division !== 'HQ'): ?>
-                                <?= htmlspecialchars($user_division) ?> Division - Status of Complaints
-                            <?php else: ?>
-                                Division vs Status of Complaints
-                            <?php endif; ?>
+                            Division vs Status of Complaints
                         </h4>
                         <button class="btn btn-apple-glass btn-sm" onclick="exportDivisionReport()">
                             <i class="fas fa-download me-1"></i>Export
@@ -307,11 +285,7 @@ if ($user_division && $user_division !== 'HQ') {
                             <table class="table table-hover" id="divisionStatusTable">
                                 <thead class="table-light">
                                     <tr>
-                                        <?php if ($user_division === 'HQ' || $user_role === 'controller_nodal'): ?>
                                         <th>Division</th>
-                                        <?php else: ?>
-                                        <th>Department</th>
-                                        <?php endif; ?>
                                         <th class="text-center">Pending</th>
                                         <th class="text-center">Awaiting Feedback</th>
                                         <th class="text-center">Awaiting Info</th>
@@ -323,58 +297,46 @@ if ($user_division && $user_division !== 'HQ') {
                                 <tbody>
                                     <?php
                                     $grand_total = ['pending' => 0, 'awaiting_feedback' => 0, 'awaiting_info' => 0, 'awaiting_approval' => 0, 'closed' => 0, 'total' => 0];
-
-                                    // Show either divisions (for HQ) or departments (for specific division)
-                                    $data_to_show = [];
-                                    if ($user_division === 'HQ' || $user_role === 'controller_nodal') {
-                                        $data_to_show = $filtered_division_stats;
-                                    } else {
-                                        // Show department-wise data for the specific division
-                                        $data_to_show = $performance_data['department_stats'] ?? [];
-                                    }
-
-                                    foreach ($data_to_show as $entity => $stats):
+                                    foreach ($division_stats as $division => $stats):
                                         foreach ($stats as $key => $value) {
-                                            if (isset($grand_total[$key])) {
-                                                $grand_total[$key] += $value;
-                                            }
+                                            $grand_total[$key] += $value;
                                         }
                                     ?>
                                     <tr>
-                                        <td class="fw-semibold"><?= htmlspecialchars($entity) ?></td>
+                                        <td class="fw-semibold"><?= htmlspecialchars($division) ?></td>
                                         <td class="text-center">
                                             <span class="badge bg-warning clickable-count"
-                                                  onclick="showEntityDetails('<?= $entity ?>', 'pending')">
+                                                  onclick="showDivisionDetails('<?= $division ?>', 'pending')">
                                                 <?= number_format($stats['pending'] ?? 0) ?>
                                             </span>
                                         </td>
                                         <td class="text-center">
                                             <span class="badge bg-info clickable-count"
-                                                  onclick="showEntityDetails('<?= $entity ?>', 'awaiting_feedback')">
+                                                  onclick="showDivisionDetails('<?= $division ?>', 'awaiting_feedback')">
                                                 <?= number_format($stats['awaiting_feedback'] ?? 0) ?>
                                             </span>
                                         </td>
                                         <td class="text-center">
                                             <span class="badge bg-secondary clickable-count"
-                                                  onclick="showEntityDetails('<?= $entity ?>', 'awaiting_info')">
+                                                  onclick="showDivisionDetails('<?= $division ?>', 'awaiting_info')">
                                                 <?= number_format($stats['awaiting_info'] ?? 0) ?>
                                             </span>
                                         </td>
                                         <td class="text-center">
                                             <span class="badge bg-primary clickable-count"
-                                                  onclick="showEntityDetails('<?= $entity ?>', 'awaiting_approval')">
+                                                  onclick="showDivisionDetails('<?= $division ?>', 'awaiting_approval')">
                                                 <?= number_format($stats['awaiting_approval'] ?? 0) ?>
                                             </span>
                                         </td>
                                         <td class="text-center">
                                             <span class="badge bg-success clickable-count"
-                                                  onclick="showEntityDetails('<?= $entity ?>', 'closed')">
+                                                  onclick="showDivisionDetails('<?= $division ?>', 'closed')">
                                                 <?= number_format($stats['closed'] ?? 0) ?>
                                             </span>
                                         </td>
                                         <td class="text-center fw-bold">
                                             <span class="clickable-count"
-                                                  onclick="showEntityDetails('<?= $entity ?>', 'all')">
+                                                  onclick="showDivisionDetails('<?= $division ?>', 'all')">
                                                 <?= number_format($stats['total'] ?? 0) ?>
                                             </span>
                                         </td>
@@ -434,19 +396,14 @@ if ($user_division && $user_division !== 'HQ') {
             </div>
         </div>
 
-        <!-- 5) Customer Registration by Division (filtered for user's access) -->
+        <!-- 5) Customer Registration by Division -->
         <div class="row g-4">
             <div class="col-12">
                 <div class="card-apple">
                     <div class="card-header">
                         <h4 class="card-title mb-0">
                             <i class="fas fa-user-plus text-apple-blue me-2"></i>
-                            Customer Registration
-                            <?php if ($user_division && $user_division !== 'HQ'): ?>
-                                - <?= htmlspecialchars($user_division) ?> Division
-                            <?php else: ?>
-                                by Division
-                            <?php endif; ?>
+                            Customer Registration by Division
                         </h4>
                     </div>
                     <div class="card-body">
@@ -465,14 +422,12 @@ if ($user_division && $user_division !== 'HQ') {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-// Dashboard data (filtered for user's division)
+// Dashboard data
 const dashboardData = {
-    division_stats: <?= json_encode($filtered_division_stats) ?>,
+    division_stats: <?= json_encode($division_stats) ?>,
     terminal_stats: <?= json_encode($terminal_stats) ?>,
     type_stats: <?= json_encode($performance_data['type_distribution'] ?? []) ?>,
-    customer_registration: <?= json_encode($customer_registration_stats) ?>,
-    user_division: '<?= $user_division ?>',
-    user_role: '<?= $user_role ?>'
+    customer_registration: <?= json_encode($customer_registration_stats) ?>
 };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -579,20 +534,13 @@ function initializeCustomerRegistrationChart() {
     const ctx = document.getElementById('customerRegistrationChart').getContext('2d');
     const registrationData = dashboardData.customer_registration;
 
-    // Filter data for user's division if not HQ
-    let filteredData = registrationData;
-    if (dashboardData.user_division !== 'HQ' && dashboardData.user_division) {
-        filteredData = {};
-        filteredData[dashboardData.user_division] = registrationData[dashboardData.user_division] || 0;
-    }
-
     new Chart(ctx, {
         type: 'line',
         data: {
-            labels: Object.keys(filteredData),
+            labels: Object.keys(registrationData),
             datasets: [{
                 label: 'Customer Registrations',
-                data: Object.values(filteredData),
+                data: Object.values(registrationData),
                 borderColor: 'rgba(75, 192, 192, 1)',
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
                 tension: 0.4,
@@ -608,9 +556,7 @@ function initializeCustomerRegistrationChart() {
                 },
                 title: {
                     display: true,
-                    text: dashboardData.user_division !== 'HQ' ?
-                          'Customer Registration Trends in Your Division' :
-                          'Customer Registration Trends by Division'
+                    text: 'Customer Registration Trends by Division'
                 }
             },
             scales: {
@@ -645,30 +591,18 @@ function showDetailedReport(type) {
         date_to: '<?= $current_date ?>'
     });
 
-    // Add division filter if user is not from HQ
-    if (dashboardData.user_division && dashboardData.user_division !== 'HQ') {
-        params.append('division', dashboardData.user_division);
-    }
-
-    window.location.href = `${APP_URL}/controller/reports?${params.toString()}`;
+    window.location.href = `${APP_URL}/admin/reports?${params.toString()}`;
 }
 
-function showEntityDetails(entity, status) {
+function showDivisionDetails(division, status) {
     const params = new URLSearchParams({
+        division: division,
         status: status !== 'all' ? status : '',
         date_from: '<?= $current_month_start ?>',
         date_to: '<?= $current_date ?>'
     });
 
-    // Determine if entity is division or department
-    if (dashboardData.user_division === 'HQ' || dashboardData.user_role === 'controller_nodal') {
-        params.append('division', entity);
-    } else {
-        params.append('department', entity);
-        params.append('division', dashboardData.user_division);
-    }
-
-    window.location.href = `${APP_URL}/controller/reports?${params.toString()}`;
+    window.location.href = `${APP_URL}/admin/reports?${params.toString()}`;
 }
 
 function showTerminalDetails(terminal) {
@@ -678,11 +612,7 @@ function showTerminalDetails(terminal) {
         date_to: '<?= $current_date ?>'
     });
 
-    if (dashboardData.user_division && dashboardData.user_division !== 'HQ') {
-        params.append('division', dashboardData.user_division);
-    }
-
-    window.location.href = `${APP_URL}/controller/reports?${params.toString()}`;
+    window.location.href = `${APP_URL}/admin/reports?${params.toString()}`;
 }
 
 function showTypeDetails(type) {
@@ -692,11 +622,7 @@ function showTypeDetails(type) {
         date_to: '<?= $current_date ?>'
     });
 
-    if (dashboardData.user_division && dashboardData.user_division !== 'HQ') {
-        params.append('division', dashboardData.user_division);
-    }
-
-    window.location.href = `${APP_URL}/controller/reports?${params.toString()}`;
+    window.location.href = `${APP_URL}/admin/reports?${params.toString()}`;
 }
 
 async function refreshDashboard() {
@@ -704,7 +630,7 @@ async function refreshDashboard() {
     refreshBtn.classList.add('fa-spin');
 
     try {
-        const response = await fetch(`${APP_URL}/api/controller/dashboard-refresh`, {
+        const response = await fetch(`${APP_URL}/api/admin/dashboard-refresh`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -723,13 +649,12 @@ async function refreshDashboard() {
 }
 
 function exportDivisionReport() {
-    const reportType = dashboardData.user_division === 'HQ' ? 'division-status' : 'department-status';
-    window.location.href = `${APP_URL}/controller/reports/export/${reportType}`;
+    window.location.href = `${APP_URL}/admin/reports/export/division-status`;
 }
 </script>
 
 <style>
-/* Dashboard specific styles - same as admin but with controller-specific colors */
+/* Dashboard specific styles */
 .card-apple {
     background: rgba(255, 255, 255, 0.98);
     border: none;
@@ -834,11 +759,6 @@ function exportDivisionReport() {
     position: relative;
 }
 
-/* Controller-specific styling */
-.border-danger {
-    border-left: 4px solid #dc3545 !important;
-}
-
 /* Responsive design */
 @media (max-width: 768px) {
     .display-4 {
@@ -874,12 +794,6 @@ function exportDivisionReport() {
 
 .counter-animate {
     animation: countUp 0.6s ease;
-}
-
-/* Authority level indicators */
-.display-4 small {
-    font-size: 0.6em;
-    color: var(--bs-secondary);
 }
 </style>
 

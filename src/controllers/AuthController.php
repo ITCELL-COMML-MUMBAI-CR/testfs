@@ -157,7 +157,16 @@ class AuthController extends BaseController {
             $this->redirect(Config::getAppUrl() . '/login');
             return;
         }
-        
+
+        // Check if user needs to change password
+        if (!empty($user['force_password_change'])) {
+            // Store user ID in session for password change verification
+            $this->session->set('force_password_change_user_id', $user['id']);
+            $this->setFlash('info', 'You must change your password before continuing.');
+            $this->redirect(Config::getAppUrl() . '/change-password');
+            return;
+        }
+
         // Login successful
         $this->session->login('user', [
             'id' => $user['id'],
@@ -382,5 +391,98 @@ class AuthController extends BaseController {
     private function sendApprovalRequestToAdmin($customerId, $data) {
         // Implementation for sending approval request to admin
         // This would use the notification service
+    }
+
+    public function showChangePassword() {
+        // Check if there's a valid force password change session
+        $userId = $this->session->get('force_password_change_user_id');
+        if (!$userId) {
+            $this->setFlash('error', 'Access denied. Please login first.');
+            $this->redirect(Config::getAppUrl() . '/login');
+            return;
+        }
+
+        $data = [
+            'page_title' => 'Change Password - SAMPARK',
+            'csrf_token' => $this->session->getCSRFToken()
+        ];
+
+        $this->view('auth/change-password', $data);
+    }
+
+    public function changePassword() {
+        $this->validateCSRF();
+
+        // Check if there's a valid force password change session
+        $userId = $this->session->get('force_password_change_user_id');
+        if (!$userId) {
+            $this->setFlash('error', 'Access denied. Please login first.');
+            $this->redirect(Config::getAppUrl() . '/login');
+            return;
+        }
+
+        $validator = new Validator();
+        $isValid = $validator->validate($_POST, [
+            'current_password' => 'required',
+            'new_password' => 'required|password',
+            'confirm_password' => 'required'
+        ]);
+
+        if (!$isValid) {
+            $this->setFlash('error', 'Please check the form for errors.');
+            $this->setFlash('errors', $validator->getErrors());
+            $this->redirect(Config::getAppUrl() . '/change-password');
+            return;
+        }
+
+        // Check if new passwords match
+        if ($_POST['new_password'] !== $_POST['confirm_password']) {
+            $this->setFlash('error', 'New password and confirmation do not match.');
+            $this->redirect(Config::getAppUrl() . '/change-password');
+            return;
+        }
+
+        // Get user
+        $user = $this->db->fetch("SELECT * FROM users WHERE id = ?", [$userId]);
+        if (!$user) {
+            $this->setFlash('error', 'User not found.');
+            $this->redirect(Config::getAppUrl() . '/login');
+            return;
+        }
+
+        // Verify current password
+        if (!password_verify($_POST['current_password'], $user['password'])) {
+            $this->setFlash('error', 'Current password is incorrect.');
+            $this->redirect(Config::getAppUrl() . '/change-password');
+            return;
+        }
+
+        // Check if new password is different from current password
+        if (password_verify($_POST['new_password'], $user['password'])) {
+            $this->setFlash('error', 'New password must be different from current password.');
+            $this->redirect(Config::getAppUrl() . '/change-password');
+            return;
+        }
+
+        try {
+            // Update password and remove force password change flag
+            $this->db->query(
+                "UPDATE users SET password = ?, force_password_change = 0, updated_at = NOW() WHERE id = ?",
+                [password_hash($_POST['new_password'], PASSWORD_DEFAULT), $userId]
+            );
+
+            // Remove the session variable
+            $this->session->remove('force_password_change_user_id');
+
+            // Log activity
+            $this->logActivity('password_changed', ['user_id' => $userId]);
+
+            $this->setFlash('success', 'Password changed successfully. Please login with your new password.');
+            $this->redirect(Config::getAppUrl() . '/login');
+        } catch (Exception $e) {
+            Config::logError("Password change error: " . $e->getMessage());
+            $this->setFlash('error', 'Failed to change password. Please try again.');
+            $this->redirect(Config::getAppUrl() . '/change-password');
+        }
     }
 }

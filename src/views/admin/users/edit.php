@@ -162,7 +162,7 @@ ob_start();
                                 
                                 <div class="col-md-6">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="forcePasswordChange" name="force_password_change">
+                                        <input class="form-check-input" type="checkbox" id="forcePasswordChange" name="force_password_change" <?= !empty($user_to_edit['force_password_change']) ? 'checked' : '' ?>>
                                         <label class="form-check-label" for="forcePasswordChange">
                                             Force password change on next login
                                         </label>

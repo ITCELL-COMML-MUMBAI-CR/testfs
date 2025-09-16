@@ -534,38 +534,27 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeDataTables() {
-    // Destroy existing DataTable instances first
-    $('table[id*="Table"]').each(function() {
-        if ($.fn.DataTable.isDataTable(this)) {
-            $(this).DataTable().destroy();
-        }
-    });
-
     const tableId = '#' + reportData.current_view + 'Table';
     const table = $(tableId);
 
-    if (table.length && table.is(':visible')) {
-        try {
-            table.DataTable({
-                pageLength: 25,
-                lengthMenu: [10, 25, 50, 100],
-                responsive: true,
-                dom: '<"top"lf>rt<"bottom"ip><"clear">',
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Search records..."
-                },
-                order: [[1, 'desc']], // Default order by first sortable column
-                columnDefs: [
-                    {
-                        targets: 'no-sort',
-                        orderable: false
-                    }
-                ]
-            });
-        } catch (error) {
-            console.error('DataTables initialization error:', error);
-        }
+    if (table.length) {
+        table.DataTable({
+            pageLength: 25,
+            lengthMenu: [10, 25, 50, 100],
+            responsive: true,
+            dom: '<"top"lf>rt<"bottom"ip><"clear">',
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search records..."
+            },
+            order: [[1, 'desc']], // Default order by first sortable column
+            columnDefs: [
+                {
+                    targets: 'no-sort',
+                    orderable: false
+                }
+            ]
+        });
     }
 }
 
@@ -587,8 +576,12 @@ function setupColumnSelector() {
             {id: 'fnr_number', label: 'FNR No', default: true},
             {id: 'description', label: 'Description', default: true},
             {id: 'action_taken', label: 'Action Taken', default: true},
-            {id: 'status', label: 'Status', default: true},
-            {id: 'priority', label: 'Priority', default: true}
+            {id: 'status', label: 'Status', default: false},
+            {id: 'priority', label: 'Priority', default: false},
+            {id: 'division', label: 'Division', default: false},
+            {id: 'department', label: 'Department', default: false},
+            {id: 'customer_email', label: 'Customer Email', default: false},
+            {id: 'rating', label: 'Rating', default: false}
         ],
         transactions: [
             {id: 'serial', label: 'Serial No.', default: true},
@@ -638,18 +631,11 @@ function setupColumnSelector() {
 }
 
 function toggleColumn(columnId, show) {
-    const tableElement = $('#' + reportData.current_view + 'Table');
-    if (tableElement.length && $.fn.DataTable.isDataTable(tableElement[0])) {
-        try {
-            const table = tableElement.DataTable();
-            const columnIndex = getColumnIndex(columnId);
+    const table = $('#' + reportData.current_view + 'Table').DataTable();
+    const columnIndex = getColumnIndex(columnId);
 
-            if (columnIndex !== -1) {
-                table.column(columnIndex).visible(show);
-            }
-        } catch (error) {
-            console.error('Error toggling column:', error);
-        }
+    if (columnIndex !== -1) {
+        table.column(columnIndex).visible(show);
     }
 }
 

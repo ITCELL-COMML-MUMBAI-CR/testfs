@@ -1,8 +1,8 @@
 <?php
 /**
- * New Detailed Reports Page - SAMPARK
+ * New Controller Reports Page - SAMPARK
  * Implementation based on prompt.md specifications
- * Advanced filtering, sorting, and data view capabilities
+ * Advanced filtering, sorting, and data view capabilities for controllers
  */
 
 // Capture the content
@@ -16,10 +16,12 @@ $date_to = $_GET['date_to'] ?? date('Y-m-t');
 $division_filter = $_GET['division'] ?? '';
 $status_filter = $_GET['status'] ?? '';
 $priority_filter = $_GET['priority'] ?? '';
+$department_filter = $_GET['department'] ?? '';
 
 // User info
-$user_division = $user['division'] ?? 'HQ';
+$user_division = $user['division'] ?? '';
 $user_department = $user['department'] ?? '';
+$user_role = $user['role'] ?? 'controller';
 
 // Initialize data arrays
 $report_data = $report_data ?? [];
@@ -48,7 +50,12 @@ $status_legend = [
                     </div>
                     <div>
                         <h1 class="h3 mb-1 fw-semibold">Detailed Reports</h1>
-                        <p class="text-muted mb-0">An In-depth Analysis Tool for comprehensive data exploration</p>
+                        <p class="text-muted mb-0">
+                            An In-depth Analysis Tool for comprehensive data exploration
+                            <?php if ($user_division): ?>
+                                - <?= htmlspecialchars($user_division) ?> Division
+                            <?php endif; ?>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -107,11 +114,11 @@ $status_legend = [
                         <div class="mt-3">
                             <small class="text-muted">
                                 <?php if ($current_view === 'complaints'): ?>
-                                    <strong>Complaints:</strong> Exhaustive list of every complaint with joined customer and terminal details
+                                    <strong>Complaints:</strong> Exhaustive list of complaints assigned to your division/department with customer and terminal details
                                 <?php elseif ($current_view === 'transactions'): ?>
-                                    <strong>Transactions:</strong> Log of every action related to complaints (status updates, assignments, remarks)
+                                    <strong>Transactions:</strong> Log of every action related to complaints in your division (status updates, assignments, remarks)
                                 <?php else: ?>
-                                    <strong>Customers:</strong> Complete list of all registered customers with contact details and registration info
+                                    <strong>Customers:</strong> Complete list of customers registered in your division with contact details
                                 <?php endif; ?>
                             </small>
                         </div>
@@ -162,19 +169,34 @@ $status_legend = [
                                     <input type="date" class="form-control-apple" name="date_to" value="<?= $date_to ?>">
                                 </div>
 
+                                <!-- Division filter (for nodal controllers) -->
+                                <?php if ($user_role === 'controller_nodal'): ?>
                                 <div class="col-md-2">
                                     <label class="form-label-apple">Division Filter</label>
                                     <select class="form-control-apple" name="division">
-                                        <option value="">All Divisions</option>
-                                        <?php if ($user_division === 'HQ'): ?>
-                                            <option value="Northern" <?= $division_filter === 'Northern' ? 'selected' : '' ?>>Northern</option>
-                                            <option value="Southern" <?= $division_filter === 'Southern' ? 'selected' : '' ?>>Southern</option>
-                                            <option value="Eastern" <?= $division_filter === 'Eastern' ? 'selected' : '' ?>>Eastern</option>
-                                            <option value="Western" <?= $division_filter === 'Western' ? 'selected' : '' ?>>Western</option>
-                                            <option value="Central" <?= $division_filter === 'Central' ? 'selected' : '' ?>>Central</option>
-                                        <?php else: ?>
-                                            <option value="<?= htmlspecialchars($user_division) ?>" selected><?= htmlspecialchars($user_division) ?></option>
+                                        <option value="">All Under Your Control</option>
+                                        <?php if ($user_division): ?>
+                                            <option value="<?= htmlspecialchars($user_division) ?>"
+                                                    <?= $division_filter === $user_division ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($user_division) ?>
+                                            </option>
                                         <?php endif; ?>
+                                    </select>
+                                </div>
+                                <?php endif; ?>
+
+                                <!-- Department filter -->
+                                <div class="col-md-2">
+                                    <label class="form-label-apple">Department Filter</label>
+                                    <select class="form-control-apple" name="department">
+                                        <option value="">All Departments</option>
+                                        <?php if ($user_department): ?>
+                                            <option value="<?= htmlspecialchars($user_department) ?>"
+                                                    <?= $department_filter === $user_department ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($user_department) ?>
+                                            </option>
+                                        <?php endif; ?>
+                                        <!-- Additional departments under user's control would be loaded here -->
                                     </select>
                                 </div>
 
@@ -208,15 +230,23 @@ $status_legend = [
                                     <label class="form-label-apple">Registration Division Filter</label>
                                     <select class="form-control-apple" name="division">
                                         <option value="">All Divisions</option>
-                                        <?php if ($user_division === 'HQ'): ?>
-                                            <option value="Northern" <?= $division_filter === 'Northern' ? 'selected' : '' ?>>Northern</option>
-                                            <option value="Southern" <?= $division_filter === 'Southern' ? 'selected' : '' ?>>Southern</option>
-                                            <option value="Eastern" <?= $division_filter === 'Eastern' ? 'selected' : '' ?>>Eastern</option>
-                                            <option value="Western" <?= $division_filter === 'Western' ? 'selected' : '' ?>>Western</option>
-                                            <option value="Central" <?= $division_filter === 'Central' ? 'selected' : '' ?>>Central</option>
-                                        <?php else: ?>
-                                            <option value="<?= htmlspecialchars($user_division) ?>" selected><?= htmlspecialchars($user_division) ?></option>
+                                        <?php if ($user_division): ?>
+                                            <option value="<?= htmlspecialchars($user_division) ?>"
+                                                    <?= $division_filter === $user_division ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($user_division) ?>
+                                            </option>
                                         <?php endif; ?>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label class="form-label-apple">Customer Status</label>
+                                    <select class="form-control-apple" name="customer_status">
+                                        <option value="">All Statuses</option>
+                                        <option value="approved">Approved</option>
+                                        <option value="pending">Pending Approval</option>
+                                        <option value="rejected">Rejected</option>
+                                        <option value="suspended">Suspended</option>
                                     </select>
                                 </div>
                             </div>
@@ -251,6 +281,21 @@ $status_legend = [
         </div>
         <?php endif; ?>
 
+        <!-- Access Level Info -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="alert alert-info py-2">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Access Level:</strong>
+                    <?php if ($user_role === 'controller_nodal'): ?>
+                        You have access to all complaints in <?= htmlspecialchars($user_division) ?> Division
+                    <?php else: ?>
+                        You have access to complaints assigned to <?= htmlspecialchars($user_department) ?> Department, <?= htmlspecialchars($user_division) ?> Division
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
         <!-- Table Functionality and Content -->
         <div class="row">
             <div class="col-12">
@@ -271,6 +316,9 @@ $status_legend = [
                                     break;
                             }
                             ?>
+                            <small class="text-muted">
+                                (Showing <?= count($current_view === 'complaints' ? $complaints_data : ($current_view === 'transactions' ? $transactions_data : $customers_data)) ?> records)
+                            </small>
                         </h5>
 
                         <!-- Column Customization -->
@@ -304,12 +352,13 @@ $status_legend = [
                                             <th class="border-0 action-col">Action Taken</th>
                                             <th class="border-0">Status</th>
                                             <th class="border-0">Priority</th>
+                                            <th class="border-0">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if (empty($complaints_data)): ?>
                                         <tr>
-                                            <td colspan="13" class="text-center py-5">
+                                            <td colspan="14" class="text-center py-5">
                                                 <div class="text-muted">
                                                     <i class="fas fa-search fa-2x mb-3"></i>
                                                     <h5>No complaints found</h5>
@@ -329,6 +378,9 @@ $status_legend = [
                                                     <span class="<?= $complaint['duration_hours'] > 48 ? 'text-danger fw-bold' : 'text-muted' ?>">
                                                         <?= $complaint['duration_hours'] ?>h
                                                     </span>
+                                                    <?php if ($complaint['duration_hours'] > 48): ?>
+                                                        <i class="fas fa-exclamation-triangle text-danger ms-1" title="Overdue"></i>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td><?= htmlspecialchars($complaint['shed_name'] ?? 'N/A') ?></td>
                                                 <td>
@@ -371,6 +423,22 @@ $status_legend = [
                                                         <?= ucfirst($complaint['priority']) ?>
                                                     </span>
                                                 </td>
+                                                <td>
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-primary btn-sm"
+                                                                onclick="event.stopPropagation(); viewComplaintDetails('<?= $complaint['complaint_id'] ?>')"
+                                                                title="View Details">
+                                                            <i class="fas fa-eye"></i>
+                                                        </button>
+                                                        <?php if ($complaint['status'] !== 'closed'): ?>
+                                                        <button class="btn btn-outline-success btn-sm"
+                                                                onclick="event.stopPropagation(); quickReply('<?= $complaint['complaint_id'] ?>')"
+                                                                title="Quick Reply">
+                                                            <i class="fas fa-reply"></i>
+                                                        </button>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </td>
                                             </tr>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
@@ -411,7 +479,7 @@ $status_legend = [
                                                 <td><?= $index + 1 ?></td>
                                                 <td class="fw-semibold text-primary"><?= htmlspecialchars($transaction['transaction_id']) ?></td>
                                                 <td>
-                                                    <a href="#" onclick="viewComplaintDetails('<?= $transaction['complaint_id'] ?>')" class="text-decoration-none">
+                                                    <a href="#" onclick="event.stopPropagation(); viewComplaintDetails('<?= $transaction['complaint_id'] ?>')" class="text-decoration-none">
                                                         <?= htmlspecialchars($transaction['complaint_id']) ?>
                                                     </a>
                                                 </td>
@@ -462,12 +530,13 @@ $status_legend = [
                                             <th class="border-0">Division</th>
                                             <th class="border-0">Status</th>
                                             <th class="border-0">Registration Date</th>
+                                            <th class="border-0">Total Complaints</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <?php if (empty($customers_data)): ?>
                                         <tr>
-                                            <td colspan="10" class="text-center py-5">
+                                            <td colspan="11" class="text-center py-5">
                                                 <div class="text-muted">
                                                     <i class="fas fa-users fa-2x mb-3"></i>
                                                     <h5>No customers found</h5>
@@ -504,6 +573,11 @@ $status_legend = [
                                                     </span>
                                                 </td>
                                                 <td><?= date('M d, Y', strtotime($customer['created_at'])) ?></td>
+                                                <td>
+                                                    <span class="badge bg-primary">
+                                                        <?= $customer['total_complaints'] ?? 0 ?>
+                                                    </span>
+                                                </td>
                                             </tr>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
@@ -519,53 +593,90 @@ $status_legend = [
     </div>
 </section>
 
+<!-- Quick Reply Modal -->
+<div class="modal fade" id="quickReplyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Reply - Ticket #<span id="replyTicketId"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="quickReplyForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label-apple">Reply Message</label>
+                        <textarea class="form-control-apple" name="reply" rows="4" required
+                                  placeholder="Enter your reply to the customer..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-apple">Action Taken</label>
+                        <textarea class="form-control-apple" name="action_taken" rows="3" required
+                                  placeholder="Describe the action taken to resolve this issue..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-apple">Status Update</label>
+                        <select class="form-control-apple" name="new_status" required>
+                            <option value="">Select Status</option>
+                            <option value="awaiting_feedback">Awaiting Customer Feedback</option>
+                            <option value="awaiting_info">Awaiting Additional Information</option>
+                            <option value="closed">Resolve and Close</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-apple-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-apple-primary">
+                        <i class="fas fa-paper-plane me-2"></i>Send Reply & Update
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 // Report data and functionality
 const reportData = {
     current_view: '<?= $current_view ?>',
     available_columns: <?= json_encode($available_columns) ?>,
-    user_division: '<?= $user_division ?>'
+    user_division: '<?= $user_division ?>',
+    user_role: '<?= $user_role ?>'
 };
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeDataTables();
     setupColumnSelector();
     setupRowClickHandlers();
+    setupQuickReplyModal();
 });
 
 function initializeDataTables() {
-    // Destroy existing DataTable instances first
-    $('table[id*="Table"]').each(function() {
-        if ($.fn.DataTable.isDataTable(this)) {
-            $(this).DataTable().destroy();
-        }
-    });
-
     const tableId = '#' + reportData.current_view + 'Table';
     const table = $(tableId);
 
-    if (table.length && table.is(':visible')) {
-        try {
-            table.DataTable({
-                pageLength: 25,
-                lengthMenu: [10, 25, 50, 100],
-                responsive: true,
-                dom: '<"top"lf>rt<"bottom"ip><"clear">',
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Search records..."
+    if (table.length) {
+        table.DataTable({
+            pageLength: 25,
+            lengthMenu: [10, 25, 50, 100],
+            responsive: true,
+            dom: '<"top"lf>rt<"bottom"ip><"clear">',
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search records..."
+            },
+            order: [[1, 'desc']], // Default order by first sortable column
+            columnDefs: [
+                {
+                    targets: 'no-sort',
+                    orderable: false
                 },
-                order: [[1, 'desc']], // Default order by first sortable column
-                columnDefs: [
-                    {
-                        targets: 'no-sort',
-                        orderable: false
-                    }
-                ]
-            });
-        } catch (error) {
-            console.error('DataTables initialization error:', error);
-        }
+                {
+                    targets: -1, // Last column (Actions)
+                    orderable: false,
+                    searchable: false
+                }
+            ]
+        });
     }
 }
 
@@ -588,7 +699,12 @@ function setupColumnSelector() {
             {id: 'description', label: 'Description', default: true},
             {id: 'action_taken', label: 'Action Taken', default: true},
             {id: 'status', label: 'Status', default: true},
-            {id: 'priority', label: 'Priority', default: true}
+            {id: 'priority', label: 'Priority', default: true},
+            {id: 'actions', label: 'Actions', default: true},
+            {id: 'division', label: 'Division', default: false},
+            {id: 'department', label: 'Department', default: false},
+            {id: 'customer_email', label: 'Customer Email', default: false},
+            {id: 'rating', label: 'Rating', default: false}
         ],
         transactions: [
             {id: 'serial', label: 'Serial No.', default: true},
@@ -613,6 +729,7 @@ function setupColumnSelector() {
             {id: 'division', label: 'Division', default: true},
             {id: 'status', label: 'Status', default: true},
             {id: 'created_at', label: 'Registration Date', default: true},
+            {id: 'total_complaints', label: 'Total Complaints', default: true},
             {id: 'designation', label: 'Designation', default: false},
             {id: 'gstin', label: 'GSTIN', default: false},
             {id: 'zone', label: 'Zone', default: false}
@@ -638,18 +755,11 @@ function setupColumnSelector() {
 }
 
 function toggleColumn(columnId, show) {
-    const tableElement = $('#' + reportData.current_view + 'Table');
-    if (tableElement.length && $.fn.DataTable.isDataTable(tableElement[0])) {
-        try {
-            const table = tableElement.DataTable();
-            const columnIndex = getColumnIndex(columnId);
+    const table = $('#' + reportData.current_view + 'Table').DataTable();
+    const columnIndex = getColumnIndex(columnId);
 
-            if (columnIndex !== -1) {
-                table.column(columnIndex).visible(show);
-            }
-        } catch (error) {
-            console.error('Error toggling column:', error);
-        }
+    if (columnIndex !== -1) {
+        table.column(columnIndex).visible(show);
     }
 }
 
@@ -670,6 +780,7 @@ function changeDataView(view) {
         url.searchParams.delete('date_from');
         url.searchParams.delete('date_to');
         url.searchParams.delete('sort');
+        url.searchParams.delete('department');
     }
 
     window.location.href = url.toString();
@@ -689,7 +800,7 @@ function exportData(format) {
     // Create temporary form for download
     const downloadForm = document.createElement('form');
     downloadForm.method = 'POST';
-    downloadForm.action = `${APP_URL}/admin/reports/export`;
+    downloadForm.action = `${APP_URL}/controller/reports/export`;
     downloadForm.style.display = 'none';
 
     // Add CSRF token
@@ -714,7 +825,7 @@ function exportData(format) {
 }
 
 function viewComplaintDetails(complaintId) {
-    window.location.href = `${APP_URL}/admin/tickets/${complaintId}`;
+    window.location.href = `${APP_URL}/controller/tickets/${complaintId}`;
 }
 
 function viewTransactionDetails(transactionId) {
@@ -723,14 +834,50 @@ function viewTransactionDetails(transactionId) {
 }
 
 function viewCustomerDetails(customerId) {
-    window.location.href = `${APP_URL}/admin/customers/${customerId}`;
+    window.location.href = `${APP_URL}/controller/customers/${customerId}`;
+}
+
+function quickReply(complaintId) {
+    document.getElementById('replyTicketId').textContent = complaintId;
+    document.getElementById('quickReplyForm').dataset.complaintId = complaintId;
+    new bootstrap.Modal(document.getElementById('quickReplyModal')).show();
+}
+
+function setupQuickReplyModal() {
+    document.getElementById('quickReplyForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const complaintId = this.dataset.complaintId;
+        const formData = new FormData(this);
+        formData.append('csrf_token', CSRF_TOKEN);
+
+        try {
+            const response = await fetch(`${APP_URL}/controller/tickets/${complaintId}/reply`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                Swal.fire('Success', result.message, 'success').then(() => {
+                    bootstrap.Modal.getInstance(document.getElementById('quickReplyModal')).hide();
+                    location.reload(); // Refresh to show updated data
+                });
+            } else {
+                Swal.fire('Error', result.message, 'error');
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Failed to send reply', 'error');
+        }
+    });
 }
 
 function scheduleReport() {
     // Implementation for report scheduling
     Swal.fire({
         title: 'Schedule Report',
-        text: 'Report scheduling feature coming soon',
+        text: 'Report scheduling feature for your division data coming soon',
         icon: 'info'
     });
 }
@@ -749,7 +896,7 @@ function setupRowClickHandlers() {
 </script>
 
 <style>
-/* Detailed Reports specific styles */
+/* Controller Reports specific styles */
 .card-apple {
     background: rgba(255, 255, 255, 0.98);
     border: none;
@@ -836,16 +983,59 @@ function setupRowClickHandlers() {
     padding: 0.35em 0.65em;
 }
 
+/* Controller-specific styling */
+.alert-info {
+    background-color: rgba(13, 202, 240, 0.1);
+    border-color: rgba(13, 202, 240, 0.2);
+    color: #055160;
+}
+
+/* Quick Reply Modal */
+.modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border-bottom: 1px solid #eee;
+    padding: 1.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #eee;
+    padding: 1rem 1.5rem;
+}
+
+/* Action buttons in table */
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.775rem;
+}
+
+/* Access level alert */
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
 /* Column selector dropdown */
 .dropdown-menu {
     max-height: 300px;
     overflow-y: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .dropdown-item label {
     margin-bottom: 0;
     cursor: pointer;
     width: 100%;
+    padding: 0.25rem 0;
 }
 
 /* Table responsive improvements */
@@ -858,6 +1048,7 @@ function setupRowClickHandlers() {
     font-size: 0.875rem;
     border-bottom: 2px solid #dee2e6;
     white-space: nowrap;
+    background-color: #f8f9fa;
 }
 
 .table td {
@@ -909,6 +1100,11 @@ function setupRowClickHandlers() {
     .remarks-text {
         max-width: 130px;
     }
+
+    .btn-group-sm .btn {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+    }
 }
 
 /* Print styles */
@@ -916,7 +1112,8 @@ function setupRowClickHandlers() {
     .card-header,
     .btn, .btn-group,
     .dropdown,
-    #reportFilters {
+    #reportFilters,
+    .alert {
         display: none !important;
     }
 
