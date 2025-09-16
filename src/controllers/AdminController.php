@@ -32,7 +32,6 @@ class AdminController extends BaseController
             'total_complaints' => $systemStats['total_tickets'] ?? 0,
             'pending_complaints' => $systemStats['open_tickets'] ?? 0,
             'closed_complaints' => $systemStats['closed_tickets'] ?? 0,
-            'sla_breached' => $this->getSLAViolationsCount(),
             'registered_customers' => $systemStats['total_customers'] ?? 0
         ];
 
@@ -2699,19 +2698,6 @@ class AdminController extends BaseController
     {
         $alerts = [];
 
-        // Check for SLA violations
-        $slaViolations = $this->db->fetch(
-            "SELECT COUNT(*) as count FROM complaints 
-             WHERE sla_deadline IS NOT NULL AND NOW() > sla_deadline AND status != 'closed'"
-        )['count'];
-
-        if ($slaViolations > 0) {
-            $alerts[] = [
-                'type' => 'warning',
-                'message' => "{$slaViolations} tickets have SLA violations",
-                'action_url' => '/admin/reports?type=sla'
-            ];
-        }
 
         // Check for pending customer approvals
         $pendingApprovals = $this->db->fetch(
@@ -2894,7 +2880,6 @@ class AdminController extends BaseController
                 'ticket_created' => 'Ticket Created',
                 'ticket_updated' => 'Ticket Updated',
                 'ticket_resolved' => 'Ticket Resolved',
-                'sla_warning' => 'SLA Warning',
                 'announcement' => 'System Announcement'
             ],
             'csrf_token' => $this->session->getCSRFToken()
@@ -3254,14 +3239,7 @@ class AdminController extends BaseController
                     s.name as shed_name, s.shed_code,
                     cust.name as customer_name, cust.email as customer_email,
                     cust.mobile as customer_mobile, cust.company_name,
-                    TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
-                    (CASE
-                        WHEN c.priority = 'critical' AND TIMESTAMPDIFF(HOUR, c.created_at, NOW()) > 4 THEN 1
-                        WHEN c.priority = 'high' AND TIMESTAMPDIFF(HOUR, c.created_at, NOW()) > 24 THEN 1
-                        WHEN c.priority = 'medium' AND TIMESTAMPDIFF(HOUR, c.created_at, NOW()) > 72 THEN 1
-                        WHEN c.priority = 'normal' AND TIMESTAMPDIFF(HOUR, c.created_at, NOW()) > 168 THEN 1
-                        ELSE 0
-                    END) as is_sla_violated
+                    TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed
             FROM complaints c
             LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
             LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -3849,18 +3827,6 @@ class AdminController extends BaseController
 
     // Helper methods for dashboard data
 
-    private function getSLAViolationsCount()
-    {
-        try {
-            $result = $this->db->fetch(
-                "SELECT COUNT(*) as count FROM complaints
-                 WHERE sla_deadline IS NOT NULL AND NOW() > sla_deadline AND status != 'closed'"
-            );
-            return $result['count'] ?? 0;
-        } catch (Exception $e) {
-            return 0;
-        }
-    }
 
     private function getDivisionStatusCount($division, $status)
     {

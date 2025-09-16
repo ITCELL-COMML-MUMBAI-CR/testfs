@@ -90,45 +90,24 @@ class WorkflowEngine {
     }
     
     /**
-     * Auto-escalate tickets based on SLA rules
+     * Auto-escalate tickets based on priority time rules
      */
     public function processAutoEscalation() {
         try {
             $escalatedTickets = [];
-            
-            // Get tickets that need escalation
-            $sql = "SELECT c.*, sla.escalation_hours, sla.resolution_hours,
-                           cat.category, cat.type, cat.subtype,
-                           cust.name as customer_name, cust.email as customer_email,
-                           NULL as assigned_user_name, NULL as assigned_user_email
-                    FROM complaints c
-                    LEFT JOIN sla_definitions sla ON c.priority = sla.priority_level
-                    LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
-                    LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                    WHERE c.status NOT IN ('closed') 
-                      AND c.escalated_at IS NULL
-                      AND sla.escalation_hours IS NOT NULL
-                      AND TIMESTAMPDIFF(HOUR, c.created_at, NOW()) >= sla.escalation_hours";
-            
-            $ticketsToEscalate = $this->db->fetchAll($sql);
-            
-            foreach ($ticketsToEscalate as $ticket) {
-                $escalationResult = $this->escalateTicket($ticket);
-                if ($escalationResult['success']) {
-                    $escalatedTickets[] = $ticket['complaint_id'];
-                }
+
+            // Process priority escalation based on time rules
+            $priorityResult = $this->processPriorityEscalation();
+            if ($priorityResult['success']) {
+                $escalatedTickets = array_merge($escalatedTickets, $priorityResult['escalated_tickets']);
             }
-            
-            // Check for SLA violations
-            $violatedTickets = $this->processSLAViolations();
-            
+
             return [
                 'success' => true,
                 'escalated_tickets' => $escalatedTickets,
-                'sla_violations' => $violatedTickets,
-                'total_processed' => count($escalatedTickets) + count($violatedTickets)
+                'total_processed' => count($escalatedTickets)
             ];
-            
+
         } catch (Exception $e) {
             error_log("Auto-escalation error: " . $e->getMessage());
             return [
@@ -185,6 +164,7 @@ class WorkflowEngine {
             $escalatedTickets = [];
             
             // Get tickets that need priority escalation (per requirements)
+            // Normal 0-3 hrs, Medium 3-12 hrs, High 12-24 hrs, Critical 24+ hrs
             $priorityRules = [
                 'normal' => ['hours' => 3, 'escalate_to' => 'medium'],
                 'medium' => ['hours' => 12, 'escalate_to' => 'high'],
@@ -578,8 +558,6 @@ class WorkflowEngine {
             
             $this->db->query($sql, [$newPriority, $ticket['complaint_id']]);
             
-            // Update SLA deadline based on new priority
-            $this->updateSLADeadline($ticket['complaint_id'], $newPriority);
             
             // Send priority escalation notifications
             $this->sendPriorityEscalationNotifications($ticket, $newPriority);
@@ -619,33 +597,6 @@ class WorkflowEngine {
         }
     }
     
-    /**
-     * Process SLA violations
-     */
-    private function processSLAViolations() {
-        $violatedTickets = [];
-        
-        // Get tickets with SLA violations
-        $sql = "SELECT c.*, sla.resolution_hours,
-                       cust.name as customer_name, cust.email as customer_email,
-                       NULL as assigned_user_name, NULL as assigned_user_email
-                FROM complaints c
-                LEFT JOIN sla_definitions sla ON c.priority = sla.priority_level
-                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                WHERE c.status NOT IN ('closed') 
-                  AND c.sla_deadline IS NOT NULL
-                  AND NOW() > c.sla_deadline";
-        
-        $violations = $this->db->fetchAll($sql);
-        
-        foreach ($violations as $ticket) {
-            // Send SLA violation notification
-            $this->sendSLAViolationNotification($ticket);
-            $violatedTickets[] = $ticket['complaint_id'];
-        }
-        
-        return $violatedTickets;
-    }
     
     /**
      * Get ticket details
@@ -709,10 +660,6 @@ class WorkflowEngine {
      * Process automated actions
      */
     private function processAutomatedActions($ticket, $newStatus, $action) {
-        // Set SLA deadline for new tickets
-        if ($newStatus === 'pending' && $action === 'assign') {
-            $this->updateSLADeadline($ticket['complaint_id'], $ticket['priority']);
-        }
         
         // Auto-assign based on rules
         if ($newStatus === 'pending' && empty($ticket['assigned_to_department'])) {
@@ -774,23 +721,6 @@ class WorkflowEngine {
         return false;
     }
     
-    /**
-     * Update SLA deadline
-     */
-    private function updateSLADeadline($complaintId, $priority) {
-        $slaInfo = $this->db->fetch(
-            "SELECT resolution_hours FROM sla_definitions WHERE priority_level = ? AND is_active = 1",
-            [$priority]
-        );
-        
-        if ($slaInfo) {
-            $deadline = date('Y-m-d H:i:s', strtotime("+{$slaInfo['resolution_hours']} hours"));
-            $this->db->query(
-                "UPDATE complaints SET sla_deadline = ? WHERE complaint_id = ?",
-                [$deadline, $complaintId]
-            );
-        }
-    }
     
     /**
      * Find auto-assignment for ticket
@@ -851,7 +781,7 @@ class WorkflowEngine {
         $data = [
             'complaint_id' => $ticket['complaint_id'],
             'customer_name' => $ticket['customer_name'],
-            'escalation_reason' => 'SLA deadline exceeded'
+            'escalation_reason' => 'Automatic priority escalation'
         ];
         
         $this->notificationService->send('ticket_escalated', $recipients, $data);
@@ -883,12 +813,6 @@ class WorkflowEngine {
         $this->notificationService->send('ticket_auto_closed', [$recipient], $data);
     }
     
-    /**
-     * Send SLA violation notification
-     */
-    private function sendSLAViolationNotification($ticket) {
-        // Send to management and nodal controllers
-    }
     
     /**
      * Get system setting

@@ -126,25 +126,6 @@ $customer_registration_stats = $customer_registration_stats ?? [];
                 </div>
             </div>
 
-            <!-- SLA Breached Complaints -->
-            <div class="col-sm-6 col-lg-3">
-                <div class="card-apple h-100 clickable-card border-danger"
-                     onclick="showDetailedReport('sla_breached')">
-                    <div class="card-body text-center">
-                        <div class="icon-wrapper mb-3">
-                            <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
-                        </div>
-                        <div class="display-5 fw-light text-danger mb-2" id="slaBreachedComplaints">
-                            <?= number_format($overview_stats['sla_breached'] ?? 0) ?>
-                        </div>
-                        <h6 class="text-muted mb-0">SLA Breached Complaints</h6>
-                        <small class="text-danger">
-                            <i class="fas fa-exclamation-circle me-1"></i>
-                            Immediate Attention
-                        </small>
-                    </div>
-                </div>
-            </div>
 
             <!-- Total Registered Customers -->
             <div class="col-sm-6 col-lg-3">

@@ -16,7 +16,7 @@ class ComplaintModel extends BaseModel {
         'rating', 'rating_remarks', 'description', 'action_taken', 'status',
         'department', 'division', 'zone', 'customer_id', 'fnr_number',
         'gstin_number', 'e_indent_number', 'assigned_to_user_id',
-        'assigned_to_department', 'forwarded_flag', 'priority', 'sla_deadline'
+        'assigned_to_department', 'forwarded_flag', 'priority'
     ];
     
     /**
@@ -30,11 +30,7 @@ class ComplaintModel extends BaseModel {
                        cust.name as customer_name, cust.email as customer_email,
                        cust.mobile as customer_mobile, cust.company_name,
                        u.name as assigned_user_name, u.role as assigned_user_role,
-                       TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
-                       CASE 
-                           WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
-                           ELSE 0
-                       END as is_sla_violated
+                       TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -164,11 +160,7 @@ class ComplaintModel extends BaseModel {
                        s.name as shed_name, s.shed_code,
                        cust.name as customer_name, cust.company_name,
                        u.name as assigned_user_name,
-                       TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
-                       CASE 
-                           WHEN c.sla_deadline IS NOT NULL AND NOW() > c.sla_deadline THEN 1
-                           ELSE 0
-                       END as is_sla_violated
+                       TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -225,79 +217,13 @@ class ComplaintModel extends BaseModel {
                     SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
                     SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed,
                     SUM(CASE WHEN priority IN ('high', 'critical') AND status != 'closed' THEN 1 ELSE 0 END) as high_priority_count,
-                    SUM(CASE WHEN sla_deadline IS NOT NULL AND NOW() > sla_deadline AND status != 'closed' THEN 1 ELSE 0 END) as sla_violations,
                     SUM(CASE WHEN escalated_at IS NOT NULL THEN 1 ELSE 0 END) as escalated
                 FROM complaints {$whereClause}";
         
         return $this->fetch($sql, $params);
     }
     
-    /**
-     * Get tickets approaching SLA deadline
-     */
-    public function getTicketsApproachingSLA($hoursThreshold = 4, $division = null) {
-        $conditions = [
-            "status NOT IN ('closed')",
-            "sla_deadline IS NOT NULL",
-            "sla_deadline > NOW()",
-            "TIMESTAMPDIFF(HOUR, NOW(), sla_deadline) <= ?"
-        ];
-        $params = [$hoursThreshold];
-        
-        if ($division) {
-            $conditions[] = 'division = ?';
-            $params[] = $division;
-        }
-        
-        $whereClause = implode(' AND ', $conditions);
-        
-        $sql = "SELECT complaint_id, priority, sla_deadline, division,
-                       cat.category, cat.subtype,
-                       cust.name as customer_name,
-                       u.name as assigned_user_name,
-                       TIMESTAMPDIFF(HOUR, NOW(), sla_deadline) as hours_remaining
-                FROM complaints c
-                LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
-                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                LEFT JOIN users u ON c.assigned_to_user_id = u.id
-                WHERE {$whereClause}
-                ORDER BY sla_deadline ASC";
-        
-        return $this->fetchAll($sql, $params);
-    }
     
-    /**
-     * Get SLA violations
-     */
-    public function getSLAViolations($division = null) {
-        $conditions = [
-            "status NOT IN ('closed')",
-            "sla_deadline IS NOT NULL",
-            "NOW() > sla_deadline"
-        ];
-        $params = [];
-        
-        if ($division) {
-            $conditions[] = 'division = ?';
-            $params[] = $division;
-        }
-        
-        $whereClause = implode(' AND ', $conditions);
-        
-        $sql = "SELECT complaint_id, priority, sla_deadline, division,
-                       cat.category, cat.subtype,
-                       cust.name as customer_name,
-                       u.name as assigned_user_name,
-                       TIMESTAMPDIFF(HOUR, sla_deadline, NOW()) as hours_overdue
-                FROM complaints c
-                LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
-                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                LEFT JOIN users u ON c.assigned_to_user_id = u.id
-                WHERE {$whereClause}
-                ORDER BY hours_overdue DESC";
-        
-        return $this->fetchAll($sql, $params);
-    }
     
     /**
      * Get customer satisfaction metrics
@@ -409,7 +335,6 @@ class ComplaintModel extends BaseModel {
                     COUNT(*) as total_handled,
                     SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as resolved,
                     AVG(CASE WHEN status = 'closed' THEN TIMESTAMPDIFF(HOUR, created_at, closed_at) END) as avg_resolution_hours,
-                    SUM(CASE WHEN status = 'closed' AND closed_at <= sla_deadline THEN 1 ELSE 0 END) as met_sla,
                     SUM(CASE WHEN status = 'closed' AND rating = 'excellent' THEN 1 ELSE 0 END) as excellent_ratings,
                     SUM(CASE WHEN escalated_at IS NOT NULL THEN 1 ELSE 0 END) as escalations
                 FROM complaints {$whereClause}";

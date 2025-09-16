@@ -88,10 +88,6 @@ $page_title = 'Support Hub - SAMPARK';
                         <div class="bg-danger bg-opacity-10 rounded-3 p-3 me-3">
                             <i class="fas fa-clock text-danger fa-lg"></i>
                         </div>
-                        <div>
-                            <div class="text-muted small">SLA Violations</div>
-                            <div class="h4 mb-0 fw-semibold" id="slaViolationCount" data-stat="sla_violations">0</div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -241,7 +237,6 @@ $page_title = 'Support Hub - SAMPARK';
                             <th class="border-0" style="width: 160px;">Assigned To</th>
                             <th class="border-0" style="width: 120px;">Created</th>
                             <th class="border-0" style="width: 300px;">Description</th>
-                            <th class="border-0" style="width: 100px;">SLA</th>
                             <th class="border-0" style="width: 100px;">Actions</th>
                         </tr>
                     </thead>
@@ -367,27 +362,6 @@ $page_title = 'Support Hub - SAMPARK';
                                                  ($ticket['description'] ?? 'N/A')) ?>
                                         </span>
                                     </div>
-                                </td>
-                                <td class="text-center">
-                                    <?php if ($ticket['is_sla_violated']): ?>
-                                        <div>
-                                            <span class="badge bg-danger px-2 py-1">
-                                                <i class="fas fa-clock me-1"></i>Overdue
-                                            </span>
-                                            <div>
-                                                <small class="text-danger fw-semibold"><?= $ticket['hours_elapsed'] ?>h</small>
-                                            </div>
-                                        </div>
-                                    <?php else: ?>
-                                        <div>
-                                            <span class="badge bg-success px-2 py-1">
-                                                <i class="fas fa-check me-1"></i>On Time
-                                            </span>
-                                            <div>
-                                                <small class="text-muted"><?= $ticket['hours_elapsed'] ?>h</small>
-                                            </div>
-                                        </div>
-                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <div class="action-buttons-group" role="group">
@@ -1144,7 +1118,6 @@ function updateStats() {
                 const stats = data.stats;
                 document.getElementById('pendingCount').textContent = stats.pending || 0;
                 document.getElementById('highPriorityCount').textContent = stats.high_priority || 0;
-                document.getElementById('slaViolationCount').textContent = stats.sla_violations || 0;
                 document.getElementById('resolvedTodayCount').textContent = stats.resolved_today || 0;
                 
                 // Update ticket count in header
