@@ -8,6 +8,7 @@
 require_once 'BaseController.php';
 require_once __DIR__ . '/../utils/Validator.php';
 require_once __DIR__ . '/../utils/NotificationService.php';
+require_once __DIR__ . '/../models/EmailTemplateModel.php';
 
 
 class AdminController extends BaseController
@@ -3147,9 +3148,10 @@ class AdminController extends BaseController
     private function getEmailTemplatesList()
     {
         try {
-            $sql = "SELECT id, name, type, subject FROM email_templates WHERE is_active = 1 ORDER BY name";
-            return $this->db->fetchAll($sql);
+            $templateModel = new EmailTemplateModel();
+            return $templateModel->getAllTemplates();
         } catch (Exception $e) {
+            error_log("Error fetching email templates: " . $e->getMessage());
             return [];
         }
     }
@@ -3228,13 +3230,77 @@ class AdminController extends BaseController
 
     private function processBulkEmailJob($jobId)
     {
-        // This would be implemented to actually send the emails
-        // For now, just update the status
         try {
-            $sql = "UPDATE bulk_email_jobs SET status = 'completed', processed_at = NOW() WHERE id = ?";
-            $this->db->query($sql, [$jobId]);
+            // 1. Get job details
+            $job = $this->db->fetch("SELECT * FROM bulk_email_jobs WHERE id = ?", [$jobId]);
+            if (!$job) {
+                error_log("Bulk email job not found: $jobId");
+                return false;
+            }
+
+            // 2. Get recipients
+            $recipients = json_decode($job['recipients'], true);
+            if (empty($recipients)) {
+                $this->db->query("UPDATE bulk_email_jobs SET status = 'failed', error_message = 'No recipients' WHERE id = ?", [$jobId]);
+                return false;
+            }
+
+            // 3. Get template if provided
+            $message = $job['message'];
+            $subject = $job['subject'];
+            if (!empty($job['template_id'])) {
+                $templateModel = new EmailTemplateModel();
+                $template = $templateModel->getTemplate($job['template_id']);
+                if ($template) {
+                    $message = $template['template_html'];
+                    if (empty($subject)) {
+                        $subject = $template['name'];
+                    }
+                }
+            }
+
+            // 4. Loop and send
+            require_once __DIR__ . '/../utils/EmailService.php';
+            $emailService = new EmailService();
+            $sentCount = 0;
+            $failedCount = 0;
+
+            foreach ($recipients as $recipient) {
+                $personalizedMessage = $message;
+                
+                if (isset($recipient['name'])) {
+                    $personalizedMessage = str_replace('$customer_name', $recipient['name'], $personalizedMessage);
+                }
+                if (isset($recipient['email'])) {
+                    $personalizedMessage = str_replace('$customer_email', $recipient['email'], $personalizedMessage);
+                }
+
+                $success = $emailService->send(
+                    $recipient['email'],
+                    $recipient['name'] ?? '',
+                    $subject,
+                    $personalizedMessage
+                );
+
+                if ($success) {
+                    $sentCount++;
+                } else {
+                    $failedCount++;
+                }
+            }
+
+            // 5. Update job status
+            $status = $failedCount > 0 ? 'partial_success' : 'completed';
+            $this->db->query(
+                "UPDATE bulk_email_jobs SET status = ?, processed_at = NOW(), sent_count = ?, failed_count = ? WHERE id = ?",
+                [$status, $sentCount, $failedCount, $jobId]
+            );
+
             return true;
+
         } catch (Exception $e) {
+            error_log("Error processing bulk email job $jobId: " . $e->getMessage());
+            $this->db->query("UPDATE bulk_email_jobs SET status = 'failed', error_message = ? WHERE id = ?", [$e->getMessage(), $jobId]);
             return false;
         }
     }

@@ -218,6 +218,9 @@
                                 <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/emails">
                                     <i class="fas fa-envelope me-2"></i>Email Management
                                 </a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/email-templates/editor">
+                                    <i class="fas fa-paint-brush me-2"></i>Email Templates
+                                </a></li>
                             </ul>
                             </li>
                         <?php endif; ?>

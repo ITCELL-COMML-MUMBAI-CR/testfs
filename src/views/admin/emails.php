@@ -23,7 +23,7 @@ ob_start();
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bulkEmailModal">
                                 <i class="fas fa-paper-plane me-2"></i>Send Bulk Email
                             </button>
-                            <a href="/admin/emails/templates" class="btn btn-outline-secondary">
+                            <a href="<?= Config::getAppUrl() ?>/admin/email-templates/editor" class="btn btn-outline-secondary">
                                 <i class="fas fa-file-alt me-2"></i>Manage Templates
                             </a>
                         </div>
@@ -254,7 +254,7 @@ ob_start();
                             <option value="">Create custom message</option>
                             <?php foreach ($email_templates as $template): ?>
                             <option value="<?= $template['id'] ?>">
-                                <?= htmlspecialchars($template['name']) ?> (<?= ucfirst($template['type']) ?>)
+                                <?= htmlspecialchars($template['name']) ?>
                             </option>
                             <?php endforeach; ?>
                         </select>
@@ -396,6 +396,35 @@ document.addEventListener('DOMContentLoaded', function() {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     tooltipTriggerList.map(function(tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    document.getElementById('template_id').addEventListener('change', function() {
+        const templateId = this.value;
+        const subjectField = document.getElementById('subject');
+        const messageField = document.getElementById('message');
+
+        if (templateId) {
+            // Fetch template content
+            fetch(`/api/email-templates/${templateId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const template = data.template;
+                        subjectField.value = template.name; // Use template name as subject
+                        messageField.value = template.template_html;
+                        // Optionally, make the message field read-only
+                        // messageField.readOnly = true;
+                    } else {
+                        alert('Failed to load template.');
+                    }
+                })
+                .catch(() => alert('An error occurred while fetching the template.'));
+        } else {
+            // Clear fields if no template is selected
+            subjectField.value = '';
+            messageField.value = '';
+            // messageField.readOnly = false;
+        }
     });
 
 });

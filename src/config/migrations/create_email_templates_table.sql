@@ -1,0 +1,7 @@
+CREATE TABLE `email_templates` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(255) NOT NULL,
+  `template_json` LONGTEXT,
+  `template_html` LONGTEXT,
+  `updated_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
