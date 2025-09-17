@@ -152,9 +152,6 @@ class Config {
     const BUSINESS_END_HOUR = 18;
     const BUSINESS_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
     
-    // SLA Configuration
-    const SLA_BUSINESS_HOURS_ONLY = true;
-    const SLA_EXCLUDE_HOLIDAYS = true;
     const AUTO_CLOSE_DAYS = 3;
     
     // Database Configuration (These would typically be in environment variables)

@@ -177,14 +177,6 @@ class ComplaintCategoryModel extends BaseModel {
         return false;
     }
     
-    /**
-     * Get category SLA information
-     */
-    public function getCategorySLA($id) {
-        // SLA functionality removed
-        $sql = "SELECT category as name, 'normal' as priority_level FROM {$this->table} WHERE category_id = ?";
-        return $this->db->fetch($sql, [$id]);
-    }
     
     /**
      * Validate category data before create/update
@@ -238,7 +230,6 @@ class ComplaintCategoryModel extends BaseModel {
             $errors[] = "Priority level must be between 1 and 5";
         }
         
-        // SLA hours validation removed
         
         return $errors;
     }
@@ -255,7 +246,6 @@ class ComplaintCategoryModel extends BaseModel {
         // Set defaults
         $data['is_active'] = $data['is_active'] ?? 1;
         $data['sort_order'] = $data['sort_order'] ?? 0;
-        // SLA hours default removed
         $data['priority_level'] = $data['priority_level'] ?? 3;
         
         $result = $this->create($data);

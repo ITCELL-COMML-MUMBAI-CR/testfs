@@ -46,14 +46,6 @@ class BackgroundRefreshService {
                 $results['errors'][] = 'Priority escalation failed: ' . $escalationResult['error'];
             }
             
-            // 2. Process SLA violations and auto-escalations
-            $slaResult = $this->processSLAViolations();
-            $results['sla_processing'] = $slaResult;
-            if ($slaResult['success']) {
-                $results['tasks_completed']++;
-            } else {
-                $results['errors'][] = 'SLA processing failed: ' . $slaResult['error'];
-            }
             
             // 3. Auto-close awaiting feedback tickets
             $autoCloseResult = $this->processAutoClose();
@@ -159,12 +151,6 @@ class BackgroundRefreshService {
         return $this->workflowEngine->processPriorityEscalation();
     }
     
-    /**
-     * Process SLA violations
-     */
-    private function processSLAViolations() {
-        return $this->workflowEngine->processAutoEscalation();
-    }
     
     /**
      * Process auto-close tickets
@@ -210,7 +196,6 @@ class BackgroundRefreshService {
                            WHEN c.status = 'awaiting_feedback' THEN TIMESTAMPDIFF(DAY, c.updated_at, NOW())
                            ELSE 0
                        END as days_since_revert,
-                       0 as is_sla_violated
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -252,7 +237,6 @@ class BackgroundRefreshService {
                            WHEN c.status = 'awaiting_feedback' THEN TIMESTAMPDIFF(DAY, c.updated_at, NOW())
                            ELSE 0
                        END as days_since_revert,
-                       0 as is_sla_violated
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -287,7 +271,6 @@ class BackgroundRefreshService {
                            WHEN c.status = 'awaiting_feedback' THEN TIMESTAMPDIFF(DAY, c.updated_at, NOW())
                            ELSE 0
                        END as days_since_revert,
-                       0 as is_sla_violated
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id

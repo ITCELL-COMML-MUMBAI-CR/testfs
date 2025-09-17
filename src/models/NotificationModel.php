@@ -37,7 +37,6 @@ class NotificationModel extends BaseModel {
     const TYPE_TICKET_ESCALATED = 'ticket_escalated';
     const TYPE_SYSTEM_ANNOUNCEMENT = 'system_announcement';
     const TYPE_MAINTENANCE_ALERT = 'maintenance_alert';
-    const TYPE_SLA_WARNING = 'sla_warning';
     const TYPE_ACCOUNT_UPDATE = 'account_update';
     
     // Priority levels
@@ -341,23 +340,6 @@ class NotificationModel extends BaseModel {
         return $notification ? [$notification] : [];
     }
     
-    /**
-     * Create SLA warning notification
-     */
-    public function createSLAWarning($ticketId, $userId, $userType, $hoursRemaining) {
-        $title = "SLA warning for ticket - {$ticketId}";
-        $message = "Ticket #{$ticketId} has {$hoursRemaining} hours remaining before SLA breach. Please take immediate action.";
-
-        return $this->createTicketNotification(
-            $ticketId,
-            $userId,
-            $userType,
-            self::TYPE_SLA_WARNING,
-            $title,
-            $message,
-            self::PRIORITY_HIGH
-        );
-    }
     
     /**
      * Get notifications by type

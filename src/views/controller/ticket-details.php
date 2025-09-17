@@ -56,11 +56,6 @@ $page_title = 'Ticket Details - SAMPARK';
                                                ($ticket['priority'] === 'medium' ? 'info-circle' : 'circle')) ?>"></i>
                             <?= ucfirst($ticket['priority']) ?> Priority
                         </span>
-                        <?php if ($ticket['is_sla_violated']): ?>
-                        <span class="badge bg-danger fs-6">
-                            <i class="fas fa-clock me-1"></i>SLA Overdue
-                        </span>
-                        <?php endif; ?>
                     </div>
                     <p class="text-muted mb-0">
                         Created <?= date('M d, Y \a\t H:i', strtotime($ticket['created_at'])) ?> • 
@@ -742,27 +737,6 @@ $page_title = 'Ticket Details - SAMPARK';
                 </div>
             </div>
 
-            <!-- SLA Information -->
-            <div class="card card-apple mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-clock me-2"></i>SLA Information
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <strong>Resolution Time:</strong>
-                        <div class="d-flex align-items-center">
-                            <?php if ($ticket['is_sla_violated']): ?>
-                            <span class="badge bg-danger me-2">Overdue</span>
-                            <?php else: ?>
-                            <span class="badge bg-success me-2">On Time</span>
-                            <?php endif; ?>
-                            <?= $ticket['hours_elapsed'] ?> hours
-                        </div>
-                    </div>
-                </div>
-            </div>
 
         </div>
     </div>

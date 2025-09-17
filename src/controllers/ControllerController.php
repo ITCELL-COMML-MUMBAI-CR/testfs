@@ -144,7 +144,6 @@ class ControllerController extends BaseController {
                        cust.company_name, cust.mobile as customer_mobile,
                        d.department_name as assigned_department_name,
                        TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
-                       0 as is_sla_violated
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -261,7 +260,6 @@ class ControllerController extends BaseController {
                        cust.company_name, cust.mobile as customer_mobile,
                        d.department_name as assigned_department_name,
                        TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
-                       0 as is_sla_violated
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -320,7 +318,6 @@ class ControllerController extends BaseController {
                        cust.mobile as customer_mobile, cust.company_name,
                        d.department_name as assigned_department_name,
                        TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
-                       0 as is_sla_violated
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -688,8 +685,6 @@ class ControllerController extends BaseController {
                 $ticketId
             ]);
             
-            // Update SLA deadline based on new priority
-            $this->updateSLADeadline($ticketId, $newPriority);
             
             // Handle priority escalation for cross-division forwarding
             $priorityService = new BackgroundPriorityService();
@@ -1846,8 +1841,7 @@ class ControllerController extends BaseController {
                 $data['report_data'] = $this->getPerformanceReport($user, $dateFrom, $dateTo, $division);
                 if (!$currentView) $_GET['view'] = 'complaints';
                 break;
-            case 'sla':
-                $data['report_data'] = $this->getSLAReport($user, $dateFrom, $dateTo, $division);
+                $data['report_data'] = [];
                 if (!$currentView) $_GET['view'] = 'complaints';
                 break;
             case 'customer_satisfaction':
@@ -2051,13 +2045,6 @@ class ControllerController extends BaseController {
         return $this->db->fetch($sql, [$param]);
     }
     
-    private function getSLAViolations($user) {
-        $condition = 'c.division = ?';
-        $param = $user['division'];
-        
-        // No longer tracking SLA violations - return empty array
-        return [];
-    }
     
     private function getDivisions() {
         $sql = "SELECT DISTINCT division FROM shed WHERE is_active = 1 ORDER BY division";
@@ -2075,10 +2062,6 @@ class ControllerController extends BaseController {
         return $this->db->fetchAll($sql, [$division]);
     }
     
-    private function updateSLADeadline($ticketId, $priority) {
-        // SLA functionality has been removed - this method is now a no-op
-        return true;
-    }
     
     private function createTransaction($complaintId, $type, $remarks, $fromUserId, $toUserId = null, $remarksType = 'internal_remarks') {
         $sql = "INSERT INTO transactions (
@@ -2361,10 +2344,6 @@ class ControllerController extends BaseController {
         return [];
     }
     
-    private function getSLAReport($user, $dateFrom, $dateTo, $division) {
-        // Implementation for SLA report
-        return [];
-    }
     
     private function getCustomerSatisfactionReport($user, $dateFrom, $dateTo, $division) {
         // Implementation for customer satisfaction report
@@ -2384,9 +2363,9 @@ class ControllerController extends BaseController {
                 'url' => '/help/escalation'
             ],
             [
-                'title' => 'SLA Guidelines',
-                'description' => 'Service Level Agreement requirements and deadlines',
-                'url' => '/help/sla-guidelines'
+                'title' => 'Priority Guidelines',
+                'description' => 'Ticket prioritization and urgency levels',
+                'url' => '/help/priority-guidelines'
             ]
         ];
     }
@@ -2400,10 +2379,6 @@ class ControllerController extends BaseController {
             [
                 'question' => 'What is the difference between regular and nodal controllers?',
                 'answer' => 'Regular controllers handle assigned tickets, while nodal controllers can forward tickets, approve replies, and manage all tickets in their division.'
-            ],
-            [
-                'question' => 'How are SLA deadlines calculated?',
-                'answer' => 'SLA deadlines are automatically calculated based on the ticket priority and the predefined resolution hours in the system.'
             ],
             [
                 'question' => 'When do I need approval for my replies?',

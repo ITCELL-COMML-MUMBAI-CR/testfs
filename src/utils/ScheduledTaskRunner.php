@@ -1,11 +1,10 @@
 <?php
 /**
  * Scheduled Task Runner for SAMPARK
- * Handles automated processes like SLA monitoring, escalations, and cleanup
+ * Handles automated processes like escalations and cleanup
  */
 
 require_once 'WorkflowEngine.php';
-// require_once 'SLAManager.php'; // SLA functionality removed
 require_once 'NotificationService.php';
 require_once 'ActivityLogger.php';
 require_once 'FileUploader.php';
@@ -14,7 +13,6 @@ class ScheduledTaskRunner {
     
     private $db;
     private $workflowEngine;
-    // private $slaManager; // SLA functionality removed
     private $notificationService;
     private $logger;
     private $fileUploader;
@@ -22,7 +20,6 @@ class ScheduledTaskRunner {
     public function __construct() {
         $this->db = Database::getInstance();
         $this->workflowEngine = new WorkflowEngine();
-        // $this->slaManager = new SLAManager(); // SLA functionality removed
         $this->notificationService = new NotificationService();
         $this->logger = new ActivityLogger();
         $this->fileUploader = new FileUploader();
@@ -42,8 +39,6 @@ class ScheduledTaskRunner {
         $startTime = microtime(true);
         
         try {
-            // 1. SLA Monitoring and Escalation
-            $results['tasks']['sla_monitoring'] = $this->runSLAMonitoring();
             
             // 2. Auto-escalation
             $results['tasks']['auto_escalation'] = $this->runAutoEscalation();
@@ -84,17 +79,6 @@ class ScheduledTaskRunner {
         return $results;
     }
     
-    /**
-     * Run SLA monitoring
-     */
-    public function runSLAMonitoring() {
-        // SLA functionality has been removed
-        return [
-            'status' => 'completed',
-            'duration' => 0,
-            'result' => 'SLA monitoring disabled'
-        ];
-    }
     
     /**
      * Run auto-escalation
@@ -231,15 +215,10 @@ class ScheduledTaskRunner {
         $results = [];
         
         try {
-            // Generate daily SLA compliance report
             if ($this->shouldGenerateDailyReport()) {
                 $yesterday = date('Y-m-d', strtotime('-1 day'));
-                // $slaReport = $this->slaManager->generateComplianceReport($yesterday, $yesterday); // SLA disabled
-                $slaReport = [];
                 
                 // Store report in database or send to management
-                $this->storeDailyReport('sla_compliance', $slaReport);
-                $results['daily_sla_report'] = 'generated';
             }
             
             // Generate weekly summary report
@@ -302,9 +281,6 @@ class ScheduledTaskRunner {
                 $results['weekly_digest'] = $digestSent;
             }
             
-            // Send SLA warning notifications
-            $warningsSent = $this->sendSLAWarningDigest();
-            $results['sla_warnings'] = $warningsSent;
             
             $endTime = microtime(true);
             $duration = round($endTime - $startTime, 2);
@@ -330,8 +306,6 @@ class ScheduledTaskRunner {
      */
     public function runTask($taskName) {
         switch ($taskName) {
-            case 'sla_monitoring':
-                return $this->runSLAMonitoring();
             case 'auto_escalation':
                 return $this->runAutoEscalation();
             case 'auto_closure':
@@ -374,7 +348,7 @@ class ScheduledTaskRunner {
     private function shouldGenerateDailyReport() {
         // Check if daily report already generated for yesterday
         $yesterday = date('Y-m-d', strtotime('-1 day'));
-        $sql = "SELECT id FROM reports WHERE report_type = 'daily_sla' AND report_date = ?";
+        $sql = "SELECT id FROM reports WHERE report_type = 'daily_report' AND report_date = ?";
         $existing = $this->db->fetch($sql, [$yesterday]);
         
         return empty($existing);
@@ -461,23 +435,6 @@ class ScheduledTaskRunner {
         return count(array_filter($results, function($r) { return $r['email_sent']; }));
     }
     
-    private function sendSLAWarningDigest() {
-        // SLA functionality has been removed
-        return 0;
-
-        // $approachingTickets = $this->slaManager->getTicketsApproachingSLA(8); // 8 hours threshold
-        // $sent = 0;
-
-        // foreach ($approachingTickets as $ticket) {
-            // Notification logic removed as assigned_to_user_id no longer exists
-                
-                $result = $this->notificationService->send('sla_warning', $recipients, $data);
-                if ($result[0]['email_sent']) {
-                    $sent++;
-                }
-            
-            return $sent;
-        }
         
         
     

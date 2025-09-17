@@ -112,11 +112,6 @@ $page_title = 'Help & Support - SAMPARK';
                                     <i class="fas fa-clock text-warning"></i>
                                 </div>
                                 <div>
-                                    <h6 class="fw-semibold">SLA Management</h6>
-                                    <p class="text-muted small mb-2">Learn about Service Level Agreements and how to meet resolution deadlines.</p>
-                                    <a href="#sla-management" class="btn btn-sm btn-apple-secondary">
-                                        Read Guide <i class="fas fa-arrow-right ms-1"></i>
-                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -214,19 +209,19 @@ $page_title = 'Help & Support - SAMPARK';
                                 <h2 class="accordion-header" id="faq3">
                                     <button class="accordion-button collapsed" type="button" 
                                             data-bs-toggle="collapse" data-bs-target="#faqCollapse3">
-                                        What are SLA deadlines and why are they important?
+                                        How do I prioritize tickets effectively?
                                     </button>
                                 </h2>
                                 <div id="faqCollapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
                                     <div class="accordion-body">
-                                        SLA (Service Level Agreement) deadlines ensure timely resolution of customer issues:
+                                        Prioritize tickets based on customer impact and urgency:
                                         <ul>
-                                            <li><strong>Critical:</strong> 4 hours</li>
-                                            <li><strong>High:</strong> 8 hours</li>
-                                            <li><strong>Medium:</strong> 24 hours</li>
-                                            <li><strong>Normal:</strong> 48 hours</li>
+                                            <li><strong>Critical:</strong> System down, service outage</li>
+                                            <li><strong>High:</strong> Major functionality affected</li>
+                                            <li><strong>Medium:</strong> Moderate impact on operations</li>
+                                            <li><strong>Normal:</strong> Minor issues or requests</li>
                                         </ul>
-                                        Meeting SLA deadlines maintains customer satisfaction and service quality standards.
+                                        Always address critical and high priority tickets first.
                                     </div>
                                 </div>
                             </div>
@@ -264,7 +259,7 @@ $page_title = 'Help & Support - SAMPARK';
                                         To generate performance reports:
                                         <ol>
                                             <li>Go to the Reports section from your dashboard</li>
-                                            <li>Select the report type (Summary, Performance, SLA, etc.)</li>
+                                            <li>Select the report type (Summary, Performance, etc.)</li>
                                             <li>Set your desired date range</li>
                                             <li>Apply any additional filters</li>
                                             <li>Click "Generate Report" to view the data</li>
@@ -433,7 +428,7 @@ $page_title = 'Help & Support - SAMPARK';
                         </div>
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
-                                <div class="fw-semibold">SLA Guidelines</div>
+                                <div class="fw-semibold">Priority Guidelines</div>
                                 <small class="text-muted">Service Level Agreement requirements</small>
                             </div>
                             <a href="#" class="btn btn-sm btn-apple-secondary">

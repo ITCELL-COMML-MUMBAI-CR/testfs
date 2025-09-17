@@ -165,13 +165,6 @@ $page_title = 'Profile - SAMPARK';
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="notify_sla_violation" 
-                                           id="notifySlaViolation" checked>
-                                    <label class="form-check-label" for="notifySlaViolation">
-                                        SLA violations
-                                    </label>
-                                </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-check">

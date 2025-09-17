@@ -160,7 +160,6 @@ $page_title = 'Forwarded Tickets - SAMPARK';
                             <th class="border-0" style="width: 160px;">Forwarded To</th>
                             <th class="border-0" style="width: 120px;">Created</th>
                             <th class="border-0" style="width: 300px;">Description</th>
-                            <th class="border-0" style="width: 100px;">SLA</th>
                             <th class="border-0" style="width: 100px;">Actions</th>
                         </tr>
                     </thead>
@@ -296,7 +295,7 @@ $page_title = 'Forwarded Tickets - SAMPARK';
                                     </div>
                                 </td>
                                 <td class="text-center">
-                                    <?php if ($ticket['is_sla_violated']): ?>
+                                    <?php if ($ticket['priority'] === 'critical'): ?>
                                         <div>
                                             <span class="badge bg-danger px-2 py-1">
                                                 <i class="fas fa-clock me-1"></i>Overdue

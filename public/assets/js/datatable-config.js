@@ -191,15 +191,7 @@ function initializeCustomerTicketsTable(tableId = 'customerTicketsTable') {
                 $(row).addClass('urgent-ticket');
             }
             
-            if (data.is_sla_violated) {
-                $(row).addClass('sla-violation');
-            }
             
-            // Add tooltip for SLA status
-            if (data.sla_status && data.sla_status !== 'no_sla') {
-                $(row).attr('data-bs-toggle', 'tooltip')
-                     .attr('title', `SLA Status: ${data.sla_status.replace('_', ' ').toUpperCase()}`);
-            }
         }
     };
     
@@ -370,19 +362,6 @@ function initializeControllerTicketsTable(tableId = 'controllerTicketsTable') {
                 }
             },
             {
-                data: 'is_sla_violated',
-                title: 'SLA',
-                width: '100px',
-                className: 'text-center',
-                render: function(data, type, row) {
-                    if (row.is_sla_violated) {
-                        return `<div><span class="badge bg-danger px-2 py-1"><i class="fas fa-clock me-1"></i>Overdue</span><div><small class="text-danger fw-semibold">${row.hours_elapsed}h</small></div></div>`;
-                    } else {
-                        return `<div><span class="badge bg-success px-2 py-1"><i class="fas fa-check me-1"></i>On Time</span><div><small class="text-muted">${row.hours_elapsed}h</small></div></div>`;
-                    }
-                }
-            },
-            {
                 data: null,
                 title: 'Actions',
                 width: '100px',
@@ -406,9 +385,9 @@ function initializeControllerTicketsTable(tableId = 'controllerTicketsTable') {
                 $(row).addClass('urgent-ticket');
             }
             
-            if (data.is_sla_violated) {
-                $(row).addClass('table-danger sla-violation');
-            } else if (data.sla_status === 'warning') {
+            if (data.priority === 'critical') {
+                $(row).addClass('table-danger');
+            } else if (data.priority === 'high') {
                 $(row).addClass('table-warning');
             }
         }
@@ -551,11 +530,10 @@ function checkForImportantUpdates(data) {
     
     // Count urgent tickets
     const urgentCount = data.data.filter(ticket => ticket.is_urgent).length;
-    const slaViolations = data.data.filter(ticket => ticket.is_sla_violated).length;
     
     // Show notification if there are urgent items
-    if (urgentCount > 0 || slaViolations > 0) {
-        showSubtleNotification(`${urgentCount} urgent tickets, ${slaViolations} SLA violations`);
+    if (urgentCount > 0) {
+        showSubtleNotification(`${urgentCount} urgent tickets`);
     }
 }
 
