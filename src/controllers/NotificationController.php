@@ -166,30 +166,19 @@ class NotificationController extends BaseController {
                 return $this->jsonResponse(['success' => false, 'error' => 'Invalid parameters'], 400);
             }
 
-            // Verify notification belongs to user (RBAC)
+            // Verify notification exists
             $notification = $this->notificationModel->find($notificationId);
             if (!$notification) {
                 return $this->jsonResponse(['success' => false, 'error' => 'Notification not found'], 404);
             }
 
-            // Check ownership based on user type
-            $isOwner = false;
-            if ($userType === 'customer' && $notification['customer_id'] == $userId) {
-                $isOwner = true;
-            } elseif ($userType !== 'customer' && $notification['user_id'] == $userId) {
-                $isOwner = true;
-            }
-
-            if (!$isOwner) {
-                return $this->jsonResponse(['success' => false, 'error' => 'Access denied'], 403);
-            }
-
+            // Let the model handle the department-based access control
             $result = $this->notificationModel->markAsRead($notificationId, $userId, $userType);
 
             if ($result) {
                 return $this->jsonResponse(['success' => true, 'message' => 'Notification marked as read']);
             } else {
-                return $this->jsonResponse(['success' => false, 'error' => 'Failed to mark as read'], 500);
+                return $this->jsonResponse(['success' => false, 'error' => 'Access denied or failed to mark as read'], 403);
             }
 
         } catch (Exception $e) {

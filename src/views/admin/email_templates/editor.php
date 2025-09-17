@@ -194,7 +194,7 @@ ob_start();
         });
 
         // Load existing template data if available
-        const templateData = <?= $template_json ?>;
+        const templateData = <?= $template_json ? json_encode(json_decode($template_json, true), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) : 'null' ?>;
         if (templateData) {
             editor.setComponents(templateData.components);
             editor.setStyle(templateData.styles);

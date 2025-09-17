@@ -629,6 +629,17 @@ function escapeHtml(text) {
 }
 
 function checkForUnreadNotificationsOnLoad() {
+    // Check if this is a login redirect and clear the "don't show again" setting
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('login') === '1') {
+        sessionStorage.removeItem('dontShowNotifications');
+    }
+    
+    // Check if user has disabled notifications for this session
+    if (sessionStorage.getItem('dontShowNotifications') === 'true') {
+        return;
+    }
+
     // Only show notifications popup on login/dashboard pages
     const currentPath = window.location.pathname;
     const showOnPages = ['/dashboard', '/admin/dashboard', '/controller/dashboard', '/customer/dashboard', '/'];
@@ -700,22 +711,47 @@ function showUnreadNotificationsSummary(notifications, count, hasHighPriority) {
                 <div class="mb-3">
                     ${notificationsList}
                 </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="dontShowAgain">
+                    <label class="form-check-label text-muted small" for="dontShowAgain">
+                        Don't show this again for this session
+                    </label>
+                </div>
             </div>
         `,
         icon: null,
         showCancelButton: true,
+        showDenyButton: true,
         confirmButtonText: '<i class="fas fa-bell me-1"></i>View All Notifications',
+        denyButtonText: '<i class="fas fa-check-double me-1"></i>Mark All as Read',
         cancelButtonText: 'Dismiss',
         confirmButtonColor: '#007bff',
+        denyButtonColor: '#28a745',
         cancelButtonColor: '#6c757d',
         width: '500px',
         customClass: {
             popup: 'text-start'
+        },
+        didOpen: () => {
+            // Add event listener for the checkbox
+            const checkbox = document.getElementById('dontShowAgain');
+            if (checkbox) {
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        sessionStorage.setItem('dontShowNotifications', 'true');
+                    } else {
+                        sessionStorage.removeItem('dontShowNotifications');
+                    }
+                });
+            }
         }
     }).then((result) => {
         if (result.isConfirmed) {
             // Open notification panel
             toggleNotificationPanel();
+        } else if (result.isDenied) {
+            // Mark all notifications as read
+            markAllAsRead();
         }
     });
 }

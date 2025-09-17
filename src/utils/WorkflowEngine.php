@@ -6,6 +6,7 @@
 
 require_once 'NotificationService.php';
 require_once 'ActivityLogger.php';
+require_once __DIR__ . '/../config/Config.php';
 
 class WorkflowEngine {
     
@@ -448,6 +449,9 @@ class WorkflowEngine {
         
         $this->db->query($sql, [$ticket['complaint_id']]);
         
+        // Send notifications to controllers
+        $this->sendInfoProvidedNotifications($ticket, $additionalInfo);
+        
         return [
             'success' => true,
             'new_status' => 'pending',
@@ -694,6 +698,64 @@ class WorkflowEngine {
             case 'provide_feedback':
                 // Send closure confirmation
                 break;
+        }
+    }
+    
+    /**
+     * Send notifications when customer provides additional information
+     */
+    private function sendInfoProvidedNotifications($ticket, $additionalInfo) {
+        try {
+            // Get assigned controller
+            $assignedUser = null;
+            if ($ticket['assigned_to_user_id']) {
+                $assignedUser = $this->db->fetch(
+                    "SELECT id, name, email, mobile FROM users WHERE id = ?",
+                    [$ticket['assigned_to_user_id']]
+                );
+            }
+            
+            // Get controller_nodal for the division
+            $nodalController = $this->db->fetch(
+                "SELECT id, name, email, mobile FROM users WHERE role = 'controller_nodal' AND division = ? AND status = 'active' LIMIT 1",
+                [$ticket['division']]
+            );
+            
+            $recipients = [];
+            
+            // Add assigned controller if exists
+            if ($assignedUser) {
+                $recipients[] = [
+                    'user_id' => $assignedUser['id'],
+                    'email' => $assignedUser['email'],
+                    'mobile' => $assignedUser['mobile'],
+                    'complaint_id' => $ticket['complaint_id']
+                ];
+            }
+            
+            // Add controller_nodal if exists and different from assigned user
+            if ($nodalController && (!$assignedUser || $nodalController['id'] != $assignedUser['id'])) {
+                $recipients[] = [
+                    'user_id' => $nodalController['id'],
+                    'email' => $nodalController['email'],
+                    'mobile' => $nodalController['mobile'],
+                    'complaint_id' => $ticket['complaint_id']
+                ];
+            }
+            
+            if (!empty($recipients)) {
+                $data = [
+                    'complaint_id' => $ticket['complaint_id'],
+                    'customer_name' => $ticket['customer_name'] ?? 'Customer',
+                    'additional_info' => $additionalInfo,
+                    'view_url' => Config::getAppUrl() . '/controller/tickets/' . $ticket['complaint_id']
+                ];
+                
+                $this->notificationService->send('info_provided', $recipients, $data);
+            }
+            
+        } catch (Exception $e) {
+            error_log("Error sending info provided notifications: " . $e->getMessage());
         }
     }
     

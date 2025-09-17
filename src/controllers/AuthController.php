@@ -122,7 +122,7 @@ class AuthController extends BaseController {
         $this->logActivity('customer_login', ['customer_id' => $customer['customer_id']]);
         
         $this->setFlash('success', 'Welcome back, ' . $customer['name']);
-        $this->redirect(Config::getAppUrl() . '/');
+        $this->redirect(Config::getAppUrl() . '/?login=1');
     }
     
     private function handleUserLogin() {
@@ -194,7 +194,7 @@ class AuthController extends BaseController {
         $this->logActivity('user_login', ['user_id' => $user['id'], 'role' => $user['role']]);
         
         $this->setFlash('success', 'Welcome back, ' . $user['name']);
-        $this->redirectToDashboard($user['role']);
+        $this->redirectToDashboard($user['role'], true);
     }
     
     public function showSignup() {
@@ -300,25 +300,27 @@ class AuthController extends BaseController {
         $this->redirect(Config::getAppUrl() . '/');
     }
     
-    private function redirectToDashboard($role = null) {
+    private function redirectToDashboard($role = null, $isLogin = false) {
         if (!$role) {
             $role = $this->session->getUserRole();
         }
         
+        $loginParam = $isLogin ? '?login=1' : '';
+        
         switch ($role) {
             case 'customer':
-                $this->redirect(Config::getAppUrl() . '/');
+                $this->redirect(Config::getAppUrl() . '/' . $loginParam);
                 break;
             case 'controller':
             case 'controller_nodal':
-                $this->redirect(Config::getAppUrl() . '/controller/tickets');
+                $this->redirect(Config::getAppUrl() . '/controller/tickets' . $loginParam);
                 break;
             case 'admin':
             case 'superadmin':
-                $this->redirect(Config::getAppUrl() . '/admin/dashboard');
+                $this->redirect(Config::getAppUrl() . '/admin/dashboard' . $loginParam);
                 break;
             default:
-                $this->redirect(Config::getAppUrl() . '/');
+                $this->redirect(Config::getAppUrl() . '/' . $loginParam);
         }
     }
     
