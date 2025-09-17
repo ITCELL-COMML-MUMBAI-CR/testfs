@@ -35,8 +35,8 @@ class OnSiteNotificationService {
 
             $this->notificationModel->createNotification([
                 'user_id' => $user['id'],
-                'title' => 'New Ticket Created: #' . $complaintId,
-                'message' => 'A new ticket has been created in your division (' . $ticket['division'] . ').',
+                'title' => 'Ticket created successfully with number - ' . $complaintId,
+                'message' => 'A new support ticket has been created and assigned to your division (' . $ticket['division'] . '). Please review and take appropriate action.',
                 'type' => 'new_ticket',
                 'related_id' => $complaintId,
                 'related_type' => 'ticket',
@@ -71,8 +71,8 @@ class OnSiteNotificationService {
 
             $this->notificationModel->createNotification([
                 'user_id' => $user['id'],
-                'title' => 'Ticket Forwarded: #' . $complaintId,
-                'message' => 'Ticket #' . $complaintId . ' has been forwarded to your ' . ($ticket['division'] !== $toDivision ? 'division.' : 'department.'),
+                'title' => 'Ticket forwarded successfully - ' . $complaintId,
+                'message' => 'Ticket #' . $complaintId . ' has been forwarded to your ' . ($ticket['division'] !== $toDivision ? 'division' : 'department') . ' for review and action.',
                 'type' => 'ticket_forwarded',
                 'related_id' => $complaintId,
                 'related_type' => 'ticket',
@@ -91,10 +91,10 @@ class OnSiteNotificationService {
         $message = '';
         switch ($status) {
             case 'awaiting_info':
-                $message = 'Your ticket #' . $complaintId . ' has been updated. We are awaiting additional information from you.';
+                $message = 'Ticket updated successfully - ' . $complaintId . '. Additional information is required from you to proceed.';
                 break;
             case 'awaiting_feedback':
-                $message = 'An action has been taken on your ticket #' . $complaintId . '. We are awaiting your feedback.';
+                $message = 'Ticket action completed - ' . $complaintId . '. Please provide your feedback on the resolution.';
                 break;
             default:
                 return; // Only handle these two statuses
@@ -102,7 +102,7 @@ class OnSiteNotificationService {
 
         $this->notificationModel->createNotification([
             'customer_id' => $ticket['customer_id'],
-            'title' => 'Ticket Update: #' . $complaintId,
+            'title' => 'Ticket status updated - ' . $complaintId,
             'message' => $message,
             'type' => 'status_update',
             'related_id' => $complaintId,
@@ -129,8 +129,8 @@ class OnSiteNotificationService {
 
             $this->notificationModel->createNotification([
                 'user_id' => $user['id'],
-                'title' => 'Priority Escalation: Ticket #' . $complaintId,
-                'message' => 'The priority for ticket #' . $complaintId . ' has been escalated.',
+                'title' => 'Ticket priority escalated - ' . $complaintId,
+                'message' => 'Ticket #' . $complaintId . ' priority has been escalated due to time elapsed. Immediate attention required.',
                 'type' => 'priority_escalation',
                 'priority' => 'high',
                 'related_id' => $complaintId,

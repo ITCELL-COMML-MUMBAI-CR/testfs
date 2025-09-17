@@ -74,19 +74,23 @@ class NotificationModel extends BaseModel {
                 $userConditions = [];
 
                 // 1. Individual notifications for this user
-                $userConditions[] = "n.user_id = " . $this->db->quote($userId);
+                $userConditions[] = "n.user_id = ?";
+                $params[] = $userId;
 
                 // 2. Role-based broadcast notifications
-                $userConditions[] = "(n.user_id IS NULL AND n.customer_id IS NULL AND (n.user_type IS NULL OR n.user_type = '' OR n.user_type = " . $this->db->quote($userRole) . "))";
+                $userConditions[] = "(n.user_id IS NULL AND n.customer_id IS NULL AND (n.user_type IS NULL OR n.user_type = '' OR n.user_type = ?))";
+                $params[] = $userRole;
 
                 // 3. Department-based notifications for controller
                 if ($userRole === 'controller' && $user && $user['department']) {
-                    $userConditions[] = "(n.user_id IS NULL AND n.user_type = 'controller' AND JSON_EXTRACT(n.metadata, '$.target_department') = " . $this->db->quote($user['department']) . ")";
+                    $userConditions[] = "(n.user_id IS NULL AND n.user_type = 'controller' AND JSON_EXTRACT(n.metadata, '$.target_department') = ?)";
+                    $params[] = $user['department'];
                 }
 
                 // 4. Division-based notifications for controller_nodal
                 if ($userRole === 'controller_nodal' && $user && $user['division']) {
-                    $userConditions[] = "(n.user_id IS NULL AND n.user_type = 'controller_nodal' AND JSON_EXTRACT(n.metadata, '$.target_division') = " . $this->db->quote($user['division']) . ")";
+                    $userConditions[] = "(n.user_id IS NULL AND n.user_type = 'controller_nodal' AND JSON_EXTRACT(n.metadata, '$.target_division') = ?)";
+                    $params[] = $user['division'];
                 }
 
                 // 5. Admin role-based notifications
@@ -317,9 +321,9 @@ class NotificationModel extends BaseModel {
      * Create SLA warning notification
      */
     public function createSLAWarning($ticketId, $userId, $userType, $hoursRemaining) {
-        $title = "SLA Warning - Ticket #{$ticketId}";
-        $message = "Ticket #{$ticketId} has {$hoursRemaining} hours remaining before SLA breach.";
-        
+        $title = "SLA warning for ticket - {$ticketId}";
+        $message = "Ticket #{$ticketId} has {$hoursRemaining} hours remaining before SLA breach. Please take immediate action.";
+
         return $this->createTicketNotification(
             $ticketId,
             $userId,
