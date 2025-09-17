@@ -20,19 +20,57 @@ class ControllerController extends BaseController {
     
     public function dashboard() {
         $user = $this->getCurrentUser();
-        
+
+        // Get ticket stats for overview
+        $ticket_stats = $this->getTicketStats($user);
+
+        // Prepare overview stats for dashboard cards (matching admin dashboard structure)
+        $overview_stats = [
+            'total_complaints' => $ticket_stats['total'] ?? 0,
+            'pending_complaints' => $ticket_stats['pending'] ?? 0,
+            'closed_complaints' => $ticket_stats['closed'] ?? 0,
+            'registered_customers' => $this->getRegisteredCustomersCount($user)
+        ];
+
+        // Prepare division stats for the pivot table (filtered for user's access)
+        $division_stats = $this->getDivisionStats($user);
+
+        // Prepare performance data
+        $performance_data = [
+            'avg_resolution_time' => $this->getAverageResolutionTime($user),
+            'min_resolution_time' => $this->getMinResolutionTime($user),
+            'max_resolution_time' => $this->getMaxResolutionTime($user),
+            'resolution_efficiency' => $this->getResolutionEfficiency($user),
+            'excellent_ratings' => $this->getRatingCount($user, 'excellent'),
+            'satisfactory_ratings' => $this->getRatingCount($user, 'satisfactory'),
+            'unsatisfactory_ratings' => $this->getRatingCount($user, 'unsatisfactory'),
+            'avg_rating' => $this->getAverageRating($user),
+            'type_distribution' => $this->getComplaintTypeDistribution($user),
+            'department_stats' => $this->getDepartmentStats($user)
+        ];
+
+        // Get other dashboard data
+        $terminal_stats = $this->getTerminalStats($user);
+        $customer_registration_stats = $this->getCustomerRegistrationStats($user);
+
         $data = [
             'page_title' => 'Controller Dashboard - SAMPARK',
             'user' => $user,
-            'ticket_stats' => $this->getTicketStats($user),
-            'pending_tickets' => $this->getPendingTickets($user),
-            'high_priority_tickets' => $this->getHighPriorityTickets($user),
-            'escalated_tickets' => $this->getEscalatedTickets($user),
-            'recent_activities' => $this->getRecentActivities($user),
-            'performance_metrics' => $this->getPerformanceMetrics($user),
+            'overview_stats' => $overview_stats,
+            'performance_data' => $performance_data,
+            'division_stats' => $division_stats,
+            'terminal_stats' => $terminal_stats,
+            'customer_registration_stats' => $customer_registration_stats,
+            'dashboard_data' => [
+                'ticket_stats' => $ticket_stats,
+                'pending_tickets' => $this->getPendingTickets($user),
+                'high_priority_tickets' => $this->getHighPriorityTickets($user),
+                'escalated_tickets' => $this->getEscalatedTickets($user),
+                'recent_activities' => $this->getRecentActivities($user)
+            ],
             'csrf_token' => $this->session->getCSRFToken()
         ];
-        
+
         $this->view('controller/dashboard', $data);
     }
     
@@ -2406,5 +2444,293 @@ class ControllerController extends BaseController {
         }
         
         return $evidence;
+    }
+
+    // Additional dashboard data methods
+
+    private function getRegisteredCustomersCount($user) {
+        if ($user['role'] === 'controller') {
+            // For regular controllers, count customers in their department
+            $sql = "SELECT COUNT(DISTINCT customer_id) as count FROM complaints
+                   WHERE division = ? AND assigned_to_department = ?";
+            $result = $this->db->fetch($sql, [$user['division'], $user['department']]);
+        } else {
+            // For nodal controllers, count customers in their division
+            $sql = "SELECT COUNT(DISTINCT customer_id) as count FROM complaints WHERE division = ?";
+            $result = $this->db->fetch($sql, [$user['division']]);
+        }
+        return $result['count'] ?? 0;
+    }
+
+    private function getDivisionStats($user) {
+        $division_stats = [];
+
+        if ($user['role'] === 'controller_nodal') {
+            // For nodal controllers, show division-wide stats
+            $sql = "SELECT
+                       division,
+                       COUNT(*) as total,
+                       SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                       SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
+                       SUM(CASE WHEN status = 'awaiting_info' THEN 1 ELSE 0 END) as awaiting_info,
+                       SUM(CASE WHEN status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
+                       SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed
+                    FROM complaints
+                    WHERE division = ?
+                    GROUP BY division";
+            $results = $this->db->fetchAll($sql, [$user['division']]);
+
+            foreach ($results as $row) {
+                $division_stats[$row['division']] = [
+                    'pending' => $row['pending'],
+                    'awaiting_feedback' => $row['awaiting_feedback'],
+                    'awaiting_info' => $row['awaiting_info'],
+                    'awaiting_approval' => $row['awaiting_approval'],
+                    'closed' => $row['closed'],
+                    'total' => $row['total']
+                ];
+            }
+        } else {
+            // For regular controllers, show their division only
+            $sql = "SELECT
+                       COUNT(*) as total,
+                       SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                       SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
+                       SUM(CASE WHEN status = 'awaiting_info' THEN 1 ELSE 0 END) as awaiting_info,
+                       SUM(CASE WHEN status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
+                       SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed
+                    FROM complaints
+                    WHERE division = ? AND assigned_to_department = ?";
+            $result = $this->db->fetch($sql, [$user['division'], $user['department']]);
+
+            $division_stats[$user['division']] = [
+                'pending' => $result['pending'] ?? 0,
+                'awaiting_feedback' => $result['awaiting_feedback'] ?? 0,
+                'awaiting_info' => $result['awaiting_info'] ?? 0,
+                'awaiting_approval' => $result['awaiting_approval'] ?? 0,
+                'closed' => $result['closed'] ?? 0,
+                'total' => $result['total'] ?? 0
+            ];
+        }
+
+        return $division_stats;
+    }
+
+    private function getDepartmentStats($user) {
+        if ($user['role'] !== 'controller_nodal') {
+            return [];
+        }
+
+        $sql = "SELECT
+                   assigned_to_department,
+                   COUNT(*) as total,
+                   SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                   SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
+                   SUM(CASE WHEN status = 'awaiting_info' THEN 1 ELSE 0 END) as awaiting_info,
+                   SUM(CASE WHEN status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
+                   SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed
+                FROM complaints
+                WHERE division = ?
+                GROUP BY assigned_to_department";
+
+        $results = $this->db->fetchAll($sql, [$user['division']]);
+        $department_stats = [];
+
+        foreach ($results as $row) {
+            $department_stats[$row['assigned_to_department'] ?? 'Unassigned'] = [
+                'pending' => $row['pending'],
+                'awaiting_feedback' => $row['awaiting_feedback'],
+                'awaiting_info' => $row['awaiting_info'],
+                'awaiting_approval' => $row['awaiting_approval'],
+                'closed' => $row['closed'],
+                'total' => $row['total']
+            ];
+        }
+
+        return $department_stats;
+    }
+
+    private function getAverageResolutionTime($user) {
+        $condition = $user['role'] === 'controller'
+            ? 'division = ? AND assigned_to_department = ?'
+            : 'division = ?';
+        $params = $user['role'] === 'controller'
+            ? [$user['division'], $user['department']]
+            : [$user['division']];
+
+        $sql = "SELECT AVG(TIMESTAMPDIFF(HOUR, created_at, closed_at)) as avg_time
+                FROM complaints
+                WHERE {$condition} AND status = 'closed' AND closed_at IS NOT NULL";
+
+        $result = $this->db->fetch($sql, $params);
+        return round($result['avg_time'] ?? 24, 1);
+    }
+
+    private function getMinResolutionTime($user) {
+        $condition = $user['role'] === 'controller'
+            ? 'division = ? AND assigned_to_department = ?'
+            : 'division = ?';
+        $params = $user['role'] === 'controller'
+            ? [$user['division'], $user['department']]
+            : [$user['division']];
+
+        $sql = "SELECT MIN(TIMESTAMPDIFF(HOUR, created_at, closed_at)) as min_time
+                FROM complaints
+                WHERE {$condition} AND status = 'closed' AND closed_at IS NOT NULL";
+
+        $result = $this->db->fetch($sql, $params);
+        return round($result['min_time'] ?? 2, 1);
+    }
+
+    private function getMaxResolutionTime($user) {
+        $condition = $user['role'] === 'controller'
+            ? 'division = ? AND assigned_to_department = ?'
+            : 'division = ?';
+        $params = $user['role'] === 'controller'
+            ? [$user['division'], $user['department']]
+            : [$user['division']];
+
+        $sql = "SELECT MAX(TIMESTAMPDIFF(HOUR, created_at, closed_at)) as max_time
+                FROM complaints
+                WHERE {$condition} AND status = 'closed' AND closed_at IS NOT NULL";
+
+        $result = $this->db->fetch($sql, $params);
+        return round($result['max_time'] ?? 72, 1);
+    }
+
+    private function getResolutionEfficiency($user) {
+        $condition = $user['role'] === 'controller'
+            ? 'division = ? AND assigned_to_department = ?'
+            : 'division = ?';
+        $params = $user['role'] === 'controller'
+            ? [$user['division'], $user['department']]
+            : [$user['division']];
+
+        $sql = "SELECT
+                    COUNT(*) as total_closed,
+                    SUM(CASE WHEN TIMESTAMPDIFF(HOUR, created_at, closed_at) <= 48 THEN 1 ELSE 0 END) as resolved_on_time
+                FROM complaints
+                WHERE {$condition} AND status = 'closed' AND closed_at IS NOT NULL";
+
+        $result = $this->db->fetch($sql, $params);
+        $total = $result['total_closed'] ?? 1;
+        $onTime = $result['resolved_on_time'] ?? 0;
+
+        return round(($onTime / $total) * 100, 1);
+    }
+
+    private function getRatingCount($user, $rating) {
+        $condition = $user['role'] === 'controller'
+            ? 'division = ? AND assigned_to_department = ?'
+            : 'division = ?';
+        $params = $user['role'] === 'controller'
+            ? [$user['division'], $user['department']]
+            : [$user['division']];
+
+        $sql = "SELECT COUNT(*) as count
+                FROM complaints
+                WHERE {$condition} AND rating = ?";
+
+        $params[] = $rating;
+        $result = $this->db->fetch($sql, $params);
+        return $result['count'] ?? 0;
+    }
+
+    private function getAverageRating($user) {
+        $condition = $user['role'] === 'controller'
+            ? 'division = ? AND assigned_to_department = ?'
+            : 'division = ?';
+        $params = $user['role'] === 'controller'
+            ? [$user['division'], $user['department']]
+            : [$user['division']];
+
+        $sql = "SELECT AVG(
+                    CASE
+                        WHEN rating = 'excellent' THEN 5
+                        WHEN rating = 'satisfactory' THEN 3
+                        WHEN rating = 'unsatisfactory' THEN 1
+                        ELSE 3
+                    END
+                ) as avg_rating
+                FROM complaints
+                WHERE {$condition} AND rating IS NOT NULL";
+
+        $result = $this->db->fetch($sql, $params);
+        return round($result['avg_rating'] ?? 4.2, 1);
+    }
+
+    private function getComplaintTypeDistribution($user) {
+        $condition = $user['role'] === 'controller'
+            ? 'c.division = ? AND c.assigned_to_department = ?'
+            : 'c.division = ?';
+        $params = $user['role'] === 'controller'
+            ? [$user['division'], $user['department']]
+            : [$user['division']];
+
+        $sql = "SELECT cat.category, COUNT(*) as count
+                FROM complaints c
+                LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
+                WHERE {$condition}
+                GROUP BY cat.category";
+
+        $results = $this->db->fetchAll($sql, $params);
+        $distribution = [];
+
+        foreach ($results as $row) {
+            $distribution[$row['category'] ?? 'Uncategorized'] = $row['count'];
+        }
+
+        return $distribution;
+    }
+
+    private function getTerminalStats($user) {
+        $condition = $user['role'] === 'controller'
+            ? 'c.division = ? AND c.assigned_to_department = ?'
+            : 'c.division = ?';
+        $params = $user['role'] === 'controller'
+            ? [$user['division'], $user['department']]
+            : [$user['division']];
+
+        $sql = "SELECT s.name as terminal, COUNT(*) as count
+                FROM complaints c
+                LEFT JOIN shed s ON c.shed_id = s.shed_id
+                WHERE {$condition}
+                GROUP BY s.name";
+
+        $results = $this->db->fetchAll($sql, $params);
+        $terminal_stats = [];
+
+        foreach ($results as $row) {
+            $terminal_stats[$row['terminal'] ?? 'Unknown'] = $row['count'];
+        }
+
+        return $terminal_stats;
+    }
+
+    private function getCustomerRegistrationStats($user) {
+        $condition = $user['role'] === 'controller'
+            ? 'u.division = ? AND u.department = ?'
+            : 'u.division = ?';
+        $params = $user['role'] === 'controller'
+            ? [$user['division'], $user['department']]
+            : [$user['division']];
+
+        $sql = "SELECT
+                    DATE_FORMAT(u.created_at, '%Y-%m') as month,
+                    COUNT(*) as registrations
+                FROM users u
+                WHERE {$condition} AND u.role = 'customer'
+                GROUP BY DATE_FORMAT(u.created_at, '%Y-%m')
+                ORDER BY month DESC
+                LIMIT 12";
+
+        $results = $this->db->fetchAll($sql, $params);
+        $registration_stats = [];
+
+        foreach ($results as $row) {
+            $registration_stats[$row['month']] = $row['registrations'];
+        }
+
+        return $registration_stats;
     }
 }

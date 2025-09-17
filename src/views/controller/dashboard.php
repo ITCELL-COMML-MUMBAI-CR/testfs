@@ -225,7 +225,7 @@ if ($user_division && $user_division !== 'HQ') {
                         <div class="row">
                             <div class="col-4 text-center">
                                 <div class="satisfaction-metric excellent">
-                                    <i class="fas fa-star-full"></i>
+                                    <i class="fas fa-star"></i>
                                     <div class="count"><?= $performance_data['excellent_ratings'] ?? 0 ?></div>
                                     <small>Excellent</small>
                                 </div>
