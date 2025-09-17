@@ -589,13 +589,13 @@ class BackgroundRefreshManager {
 // Global instance
 window.backgroundRefreshManager = null;
 
-// Auto-initialize when DOM is ready - TEMPORARILY DISABLED TO FIX LOGIN ISSUES
+// Auto-initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    // DISABLED: Initialize background refresh manager
-    console.log('Background refresh manager disabled to resolve login issues');
-    // window.backgroundRefreshManager = new BackgroundRefreshManager({
-    //     debug: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    // });
+    // Initialize background refresh manager
+    console.log('Background refresh manager enabled');
+    window.backgroundRefreshManager = new BackgroundRefreshManager({
+        debug: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    });
 });
 
 // Export for use in other scripts

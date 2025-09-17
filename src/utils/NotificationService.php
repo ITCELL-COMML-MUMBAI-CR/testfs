@@ -585,18 +585,6 @@ class NotificationService {
             $recipients = array_merge($recipients, $controllerUsers);
         }
 
-        // Always notify assigned user if exists
-        if (!empty($ticket['assigned_to_user_id'])) {
-            $assignedUser = $this->db->fetch(
-                "SELECT id as user_id, role as user_type, email, mobile, name
-                 FROM users
-                 WHERE id = ? AND status = 'active'",
-                [$ticket['assigned_to_user_id']]
-            );
-            if ($assignedUser) {
-                $recipients[] = $assignedUser;
-            }
-        }
 
         // Always notify the customer
         if (!empty($ticket['customer_id'])) {

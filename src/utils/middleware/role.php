@@ -258,10 +258,9 @@ class RoleMiddleware {
             return $ticketData['zone'] === $userData['zone'];
         }
         
-        // Controllers can view tickets in their division or assigned to them
+        // Controllers can view tickets in their division
         if (in_array($userRole, ['controller', 'controller_nodal'])) {
-            return $ticketData['division'] === $userData['division'] || 
-                   $ticketData['assigned_to_user_id'] === $userData['id'];
+            return $ticketData['division'] === $userData['division'];
         }
         
         return false;

@@ -764,30 +764,11 @@ class WorkflowEngine {
                 ]);
             }
 
-            // Create notification for assigned controller if ticket is assigned
-            if ($ticket['assigned_to_user_id']) {
-                $notificationModel->createNotification([
-                    'title' => "Ticket Status Updated",
-                    'message' => "Ticket #{$ticket['complaint_id']} status has been changed to {$this->getStatusDisplayName($newStatus)}",
-                    'type' => 'status_change',
-                    'user_id' => $ticket['assigned_to_user_id'],
-                    'user_type' => 'user',
-                    'related_id' => $ticket['complaint_id'],
-                    'related_type' => 'ticket',
-                    'priority' => 'medium',
-                    'action_url' => "/controller/tickets/{$ticket['complaint_id']}",
-                    'metadata' => [
-                        'action' => $action,
-                        'new_status' => $newStatus,
-                        'ticket_id' => $ticket['complaint_id']
-                    ]
-                ]);
-            }
 
-            // Create notification for nodal controller if different from assigned user
+            // Create notification for nodal controller
             $nodalController = $this->db->fetch(
-                "SELECT id FROM users WHERE role = 'controller_nodal' AND division = ? AND status = 'active' AND id != ? LIMIT 1",
-                [$ticket['division'], $ticket['assigned_to_user_id'] ?? 0]
+                "SELECT id FROM users WHERE role = 'controller_nodal' AND division = ? AND status = 'active' LIMIT 1",
+                [$ticket['division']]
             );
 
             if ($nodalController) {
@@ -854,14 +835,6 @@ class WorkflowEngine {
      */
     private function sendInfoProvidedNotifications($ticket, $additionalInfo) {
         try {
-            // Get assigned controller
-            $assignedUser = null;
-            if ($ticket['assigned_to_user_id']) {
-                $assignedUser = $this->db->fetch(
-                    "SELECT id, name, email, mobile FROM users WHERE id = ?",
-                    [$ticket['assigned_to_user_id']]
-                );
-            }
             
             // Get controller_nodal for the division
             $nodalController = $this->db->fetch(

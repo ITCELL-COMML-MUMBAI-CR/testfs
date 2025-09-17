@@ -469,24 +469,13 @@ class ScheduledTaskRunner {
         // $sent = 0;
 
         // foreach ($approachingTickets as $ticket) {
-            if ($ticket['assigned_user_email']) {
-                $recipients = [[
-                    'user_id' => $ticket['assigned_to_user_id'],
-                    'email' => $ticket['assigned_user_email'],
-                    'name' => $ticket['assigned_user_name']
-                ]];
-                
-                $data = [
-                    'complaint_id' => $ticket['complaint_id'],
-                    'hours_remaining' => $ticket['hours_remaining'],
-                    'priority' => $ticket['priority']
-                ];
+            // Notification logic removed as assigned_to_user_id no longer exists
                 
                 $result = $this->notificationService->send('sla_warning', $recipients, $data);
                 if ($result[0]['email_sent']) {
                     $sent++;
                 }
-            }
+            
             return $sent;
         }
         

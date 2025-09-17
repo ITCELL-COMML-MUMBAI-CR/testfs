@@ -549,12 +549,14 @@ class AdditionalInfoModal {
 
             if (data.success) {
                 // Show enhanced success message with view link and info provided
-                let successMessage = data.message;
+                let successMessage = `<p>${data.message}</p>`;
                 if (data.details) {
-                    successMessage += `<br><br><strong>Information Provided:</strong><br>"${data.details.info_provided}"<br><br>`;
-                    successMessage += `<a href="${data.details.view_url}" class="btn btn-primary btn-sm mt-2">
-                        <i class="fas fa-eye me-1"></i>View Ticket
-                    </a>`;
+                    successMessage += `<p><strong>Information Provided:</strong><br>"${data.details.info_provided}"</p>`;
+                    successMessage += `<div class="mt-3">
+                        <a href="${data.details.view_url}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i>View Ticket
+                        </a>
+                    </div>`;
                 }
 
                 window.SAMPARK.ui.showSuccess('Information Submitted Successfully', successMessage);

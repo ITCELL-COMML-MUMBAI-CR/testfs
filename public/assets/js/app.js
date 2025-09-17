@@ -206,7 +206,7 @@ window.SAMPARK = {
             return Swal.fire({
                 icon: 'success',
                 title: title,
-                text: text,
+                html: text,
                 customClass: {
                     confirmButton: 'btn btn-apple-primary'
                 }
@@ -218,7 +218,7 @@ window.SAMPARK = {
             return Swal.fire({
                 icon: 'error',
                 title: title,
-                text: text,
+                html: text,
                 customClass: {
                     confirmButton: 'btn btn-apple-primary'
                 }
@@ -230,7 +230,7 @@ window.SAMPARK = {
             return Swal.fire({
                 icon: 'info',
                 title: title,
-                text: text,
+                html: text,
                 customClass: {
                     confirmButton: 'btn btn-apple-primary'
                 }

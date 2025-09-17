@@ -25,7 +25,7 @@ class FileController extends BaseController {
             
             // Get evidence details from database
             $evidence = $this->db->fetch(
-                "SELECT e.*, c.customer_id, c.assigned_to_user_id, c.division 
+                "SELECT e.*, c.customer_id, c.division 
                  FROM evidence e
                  LEFT JOIN complaints c ON e.complaint_id = c.complaint_id
                  WHERE e.file_name_1 = ? OR e.file_name_2 = ? OR e.file_name_3 = ?",
@@ -46,7 +46,7 @@ class FileController extends BaseController {
                     break;
                     
                 case 'controller':
-                    $hasAccess = ($evidence['assigned_to_user_id'] == $user['id']);
+                    $hasAccess = ($evidence['division'] === $user['division']);
                     break;
                     
                 case 'controller_nodal':
@@ -462,8 +462,8 @@ class FileController extends BaseController {
                 break;
                 
             case 'controller':
-                $sql .= " AND assigned_to_user_id = ?";
-                $params[] = $user['id'];
+                $sql .= " AND division = ?";
+                $params[] = $user['division'];
                 break;
                 
             case 'controller_nodal':

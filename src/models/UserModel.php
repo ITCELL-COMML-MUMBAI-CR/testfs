@@ -142,10 +142,9 @@ class UserModel extends BaseModel {
      */
     public function getUsersWithWorkload($division = null) {
         $sql = "SELECT u.id, u.name, u.role, u.division, u.status,
-                       COUNT(c.complaint_id) as active_tickets,
-                       AVG(CASE WHEN c.status = 'closed' THEN TIMESTAMPDIFF(HOUR, c.created_at, c.closed_at) END) as avg_resolution_hours
+                       0 as active_tickets,
+                       NULL as avg_resolution_hours
                 FROM users u
-                LEFT JOIN complaints c ON u.id = c.assigned_to_user_id AND c.status != 'closed'
                 WHERE u.status = 'active' AND u.role IN ('controller', 'controller_nodal')";
         
         $params = [];
@@ -155,7 +154,7 @@ class UserModel extends BaseModel {
             $params[] = $division;
         }
         
-        $sql .= " GROUP BY u.id ORDER BY active_tickets ASC, u.name ASC";
+        $sql .= " ORDER BY u.name ASC";
         
         return $this->fetchAll($sql, $params);
     }

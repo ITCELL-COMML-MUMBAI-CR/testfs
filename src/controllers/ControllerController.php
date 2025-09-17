@@ -1917,13 +1917,8 @@ class ControllerController extends BaseController {
     // Helper methods
     
     private function getTicketStats($user) {
-        if ($user['role'] === 'controller') {
-            $condition = 'c.assigned_to_user_id = ?';
-            $param = $user['id'];
-        } else {
-            $condition = 'c.division = ?';
-            $param = $user['division'];
-        }
+        $condition = 'c.division = ?';
+        $param = $user['division'];
 
         $sql = "SELECT
                     COUNT(*) as total,
@@ -1957,8 +1952,8 @@ class ControllerController extends BaseController {
     }
     
     private function getPendingTickets($user, $limit = 10) {
-        $condition = $user['role'] === 'controller' ? 'c.assigned_to_user_id = ?' : 'c.division = ?';
-        $param = $user['role'] === 'controller' ? $user['id'] : $user['division'];
+        $condition = 'c.division = ?';
+        $param = $user['division'];
         
         $sql = "SELECT c.complaint_id, c.priority, c.created_at, c.status,
                        cat.category, cat.subtype,
@@ -1983,8 +1978,8 @@ class ControllerController extends BaseController {
     }
     
     private function getHighPriorityTickets($user, $limit = 5) {
-        $condition = $user['role'] === 'controller' ? 'c.assigned_to_user_id = ?' : 'c.division = ?';
-        $param = $user['role'] === 'controller' ? $user['id'] : $user['division'];
+        $condition = 'c.division = ?';
+        $param = $user['division'];
         
         $sql = "SELECT c.complaint_id, c.priority, c.created_at, c.status,
                        cat.category, cat.subtype,
@@ -2005,8 +2000,8 @@ class ControllerController extends BaseController {
     }
     
     private function getEscalatedTickets($user, $limit = 5) {
-        $condition = $user['role'] === 'controller' ? 'c.assigned_to_user_id = ?' : 'c.division = ?';
-        $param = $user['role'] === 'controller' ? $user['id'] : $user['division'];
+        $condition = 'c.division = ?';
+        $param = $user['division'];
         
         $sql = "SELECT c.complaint_id, c.priority, c.created_at, c.status, c.escalated_at,
                        cat.category, cat.subtype,
@@ -2040,8 +2035,8 @@ class ControllerController extends BaseController {
     }
     
     private function getPerformanceMetrics($user) {
-        $condition = $user['role'] === 'controller' ? 'c.assigned_to_user_id = ?' : 'c.division = ?';
-        $param = $user['role'] === 'controller' ? $user['id'] : $user['division'];
+        $condition = 'c.division = ?';
+        $param = $user['division'];
         
         $sql = "SELECT 
                     COUNT(*) as total_handled,
@@ -2057,8 +2052,8 @@ class ControllerController extends BaseController {
     }
     
     private function getSLAViolations($user) {
-        $condition = $user['role'] === 'controller' ? 'c.assigned_to_user_id = ?' : 'c.division = ?';
-        $param = $user['role'] === 'controller' ? $user['id'] : $user['division'];
+        $condition = 'c.division = ?';
+        $param = $user['division'];
         
         // No longer tracking SLA violations - return empty array
         return [];
@@ -2222,32 +2217,7 @@ class ControllerController extends BaseController {
                     'complaint_id' => $ticketId
                 ]];
                 
-                $notificationService->send('reply_approved', $recipients, $data);
-            }
-        } else {
-            // Notify assigned controller
-            if ($ticket['assigned_to_user_id']) {
-                $assignedUser = $this->db->fetch(
-                    "SELECT id, name, email, mobile FROM users WHERE id = ?",
-                    [$ticket['assigned_to_user_id']]
-                );
-                
-                if ($assignedUser) {
-                    $data = [
-                        'complaint_id' => $ticketId,
-                        'rejected_by' => $user['name'],
-                        'reason' => $reason
-                    ];
-                    
-                    $recipients = [[
-                        'user_id' => $assignedUser['id'],
-                        'email' => $assignedUser['email'],
-                        'mobile' => $assignedUser['mobile'],
-                        'complaint_id' => $ticketId
-                    ]];
-                    
-                    $notificationService->send('reply_rejected', $recipients, $data);
-                }
+                $notificationService->send('awaiting_feedback', $recipients, $data);
             }
         }
     }
@@ -2649,7 +2619,7 @@ class ControllerController extends BaseController {
 
         $result = $this->db->fetch($sql, $params);
         $total = $result['total_closed'] ?? 1;
-        $onTime = $result['resolved_on_time'] ?? 0;
+        $onTime = $result['resolved_on_time'] ?? 1;
 
         return round(($onTime / $total) * 100, 1);
     }
