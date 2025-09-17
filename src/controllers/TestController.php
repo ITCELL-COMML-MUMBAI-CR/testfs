@@ -19,7 +19,6 @@ class TestController extends BaseController {
         $this->userModel = new UserModel();
         $this->customerModel = new CustomerModel();
     }
-
     public function notifications() {
         $data = [
             'page_title' => 'Test Notifications',

@@ -3275,7 +3275,7 @@ class AdminController extends BaseController
                     $personalizedMessage = str_replace('$customer_email', $recipient['email'], $personalizedMessage);
                 }
 
-                $success = $emailService->send(
+                $success = $emailService->sendEmail(
                     $recipient['email'],
                     $recipient['name'] ?? '',
                     $subject,
