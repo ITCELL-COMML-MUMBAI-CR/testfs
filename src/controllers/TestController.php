@@ -51,7 +51,7 @@ class TestController extends BaseController {
         $this->view('admin/testing/emails', $data);
     }
 
-    public function sendNotification() {
+    public function sendTestNotification() {
         $this->validateCSRF();
 
         $title = $_POST['title'];
@@ -74,28 +74,11 @@ class TestController extends BaseController {
                     $recipients[] = ['customer_id' => $customerId];
                 }
                 break;
-            case 'all_users':
-                $users = $this->userModel->findAll();
-                foreach ($users as $user) {
-                    if ($user['role'] !== 'superadmin') {
-                        $recipients[] = ['user_id' => $user['id']];
-                    }
-                }
+            case 'structured':
+                $recipients = $this->getStructuredNotificationRecipients();
                 break;
             case 'user_type':
                 $users = $this->userModel->getUsersByRole($_POST['user_type']);
-                foreach ($users as $user) {
-                    if ($user['role'] !== 'superadmin') {
-                        $recipients[] = ['user_id' => $user['id']];
-                    }
-                }
-                break;
-            case 'division':
-                $conditions = ['status' => 'active'];
-                if (!empty($_POST['division'])) $conditions['division'] = $_POST['division'];
-                if (!empty($_POST['zone'])) $conditions['zone'] = $_POST['zone'];
-                if (!empty($_POST['department'])) $conditions['department'] = $_POST['department'];
-                $users = $this->userModel->findAll($conditions);
                 foreach ($users as $user) {
                     if ($user['role'] !== 'superadmin') {
                         $recipients[] = ['user_id' => $user['id']];
@@ -176,5 +159,61 @@ class TestController extends BaseController {
         }
 
         $this->json(['success' => true, 'message' => 'Sent ' . $sentCount . ' emails.']);
+    }
+
+    /**
+     * Get recipients for structured notifications based on zone/division/department hierarchy
+     */
+    private function getStructuredNotificationRecipients() {
+        $zones = $_POST['structured_zone'] ?? [];
+        $divisions = $_POST['structured_division'] ?? [];
+        $departments = $_POST['structured_department'] ?? [];
+        $userTypes = $_POST['structured_user_types'] ?? [];
+
+        if (empty($userTypes)) {
+            return [];
+        }
+
+        $recipients = [];
+        $conditions = ['status' => 'active'];
+        $conditionParams = [];
+
+        // Build conditions based on hierarchy
+        if (!empty($zones) && !in_array('', $zones)) {
+            $zonePlaceholders = str_repeat('?,', count($zones) - 1) . '?';
+            $conditions[] = "zone IN ($zonePlaceholders)";
+            $conditionParams = array_merge($conditionParams, $zones);
+        }
+
+        if (!empty($divisions) && !in_array('', $divisions)) {
+            $divisionPlaceholders = str_repeat('?,', count($divisions) - 1) . '?';
+            $conditions[] = "division IN ($divisionPlaceholders)";
+            $conditionParams = array_merge($conditionParams, $divisions);
+        }
+
+        if (!empty($departments) && !in_array('', $departments)) {
+            $departmentPlaceholders = str_repeat('?,', count($departments) - 1) . '?';
+            $conditions[] = "department IN ($departmentPlaceholders)";
+            $conditionParams = array_merge($conditionParams, $departments);
+        }
+
+        // Build user type conditions
+        $userTypePlaceholders = str_repeat('?,', count($userTypes) - 1) . '?';
+        $conditions[] = "role IN ($userTypePlaceholders)";
+        $conditionParams = array_merge($conditionParams, $userTypes);
+
+        // Exclude superadmin
+        $conditions[] = "role != 'superadmin'";
+
+        $whereClause = implode(' AND ', $conditions);
+        $sql = "SELECT id FROM users WHERE $whereClause";
+
+        $users = $this->db->fetchAll($sql, $conditionParams);
+
+        foreach ($users as $user) {
+            $recipients[] = ['user_id' => $user['id']];
+        }
+
+        return $recipients;
     }
 }

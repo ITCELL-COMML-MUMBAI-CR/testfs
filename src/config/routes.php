@@ -107,7 +107,7 @@ $router->get('/admin/notifications', 'Admin@notifications', ['auth', 'role:admin
 
 // Admin testing routes
 $router->get('/admin/testing/notifications', 'Test@notifications', ['auth', 'role:superadmin']);
-$router->post('/admin/testing/notifications/send', 'Test@sendNotification', ['auth', 'role:superadmin']);
+$router->post('/admin/testing/notifications/send', 'Test@sendTestNotification', ['auth', 'role:superadmin']);
 $router->get('/admin/testing/emails', 'Test@emails', ['auth', 'role:superadmin']);
 $router->post('/admin/testing/emails/send', 'Test@sendTestEmail', ['auth', 'role:superadmin']);
 

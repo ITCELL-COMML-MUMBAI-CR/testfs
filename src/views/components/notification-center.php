@@ -218,23 +218,47 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function showNewNotificationToast(notification) {
+    // Get ticket URL if this is a ticket-related notification
+    const ticketUrl = notification.related_id && notification.related_type === 'ticket'
+        ? getTicketUrl(notification.related_id, notification.related_type)
+        : null;
+
+    const hasTicketLink = ticketUrl && ticketUrl !== '#';
+
     Swal.fire({
         toast: true,
         position: 'top-end',
         icon: 'info',
         title: notification.title,
-        text: notification.message,
-        showConfirmButton: false,
-        timer: 10000,
-        timerProgressBar: true,
+        html: `
+            <div>${notification.message}</div>
+            ${hasTicketLink ? `
+                <div class="mt-2">
+                    <a href="${ticketUrl}" class="btn btn-sm btn-primary" onclick="Swal.close();">
+                        <i class="fas fa-ticket-alt me-1"></i>View Ticket #${notification.related_id}
+                    </a>
+                </div>
+            ` : ''}
+        `,
+        showConfirmButton: true,
+        confirmButtonText: 'Close',
+        showCancelButton: hasTicketLink,
+        cancelButtonText: hasTicketLink ? 'View Ticket' : undefined,
+        allowOutsideClick: false,
+        allowEscapeKey: true,
         didOpen: (toast) => {
-            toast.addEventListener('mouseenter', Swal.stopTimer)
-            toast.addEventListener('mouseleave', Swal.resumeTimer)
-            toast.addEventListener('click', () => {
-                if (notification.action_url) {
-                    window.location.href = notification.action_url;
+            toast.addEventListener('click', (e) => {
+                if (e.target.tagName === 'A') {
+                    return true; // Allow link clicks
                 }
-            })
+            });
+        }
+    }).then((result) => {
+        if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel && hasTicketLink) {
+            window.location.href = ticketUrl;
+        }
+        if (notification.action_url && !hasTicketLink) {
+            window.location.href = notification.action_url;
         }
     });
 }
