@@ -143,7 +143,7 @@ class ControllerController extends BaseController {
                        cust.name as customer_name, cust.email as customer_email,
                        cust.company_name, cust.mobile as customer_mobile,
                        d.department_name as assigned_department_name,
-                       TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
+                       TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -259,7 +259,7 @@ class ControllerController extends BaseController {
                        cust.name as customer_name, cust.email as customer_email,
                        cust.company_name, cust.mobile as customer_mobile,
                        d.department_name as assigned_department_name,
-                       TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
+                       TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -317,7 +317,7 @@ class ControllerController extends BaseController {
                        cust.name as customer_name, cust.email as customer_email, 
                        cust.mobile as customer_mobile, cust.company_name,
                        d.department_name as assigned_department_name,
-                       TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed,
+                       TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -2593,8 +2593,13 @@ class ControllerController extends BaseController {
                 WHERE {$condition} AND status = 'closed' AND closed_at IS NOT NULL";
 
         $result = $this->db->fetch($sql, $params);
-        $total = $result['total_closed'] ?? 1;
-        $onTime = $result['resolved_on_time'] ?? 1;
+        $total = $result['total_closed'] ?? 0;
+        $onTime = $result['resolved_on_time'] ?? 0;
+
+        // Handle division by zero - return 0% if no closed tickets
+        if ($total == 0) {
+            return 0;
+        }
 
         return round(($onTime / $total) * 100, 1);
     }
