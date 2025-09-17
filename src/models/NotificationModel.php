@@ -49,7 +49,7 @@ class NotificationModel extends BaseModel {
     /**
      * Get notifications for a specific user - Department-based approach
      */
-    public function getUserNotifications($userId, $userRole, $limit = 20, $unreadOnly = false, $division = null) {
+    public function getUserNotifications($userId, $userRole, $limit = 20, $unreadOnly = false, $division = null, $recentOnly = false) {
         try {
             // Get user's department information
             $user = null;
@@ -108,6 +108,10 @@ class NotificationModel extends BaseModel {
 
             if ($unreadOnly) {
                 $sql .= " AND n.is_read = 0";
+            }
+
+            if ($recentOnly) {
+                $sql .= " AND n.created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)";
             }
 
             $sql .= " ORDER BY n.created_at DESC LIMIT ?";
@@ -639,6 +643,26 @@ class NotificationModel extends BaseModel {
         }
 
         return $success;
+    }
+
+    /**
+     * Get all notifications for admin view
+     */
+    public function getAllNotificationsForAdmin($limit = 100) {
+        try {
+            $sql = "SELECT n.*, c.complaint_id, c.division, c.assigned_to_department, c.customer_id as ticket_customer_id
+                    FROM {$this->table} n
+                    LEFT JOIN complaints c ON n.complaint_id = c.complaint_id
+                    WHERE (n.expires_at IS NULL OR n.expires_at > NOW())
+                    ORDER BY n.created_at DESC
+                    LIMIT ?";
+
+            return $this->db->fetchAll($sql, [$limit]);
+
+        } catch (Exception $e) {
+            error_log("Error getting admin notifications: " . $e->getMessage());
+            return [];
+        }
     }
 
     /**

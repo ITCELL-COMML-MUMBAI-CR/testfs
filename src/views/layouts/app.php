@@ -224,6 +224,18 @@
                                 <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/notifications">
                                     <i class="fas fa-bell me-2"></i>Notifications
                                 </a></li>
+                                <?php if ($userRole === 'superadmin'): ?>
+                                <li><hr class="dropdown-divider"></li>
+                                <li class="dropdown-header">
+                                    <small class="text-muted">🔧 System Testing</small>
+                                </li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/testing/emails">
+                                    <i class="fas fa-flask me-2"></i>Test Emails
+                                </a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/testing/notifications">
+                                    <i class="fas fa-vial me-2"></i>Test Notifications
+                                </a></li>
+                                <?php endif; ?>
                             </ul>
                             </li>
                         <?php endif; ?>

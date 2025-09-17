@@ -215,6 +215,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Auto-refresh notifications every 30 seconds
     setInterval(refreshNotificationCount, 30000);
+
+    // Check for unread notifications on page load and show them
+    checkForUnreadNotificationsOnLoad();
 });
 
 function showNewNotificationToast(notification) {
@@ -623,5 +626,97 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function checkForUnreadNotificationsOnLoad() {
+    // Only show notifications popup on login/dashboard pages
+    const currentPath = window.location.pathname;
+    const showOnPages = ['/dashboard', '/admin/dashboard', '/controller/dashboard', '/customer/dashboard', '/'];
+
+    const shouldShow = showOnPages.some(page => currentPath.includes(page) || currentPath === '/' || currentPath.endsWith('/'));
+
+    if (!shouldShow) {
+        return;
+    }
+
+    // Check for recent unread notifications (last 24 hours)
+    fetch(`${APP_URL}/api/notifications?limit=5&unread_only=true&recent=true`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-Token': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.notifications && data.notifications.length > 0) {
+            const unreadCount = data.notifications.length;
+            const hasHighPriority = data.notifications.some(n => n.priority === 'high' || n.priority === 'urgent' || n.priority === 'critical');
+
+            // Show notification summary popup
+            showUnreadNotificationsSummary(data.notifications, unreadCount, hasHighPriority);
+        }
+    })
+    .catch(error => console.error('Error checking unread notifications:', error));
+}
+
+function showUnreadNotificationsSummary(notifications, count, hasHighPriority) {
+    const iconClass = hasHighPriority ? 'fa-exclamation-triangle text-warning' : 'fa-bell text-primary';
+    const titleText = hasHighPriority ? 'Important Notifications!' : 'You have unread notifications';
+
+    let notificationsList = '';
+    notifications.slice(0, 3).forEach(notification => {
+        const priorityBadge = notification.priority !== 'medium'
+            ? `<span class="badge bg-${getPriorityColor(notification.priority)} me-2">${notification.priority}</span>`
+            : '';
+        const timeAgo = formatTimeAgo(notification.created_at);
+
+        notificationsList += `
+            <div class="d-flex align-items-start mb-2 p-2 border rounded">
+                <div class="flex-grow-1">
+                    <div class="fw-semibold">${priorityBadge}${escapeHtml(notification.title)}</div>
+                    <div class="text-muted small">${escapeHtml(notification.message.substring(0, 100))}${notification.message.length > 100 ? '...' : ''}</div>
+                    <div class="text-muted small">${timeAgo}</div>
+                </div>
+            </div>
+        `;
+    });
+
+    if (notifications.length > 3) {
+        notificationsList += `<div class="text-center text-muted small">...and ${notifications.length - 3} more notifications</div>`;
+    }
+
+    Swal.fire({
+        title: titleText,
+        html: `
+            <div class="text-start">
+                <div class="d-flex align-items-center mb-3">
+                    <i class="fas ${iconClass} fa-2x me-3"></i>
+                    <div>
+                        <div class="fw-bold">You have ${count} unread notification${count > 1 ? 's' : ''}</div>
+                        <div class="text-muted small">Click below to view all notifications</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    ${notificationsList}
+                </div>
+            </div>
+        `,
+        icon: null,
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-bell me-1"></i>View All Notifications',
+        cancelButtonText: 'Dismiss',
+        confirmButtonColor: '#007bff',
+        cancelButtonColor: '#6c757d',
+        width: '500px',
+        customClass: {
+            popup: 'text-start'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Open notification panel
+            toggleNotificationPanel();
+        }
+    });
 }
 </script>

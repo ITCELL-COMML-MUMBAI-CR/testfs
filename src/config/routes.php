@@ -110,6 +110,8 @@ $router->get('/admin/testing/notifications', 'Test@notifications', ['auth', 'rol
 $router->post('/admin/testing/notifications/send', 'Test@sendTestNotification', ['auth', 'role:superadmin']);
 $router->get('/admin/testing/emails', 'Test@emails', ['auth', 'role:superadmin']);
 $router->post('/admin/testing/emails/send', 'Test@sendTestEmail', ['auth', 'role:superadmin']);
+$router->post('/admin/testing/emails/send-template', 'Test@sendTemplateEmail', ['auth', 'role:superadmin']);
+$router->get('/admin/testing/emails/preview', 'Test@previewTemplate', ['auth', 'role:superadmin']);
 
 // Admin ticket management routes
 $router->get('/admin/tickets', 'Admin@tickets', ['auth', 'role:admin,superadmin']);

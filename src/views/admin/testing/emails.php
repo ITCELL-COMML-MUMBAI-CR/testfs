@@ -5,10 +5,50 @@ include __DIR__ . '/../../layouts/app.php';
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-12">
+        <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Send Test Email</h3>
+                    <h3 class="card-title">🧪 Test Email Templates</h3>
+                </div>
+                <div class="card-body">
+                    <form id="template-email-form">
+                        <input type="hidden" name="csrf_token" value="<?= $csrf_token ?>">
+                        <div class="form-group">
+                            <label for="template_code">Email Template</label>
+                            <select class="form-control" id="template_code" name="template_code" required>
+                                <option value="">Select Template</option>
+                                <?php foreach ($email_templates as $template): ?>
+                                    <option value="<?= $template['template_code'] ?>"><?= htmlspecialchars($template['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="test_email">Test Email Address</label>
+                            <input type="email" class="form-control" id="test_email" name="test_email" placeholder="test@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" class="btn btn-info" id="preview-template">👁️ Preview Template</button>
+                            <button type="submit" class="btn btn-success">📧 Send Test Email</button>
+                        </div>
+                    </form>
+
+                    <div id="template-preview" class="mt-4" style="display: none;">
+                        <h5>📋 Template Preview</h5>
+                        <div class="alert alert-info">
+                            <strong>Subject:</strong> <span id="preview-subject"></span>
+                        </div>
+                        <div class="border p-3" style="max-height: 400px; overflow-y: auto;">
+                            <iframe id="preview-iframe" width="100%" height="300" frameborder="0"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📨 Send Custom Email</h3>
                 </div>
                 <div class="card-body">
                     <form id="send-email-form">
@@ -137,6 +177,55 @@ $(document).ready(function() {
         }
     });
 
+    // Template email functionality
+    $('#preview-template').click(function() {
+        var templateCode = $('#template_code').val();
+        if (!templateCode) {
+            Swal.fire('Error', 'Please select a template first.', 'error');
+            return;
+        }
+
+        $.ajax({
+            url: '<?= Config::getAppUrl() ?>/admin/testing/emails/preview',
+            type: 'GET',
+            data: { template_code: templateCode },
+            success: function(response) {
+                if (response.success) {
+                    $('#preview-subject').text(response.preview.subject);
+                    var iframe = document.getElementById('preview-iframe');
+                    iframe.srcdoc = response.preview.body_html;
+                    $('#template-preview').show();
+                } else {
+                    Swal.fire('Error', response.message, 'error');
+                }
+            },
+            error: function() {
+                Swal.fire('Error', 'Failed to preview template.', 'error');
+            }
+        });
+    });
+
+    $('#template-email-form').submit(function(e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+
+        $.ajax({
+            url: '<?= Config::getAppUrl() ?>/admin/testing/emails/send-template',
+            type: 'POST',
+            data: formData,
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire('Success', response.message, 'success');
+                } else {
+                    Swal.fire('Error', response.message, 'error');
+                }
+            },
+            error: function() {
+                Swal.fire('Error', 'An error occurred while sending the template email.', 'error');
+            }
+        });
+    });
+
     $('#send-email-form').submit(function(e) {
         e.preventDefault();
         var formData = $(this).serialize();
@@ -159,5 +248,3 @@ $(document).ready(function() {
     });
 });
 </script>
-
-<?php include __DIR__ . '/../../layouts/footer.php'; ?>

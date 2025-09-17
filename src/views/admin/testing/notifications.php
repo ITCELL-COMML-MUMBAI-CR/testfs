@@ -185,4 +185,3 @@ $(document).ready(function() {
 });
 </script>
 
-<?php include __DIR__ . '/../../layouts/footer.php'; ?>

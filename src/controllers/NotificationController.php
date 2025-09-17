@@ -57,14 +57,26 @@ class NotificationController extends BaseController {
             $page = intval($_GET['page'] ?? 1);
             $limit = intval($_GET['limit'] ?? 20);
             $unreadOnly = filter_var($_GET['unread_only'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            $isAdmin = filter_var($_GET['admin'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            $recentOnly = filter_var($_GET['recent'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
-            // Apply department-specific RBAC
-            $notifications = $this->notificationModel->getUserNotifications($userId, $userRole, $limit, $unreadOnly, $division);
+            // Check if this is an admin request
+            if ($isAdmin && in_array($userRole, ['admin', 'superadmin'])) {
+                // Admin view - get all notifications
+                $notifications = $this->notificationModel->getAllNotificationsForAdmin($limit);
+            } else {
+                // Apply department-specific RBAC
+                $notifications = $this->notificationModel->getUserNotifications($userId, $userRole, $limit, $unreadOnly, $division, $recentOnly);
+            }
 
             // Calculate if there are more notifications
-            // Calculate if there are more notifications
-                        $totalNotifications = $this->notificationModel->getUserNotifications($userId, $userRole, $limit + 1, $unreadOnly, $division);
-            $hasMore = count($totalNotifications) > $limit;
+            if ($isAdmin && in_array($userRole, ['admin', 'superadmin'])) {
+                $totalNotifications = $this->notificationModel->getAllNotificationsForAdmin($limit + 1);
+                $hasMore = count($totalNotifications) > $limit;
+            } else {
+                $totalNotifications = $this->notificationModel->getUserNotifications($userId, $userRole, $limit + 1, $unreadOnly, $division, $recentOnly);
+                $hasMore = count($totalNotifications) > $limit;
+            }
 
             // Format notifications for display
             $formattedNotifications = [];

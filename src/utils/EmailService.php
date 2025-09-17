@@ -49,6 +49,7 @@ class EmailService {
             return $result;
 
         } catch (Exception $e) {
+            error_log("EmailService Exception: " . $e->getMessage());
             return [
                 'success' => false,
                 'error' => 'Email error: ' . $e->getMessage()
@@ -113,6 +114,40 @@ class EmailService {
                 $response = fgets($smtp);
             }
 
+            // Handle STARTTLS for TLS encryption
+            if ($this->smtpEncryption === 'tls') {
+                fwrite($smtp, "STARTTLS\r\n");
+                $response = fgets($smtp);
+                if (substr($response, 0, 3) !== '220') {
+                    return ['success' => false, 'error' => 'STARTTLS failed: ' . $response];
+                }
+
+                // Enable TLS encryption on the stream
+                $context = stream_context_create([
+                    'ssl' => [
+                        'verify_peer' => false,
+                        'verify_peer_name' => false,
+                        'allow_self_signed' => true
+                    ]
+                ]);
+
+                if (!stream_socket_enable_crypto($smtp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                    return ['success' => false, 'error' => 'Failed to enable TLS encryption'];
+                }
+
+                // Send EHLO again after TLS
+                fwrite($smtp, "EHLO " . $_SERVER['HTTP_HOST'] . "\r\n");
+                $response = fgets($smtp);
+                if (substr($response, 0, 3) !== '250') {
+                    return ['success' => false, 'error' => 'EHLO after TLS failed: ' . $response];
+                }
+
+                // Skip additional EHLO responses
+                while (substr($response, 3, 1) === '-') {
+                    $response = fgets($smtp);
+                }
+            }
+
             // AUTH LOGIN
             fwrite($smtp, "AUTH LOGIN\r\n");
             $response = fgets($smtp);
@@ -157,7 +192,13 @@ class EmailService {
 
             // Email headers and body
             $headers = $this->buildHeaders($to, $subject, $isHtml);
-            $message = $headers . "\r\n" . $body . "\r\n.\r\n";
+            $encodedBody = quoted_printable_encode($body);
+            $message = $headers . "\r\n\r\n" . $encodedBody . "\r\n.\r\n";
+
+            // Debug logging
+            error_log("Email Debug - To: $to, Subject: $subject");
+            error_log("Email Debug - Body Length: " . strlen($body));
+            error_log("Email Debug - Encoded Body Length: " . strlen($encodedBody));
 
             fwrite($smtp, $message);
             $response = fgets($smtp);
@@ -183,7 +224,7 @@ class EmailService {
         $headers = [];
         $headers[] = "From: {$this->fromName} <{$this->fromEmail}>";
         $headers[] = "To: {$to}";
-        $headers[] = "Subject: {$subject}";
+        $headers[] = "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=";
         $headers[] = "Date: " . date('r');
         $headers[] = "Message-ID: <" . time() . "." . uniqid() . "@{$_SERVER['HTTP_HOST']}>";
         $headers[] = "MIME-Version: 1.0";
@@ -194,7 +235,7 @@ class EmailService {
             $headers[] = "Content-Type: text/plain; charset=UTF-8";
         }
 
-        $headers[] = "Content-Transfer-Encoding: 8bit";
+        $headers[] = "Content-Transfer-Encoding: quoted-printable";
         $headers[] = "X-Mailer: SAMPARK v" . Config::APP_VERSION;
         $headers[] = "X-Priority: 3";
 
@@ -252,6 +293,33 @@ class EmailService {
             // Test basic commands
             fwrite($smtp, "EHLO " . $_SERVER['HTTP_HOST'] . "\r\n");
             $response = fgets($smtp);
+
+            // Skip additional EHLO responses
+            while (substr($response, 3, 1) === '-') {
+                $response = fgets($smtp);
+            }
+
+            // Test STARTTLS if needed
+            if ($this->smtpEncryption === 'tls') {
+                fwrite($smtp, "STARTTLS\r\n");
+                $tlsResponse = fgets($smtp);
+                if (substr($tlsResponse, 0, 3) !== '220') {
+                    fclose($smtp);
+                    return [
+                        'success' => false,
+                        'error' => 'STARTTLS test failed: ' . $tlsResponse
+                    ];
+                }
+
+                // Enable TLS encryption on the stream
+                if (!stream_socket_enable_crypto($smtp, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+                    fclose($smtp);
+                    return [
+                        'success' => false,
+                        'error' => 'Failed to enable TLS encryption during test'
+                    ];
+                }
+            }
 
             fwrite($smtp, "QUIT\r\n");
             fgets($smtp);

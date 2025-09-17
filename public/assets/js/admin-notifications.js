@@ -20,16 +20,29 @@ function initializeNotificationsTable() {
         processing: true,
         serverSide: false,
         ajax: {
-            url: APP_URL + '/api/notifications',
-            dataSrc: 'notifications',
+            url: APP_URL + '/api/notifications?admin=true&limit=100',
+            dataSrc: function(json) {
+                if (json.success) {
+                    return json.notifications || [];
+                } else {
+                    console.error('API returned error:', json.error);
+                    return [];
+                }
+            },
             type: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-Token': CSRF_TOKEN
             },
             error: function(xhr, error, thrown) {
-                console.error('Error loading notifications:', error);
-                Swal.fire('Error', 'Failed to load notifications', 'error');
+                console.error('Error loading notifications:', error, xhr.responseText);
+                if (xhr.status === 401) {
+                    Swal.fire('Error', 'Unauthorized access. Please login again.', 'error');
+                } else if (xhr.status === 0) {
+                    Swal.fire('Error', 'Network error. Please check your connection.', 'error');
+                } else {
+                    Swal.fire('Error', 'Failed to load notifications: ' + (xhr.responseText || error), 'error');
+                }
             }
         },
         columns: [
@@ -216,7 +229,168 @@ function handleTabChange(tabTarget) {
     }
 }
 
+function loadPriorityEscalations() {
+    // Load priority escalations data
+    fetch(APP_URL + '/api/notifications/stats?type=priority_escalation&days=30', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-Token': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displayPriorityEscalations(data.stats);
+        } else {
+            console.error('Failed to load priority escalations');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading priority escalations:', error);
+    });
+}
+
+function displayPriorityEscalations(escalations) {
+    const container = document.getElementById('priority-escalations-content');
+    if (!container) return;
+
+    if (!escalations || escalations.length === 0) {
+        container.innerHTML = '<div class="text-center py-4 text-muted">No priority escalations found</div>';
+        return;
+    }
+
+    let html = '<div class="table-responsive"><table class="table table-striped"><thead><tr>';
+    html += '<th>Date</th><th>Ticket ID</th><th>From Priority</th><th>To Priority</th><th>Reason</th>';
+    html += '</tr></thead><tbody>';
+
+    escalations.forEach(escalation => {
+        html += `<tr>
+            <td>${formatDateTime(escalation.created_at)}</td>
+            <td><a href="${getTicketUrl(escalation.ticket_id)}" target="_blank">#${escalation.ticket_id}</a></td>
+            <td><span class="badge bg-secondary">${escalation.from_priority}</span></td>
+            <td><span class="badge bg-warning">${escalation.to_priority}</span></td>
+            <td>${escalation.reason || 'Auto-escalated'}</td>
+        </tr>`;
+    });
+
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+}
+
+function loadSystemAnnouncements() {
+    // Load system announcements data
+    fetch(APP_URL + '/api/notifications?type=system_announcement&limit=50', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-Token': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            displaySystemAnnouncements(data.notifications);
+        } else {
+            console.error('Failed to load system announcements');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading system announcements:', error);
+    });
+}
+
+function displaySystemAnnouncements(announcements) {
+    const container = document.getElementById('system-announcements-content');
+    if (!container) return;
+
+    if (!announcements || announcements.length === 0) {
+        container.innerHTML = '<div class="text-center py-4 text-muted">No system announcements found</div>';
+        return;
+    }
+
+    let html = '';
+    announcements.forEach(announcement => {
+        const isExpired = announcement.expires_at && new Date(announcement.expires_at) < new Date();
+        html += `<div class="card mb-3 ${isExpired ? 'border-secondary' : ''}">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">${escapeHtml(announcement.title)}</h6>
+                <div>
+                    <span class="badge bg-${getPriorityColor(announcement.priority)}">${announcement.priority.toUpperCase()}</span>
+                    ${isExpired ? '<span class="badge bg-secondary ms-1">EXPIRED</span>' : ''}
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="card-text">${escapeHtml(announcement.message)}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        Created: ${formatDateTime(announcement.created_at)}
+                        ${announcement.expires_at ? ` | Expires: ${formatDateTime(announcement.expires_at)}` : ''}
+                    </small>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewNotificationDetails(${announcement.id})">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="duplicateNotification(${announcement.id})">
+                            <i class="fas fa-copy"></i> Duplicate
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+function duplicateNotification(notificationId) {
+    // Get notification details and pre-fill the create form
+    fetch(APP_URL + `/api/notifications/${notificationId}/details`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-Token': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.notification) {
+            const notification = data.notification;
+
+            // Pre-fill the create notification form
+            document.getElementById('title').value = 'Copy of ' + notification.title;
+            document.getElementById('message').value = notification.message;
+            document.getElementById('priority').value = notification.priority;
+            document.getElementById('user_type').value = notification.user_type || '';
+
+            // Show the create modal
+            showCreateNotificationModal();
+        } else {
+            Swal.fire('Error', 'Failed to load notification details', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error loading notification for duplication:', error);
+        Swal.fire('Error', 'Failed to duplicate notification', 'error');
+    });
+}
+
 function showCreateNotificationModal() {
+    const modal = new bootstrap.Modal(document.getElementById('createNotificationModal'));
+    modal.show();
+}
+
+function showCreateAnnouncementModal() {
+    // Reset form
+    const form = document.getElementById('createNotificationForm');
+    if (form) {
+        form.reset();
+        // Set announcement-specific defaults
+        document.getElementById('type').value = 'system_announcement';
+        document.getElementById('priority').value = 'medium';
+        document.getElementById('user_type').value = ''; // All users
+    }
+
     const modal = new bootstrap.Modal(document.getElementById('createNotificationModal'));
     modal.show();
 }

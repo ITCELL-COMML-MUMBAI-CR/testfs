@@ -254,4 +254,22 @@ class CustomerModel extends BaseModel {
             'updated_by' => $suspendedBy
         ]);
     }
+
+    /**
+     * Get distinct values for a column
+     */
+    public function getDistinct($column) {
+        $allowedColumns = ['division', 'zone', 'department', 'status', 'category'];
+
+        if (!in_array($column, $allowedColumns)) {
+            throw new InvalidArgumentException("Column '$column' is not allowed for distinct queries");
+        }
+
+        $sql = "SELECT DISTINCT {$column} FROM {$this->table} WHERE {$column} IS NOT NULL AND {$column} != '' ORDER BY {$column}";
+        $results = $this->fetchAll($sql);
+
+        return array_map(function($row) use ($column) {
+            return [$column => $row[$column]];
+        }, $results);
+    }
 }
