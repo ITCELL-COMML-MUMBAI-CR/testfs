@@ -965,9 +965,7 @@ class ControllerController extends BaseController {
             
             $this->db->commit();
 
-            // Send on-site notification
-            $onSiteNotificationService = new OnSiteNotificationService();
-            $onSiteNotificationService->notifyCustomerOfStatusChange($ticketId, 'awaiting_feedback');
+            // Notification handled by WorkflowEngine to prevent duplicates
             
             $this->json([
                 'success' => true,
@@ -1220,9 +1218,7 @@ class ControllerController extends BaseController {
             
             $this->db->commit();
 
-            // Send on-site notification
-            $onSiteNotificationService = new OnSiteNotificationService();
-            $onSiteNotificationService->notifyCustomerOfStatusChange($ticketId, 'awaiting_info');
+            // Notification handled by WorkflowEngine to prevent duplicates
             
             $this->json([
                 'success' => true,

@@ -296,7 +296,7 @@ class NotificationService {
     }
     
     /**
-     * Send ticket created notification
+     * Send ticket created notification (only to customers, no emails to staff)
      */
     public function sendTicketCreated($complaintId, $customer, $assignedUser = null) {
         $data = [
@@ -307,6 +307,7 @@ class NotificationService {
             'view_url' => Config::getAppUrl() . '/customer/tickets/' . $complaintId
         ];
 
+        // Only send email to customer - no emails to staff per requirements
         $recipients = [
             [
                 'customer_id' => $customer['customer_id'],
@@ -315,14 +316,8 @@ class NotificationService {
             ]
         ];
 
-        // Add assigned user to recipients
-        if ($assignedUser) {
-            $recipients[] = [
-                'user_id' => $assignedUser['user_id'],
-                'email' => $assignedUser['email'],
-                'mobile' => $assignedUser['mobile'] ?? null
-            ];
-        }
+        // Note: Intentionally NOT adding assigned user to email recipients per requirements
+        // Staff will only receive on-screen notifications
 
         return $this->send('ticket_created', $recipients, $data);
     }
@@ -400,26 +395,21 @@ class NotificationService {
     }
     
     /**
-     * Send ticket assigned notification
+     * Send ticket assigned notification (no emails to staff per requirements)
      */
     public function sendTicketAssigned($complaintId, $customer, $assignedUser) {
-        $data = [
-            'complaint_id' => $complaintId,
-            'customer_name' => $customer['name'],
-            'assigned_user' => $assignedUser['name'],
-            'priority' => $customer['priority'] ?? 'normal'
-        ];
-        
-        $recipients = [
+        // Per requirements: No emails to Controllers, Controller_nodal, Admins or Superadmins
+        // This method will not send any emails - only on-screen notifications are handled elsewhere
+
+        // Return success without actually sending emails to staff
+        return [
             [
-                'user_id' => $assignedUser['user_id'],
-                'email' => $assignedUser['email'],
-                'mobile' => $assignedUser['mobile'] ?? null,
-                'complaint_id' => $complaintId
+                'recipient' => $assignedUser,
+                'email_sent' => false, // Intentionally false per requirements
+                'sms_sent' => false,
+                'errors' => []
             ]
         ];
-        
-        return $this->send('ticket_assigned', $recipients, $data);
     }
     
     /**

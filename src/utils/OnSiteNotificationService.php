@@ -35,8 +35,8 @@ class OnSiteNotificationService {
 
             $this->notificationModel->createNotification([
                 'user_id' => $user['id'],
-                'title' => 'Ticket created successfully with number - ' . $complaintId,
-                'message' => 'A new support ticket has been created and assigned to your division (' . $ticket['division'] . '). Please review and take appropriate action.',
+                'title' => 'New Ticket Created',
+                'message' => "New support ticket #{$complaintId} has been created for {$ticket['category']} - {$ticket['type']} in {$ticket['division']} division. Priority: {$ticket['priority']}. Please review and take appropriate action.",
                 'type' => 'new_ticket',
                 'related_id' => $complaintId,
                 'related_type' => 'ticket',
@@ -71,8 +71,8 @@ class OnSiteNotificationService {
 
             $this->notificationModel->createNotification([
                 'user_id' => $user['id'],
-                'title' => 'Ticket forwarded successfully - ' . $complaintId,
-                'message' => 'Ticket #' . $complaintId . ' has been forwarded to your ' . ($ticket['division'] !== $toDivision ? 'division' : 'department') . ' for review and action.',
+                'title' => 'Ticket Forwarded',
+                'message' => "Ticket #{$complaintId} for {$ticket['category']} - {$ticket['type']} has been forwarded to your " . ($ticket['division'] !== $toDivision ? 'division' : 'department') . " for review and action. Priority: {$ticket['priority']}.",
                 'type' => 'ticket_forwarded',
                 'related_id' => $complaintId,
                 'related_type' => 'ticket',
@@ -85,16 +85,19 @@ class OnSiteNotificationService {
      * Notify customer of a status change.
      */
     public function notifyCustomerOfStatusChange($complaintId, $status) {
-        $ticket = $this->complaintModel->find($complaintId, 'complaint_id');
+        $ticket = $this->complaintModel->getComplaintWithDetails($complaintId);
         if (!$ticket || !$ticket['customer_id']) return;
 
         $message = '';
+        $title = '';
         switch ($status) {
             case 'awaiting_info':
-                $message = 'Ticket updated successfully - ' . $complaintId . '. Additional information is required from you to proceed.';
+                $title = 'Additional Information Required';
+                $message = "Your ticket #{$complaintId} regarding {$ticket['category']} - {$ticket['type']} requires additional information to proceed. Please provide the requested details to help us resolve your issue.";
                 break;
             case 'awaiting_feedback':
-                $message = 'Ticket action completed - ' . $complaintId . '. Please provide your feedback on the resolution.';
+                $title = 'Action Completed - Feedback Required';
+                $message = "Action has been taken on your ticket #{$complaintId} regarding {$ticket['category']} - {$ticket['type']}. Please review the resolution and provide your feedback.";
                 break;
             default:
                 return; // Only handle these two statuses
@@ -102,7 +105,7 @@ class OnSiteNotificationService {
 
         $this->notificationModel->createNotification([
             'customer_id' => $ticket['customer_id'],
-            'title' => 'Ticket status updated - ' . $complaintId,
+            'title' => $title,
             'message' => $message,
             'type' => 'status_update',
             'related_id' => $complaintId,
@@ -129,8 +132,8 @@ class OnSiteNotificationService {
 
             $this->notificationModel->createNotification([
                 'user_id' => $user['id'],
-                'title' => 'Ticket priority escalated - ' . $complaintId,
-                'message' => 'Ticket #' . $complaintId . ' priority has been escalated due to time elapsed. Immediate attention required.',
+                'title' => 'Priority Escalation Alert',
+                'message' => "Ticket #{$complaintId} for {$ticket['category']} - {$ticket['type']} has been escalated to {$ticket['priority']} priority due to time elapsed. Immediate attention required.",
                 'type' => 'priority_escalation',
                 'priority' => 'high',
                 'related_id' => $complaintId,

@@ -134,9 +134,11 @@ class CustomerController extends BaseController {
         
         // Get ticket transactions (visible to customer) - exclude forwarded transactions, internal-only remarks, and awaiting approval remarks
         $transactionSql = "SELECT t.*,
-                                  u.name as user_name, u.role as user_role
+                                  u.name as user_name, u.role as user_role,
+                                  c.name as customer_name
                            FROM transactions t
-                           LEFT JOIN users u ON t.created_by_id = u.id
+                           LEFT JOIN users u ON t.created_by_id = u.id AND t.created_by_type = 'user'
+                           LEFT JOIN customers c ON t.created_by_id = c.customer_id AND t.created_by_type = 'customer'
                            WHERE t.complaint_id = ?
                            AND t.transaction_type NOT IN ('forwarded')
                            AND (t.remarks_type IS NULL OR t.remarks_type NOT IN ('internal_remarks', 'forwarding_remarks', 'admin_remarks'))
@@ -418,7 +420,7 @@ class CustomerController extends BaseController {
             $this->db->query($sql, $params);
             
             // Create initial transaction
-            $this->createTransaction($complaintId, 'created', 'Ticket created by customer', $customer['customer_id'], 'customer');
+            $this->createTransaction($complaintId,'customer_remarks', 'created', 'Ticket created by customer', $customer['customer_id'], 'customer');
             
             // Handle file uploads
             if (!empty($_FILES['evidence'])) {
@@ -510,6 +512,7 @@ class CustomerController extends BaseController {
             // Create feedback transaction
             $this->createTransaction(
                 $ticketId, 
+                'customer_remarks',
                 'feedback_submitted', 
                 "Rating: " . ucfirst($_POST['rating']) . 
                 ($_POST['remarks'] ? "\nRemarks: " . $_POST['remarks'] : ''),
@@ -843,10 +846,10 @@ class CustomerController extends BaseController {
         return $evidence;
     }
     
-    private function createTransaction($complaintId, $type, $remarks, $createdById, $createdByType) {
+    private function createTransaction($complaintId,$remarksType, $type, $remarks, $createdById, $createdByType) {
         $sql = "INSERT INTO transactions (
             complaint_id, transaction_type, remarks, 
-            created_by_id, created_by_customer_id, created_by_type, 
+            remarks_type, created_by_id, created_by_customer_id, created_by_type, 
             created_by_role, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
         
@@ -854,6 +857,7 @@ class CustomerController extends BaseController {
             $complaintId,
             $type,
             $remarks,
+            $remarksType,
             $createdByType === 'user' ? $createdById : null,
             $createdByType === 'customer' ? $createdById : null,
             $createdByType,
@@ -1371,8 +1375,8 @@ class CustomerController extends BaseController {
             }
             
             $this->db->query(
-                "INSERT INTO transactions (complaint_id, transaction_type, remarks, created_by_type, created_by_id, created_at) VALUES (?, ?, ?, ?, ?, NOW())",
-                [$ticketId, 'info_provided', $remarkText, 'customer', $customer['customer_id']]
+                "INSERT INTO transactions (complaint_id, transaction_type, remarks, remarks_type, created_by_type, created_by_customer_id, created_by_role, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())",
+                [$ticketId, 'info_provided', $remarkText, 'customer_remarks', 'customer', $customer['customer_id'], 'customer']
             );
             
             // Process workflow

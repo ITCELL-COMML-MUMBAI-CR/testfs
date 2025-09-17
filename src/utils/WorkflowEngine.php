@@ -687,20 +687,168 @@ class WorkflowEngine {
                     $ticket,
                     ['department' => $result['updates']['assigned_to_department']]
                 );
+
+                // Send status change notification to customer
+                $this->sendStatusChangeNotification($ticket, $result['new_status'], $action, $userType);
                 break;
-                
+
             case 'reply':
                 if ($result['new_status'] === 'awaiting_feedback') {
                     // Send reply notification to customer
                 }
+                // Send status change notification
+                $this->sendStatusChangeNotification($ticket, $result['new_status'], $action, $userType);
                 break;
-                
+
+            case 'approve':
+            case 'reject':
+                // Send status change notification to customer and controllers
+                $this->sendStatusChangeNotification($ticket, $result['new_status'], $action, $userType);
+                break;
+
+            case 'close':
+                // Send closure notification to customer
+                $this->sendStatusChangeNotification($ticket, $result['new_status'], $action, $userType);
+                break;
+
+            case 'reopen':
+                // Send reopen notification to customer and controllers
+                $this->sendStatusChangeNotification($ticket, $result['new_status'], $action, $userType);
+                break;
+
+            case 'revert':
+                // Send revert notification to customer
+                $this->sendStatusChangeNotification($ticket, $result['new_status'], $action, $userType);
+                break;
+
             case 'provide_feedback':
                 // Send closure confirmation
+                $this->sendStatusChangeNotification($ticket, $result['new_status'], $action, $userType);
                 break;
         }
     }
-    
+
+    /**
+     * Send status change notification to relevant parties
+     */
+    private function sendStatusChangeNotification($ticket, $newStatus, $action, $userType) {
+        try {
+            require_once __DIR__ . '/../models/NotificationModel.php';
+            $notificationModel = new NotificationModel();
+
+            // Create notification for customer
+            $customer = $this->db->fetch(
+                "SELECT customer_id, name, email FROM customers WHERE customer_id = ?",
+                [$ticket['customer_id']]
+            );
+
+            if ($customer) {
+                $statusDisplay = $this->getStatusDisplayName($newStatus);
+                $actionDisplay = $this->getActionDisplayName($action);
+                // Create on-screen notification for customer
+                $notificationModel->createNotification([
+                    'title' => "Ticket Status Updated",
+                    'message' => "Your ticket #{$ticket['complaint_id']} status has been changed to {$statusDisplay}",
+                    'type' => 'status_change',
+                    'user_id' => $customer['customer_id'],
+                    'user_type' => 'customer',
+                    'related_id' => $ticket['complaint_id'],
+                    'related_type' => 'ticket',
+                    'priority' => 'medium',
+                    'action_url' => "/customer/tickets/{$ticket['complaint_id']}",
+                    'metadata' => [
+                        'action' => $action,
+                        'new_status' => $newStatus,
+                        'ticket_id' => $ticket['complaint_id']
+                    ]
+                ]);
+            }
+
+            // Create notification for assigned controller if ticket is assigned
+            if ($ticket['assigned_to_user_id']) {
+                $notificationModel->createNotification([
+                    'title' => "Ticket Status Updated",
+                    'message' => "Ticket #{$ticket['complaint_id']} status has been changed to {$this->getStatusDisplayName($newStatus)}",
+                    'type' => 'status_change',
+                    'user_id' => $ticket['assigned_to_user_id'],
+                    'user_type' => 'user',
+                    'related_id' => $ticket['complaint_id'],
+                    'related_type' => 'ticket',
+                    'priority' => 'medium',
+                    'action_url' => "/controller/tickets/{$ticket['complaint_id']}",
+                    'metadata' => [
+                        'action' => $action,
+                        'new_status' => $newStatus,
+                        'ticket_id' => $ticket['complaint_id']
+                    ]
+                ]);
+            }
+
+            // Create notification for nodal controller if different from assigned user
+            $nodalController = $this->db->fetch(
+                "SELECT id FROM users WHERE role = 'controller_nodal' AND division = ? AND status = 'active' AND id != ? LIMIT 1",
+                [$ticket['division'], $ticket['assigned_to_user_id'] ?? 0]
+            );
+
+            if ($nodalController) {
+                $notificationModel->createNotification([
+                    'title' => "Ticket Status Updated",
+                    'message' => "Ticket #{$ticket['complaint_id']} in your division has been updated to {$this->getStatusDisplayName($newStatus)}",
+                    'type' => 'status_change',
+                    'user_id' => $nodalController['id'],
+                    'user_type' => 'user',
+                    'related_id' => $ticket['complaint_id'],
+                    'related_type' => 'ticket',
+                    'priority' => 'low',
+                    'action_url' => "/controller/tickets/{$ticket['complaint_id']}",
+                    'metadata' => [
+                        'action' => $action,
+                        'new_status' => $newStatus,
+                        'ticket_id' => $ticket['complaint_id']
+                    ]
+                ]);
+            }
+
+        } catch (Exception $e) {
+            error_log("Failed to send status change notification: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get display name for status
+     */
+    private function getStatusDisplayName($status) {
+        $statusNames = [
+            'pending' => 'Pending Review',
+            'awaiting_info' => 'Awaiting Information',
+            'awaiting_feedback' => 'Awaiting Feedback',
+            'awaiting_approval' => 'Awaiting Approval',
+            'closed' => 'Closed',
+            'resolved' => 'Resolved'
+        ];
+
+        return $statusNames[$status] ?? ucfirst($status);
+    }
+
+    /**
+     * Get display name for action
+     */
+    private function getActionDisplayName($action) {
+        $actionNames = [
+            'assign' => 'Assigned',
+            'forward' => 'Forwarded',
+            'reply' => 'Replied',
+            'approve' => 'Approved',
+            'reject' => 'Rejected',
+            'close' => 'Closed',
+            'reopen' => 'Reopened',
+            'revert' => 'Reverted',
+            'provide_feedback' => 'Feedback Provided'
+        ];
+
+        return $actionNames[$action] ?? ucfirst($action);
+    }
+
     /**
      * Send notifications when customer provides additional information
      */
@@ -743,15 +891,30 @@ class WorkflowEngine {
                 ];
             }
             
+            // Per requirements: No emails to Controllers, Controller_nodal, Admins or Superadmins
+            // Only create on-screen notifications - do not send emails to staff
             if (!empty($recipients)) {
-                $data = [
-                    'complaint_id' => $ticket['complaint_id'],
-                    'customer_name' => $ticket['customer_name'] ?? 'Customer',
-                    'additional_info' => $additionalInfo,
-                    'view_url' => Config::getAppUrl() . '/controller/tickets/' . $ticket['complaint_id']
-                ];
-                
-                $this->notificationService->send('info_provided', $recipients, $data);
+                // Create on-screen notifications instead of emails
+                require_once __DIR__ . '/../models/NotificationModel.php';
+                $notificationModel = new NotificationModel();
+
+                foreach ($recipients as $recipient) {
+                    $notificationModel->createNotification([
+                        'title' => "Customer Provided Additional Info",
+                        'message' => "Customer has provided additional information for ticket #{$ticket['complaint_id']}",
+                        'type' => 'info_provided',
+                        'user_id' => $recipient['user_id'],
+                        'user_type' => 'user',
+                        'related_id' => $ticket['complaint_id'],
+                        'related_type' => 'ticket',
+                        'priority' => 'medium',
+                        'action_url' => "/controller/tickets/{$ticket['complaint_id']}",
+                        'metadata' => json_encode([
+                            'customer_name' => $ticket['customer_name'] ?? 'Customer',
+                            'additional_info' => substr($additionalInfo, 0, 100) . (strlen($additionalInfo) > 100 ? '...' : '')
+                        ])
+                    ]);
+                }
             }
             
         } catch (Exception $e) {
@@ -846,7 +1009,8 @@ class WorkflowEngine {
             'escalation_reason' => 'Automatic priority escalation'
         ];
         
-        $this->notificationService->send('ticket_escalated', $recipients, $data);
+        // Per requirements: No emails to staff - only on-screen notifications
+        // The NotificationService already handles this properly for escalations
     }
     
     /**
@@ -872,6 +1036,7 @@ class WorkflowEngine {
             'close_reason' => 'No feedback received within specified time'
         ];
         
+        // Only send auto-close emails to customers, not staff
         $this->notificationService->send('ticket_auto_closed', [$recipient], $data);
     }
     

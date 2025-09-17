@@ -434,6 +434,9 @@ function createNotificationElement(notification) {
             <div class="d-flex align-items-center gap-1">
                 ${notification.priority !== 'medium' ? `<span class="badge priority-badge bg-${getPriorityColor(notification.priority)}">${notification.priority}</span>` : ''}
                 <small class="text-muted">${timeAgo}</small>
+                ${notification.is_read == 0 ? `<button type="button" class="btn btn-sm btn-outline-primary p-1" onclick="markAsReadOnly(${notification.id}, event)" title="Mark as Read">
+                    <i class="fas fa-check" style="font-size: 10px;"></i>
+                </button>` : ''}
                 <button type="button" class="btn btn-sm btn-outline-secondary p-1" onclick="dismissNotification(${notification.id}, event)" title="Dismiss">
                     <i class="fas fa-times" style="font-size: 10px;"></i>
                 </button>
@@ -520,6 +523,38 @@ function markAsRead(notificationId) {
             const notificationElement = document.querySelector(`[onclick*="${notificationId}"]`)?.closest('.notification-item');
             if (notificationElement) {
                 notificationElement.classList.remove('unread');
+            }
+
+            // Update counter
+            refreshNotificationCount();
+        }
+    })
+    .catch(error => console.error('Error marking notification as read:', error));
+}
+
+function markAsReadOnly(notificationId, event) {
+    event.stopPropagation();
+
+    fetch(`${APP_URL}/api/notifications/${notificationId}/read`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-Token': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update UI to show as read
+            const notificationElement = event.target.closest('.notification-item');
+            if (notificationElement) {
+                notificationElement.classList.remove('unread');
+                // Hide the mark as read button since it's now read
+                const markReadBtn = notificationElement.querySelector(`[onclick*="markAsReadOnly(${notificationId}"]`);
+                if (markReadBtn) {
+                    markReadBtn.style.display = 'none';
+                }
             }
 
             // Update counter

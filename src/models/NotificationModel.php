@@ -150,11 +150,31 @@ class NotificationModel extends BaseModel {
             return false;
         }
 
-        // For customer notifications, verify ownership
+        // For customer notifications, allow customers to mark read any notification they can see
         if ($userType === 'customer') {
-            if ($notification['customer_id'] != $userId && $notification['customer_id'] !== null) {
+            // Allow customers to mark as read any notification that is either:
+            // 1. Assigned to them (customer_id matches)
+            // 2. A general notification (customer_id is null but user_type is customer or null)
+            // 3. A ticket-related notification for their ticket
+            $canMarkAsRead = false;
+
+            if ($notification['customer_id'] == $userId) {
+                $canMarkAsRead = true;
+            } elseif ($notification['customer_id'] === null &&
+                     ($notification['user_type'] === 'customer' || $notification['user_type'] === null)) {
+                $canMarkAsRead = true;
+            } elseif ($notification['complaint_id']) {
+                // Check if this ticket belongs to the customer
+                $ticket = $this->db->fetch("SELECT customer_id FROM complaints WHERE complaint_id = ?", [$notification['complaint_id']]);
+                if ($ticket && $ticket['customer_id'] == $userId) {
+                    $canMarkAsRead = true;
+                }
+            }
+
+            if (!$canMarkAsRead) {
                 return false;
             }
+
             // Customer notifications are always individual, mark as read
             return $this->update($notificationId, [
                 'is_read' => 1,
@@ -168,7 +188,7 @@ class NotificationModel extends BaseModel {
             return $this->markTicketNotificationAsReadByDepartment($notificationId, $userId, $userType);
         }
 
-        // For individual user notifications, verify ownership
+        // For individual user notifications, verify ownership or allow if user_id is null (broadcast)
         if ($notification['user_id'] !== null) {
             if ($notification['user_id'] != $userId) {
                 return false;

@@ -98,6 +98,8 @@ ob_start();
                                     📋 Please provide the requested information:
                                 <?php elseif ($latest_important_remark['remarks_type'] === 'customer_remarks' && $latest_important_remark['transaction_type'] === 'closed'): ?>
                                     ✅ Action has been taken on your ticket:
+                                <?php elseif ($latest_important_remark['remarks_type'] === 'customer_remarks' && $latest_important_remark['transaction_type'] === 'info_provided'): ?>
+                                    ✅ Information provided by you:
                                 <?php elseif ($latest_important_remark['remarks_type'] === 'interim_remarks'): ?>
                                     📈 Progress update on your ticket:
                                 <?php elseif ($latest_important_remark['remarks_type'] === 'customer_remarks'): ?>
@@ -898,6 +900,7 @@ function getTransactionIcon($type) {
         case 'closed': return 'check-circle';
         case 'escalated': return 'exclamation-triangle';
         case 'feedback_submitted': return 'star';
+        case 'info_provided': return 'info';
         default: return 'circle';
     }
 }
@@ -913,6 +916,7 @@ function getTransactionTitle($type) {
         case 'closed': return 'Ticket Closed';
         case 'escalated': return 'Priority Escalated';
         case 'feedback_submitted': return 'Feedback Submitted';
+        case 'info_provided': return 'Additional Information Provided';
         default: return ucfirst(str_replace('_', ' ', $type));
     }
 }
