@@ -1394,7 +1394,13 @@ class CustomerController extends BaseController {
             
             return $this->json([
                 'success' => true,
-                'message' => 'Additional information provided successfully. Your ticket is now back under review.'
+                'message' => 'Additional information provided successfully. Your ticket is now back under review.',
+                'details' => [
+                    'ticket_id' => $ticketId,
+                    'view_url' => Config::getAppUrl() . '/customer/tickets/' . $ticketId,
+                    'info_provided' => $additionalInfo,
+                    'status' => 'pending'
+                ]
             ]);
             
         } catch (Exception $e) {

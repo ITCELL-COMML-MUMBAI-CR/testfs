@@ -428,9 +428,8 @@ ob_start();
                                         $displayRemarks = '';
                                         if (!empty($transaction['remarks'])) {
                                             $displayRemarks = $transaction['remarks'];
-                                        } elseif (!empty($transaction['internal_remarks'])) {
-                                            $displayRemarks = $transaction['internal_remarks'];
                                         }
+                                        // Internal remarks are not shown to customers for privacy/security
                                         ?>
                                         <?php if (!empty(trim($displayRemarks))): ?>
                                             <div class="bg-light p-3 rounded small">

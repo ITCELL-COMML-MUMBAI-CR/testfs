@@ -548,7 +548,16 @@ class AdditionalInfoModal {
             const data = await response.json();
 
             if (data.success) {
-                window.SAMPARK.ui.showSuccess('Information Submitted', data.message);
+                // Show enhanced success message with view link and info provided
+                let successMessage = data.message;
+                if (data.details) {
+                    successMessage += `<br><br><strong>Information Provided:</strong><br>"${data.details.info_provided}"<br><br>`;
+                    successMessage += `<a href="${data.details.view_url}" class="btn btn-primary btn-sm mt-2">
+                        <i class="fas fa-eye me-1"></i>View Ticket
+                    </a>`;
+                }
+
+                window.SAMPARK.ui.showSuccess('Information Submitted Successfully', successMessage);
 
                 // Close modal
                 const bsModal = bootstrap.Modal.getInstance(this.modal);

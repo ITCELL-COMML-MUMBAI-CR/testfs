@@ -15,14 +15,20 @@ class AuthController extends BaseController {
             $this->redirectToDashboard();
             return;
         }
-        
+
+        // Store redirect URL if provided
+        $redirectUrl = $_GET['redirect'] ?? null;
+        if ($redirectUrl) {
+            $this->session->set('login_redirect', $redirectUrl);
+        }
+
         $data = [
             'csrf_token' => $this->session->getCSRFToken(),
             'page_title' => 'Login - SAMPARK',
             'errors' => $this->session->getFlash('error'),
             'success' => $this->session->getFlash('success')
         ];
-        
+
         $this->view('auth/login', $data);
     }
     
@@ -120,9 +126,17 @@ class AuthController extends BaseController {
         
         // Log successful login
         $this->logActivity('customer_login', ['customer_id' => $customer['customer_id']]);
-        
+
         $this->setFlash('success', 'Welcome back, ' . $customer['name']);
-        $this->redirect(Config::getAppUrl() . '/?login=1');
+
+        // Check if there's a redirect URL stored in session
+        $redirectUrl = $this->session->get('login_redirect');
+        if ($redirectUrl) {
+            $this->session->remove('login_redirect');
+            $this->redirect(Config::getAppUrl() . $redirectUrl);
+        } else {
+            $this->redirect(Config::getAppUrl() . '/?login=1');
+        }
     }
     
     private function handleUserLogin() {
@@ -192,9 +206,17 @@ class AuthController extends BaseController {
         
         // Log successful login
         $this->logActivity('user_login', ['user_id' => $user['id'], 'role' => $user['role']]);
-        
+
         $this->setFlash('success', 'Welcome back, ' . $user['name']);
-        $this->redirectToDashboard($user['role'], true);
+
+        // Check if there's a redirect URL stored in session
+        $redirectUrl = $this->session->get('login_redirect');
+        if ($redirectUrl) {
+            $this->session->remove('login_redirect');
+            $this->redirect(Config::getAppUrl() . $redirectUrl);
+        } else {
+            $this->redirectToDashboard($user['role'], true);
+        }
     }
     
     public function showSignup() {

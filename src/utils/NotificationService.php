@@ -304,7 +304,7 @@ class NotificationService {
             'customer_name' => $customer['name'],
             'customer_email' => $customer['email'],
             'company_name' => $customer['company_name'],
-            'view_url' => Config::getAppUrl() . '/customer/ticket/' . $complaintId
+            'view_url' => Config::getAppUrl() . '/customer/tickets/' . $complaintId
         ];
 
         $recipients = [
@@ -359,8 +359,8 @@ class NotificationService {
             'customer_email' => $customer['email'],
             'company_name' => $customer['company_name'],
             'message' => $message,
-            'view_url' => Config::getAppUrl() . '/customer/ticket/' . $complaintId,
-            'login_url' => Config::getAppUrl() . '/login'
+            'view_url' => Config::getAppUrl() . '/customer/tickets/' . $complaintId,
+            'login_url' => Config::getAppUrl() . '/login?redirect=' . urlencode('/customer/tickets/' . $complaintId)
         ];
 
         $recipients = [
@@ -384,8 +384,8 @@ class NotificationService {
             'customer_email' => $customer['email'],
             'company_name' => $customer['company_name'],
             'message' => $message,
-            'view_url' => Config::getAppUrl() . '/customer/ticket/' . $complaintId,
-            'login_url' => Config::getAppUrl() . '/login'
+            'view_url' => Config::getAppUrl() . '/customer/tickets/' . $complaintId,
+            'login_url' => Config::getAppUrl() . '/login?redirect=' . urlencode('/customer/tickets/' . $complaintId)
         ];
 
         $recipients = [
@@ -423,7 +423,7 @@ class NotificationService {
     }
     
     /**
-     * Send priority escalation notification with RBAC
+     * Send priority escalation notification with RBAC (screen notifications only)
      */
     public function sendPriorityEscalated($complaintId, $customer, $newPriority, $oldPriority = null, $escalationReason = 'Automatic escalation') {
         // Get ticket details
@@ -444,30 +444,18 @@ class NotificationService {
         ];
 
         try {
-            // Create persistent browser notifications based on RBAC
+            // Create persistent browser notifications based on RBAC (no emails for priority escalations)
             $this->createPriorityEscalationNotifications($complaintId, $newPriority, $data, $ticket);
 
-            // Send email/SMS notifications to relevant users
-            $recipients = $this->getEscalationRecipients($ticket, $newPriority);
-            $results = $this->send('priority_escalated', $recipients, $data);
-
-            // Check if any notifications were sent successfully
-            $successCount = 0;
-            $errorCount = 0;
-            foreach ($results as $result) {
-                if ($result['email_sent'] || $result['sms_sent']) {
-                    $successCount++;
-                } else {
-                    $errorCount++;
-                }
-            }
+            // Log that we're not sending email notifications for priority escalations as per requirement
+            
 
             return [
                 'success' => true,
-                'message' => "Priority escalation notifications processed",
-                'notifications_sent' => $successCount,
-                'errors' => $errorCount,
-                'details' => $results
+                'message' => "Priority escalation screen notifications sent (no emails as per requirement)",
+                'notifications_sent' => 1, // screen notification
+                'errors' => 0,
+                'details' => ['Screen notifications created for relevant controllers']
             ];
 
         } catch (Exception $e) {

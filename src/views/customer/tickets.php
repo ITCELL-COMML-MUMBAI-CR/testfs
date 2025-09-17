@@ -127,10 +127,15 @@ ob_start();
                             <i class="fas fa-ticket-alt text-muted" style="font-size: 3rem;"></i>
                         </div>
                         <h5 class="text-muted mb-2">No tickets found</h5>
-                        <p class="text-muted mb-4">You don't have any support tickets matching your current filters.</p>
-                        <a href="<?= Config::getAppUrl() ?>/customer/tickets/create" class="btn btn-apple-primary">
-                            <i class="fas fa-plus me-2"></i>Create Your First Ticket
-                        </a>
+                        <p class="text-muted mb-4">You don't have any support tickets matching your current filters. Try adjusting your filters or create a new ticket to get help with your railway cargo issues.</p>
+                        <div class="d-flex flex-column flex-sm-row gap-2 justify-content-center">
+                            <a href="<?= Config::getAppUrl() ?>/customer/tickets/create" class="btn btn-apple-primary">
+                                <i class="fas fa-plus me-2"></i>Create New Ticket
+                            </a>
+                            <button class="btn btn-outline-secondary" onclick="clearAllFilters()">
+                                <i class="fas fa-filter me-2"></i>Clear Filters
+                            </button>
+                        </div>
                     </div>
                 <?php endif; ?>
             </div>

@@ -367,7 +367,8 @@ function loadNotifications(page = 1) {
                 listContainer.innerHTML = `
                     <div class="text-center py-4 text-muted">
                         <i class="fas fa-bell-slash fa-2x mb-2"></i>
-                        <div>No notifications found</div>
+                        <div class="fw-semibold mb-1">All caught up!</div>
+                        <div class="small">You have no new notifications at this time.</div>
                     </div>
                 `;
             }
@@ -629,26 +630,22 @@ function escapeHtml(text) {
 }
 
 function checkForUnreadNotificationsOnLoad() {
-    // Check if this is a login redirect and clear the "don't show again" setting
+    // Check if this is a login redirect
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('login') === '1') {
-        sessionStorage.removeItem('dontShowNotifications');
-    }
-    
-    // Check if user has disabled notifications for this session
-    if (sessionStorage.getItem('dontShowNotifications') === 'true') {
+    const isLoginRedirect = urlParams.get('login') === '1';
+
+    // Only show notification modal on login (when login=1 parameter is present)
+    if (!isLoginRedirect) {
         return;
     }
 
-    // Only show notifications popup on login/dashboard pages
-    const currentPath = window.location.pathname;
-    const showOnPages = ['/dashboard', '/admin/dashboard', '/controller/dashboard', '/customer/dashboard', '/'];
-
-    const shouldShow = showOnPages.some(page => currentPath.includes(page) || currentPath === '/' || currentPath.endsWith('/'));
-
-    if (!shouldShow) {
+    // Check if already shown for this login session
+    if (sessionStorage.getItem('notificationsShownThisLogin') === 'true') {
         return;
     }
+
+    // Mark as shown for this login session
+    sessionStorage.setItem('notificationsShownThisLogin', 'true');
 
     // Check for recent unread notifications (last 24 hours)
     fetch(`${APP_URL}/api/notifications?limit=5&unread_only=true&recent=true`, {
@@ -711,11 +708,9 @@ function showUnreadNotificationsSummary(notifications, count, hasHighPriority) {
                 <div class="mb-3">
                     ${notificationsList}
                 </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="dontShowAgain">
-                    <label class="form-check-label text-muted small" for="dontShowAgain">
-                        Don't show this again for this session
-                    </label>
+                <div class="text-muted small text-center">
+                    <i class="fas fa-info-circle me-1"></i>
+                    This notification is shown only once per login session
                 </div>
             </div>
         `,
@@ -731,19 +726,6 @@ function showUnreadNotificationsSummary(notifications, count, hasHighPriority) {
         width: '500px',
         customClass: {
             popup: 'text-start'
-        },
-        didOpen: () => {
-            // Add event listener for the checkbox
-            const checkbox = document.getElementById('dontShowAgain');
-            if (checkbox) {
-                checkbox.addEventListener('change', function() {
-                    if (this.checked) {
-                        sessionStorage.setItem('dontShowNotifications', 'true');
-                    } else {
-                        sessionStorage.removeItem('dontShowNotifications');
-                    }
-                });
-            }
         }
     }).then((result) => {
         if (result.isConfirmed) {

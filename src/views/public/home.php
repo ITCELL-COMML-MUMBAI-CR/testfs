@@ -91,8 +91,9 @@ ob_start();
                             <?php endif; ?>
                         <?php else: ?>
                             <div class="text-center py-4">
-                                <i class="fas fa-newspaper text-muted fs-1 mb-3"></i>
-                                <p class="text-muted">No news available at the moment.</p>
+                                <i class="fas fa-newspaper text-muted mb-3" style="font-size: 2rem;"></i>
+                                <p class="text-muted mb-0">No news available at the moment.</p>
+                                <small class="text-muted">Check back later for the latest updates on railway cargo services.</small>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -140,8 +141,9 @@ ob_start();
                             <?php endif; ?>
                         <?php else: ?>
                             <div class="text-center py-4">
-                                <i class="fas fa-bullhorn text-muted fs-1 mb-3"></i>
-                                <p class="text-muted">No announcements available.</p>
+                                <i class="fas fa-bullhorn text-muted mb-3" style="font-size: 2rem;"></i>
+                                <p class="text-muted mb-0">No announcements available.</p>
+                                <small class="text-muted">Important system and service announcements will appear here.</small>
                             </div>
                         <?php endif; ?>
                     </div>
@@ -223,12 +225,28 @@ function showNewsDetails(newsId) {
                     width: '600px'
                 });
             } else {
-                Swal.fire('Error', data.error || 'Failed to load news details', 'error');
+                Swal.fire({
+                    title: 'Unable to Load News',
+                    text: data.error || 'We couldn\'t load the full news article at this time. Please try again later or contact support if the issue persists.',
+                    icon: 'error',
+                    confirmButtonText: 'Close',
+                    customClass: {
+                        confirmButton: 'btn btn-primary'
+                    }
+                });
             }
         })
         .catch(error => {
             hideLoading();
-            Swal.fire('Error', 'Failed to load news details', 'error');
+            Swal.fire({
+                title: 'Connection Error',
+                text: 'We couldn\'t connect to load the news details. Please check your internet connection and try again.',
+                icon: 'error',
+                confirmButtonText: 'Close',
+                customClass: {
+                    confirmButton: 'btn btn-primary'
+                }
+            });
         });
 }
 </script>

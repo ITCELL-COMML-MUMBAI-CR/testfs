@@ -244,10 +244,10 @@ $page_title = 'Support Hub - SAMPARK';
                         <?php if (empty($tickets['data'])): ?>
                         <tr>
                             <td colspan="10" class="text-center py-5">
-                                <div class="text-muted">
-                                    <i class="fas fa-inbox fa-3x mb-3"></i>
-                                    <h5>No complaints found</h5>
-                                    <p>No complaints match your current filters.</p>
+                                <div class="text-center">
+                                    <i class="fas fa-inbox text-muted mb-3" style="font-size: 3rem;"></i>
+                                    <h5 class="text-muted mb-2">No tickets assigned</h5>
+                                    <p class="text-muted">You don't have any tickets assigned at the moment. New tickets will appear here when they're assigned to your department.</p>
                                 </div>
                             </td>
                         </tr>
@@ -711,9 +711,9 @@ function initializeBasicDataTable() {
                         search: "Search tickets:",
                         lengthMenu: "Show _MENU_ tickets",
                         info: "Showing _START_ to _END_ of _TOTAL_ tickets",
-                        infoEmpty: "No tickets available",
+                        infoEmpty: "No tickets to display - you're all caught up!",
                         infoFiltered: "(filtered from _MAX_ total tickets)",
-                        emptyTable: "No tickets found matching your criteria",
+                        emptyTable: "No tickets found matching your criteria. Try adjusting your filters or check back later for new assignments.",
                         paginate: {
                             first: "First",
                             last: "Last", 
