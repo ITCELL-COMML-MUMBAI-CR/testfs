@@ -682,6 +682,131 @@ class AdminController extends BaseController
         $this->view('admin/customers/index', $data);
     }
 
+    public function createCustomer()
+    {
+        $user = $this->getCurrentUser();
+
+        // Get divisions for dropdown
+        $divisions = $this->getDivisions();
+
+        $data = [
+            'page_title' => 'Add New Customer - SAMPARK',
+            'user' => $user,
+            'divisions' => $divisions,
+            'csrf_token' => $this->session->getCSRFToken()
+        ];
+
+        $this->view('admin/customers/create', $data);
+    }
+
+    public function storeCustomer()
+    {
+        try {
+            // Validate CSRF token
+            if (!$this->session->validateCSRF($_POST['csrf_token'] ?? '')) {
+                $this->setFlash('error', 'Invalid security token');
+                $this->redirect(Config::getAppUrl() . '/admin/customers/create');
+                return;
+            }
+
+            // Validate required fields
+            $validator = new Validator();
+            $isValid = $validator->validate($_POST, [
+                'name' => 'required|min:2|max:100',
+                'email' => 'required|email',
+                'mobile' => 'required|min:10',
+                'division' => 'required'
+            ]);
+
+            if (!$isValid) {
+                $this->setFlash('error', 'Please correct the validation errors: ' . implode(', ', $validator->getAllErrorMessages()));
+                $this->redirect(Config::getAppUrl() . '/admin/customers/create');
+                return;
+            }
+
+            // Check if email already exists
+            $existingCustomer = $this->db->fetch(
+                "SELECT customer_id FROM customers WHERE email = ?",
+                [$this->sanitize($_POST['email'])]
+            );
+
+            if ($existingCustomer) {
+                $this->setFlash('error', 'A customer with this email already exists');
+                $this->redirect(Config::getAppUrl() . '/admin/customers/create');
+                return;
+            }
+
+            // Generate customer ID
+            $customerId = $this->generateCustomerId();
+
+            // Prepare customer data
+            $customerData = [
+                'customer_id' => $customerId,
+                'name' => $this->sanitize($_POST['name']),
+                'email' => $this->sanitize($_POST['email']),
+                'mobile' => $this->sanitize($_POST['mobile']),
+                'company_name' => $this->sanitize($_POST['company_name'] ?? ''),
+                'designation' => $this->sanitize($_POST['designation'] ?? ''),
+                'gstin' => $this->sanitize($_POST['gstin'] ?? ''),
+                'division' => $this->sanitize($_POST['division']),
+                'zone' => $this->sanitize($_POST['zone'] ?? ''),
+                'customer_type' => $this->sanitize($_POST['customer_type'] ?? 'individual'),
+                'status' => 'active',
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+
+            // Insert customer
+            $sql = "INSERT INTO customers (customer_id, name, email, mobile, company_name, designation, gstin, division, zone, customer_type, status, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            $params = [
+                $customerData['customer_id'],
+                $customerData['name'],
+                $customerData['email'],
+                $customerData['mobile'],
+                $customerData['company_name'],
+                $customerData['designation'],
+                $customerData['gstin'],
+                $customerData['division'],
+                $customerData['zone'],
+                $customerData['customer_type'],
+                $customerData['status'],
+                $customerData['created_at']
+            ];
+
+            $this->db->query($sql, $params);
+
+            $this->setFlash('success', 'Customer created successfully');
+            $this->redirect(Config::getAppUrl() . '/admin/customers');
+
+        } catch (\Exception $e) {
+            Config::logError("Customer creation error: " . $e->getMessage());
+            $this->setFlash('error', 'Failed to create customer');
+            $this->redirect(Config::getAppUrl() . '/admin/customers/create');
+        }
+    }
+
+    private function generateCustomerId()
+    {
+        $year = date('Y');
+        $month = date('m');
+
+        // Get the last customer ID for this month
+        $lastCustomer = $this->db->fetch(
+            "SELECT customer_id FROM customers WHERE customer_id LIKE ? ORDER BY customer_id DESC LIMIT 1",
+            ["CUST{$year}{$month}%"]
+        );
+
+        if ($lastCustomer) {
+            $lastNumber = (int)substr($lastCustomer['customer_id'], -4);
+            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
+        } else {
+            $newNumber = '0001';
+        }
+
+        return "CUST{$year}{$month}{$newNumber}";
+    }
+
     public function viewCustomer($customerId)
     {
         $user = $this->getCurrentUser();
@@ -1019,6 +1144,81 @@ class AdminController extends BaseController
             $this->json([
                 'success' => false,
                 'message' => 'Failed to reject customer. Please try again.'
+            ], 500);
+        }
+    }
+
+    public function deleteCustomer($customerId)
+    {
+        $this->validateCSRF();
+        $user = $this->getCurrentUser();
+
+        // Only superadmin can delete customers
+        if ($user['role'] !== 'superadmin') {
+            $this->json(['success' => false, 'message' => 'Insufficient permissions'], 403);
+            return;
+        }
+
+        try {
+            $customer = $this->db->fetch(
+                "SELECT * FROM customers WHERE customer_id = ?",
+                [$customerId]
+            );
+
+            if (!$customer) {
+                $this->json(['success' => false, 'message' => 'Customer not found'], 404);
+                return;
+            }
+
+            // Check if customer has active tickets
+            $activeTickets = $this->db->fetch(
+                "SELECT COUNT(*) as count FROM complaints WHERE customer_id = ? AND status != 'closed'",
+                [$customerId]
+            );
+
+            if ($activeTickets['count'] > 0) {
+                $this->json([
+                    'success' => false,
+                    'message' => 'Cannot delete customer with active tickets. Please close all tickets first or set customer status to suspended.'
+                ], 400);
+                return;
+            }
+
+            $this->db->beginTransaction();
+
+            // Archive customer data before deletion (soft delete approach)
+            $archiveData = json_encode($customer);
+            $this->db->query(
+                "INSERT INTO archived_customers (customer_id, customer_data, deleted_by, deleted_at) VALUES (?, ?, ?, NOW())",
+                [$customerId, $archiveData, $user['id']]
+            );
+
+            // Instead of hard delete, mark as deleted
+            $this->db->query(
+                "UPDATE customers SET status = 'deleted', updated_at = NOW() WHERE customer_id = ?",
+                [$customerId]
+            );
+
+            $this->db->commit();
+
+            // Log activity
+            $this->logActivity('customer_deleted', [
+                'customer_id' => $customerId,
+                'customer_name' => $customer['name'],
+                'customer_email' => $customer['email']
+            ]);
+
+            $this->json([
+                'success' => true,
+                'message' => 'Customer account has been permanently deactivated'
+            ]);
+        } catch (Exception $e) {
+            $this->db->rollback();
+            Config::logError("Customer deletion error: " . $e->getMessage());
+
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to delete customer. Please try again.'
             ], 500);
         }
     }
@@ -2827,18 +3027,57 @@ class AdminController extends BaseController
     private function sendCustomerApprovalEmail($customer, $status, $reason = null)
     {
         try {
-            require_once '../src/utils/NotificationService.php';
-            $notificationService = new NotificationService();
-
             if ($status === 'approved') {
-                // Send approval notification
-                $notificationService->sendSignupApproved($customer);
+                // Send approval email directly
+                $subject = "SAMPARK Account Approved - Welcome!";
+                $body = "Dear " . htmlspecialchars($customer['name']) . ",\n\n";
+                $body .= "Your SAMPARK account has been approved!\n\n";
+                $body .= "Account Details:\n";
+                $body .= "Customer ID: " . $customer['customer_id'] . "\n";
+                $body .= "Company: " . htmlspecialchars($customer['company_name']) . "\n\n";
+                $body .= "You can now log in to access our freight support services at:\n";
+                $body .= Config::getAppUrl() . "/login\n\n";
+                $body .= "Best regards,\nSAMPARK Team";
+
+                $headers = "From: noreply@sampark.railway.gov.in\r\n";
+                $headers .= "Reply-To: support@sampark.railway.gov.in\r\n";
+                $headers .= "X-Mailer: PHP/" . phpversion();
+
+                mail($customer['email'], $subject, $body, $headers);
+
+                Config::logInfo("Approval notification sent to customer", [
+                    'customer_id' => $customer['customer_id'],
+                    'email' => $customer['email']
+                ]);
+
+            } elseif ($status === 'rejected') {
+                // Send rejection email
+                $subject = "SAMPARK Account Registration - Update Required";
+                $body = "Dear " . htmlspecialchars($customer['name']) . ",\n\n";
+                $body .= "Thank you for your interest in SAMPARK services.\n\n";
+                $body .= "Unfortunately, we need additional information or clarification before we can approve your account.\n\n";
+                if ($reason) {
+                    $body .= "Reason: " . htmlspecialchars($reason) . "\n\n";
+                }
+                $body .= "Please contact our support team for assistance or re-register with the correct information.\n\n";
+                $body .= "Best regards,\nSAMPARK Team";
+
+                $headers = "From: noreply@sampark.railway.gov.in\r\n";
+                $headers .= "Reply-To: support@sampark.railway.gov.in\r\n";
+                $headers .= "X-Mailer: PHP/" . phpversion();
+
+                mail($customer['email'], $subject, $body, $headers);
+
+                Config::logInfo("Rejection notification sent to customer", [
+                    'customer_id' => $customer['customer_id'],
+                    'email' => $customer['email'],
+                    'reason' => $reason
+                ]);
             }
-            // Note: Rejection email could be added later if needed
 
         } catch (Exception $e) {
             // Log error but don't fail the approval process
-            error_log("Customer approval email error: " . $e->getMessage());
+            Config::logError("Customer email notification error: " . $e->getMessage());
         }
     }
 

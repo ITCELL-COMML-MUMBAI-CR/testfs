@@ -414,13 +414,69 @@ class AuthController extends BaseController {
     }
     
     private function sendRegistrationNotification($customerId, $email, $name) {
-        // Implementation for sending email notification
-        // This would use the email service
+        try {
+            $subject = "Welcome to SAMPARK - Registration Confirmation";
+            $body = "Dear " . htmlspecialchars($name) . ",\n\n";
+            $body .= "Thank you for registering with SAMPARK (Customer ID: " . $customerId . ").\n\n";
+            $body .= "Your account is currently pending approval by our admin team. ";
+            $body .= "You will receive another email once your account has been approved and you can start using our services.\n\n";
+            $body .= "If you have any questions, please contact our support team.\n\n";
+            $body .= "Best regards,\nSAMPARK Team";
+
+            // Use mail function or email service
+            $headers = "From: noreply@sampark.railway.gov.in\r\n";
+            $headers .= "Reply-To: support@sampark.railway.gov.in\r\n";
+            $headers .= "X-Mailer: PHP/" . phpversion();
+
+            mail($email, $subject, $body, $headers);
+
+            Config::logInfo("Registration notification sent to customer", [
+                'customer_id' => $customerId,
+                'email' => $email
+            ]);
+        } catch (Exception $e) {
+            Config::logError("Failed to send registration notification: " . $e->getMessage());
+        }
     }
-    
+
     private function sendApprovalRequestToAdmin($customerId, $data) {
-        // Implementation for sending approval request to admin
-        // This would use the notification service
+        try {
+            // Create notification for admin users
+            $sql = "INSERT INTO notifications (
+                user_id, customer_id, type, title, message,
+                data, is_read, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, 0, NOW())";
+
+            $adminUsers = $this->db->fetchAll(
+                "SELECT id FROM users WHERE role IN ('admin', 'superadmin') AND status = 'active'"
+            );
+
+            $notificationData = json_encode([
+                'customer_id' => $customerId,
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'company_name' => $data['company_name'],
+                'division' => $data['division']
+            ]);
+
+            foreach ($adminUsers as $admin) {
+                $this->db->query($sql, [
+                    $admin['id'],
+                    $customerId,
+                    'customer_approval_request',
+                    'New Customer Registration - Approval Required',
+                    "New customer " . $data['name'] . " (" . $data['company_name'] . ") has registered and requires approval.",
+                    $notificationData
+                ]);
+            }
+
+            Config::logInfo("Approval request notification sent to admins", [
+                'customer_id' => $customerId,
+                'admin_count' => count($adminUsers)
+            ]);
+        } catch (Exception $e) {
+            Config::logError("Failed to send approval request to admin: " . $e->getMessage());
+        }
     }
 
     public function showChangePassword() {

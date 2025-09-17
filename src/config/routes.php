@@ -65,6 +65,8 @@ $router->post('/admin/users/{id}/status', 'Admin@toggleUser', ['auth', 'role:adm
 $router->post('/admin/users/{id}/reset-password', 'Admin@resetUserPassword', ['auth', 'role:admin,superadmin']);
 
 $router->get('/admin/customers', 'Admin@customers', ['auth', 'role:admin,superadmin']);
+$router->get('/admin/customers/create', 'Admin@createCustomer', ['auth', 'role:admin,superadmin']);
+$router->post('/admin/customers/create', 'Admin@storeCustomer', ['auth', 'role:admin,superadmin']);
 $router->get('/admin/customers/{id}', 'Admin@viewCustomer', ['auth', 'role:admin,superadmin']);
 $router->get('/admin/customers/{id}/edit', 'Admin@editCustomer', ['auth', 'role:admin,superadmin']);
 $router->post('/admin/customers/{id}/edit', 'Admin@updateCustomer', ['auth', 'role:admin,superadmin']);
@@ -73,6 +75,7 @@ $router->post('/admin/customers/{id}/approve', 'Admin@approveCustomer', ['auth',
 $router->post('/admin/customers/{id}/reject', 'Admin@rejectCustomer', ['auth', 'role:admin,superadmin']);
 $router->post('/admin/customers/{id}/verify', 'Admin@approveCustomer', ['auth', 'role:admin,superadmin']);
 $router->post('/admin/customers/{id}/status', 'Admin@updateCustomerStatus', ['auth', 'role:admin,superadmin']);
+$router->post('/admin/customers/{id}/delete', 'Admin@deleteCustomer', ['auth', 'role:superadmin']);
 
 $router->get('/admin/categories', 'Admin@categories', ['auth', 'role:admin,superadmin']);
 $router->post('/admin/categories', 'Admin@storeCategory', ['auth', 'role:admin,superadmin']);

@@ -73,6 +73,7 @@ ob_start();
                                 <option value="inactive" <?= isset($filters['status']) && $filters['status'] === 'inactive' ? 'selected' : '' ?>>Inactive</option>
                                 <option value="pending" <?= isset($filters['status']) && $filters['status'] === 'pending' ? 'selected' : '' ?>>Pending Verification</option>
                                 <option value="suspended" <?= isset($filters['status']) && $filters['status'] === 'suspended' ? 'selected' : '' ?>>Suspended</option>
+                                <option value="deleted" <?= isset($filters['status']) && $filters['status'] === 'deleted' ? 'selected' : '' ?>>Deleted</option>
                             </select>
                         </div>
                         
@@ -264,6 +265,14 @@ ob_start();
                                                             <i class="fas fa-envelope me-2"></i>Send Email
                                                         </button>
                                                     </li>
+                                                    <?php if ($user['role'] === 'superadmin' && $customer['status'] !== 'deleted'): ?>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <button class="dropdown-item text-danger" onclick="confirmCustomerDeletion('<?= $customer['customer_id'] ?>')">
+                                                                <i class="fas fa-trash me-2"></i>Delete Customer
+                                                            </button>
+                                                        </li>
+                                                    <?php endif; ?>
                                                 </ul>
                                             </div>
                                         </td>
@@ -341,6 +350,7 @@ ob_start();
                             <small><span class="badge bg-warning me-1">Pending</span> Awaiting verification</small>
                             <small><span class="badge bg-danger me-1">Suspended</span> Account temporarily disabled</small>
                             <small><span class="badge bg-secondary me-1">Inactive</span> Account deactivated</small>
+                            <small><span class="badge bg-dark me-1">Deleted</span> Permanently deactivated</small>
                         </div>
                     </div>
                     <div class="col-md-4 text-md-end mt-2 mt-md-0">
@@ -599,6 +609,59 @@ function exportCustomers(format) {
     currentUrl.searchParams.set('export', format);
     window.open(currentUrl.toString(), '_blank');
 }
+
+function confirmCustomerDeletion(customerId) {
+    Swal.fire({
+        title: 'Delete Customer Account',
+        text: 'This action will permanently deactivate the customer account. This cannot be undone!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        confirmButtonText: 'Yes, delete account',
+        cancelButtonText: 'Cancel',
+        input: 'textarea',
+        inputLabel: 'Reason for deletion (required)',
+        inputPlaceholder: 'Please provide a reason for deleting this customer account...',
+        inputValidator: (value) => {
+            if (!value || value.trim().length < 10) {
+                return 'Please provide a detailed reason (minimum 10 characters)';
+            }
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Send AJAX request to delete customer
+            fetch(`${APP_URL}/admin/customers/${customerId}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': CSRF_TOKEN
+                },
+                body: JSON.stringify({
+                    reason: result.value,
+                    confirm_deletion: true
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire(
+                        'Deleted!',
+                        'Customer account has been permanently deactivated.',
+                        'success'
+                    );
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    Swal.fire('Error!', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error!', 'Failed to delete customer account.', 'error');
+            });
+        }
+    });
+}
 </script>
 
 <style>
@@ -679,9 +742,12 @@ function exportCustomers(format) {
 function getStatusColor($status) {
     switch ($status) {
         case 'active': return 'success';
+        case 'approved': return 'success';
         case 'pending': return 'warning';
         case 'suspended': return 'danger';
         case 'inactive': return 'secondary';
+        case 'deleted': return 'dark';
+        case 'rejected': return 'danger';
         default: return 'secondary';
     }
 }
@@ -689,9 +755,12 @@ function getStatusColor($status) {
 function getStatusBadgeClass($status) {
     switch ($status) {
         case 'active': return 'bg-success';
+        case 'approved': return 'bg-success';
         case 'pending': return 'bg-warning';
         case 'suspended': return 'bg-danger';
         case 'inactive': return 'bg-secondary';
+        case 'deleted': return 'bg-dark';
+        case 'rejected': return 'bg-danger';
         default: return 'bg-secondary';
     }
 }
