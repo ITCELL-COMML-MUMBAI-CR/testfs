@@ -49,37 +49,45 @@ class NotificationModel extends BaseModel {
     /**
      * Get notifications for a specific user
      */
-    public function getUserNotifications($userId, $userType, $limit = 20, $unreadOnly = false) {
+    public function getUserNotifications($userId, $userType, $limit = 20, $unreadOnly = false, $division = null) {
         try {
-            // Check if enhanced columns exist
-            $hasEnhancedColumns = $this->checkEnhancedColumns();
+            $sql = "SELECT n.*, c.complaint_id, c.division, c.assigned_to_department, c.customer_id as ticket_customer_id
+                    FROM {$this->table} n
+                    LEFT JOIN complaints c ON n.complaint_id = c.complaint_id
+                    WHERE ";
 
-            if ($hasEnhancedColumns) {
-                // Use enhanced query with new columns
-                $sql = "SELECT * FROM {$this->table}
-                        WHERE ";
+            $conditions = [];
+            $params = [];
 
-                if ($userType === 'customer') {
-                    $sql .= "customer_id = ?";
-                } else {
-                    $sql .= "(user_id = ? OR user_type = ?)";
-                }
-
-                $sql .= " AND (expires_at IS NULL OR expires_at > NOW())";
-
-                $params = $userType === 'customer' ? [$userId] : [$userId, $userType];
-            } else {
-                // Use basic query for backward compatibility
-                $whereClause = $userType === 'customer' ? 'customer_id = ?' : 'user_id = ?';
-                $sql = "SELECT * FROM {$this->table} WHERE {$whereClause}";
-                $params = [$userId];
+            if ($userType === 'customer') {
+                // Customers see notifications for their own tickets
+                $conditions[] = "n.customer_id = ?";
+                $params[] = $userId;
+            } elseif ($userType === 'controller') {
+                // Controllers see notifications assigned to them or their department
+                $conditions[] = "n.user_id = ?";
+                $params[] = $userId;
+            } elseif ($userType === 'controller_nodal' && $division) {
+                // Controller nodals see notifications for tickets in their division
+                $conditions[] = "(c.division = ? AND n.user_type = 'controller_nodal' AND n.user_id = ?)";
+                $params[] = $division;
+                $params[] = $userId;
+            } elseif (in_array($userType, ['admin', 'superadmin'])) {
+                // Admins see notifications assigned to them
+                $conditions[] = "n.user_id = ?";
+                $params[] = $userId;
             }
+
+            // Add expiration check
+            $conditions[] = "(n.expires_at IS NULL OR n.expires_at > NOW())";
+
+            $sql .= implode(' AND ', $conditions);
 
             if ($unreadOnly) {
-                $sql .= " AND is_read = 0";
+                $sql .= " AND n.is_read = 0";
             }
 
-            $sql .= " ORDER BY created_at DESC LIMIT ?";
+            $sql .= " ORDER BY n.created_at DESC LIMIT ?";
             $params[] = $limit;
 
             return $this->db->fetchAll($sql, $params);
@@ -104,20 +112,26 @@ class NotificationModel extends BaseModel {
     /**
      * Mark notification as read
      */
-    public function markAsRead($notificationId, $userId = null) {
+    public function markAsRead($notificationId, $userId = null, $userType = null) {
         $data = [
             'is_read' => 1,
-            'read_at' => date('Y-m-d H:i:s')
+            'read_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
         ];
-        
-        if ($userId) {
+
+        if ($userId && $userType) {
             // Verify the notification belongs to the user
-            $notification = $this->findBy(['id' => $notificationId, 'user_id' => $userId]);
+            if ($userType === 'customer') {
+                $notification = $this->findBy(['id' => $notificationId, 'customer_id' => $userId]);
+            } else {
+                $notification = $this->findBy(['id' => $notificationId, 'user_id' => $userId]);
+            }
+
             if (!$notification) {
                 return false;
             }
         }
-        
+
         return $this->update($notificationId, $data);
     }
     
@@ -125,11 +139,17 @@ class NotificationModel extends BaseModel {
      * Mark all notifications as read for a user
      */
     public function markAllAsRead($userId, $userType) {
-        $sql = "UPDATE {$this->table} 
-                SET is_read = 1, read_at = NOW(), updated_at = NOW()
-                WHERE user_id = ? AND user_type = ? AND is_read = 0";
-        
-        return $this->db->query($sql, [$userId, $userType]);
+        if ($userType === 'customer') {
+            $sql = "UPDATE {$this->table}
+                    SET is_read = 1, read_at = NOW(), updated_at = NOW()
+                    WHERE customer_id = ? AND is_read = 0";
+            return $this->db->query($sql, [$userId]);
+        } else {
+            $sql = "UPDATE {$this->table}
+                    SET is_read = 1, read_at = NOW(), updated_at = NOW()
+                    WHERE user_id = ? AND is_read = 0";
+            return $this->db->query($sql, [$userId]);
+        }
     }
     
     /**
@@ -413,6 +433,123 @@ class NotificationModel extends BaseModel {
         }
         
         return $notification;
+    }
+
+    /**
+     * Create department-specific notifications following ticket assignment logic
+     */
+    public function createDepartmentNotification($complaintId, $title, $message, $type = 'ticket_created', $priority = 'medium') {
+        // Get ticket details to determine who should receive notifications
+        $sql = "SELECT complaint_id, customer_id, division, department, assigned_to_department, status
+                FROM complaints WHERE complaint_id = ?";
+        $ticket = $this->db->fetch($sql, [$complaintId]);
+
+        if (!$ticket) {
+            return false;
+        }
+
+        $notifications = [];
+
+        // 1. Customer notification (always for their own tickets)
+        if ($ticket['customer_id']) {
+            $notifications[] = [
+                'customer_id' => $ticket['customer_id'],
+                'user_id' => null,
+                'user_type' => 'customer',
+                'title' => $title,
+                'message' => $message,
+                'type' => $type,
+                'priority' => $priority,
+                'complaint_id' => $complaintId,
+                'related_id' => $complaintId,
+                'related_type' => 'ticket',
+                'is_read' => 0
+            ];
+        }
+
+        // 2. Controller Nodal notifications (for division-based notifications)
+        if ($ticket['division']) {
+            // Get all controller nodals for this division
+            $divisionUsers = $this->db->fetchAll(
+                "SELECT id FROM users WHERE role = 'controller_nodal' AND division = ? AND status = 'active'",
+                [$ticket['division']]
+            );
+
+            foreach ($divisionUsers as $user) {
+                $notifications[] = [
+                    'customer_id' => null,
+                    'user_id' => $user['id'],
+                    'user_type' => 'controller_nodal',
+                    'title' => $title,
+                    'message' => $message,
+                    'type' => $type,
+                    'priority' => $priority,
+                    'complaint_id' => $complaintId,
+                    'related_id' => $complaintId,
+                    'related_type' => 'ticket',
+                    'is_read' => 0
+                ];
+            }
+        }
+
+        // 3. Department-based controller notifications
+        if ($ticket['assigned_to_department']) {
+            // Get all controllers for the assigned department
+            $departmentUsers = $this->db->fetchAll(
+                "SELECT id FROM users WHERE role = 'controller' AND department = ? AND status = 'active'",
+                [$ticket['assigned_to_department']]
+            );
+
+            foreach ($departmentUsers as $user) {
+                $notifications[] = [
+                    'customer_id' => null,
+                    'user_id' => $user['id'],
+                    'user_type' => 'controller',
+                    'title' => $title,
+                    'message' => $message,
+                    'type' => $type,
+                    'priority' => $priority,
+                    'complaint_id' => $complaintId,
+                    'related_id' => $complaintId,
+                    'related_type' => 'ticket',
+                    'is_read' => 0
+                ];
+            }
+        }
+
+        // 4. Admin notifications (for high priority or critical tickets)
+        if (in_array($priority, ['high', 'critical'])) {
+            $adminUsers = $this->db->fetchAll(
+                "SELECT id FROM users WHERE role IN ('admin', 'superadmin') AND status = 'active'"
+            );
+
+            foreach ($adminUsers as $user) {
+                $notifications[] = [
+                    'customer_id' => null,
+                    'user_id' => $user['id'],
+                    'user_type' => 'admin',
+                    'title' => $title,
+                    'message' => $message,
+                    'type' => $type,
+                    'priority' => $priority,
+                    'complaint_id' => $complaintId,
+                    'related_id' => $complaintId,
+                    'related_type' => 'ticket',
+                    'is_read' => 0
+                ];
+            }
+        }
+
+        // Insert all notifications
+        $success = true;
+        foreach ($notifications as $notificationData) {
+            if (!$this->create($notificationData)) {
+                $success = false;
+                error_log("Failed to create notification: " . json_encode($notificationData));
+            }
+        }
+
+        return $success;
     }
 
     /**

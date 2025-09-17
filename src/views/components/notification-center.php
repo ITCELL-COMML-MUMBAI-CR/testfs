@@ -28,17 +28,13 @@ $highPriorityCount = $notificationCounts['high_priority'] ?? 0;
     <button type="button" class="btn btn-link nav-link position-relative" onclick="toggleNotificationPanel()"
             data-bs-toggle="tooltip" data-bs-placement="bottom" title="Notifications">
         <i class="fas fa-bell"></i>
-        <?php if ($unreadCount > 0): ?>
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                <?= $unreadCount > 99 ? '99+' : $unreadCount ?>
-                <span class="visually-hidden">unread notifications</span>
-            </span>
-        <?php endif; ?>
-        <?php if ($highPriorityCount > 0): ?>
-            <span class="position-absolute top-0 start-0 translate-middle">
-                <span class="badge bg-warning rounded-pill pulse-animation" style="width: 8px; height: 8px;"></span>
-            </span>
-        <?php endif; ?>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="<?= $unreadCount > 0 ? '' : 'display: none;' ?>">
+            <?= $unreadCount > 99 ? '99+' : $unreadCount ?>
+            <span class="visually-hidden">unread notifications</span>
+        </span>
+        <span class="position-absolute top-0 start-0 translate-middle" style="<?= $highPriorityCount > 0 ? '' : 'display: none;' ?>">
+            <span class="badge bg-warning rounded-pill pulse-animation" style="width: 8px; height: 8px;"></span>
+        </span>
     </button>
 </div>
 
@@ -57,14 +53,6 @@ $highPriorityCount = $notificationCounts['high_priority'] ?? 0;
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-        </div>
-        <div class="notification-stats mt-2">
-            <small class="text-muted">
-                <?= $activeCount ?> active notifications
-                <?php if ($highPriorityCount > 0): ?>
-                    • <span class="text-warning"><?= $highPriorityCount ?> high priority</span>
-                <?php endif; ?>
-            </small>
         </div>
     </div>
 
@@ -206,8 +194,15 @@ let notificationPanel = null;
 let notificationOverlay = null;
 let currentPage = 1;
 let isLoading = false;
+let notificationCenterInitialized = false;
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Prevent multiple initializations
+    if (notificationCenterInitialized) {
+        return;
+    }
+    notificationCenterInitialized = true;
+
     notificationPanel = document.getElementById('notificationPanel');
     notificationOverlay = document.getElementById('notificationOverlay');
 
@@ -222,6 +217,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function toggleNotificationPanel() {
+    if (!notificationPanel) {
+        console.error('Notification panel not found');
+        return;
+    }
+
     if (notificationPanel.classList.contains('d-none')) {
         openNotificationPanel();
     } else {
@@ -230,6 +230,11 @@ function toggleNotificationPanel() {
 }
 
 function openNotificationPanel() {
+    if (!notificationPanel || !notificationOverlay) {
+        console.error('Notification panel elements not found');
+        return;
+    }
+
     notificationPanel.classList.remove('d-none');
     notificationOverlay.classList.remove('d-none');
     currentPage = 1;
@@ -237,6 +242,10 @@ function openNotificationPanel() {
 }
 
 function closeNotificationPanel() {
+    if (!notificationPanel || !notificationOverlay) {
+        return;
+    }
+
     notificationPanel.classList.add('d-none');
     notificationOverlay.classList.add('d-none');
 }
@@ -246,6 +255,12 @@ function loadNotifications(page = 1) {
 
     isLoading = true;
     const listContainer = document.getElementById('notificationList');
+
+    if (!listContainer) {
+        console.error('Notification list container not found');
+        isLoading = false;
+        return;
+    }
 
     if (page === 1) {
         listContainer.innerHTML = `
@@ -258,14 +273,19 @@ function loadNotifications(page = 1) {
         `;
     }
 
-    fetch(`${APP_URL}/api/notifications?page=${page}&limit=20`, {
+    fetch(`${APP_URL}/api/notifications?page=${page}&limit=20&unread_only=true`, {
         method: 'GET',
         headers: {
             'X-Requested-With': 'XMLHttpRequest',
             'X-CSRF-Token': CSRF_TOKEN
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             if (page === 1) {
@@ -287,13 +307,15 @@ function loadNotifications(page = 1) {
 
             // Update footer button visibility
             const footerButton = document.querySelector('.notification-footer button');
-            if (data.has_more) {
-                footerButton.style.display = 'block';
-            } else {
-                footerButton.style.display = 'none';
+            if (footerButton) {
+                if (data.has_more) {
+                    footerButton.style.display = 'block';
+                } else {
+                    footerButton.style.display = 'none';
+                }
             }
         } else {
-            if (page === 1) {
+            if (page === 1 && listContainer) {
                 listContainer.innerHTML = `
                     <div class="text-center py-4 text-danger">
                         <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
@@ -305,7 +327,7 @@ function loadNotifications(page = 1) {
     })
     .catch(error => {
         console.error('Error loading notifications:', error);
-        if (page === 1) {
+        if (page === 1 && listContainer) {
             listContainer.innerHTML = `
                 <div class="text-center py-4 text-danger">
                     <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
@@ -350,8 +372,8 @@ function createNotificationElement(notification) {
             </div>
         </div>
         <div class="text-muted small mb-1">${escapeHtml(notification.message)}</div>
-        ${ticketId ? `<div class="mt-2">
-            <a href="${ticketUrl}" class="ticket-link" onclick="markAsRead(${notification.id})">
+        ${ticketId && ticketUrl !== '#' ? `<div class="mt-2">
+            <a href="${ticketUrl}" class="ticket-link" onclick="markAsRead(${notification.id}); closeNotificationPanel(); return true;" onError="console.error('Access denied to ticket'); return false;">
                 <i class="fas fa-ticket-alt me-1"></i>View Ticket #${ticketId}
             </a>
         </div>` : ''}
@@ -361,6 +383,7 @@ function createNotificationElement(notification) {
     div.addEventListener('click', (e) => {
         if (!e.target.closest('button') && !e.target.closest('a')) {
             markAsRead(notification.id);
+            closeNotificationPanel();
             if (ticketUrl) {
                 window.location.href = ticketUrl;
             }
@@ -441,7 +464,8 @@ function markAsRead(notificationId) {
 function dismissNotification(notificationId, event) {
     event.stopPropagation();
 
-    fetch(`${APP_URL}/api/notifications/${notificationId}/dismiss`, {
+    // Instead of dismissing, mark as read
+    fetch(`${APP_URL}/api/notifications/${notificationId}/read`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -452,9 +476,10 @@ function dismissNotification(notificationId, event) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // Remove from UI
+            // Remove from UI and mark as read
             const notificationElement = event.target.closest('.notification-item');
             if (notificationElement) {
+                notificationElement.classList.remove('unread');
                 notificationElement.remove();
             }
 
@@ -462,7 +487,7 @@ function dismissNotification(notificationId, event) {
             refreshNotificationCount();
         }
     })
-    .catch(error => console.error('Error dismissing notification:', error));
+    .catch(error => console.error('Error marking notification as read:', error));
 }
 
 function markAllAsRead() {

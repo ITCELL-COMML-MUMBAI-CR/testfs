@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/../utils/ActivityLogger.php';
+require_once __DIR__ . '/../utils/Session.php';
 
 class BaseController {
     protected $db;

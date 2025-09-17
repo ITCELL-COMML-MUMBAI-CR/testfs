@@ -684,26 +684,31 @@ class NotificationService {
 
             if ($hasEnhancedColumns) {
                 // Use enhanced query with new columns
-                $sql = "SELECT
-                            COUNT(*) as total,
-                            COUNT(CASE WHEN is_read = 0 AND dismissed_at IS NULL THEN 1 END) as unread,
-                            COUNT(CASE WHEN dismissed_at IS NULL THEN 1 END) as active,
-                            COUNT(CASE WHEN priority IN ('high', 'critical', 'urgent') AND dismissed_at IS NULL THEN 1 END) as high_priority
-                        FROM notifications
-                        WHERE {$whereClause}
-                        AND (expires_at IS NULL OR expires_at > NOW())";
+                $sql = "SELECT COUNT(*) as total, " .
+                       "COUNT(CASE WHEN is_read = 0 AND dismissed_at IS NULL THEN 1 END) as unread, " .
+                       "COUNT(CASE WHEN dismissed_at IS NULL THEN 1 END) as active, " .
+                       "COUNT(CASE WHEN priority IN ('high', 'critical', 'urgent') AND dismissed_at IS NULL THEN 1 END) as priority_high " .
+                       "FROM notifications " .
+                       "WHERE {$whereClause} " .
+                       "AND (expires_at IS NULL OR expires_at > NOW())";
             } else {
                 // Use basic query for backward compatibility
-                $sql = "SELECT
-                            COUNT(*) as total,
-                            COUNT(CASE WHEN is_read = 0 THEN 1 END) as unread,
-                            COUNT(*) as active,
-                            0 as high_priority
-                        FROM notifications
-                        WHERE {$whereClause}";
+                $sql = "SELECT COUNT(*) as total, " .
+                       "COUNT(CASE WHEN is_read = 0 THEN 1 END) as unread, " .
+                       "COUNT(*) as active, " .
+                       "0 as priority_high " .
+                       "FROM notifications " .
+                       "WHERE {$whereClause}";
             }
 
             $result = $this->db->fetch($sql, [$userId]);
+
+            // Map priority_high back to high_priority for consistency
+            if ($result && isset($result['priority_high'])) {
+                $result['high_priority'] = $result['priority_high'];
+                unset($result['priority_high']);
+            }
+
             return $result ?: ['total' => 0, 'unread' => 0, 'active' => 0, 'high_priority' => 0];
 
         } catch (Exception $e) {

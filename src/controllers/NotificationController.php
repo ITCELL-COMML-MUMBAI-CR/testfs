@@ -48,6 +48,7 @@ class NotificationController extends BaseController {
 
             $userId = $_SESSION['user_id'] ?? $_SESSION['customer_id'] ?? null;
             $userType = $_SESSION['user_type'] ?? 'customer';
+            $division = $_SESSION['division'] ?? null;
 
             if (!$userId) {
                 return $this->jsonResponse(['success' => false, 'error' => 'User ID not found'], 400);
@@ -57,11 +58,11 @@ class NotificationController extends BaseController {
             $limit = intval($_GET['limit'] ?? 20);
             $unreadOnly = filter_var($_GET['unread_only'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
-            // Apply RBAC - users can only see their own notifications
-            $notifications = $this->notificationModel->getUserNotifications($userId, $userType, $limit, $unreadOnly);
+            // Apply department-specific RBAC
+            $notifications = $this->notificationModel->getUserNotifications($userId, $userType, $limit, $unreadOnly, $division);
 
             // Calculate if there are more notifications
-            $totalNotifications = $this->notificationModel->getUserNotifications($userId, $userType, $limit + 1, $unreadOnly);
+            $totalNotifications = $this->notificationModel->getUserNotifications($userId, $userType, $limit + 1, $unreadOnly, $division);
             $hasMore = count($totalNotifications) > $limit;
 
             // Format notifications for display
@@ -169,7 +170,7 @@ class NotificationController extends BaseController {
                 return $this->jsonResponse(['success' => false, 'error' => 'Access denied'], 403);
             }
 
-            $result = $this->notificationModel->markAsRead($notificationId, $userId);
+            $result = $this->notificationModel->markAsRead($notificationId, $userId, $userType);
 
             if ($result) {
                 return $this->jsonResponse(['success' => true, 'message' => 'Notification marked as read']);

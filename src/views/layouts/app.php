@@ -235,13 +235,8 @@
                             </a>
                         </li>
 
-                        <!-- Notification Center - Checking migration status -->
-                        <li class="nav-item">
-                            <a class="nav-link" href="<?= Config::getAppUrl() ?>/check_migration.php" title="Check notification system status">
-                                <i class="fas fa-bell text-warning"></i>
-                                <span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">FIX</span>
-                            </a>
-                        </li>
+                        <!-- Notification Center -->
+                        <?php include __DIR__ . '/../components/notification-center.php'; ?>
 
                         <!-- User Profile Dropdown -->
                         <li class="nav-item dropdown">
@@ -420,48 +415,7 @@
             document.getElementById('loadingOverlay').classList.add('d-none');
         }
         
-        // Notification functions
-        function showNotifications() {
-            // Implementation for showing notifications
-            Swal.fire({
-                title: 'Notifications',
-                html: '<div id="notificationsContent">Loading notifications...</div>',
-                showCloseButton: true,
-                showConfirmButton: false,
-                width: '600px'
-            });
-            
-            // Load notifications via AJAX
-            loadNotifications();
-        }
-        
-        function loadNotifications() {
-            // AJAX call to load notifications
-            fetch(APP_URL + '/api/notifications')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('notificationsContent').innerHTML = formatNotifications(data);
-                })
-                .catch(error => {
-                    document.getElementById('notificationsContent').innerHTML = '<p class="text-muted">Failed to load notifications.</p>';
-                });
-        }
-        
-        function formatNotifications(notifications) {
-            if (!notifications || notifications.length === 0) {
-                return '<p class="text-muted">No new notifications.</p>';
-            }
-
-            return notifications.map(notification => `
-                <div class="notification-item border-bottom py-2">
-                    <div class="d-flex justify-content-between">
-                        <strong>${notification.title}</strong>
-                        <small class="text-muted">${notification.created_at}</small>
-                    </div>
-                    <p class="mb-1">${notification.message}</p>
-                </div>
-            `).join('');
-        }
+        // Note: Notification functionality is now handled by the notification center component
 
         function showMigrationNotice() {
             Swal.fire({
@@ -518,10 +472,6 @@
             text-align: center;
         }
         
-        .notification-item {
-            max-height: 100px;
-            overflow: hidden;
-        }
         
         /* Mobile navbar improvements */
         @media (max-width: 991px) {

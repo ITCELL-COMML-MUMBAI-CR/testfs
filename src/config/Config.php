@@ -17,13 +17,13 @@ class Config {
     // Use Config::getAppUrl() and Config::getBasePath() instead of constants
     
     // Email Configuration
-    const FROM_EMAIL = 'admin@itcellbbcr.in';
+    const FROM_EMAIL = 'itcell.mumbai.cr@gmail.com';
     const FROM_NAME = 'SAMPARK Support System';
-    const SMTP_HOST = 'smtp.hostinger.com';
-    const SMTP_PORT = 465;
-    const SMTP_USERNAME = 'admin@itcellbbcr.in';
-    const SMTP_PASSWORD = '4|272mK&4Ca';
-    const SMTP_ENCRYPTION = 'ssl';
+    const SMTP_HOST = 'smtp.gmail.com';
+    const SMTP_PORT = 587;
+    const SMTP_USERNAME = 'itcell.mumbai.cr@gmail.com';
+    const SMTP_PASSWORD = 'vjljxrvqypzvqqvi';
+    const SMTP_ENCRYPTION = 'tls';
     
     // SMS Configuration
     const SMS_API_URL = '';
