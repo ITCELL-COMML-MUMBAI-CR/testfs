@@ -2510,7 +2510,8 @@ class AdminController extends BaseController
         $user = $this->getCurrentUser();
 
         // Get URL parameters for filtering
-        $current_view = $_GET['view'] ?? 'complaints';
+        $reportType = $_GET['type'] ?? null; // Handle dashboard card clicks
+        $current_view = $_GET['view'] ?? null; // User's explicit view choice
         $current_tab = $_GET['tab'] ?? 'detailed';
         $sort_order = $_GET['sort'] ?? 'latest';
         $date_from = $_GET['date_from'] ?? date('Y-m-01');
@@ -2518,6 +2519,26 @@ class AdminController extends BaseController
         $division_filter = $_GET['division'] ?? '';
         $status_filter = $_GET['status'] ?? '';
         $priority_filter = $_GET['priority'] ?? '';
+
+        // Handle report type from dashboard cards
+        if ($reportType && !$current_view) {
+            if (in_array($reportType, ['total_complaints', 'pending_complaints', 'closed_complaints'])) {
+                $current_view = 'complaints';
+                // Filter complaints based on type
+                if ($reportType === 'pending_complaints') {
+                    $status_filter = 'pending';
+                } elseif ($reportType === 'closed_complaints') {
+                    $status_filter = 'closed';
+                }
+            } elseif ($reportType === 'registered_customers') {
+                $current_view = 'customers';
+            }
+        }
+
+        // Default view if none specified
+        if (!$current_view) {
+            $current_view = 'complaints';
+        }
 
         // Build filters array
         $filters = [
@@ -2529,18 +2550,10 @@ class AdminController extends BaseController
             'sort' => $sort_order
         ];
 
-        // Get data based on current view
-        $complaints_data = [];
-        $transactions_data = [];
-        $customers_data = [];
-
-        if ($current_view === 'complaints') {
-            $complaints_data = $this->getComplaintsReportData($filters);
-        } elseif ($current_view === 'transactions') {
-            $transactions_data = $this->getTransactionsReportData($filters);
-        } elseif ($current_view === 'customers') {
-            $customers_data = $this->getCustomersReportData($filters);
-        }
+        // Always load all data types so users can switch between views
+        $complaints_data = $this->getComplaintsReportData($filters);
+        $transactions_data = $this->getTransactionsReportData($filters);
+        $customers_data = $this->getCustomersReportData($filters);
 
         // Get available columns for column selector
         $available_columns = $this->getAvailableColumns($current_view);
@@ -4193,46 +4206,48 @@ class AdminController extends BaseController
     private function getTransactionsReportData($filters)
     {
         try {
-            // This is a placeholder - you'll need to implement based on your transaction log structure
-            // For now, return complaint history as transactions
+            // Load actual transactions from transactions table
             $sql = "SELECT
-                        CONCAT('TXN_', c.complaint_id, '_', UNIX_TIMESTAMP(c.updated_at)) as transaction_id,
-                        c.complaint_id,
-                        'status_update' as transaction_type,
-                        u.name as user_name,
-                        c.division as from_division,
-                        c.division as to_division,
-                        'pending' as old_status,
-                        c.status as new_status,
-                        COALESCE(c.action_taken, 'Status updated') as remarks,
-                        c.updated_at as created_at
-                    FROM complaints c
-                    LEFT JOIN users u ON c.assigned_to_user_id = u.id
+                        t.transaction_id,
+                        t.complaint_id,
+                        t.transaction_type,
+                        COALESCE(u.name, cust.name, 'System') as user_name,
+                        t.from_division,
+                        t.to_division,
+                        '' as old_status,
+                        '' as new_status,
+                        t.remarks,
+                        t.created_at
+                    FROM transactions t
+                    LEFT JOIN complaints c ON t.complaint_id = c.complaint_id
+                    LEFT JOIN users u ON t.created_by_id = u.id
+                    LEFT JOIN customers cust ON t.created_by_customer_id = cust.customer_id
                     WHERE 1=1";
 
             $params = [];
 
             // Apply filters
             if (!empty($filters['date_from'])) {
-                $sql .= " AND c.updated_at >= ?";
+                $sql .= " AND t.created_at >= ?";
                 $params[] = $filters['date_from'] . ' 00:00:00';
             }
 
             if (!empty($filters['date_to'])) {
-                $sql .= " AND c.updated_at <= ?";
+                $sql .= " AND t.created_at <= ?";
                 $params[] = $filters['date_to'] . ' 23:59:59';
             }
 
             if (!empty($filters['division'])) {
-                $sql .= " AND c.division = ?";
+                $sql .= " AND (t.from_division = ? OR t.to_division = ?)";
+                $params[] = $filters['division'];
                 $params[] = $filters['division'];
             }
 
             // Apply sorting
             if ($filters['sort'] === 'oldest') {
-                $sql .= " ORDER BY c.updated_at ASC";
+                $sql .= " ORDER BY t.created_at ASC";
             } else {
-                $sql .= " ORDER BY c.updated_at DESC";
+                $sql .= " ORDER BY t.created_at DESC";
             }
 
             $sql .= " LIMIT 500"; // Limit for performance

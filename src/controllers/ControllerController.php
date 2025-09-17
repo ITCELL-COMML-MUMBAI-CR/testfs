@@ -1814,11 +1814,12 @@ class ControllerController extends BaseController {
     
     public function reports() {
         $user = $this->getCurrentUser();
-        
+
         $reportType = $_GET['type'] ?? 'summary';
         $dateFrom = $_GET['date_from'] ?? date('Y-m-01');
         $dateTo = $_GET['date_to'] ?? date('Y-m-t');
         $division = $_GET['division'] ?? $user['division'];
+        $currentView = $_GET['view'] ?? null; // User's explicit view choice
         
         $data = [
             'page_title' => 'Reports - SAMPARK',
@@ -1829,18 +1830,56 @@ class ControllerController extends BaseController {
             'csrf_token' => $this->session->getCSRFToken()
         ];
         
+        // Initialize empty data arrays
+        $data['complaints_data'] = [];
+        $data['transactions_data'] = [];
+        $data['customers_data'] = [];
+        $data['available_columns'] = [];
+
+        // Always load all data types so users can switch between views
+        $data['complaints_data'] = $this->getComplaintsReport($user, $dateFrom, $dateTo, $division, 'all');
+        $data['customers_data'] = $this->getCustomersReport($user, $dateFrom, $dateTo, $division);
+        $data['transactions_data'] = $this->getTransactionsReport($user, $dateFrom, $dateTo, $division);
+
         switch ($reportType) {
             case 'summary':
                 $data['report_data'] = $this->getSummaryReport($user, $dateFrom, $dateTo, $division);
+                if (!$currentView) $_GET['view'] = 'complaints'; // Default view only if not set
                 break;
             case 'performance':
                 $data['report_data'] = $this->getPerformanceReport($user, $dateFrom, $dateTo, $division);
+                if (!$currentView) $_GET['view'] = 'complaints';
                 break;
             case 'sla':
                 $data['report_data'] = $this->getSLAReport($user, $dateFrom, $dateTo, $division);
+                if (!$currentView) $_GET['view'] = 'complaints';
                 break;
             case 'customer_satisfaction':
                 $data['report_data'] = $this->getCustomerSatisfactionReport($user, $dateFrom, $dateTo, $division);
+                $data['complaints_data'] = $this->getComplaintsReport($user, $dateFrom, $dateTo, $division, 'closed');
+                if (!$currentView) $_GET['view'] = 'complaints';
+                break;
+            case 'total_complaints':
+                $data['report_data'] = ['type' => 'complaints', 'title' => 'All Complaints Report'];
+                if (!$currentView) $_GET['view'] = 'complaints';
+                break;
+            case 'pending_complaints':
+                $data['complaints_data'] = $this->getComplaintsReport($user, $dateFrom, $dateTo, $division, 'pending');
+                $data['report_data'] = ['type' => 'complaints', 'title' => 'Pending Complaints Report'];
+                if (!$currentView) $_GET['view'] = 'complaints';
+                break;
+            case 'closed_complaints':
+                $data['complaints_data'] = $this->getComplaintsReport($user, $dateFrom, $dateTo, $division, 'closed');
+                $data['report_data'] = ['type' => 'complaints', 'title' => 'Closed Complaints Report'];
+                if (!$currentView) $_GET['view'] = 'complaints';
+                break;
+            case 'registered_customers':
+                $data['report_data'] = ['type' => 'customers', 'title' => 'Registered Customers Report'];
+                if (!$currentView) $_GET['view'] = 'customers'; // Default to customers view for this report
+                break;
+            default:
+                $data['report_data'] = $this->getSummaryReport($user, $dateFrom, $dateTo, $division);
+                if (!$currentView) $_GET['view'] = 'complaints';
                 break;
         }
         
@@ -2732,5 +2771,163 @@ class ControllerController extends BaseController {
         }
 
         return $registration_stats;
+    }
+
+    private function getComplaintsReport($user, $dateFrom, $dateTo, $division, $status = 'all') {
+        $conditions = [];
+        $params = [];
+
+        // Role-based access control
+        if ($user['role'] === 'controller') {
+            $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
+            $params[] = $user['division'];
+            $params[] = $user['department'];
+        } else {
+            $conditions[] = 'c.division = ?';
+            $params[] = $division;
+        }
+
+        // Date range filter
+        if ($dateFrom) {
+            $conditions[] = 'c.created_at >= ?';
+            $params[] = $dateFrom . ' 00:00:00';
+        }
+        if ($dateTo) {
+            $conditions[] = 'c.created_at <= ?';
+            $params[] = $dateTo . ' 23:59:59';
+        }
+
+        // Status filter
+        if ($status !== 'all') {
+            $conditions[] = 'c.status = ?';
+            $params[] = $status;
+        }
+
+        $whereClause = implode(' AND ', $conditions);
+
+        $sql = "SELECT
+                    c.complaint_id,
+                    c.date,
+                    c.time,
+                    c.created_at,
+                    c.updated_at,
+                    c.status,
+                    c.priority,
+                    c.description,
+                    c.action_taken,
+                    c.division,
+                    c.assigned_to_department,
+                    c.fnr_number,
+                    c.e_indent_number,
+                    cat.category,
+                    cat.subtype as type,
+                    s.name as shed_name,
+                    cust.name as customer_name,
+                    cust.mobile as customer_mobile,
+                    cust.company_name,
+                    TIMESTAMPDIFF(HOUR, c.created_at, COALESCE(c.closed_at, NOW())) as duration_hours
+                FROM complaints c
+                LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
+                LEFT JOIN shed s ON c.shed_id = s.shed_id
+                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                WHERE {$whereClause}
+                ORDER BY c.created_at DESC";
+
+        return $this->db->fetchAll($sql, $params);
+    }
+
+    private function getCustomersReport($user, $dateFrom, $dateTo, $division) {
+        $conditions = [];
+        $params = [];
+
+        // Role-based access control - filter customers by division from their complaints
+        if ($user['role'] === 'controller') {
+            $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
+            $params[] = $user['division'];
+            $params[] = $user['department'];
+        } else {
+            $conditions[] = 'c.division = ?';
+            $params[] = $division;
+        }
+
+        // Date range filter on customer registration
+        if ($dateFrom) {
+            $conditions[] = 'cust.created_at >= ?';
+            $params[] = $dateFrom . ' 00:00:00';
+        }
+        if ($dateTo) {
+            $conditions[] = 'cust.created_at <= ?';
+            $params[] = $dateTo . ' 23:59:59';
+        }
+
+        $whereClause = implode(' AND ', $conditions);
+
+        $sql = "SELECT DISTINCT
+                    cust.customer_id,
+                    cust.name,
+                    cust.email,
+                    cust.mobile,
+                    cust.company_name,
+                    cust.customer_type,
+                    cust.designation,
+                    cust.gstin,
+                    cust.created_at,
+                    cust.status,
+                    COUNT(c.complaint_id) as total_complaints
+                FROM customers cust
+                LEFT JOIN complaints c ON cust.customer_id = c.customer_id
+                WHERE {$whereClause}
+                GROUP BY cust.customer_id, cust.name, cust.email, cust.mobile, cust.company_name,
+                         cust.customer_type, cust.designation, cust.gstin, cust.created_at, cust.status
+                ORDER BY cust.created_at DESC";
+
+        return $this->db->fetchAll($sql, $params);
+    }
+
+    private function getTransactionsReport($user, $dateFrom, $dateTo, $division) {
+        $conditions = [];
+        $params = [];
+
+        // Role-based access control - filter transactions by division from complaints
+        if ($user['role'] === 'controller') {
+            $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
+            $params[] = $user['division'];
+            $params[] = $user['department'];
+        } else {
+            $conditions[] = 'c.division = ?';
+            $params[] = $division;
+        }
+
+        // Date range filter on transaction creation
+        if ($dateFrom) {
+            $conditions[] = 't.created_at >= ?';
+            $params[] = $dateFrom . ' 00:00:00';
+        }
+        if ($dateTo) {
+            $conditions[] = 't.created_at <= ?';
+            $params[] = $dateTo . ' 23:59:59';
+        }
+
+        $whereClause = implode(' AND ', $conditions);
+
+        $sql = "SELECT
+                    t.transaction_id,
+                    t.complaint_id,
+                    t.transaction_type,
+                    t.from_division,
+                    t.to_division,
+                    '' as old_status,
+                    '' as new_status,
+                    t.remarks,
+                    t.created_at,
+                    COALESCE(u.name, cust.name, 'System') as user_name
+                FROM transactions t
+                LEFT JOIN complaints c ON t.complaint_id = c.complaint_id
+                LEFT JOIN users u ON t.created_by_id = u.id
+                LEFT JOIN customers cust ON t.created_by_customer_id = cust.customer_id
+                WHERE {$whereClause}
+                ORDER BY t.created_at DESC";
+
+        return $this->db->fetchAll($sql, $params);
     }
 }
