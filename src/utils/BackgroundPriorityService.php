@@ -4,6 +4,10 @@
  * Handles automatic priority escalation without user interaction
  */
 
+require_once __DIR__ . '/OnSiteNotificationService.php';
+
+require_once __DIR__ . '/OnSiteNotificationService.php';
+
 class BackgroundPriorityService {
     private $db;
     private $notificationService;
@@ -216,6 +220,10 @@ class BackgroundPriorityService {
         if (!$result['success']) {
             error_log("Failed to send priority escalation notification for ticket {$ticketId}: " . ($result['error'] ?? 'Unknown error'));
         }
+
+        // Send on-site notification
+        $onSiteNotificationService = new OnSiteNotificationService();
+        $onSiteNotificationService->notifyUsersOfPriorityEscalation($ticketId);
 
         return $result;
     }

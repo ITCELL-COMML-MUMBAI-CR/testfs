@@ -4326,16 +4326,16 @@ class AdminController extends BaseController
         $user = $this->getCurrentUser();
 
         // Only allow admin/superadmin
-        if (!in_array($user['user_type'], ['admin', 'superadmin'])) {
-            $this->redirect('/dashboard');
+        if (!in_array($user['role'], ['admin', 'superadmin'])) {
+            $this->redirect(Config::getAppUrl() . '/');
             return;
         }
 
-        $this->render('admin/notifications', [
+        $this->view('admin/notifications', [
             'page_title' => 'Notification Management - SAMPARK Admin',
             'user' => $user,
             'user_name' => $user['name'] ?? 'Admin',
-            'user_role' => $user['user_type']
+            'user_role' => $user['role']
         ]);
     }
 }

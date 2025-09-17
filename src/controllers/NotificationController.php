@@ -47,7 +47,7 @@ class NotificationController extends BaseController {
             }
 
             $userId = $_SESSION['user_id'] ?? $_SESSION['customer_id'] ?? null;
-            $userType = $_SESSION['user_type'] ?? 'customer';
+            $userRole = $_SESSION['user_role'] ?? 'customer';
             $division = $_SESSION['division'] ?? null;
 
             if (!$userId) {
@@ -59,10 +59,11 @@ class NotificationController extends BaseController {
             $unreadOnly = filter_var($_GET['unread_only'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
             // Apply department-specific RBAC
-            $notifications = $this->notificationModel->getUserNotifications($userId, $userType, $limit, $unreadOnly, $division);
+            $notifications = $this->notificationModel->getUserNotifications($userId, $userRole, $limit, $unreadOnly, $division);
 
             // Calculate if there are more notifications
-            $totalNotifications = $this->notificationModel->getUserNotifications($userId, $userType, $limit + 1, $unreadOnly, $division);
+            // Calculate if there are more notifications
+                        $totalNotifications = $this->notificationModel->getUserNotifications($userId, $userRole, $limit + 1, $unreadOnly, $division);
             $hasMore = count($totalNotifications) > $limit;
 
             // Format notifications for display
@@ -82,6 +83,7 @@ class NotificationController extends BaseController {
                     'message' => $notification['message'],
                     'type' => $notification['type'],
                     'priority' => $notification['priority'],
+                    'user_type' => $notification['user_type'],
                     'related_id' => $notification['related_id'],
                     'related_type' => $notification['related_type'],
                     'is_read' => $notification['is_read'],
@@ -272,7 +274,7 @@ class NotificationController extends BaseController {
             }
 
             // Only admins can create notifications
-            $userRole = $_SESSION['user_type'] ?? '';
+            $userRole = $_SESSION['user_role'] ?? '';
             if (!in_array($userRole, ['admin', 'superadmin'])) {
                 return $this->jsonResponse(['success' => false, 'error' => 'Access denied'], 403);
             }
@@ -348,7 +350,7 @@ class NotificationController extends BaseController {
             }
 
             // Only admins can add remarks
-            $userRole = $_SESSION['user_type'] ?? '';
+            $userRole = $_SESSION['user_role'] ?? '';
             if (!in_array($userRole, ['admin', 'superadmin'])) {
                 return $this->jsonResponse(['success' => false, 'error' => 'Access denied'], 403);
             }
@@ -408,7 +410,7 @@ class NotificationController extends BaseController {
             }
 
             // Only admins can view stats
-            $userRole = $_SESSION['user_type'] ?? '';
+            $userRole = $_SESSION['user_role'] ?? '';
             if (!in_array($userRole, ['admin', 'superadmin'])) {
                 return $this->jsonResponse(['success' => false, 'error' => 'Access denied'], 403);
             }

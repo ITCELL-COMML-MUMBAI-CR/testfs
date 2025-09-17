@@ -49,7 +49,7 @@ class NotificationModel extends BaseModel {
     /**
      * Get notifications for a specific user
      */
-    public function getUserNotifications($userId, $userType, $limit = 20, $unreadOnly = false, $division = null) {
+    public function getUserNotifications($userId, $userRole, $limit = 20, $unreadOnly = false, $division = null) {
         try {
             $sql = "SELECT n.*, c.complaint_id, c.division, c.assigned_to_department, c.customer_id as ticket_customer_id
                     FROM {$this->table} n
@@ -59,21 +59,12 @@ class NotificationModel extends BaseModel {
             $conditions = [];
             $params = [];
 
-            if ($userType === 'customer') {
+            if ($userRole === 'customer') {
                 // Customers see notifications for their own tickets
                 $conditions[] = "n.customer_id = ?";
                 $params[] = $userId;
-            } elseif ($userType === 'controller') {
-                // Controllers see notifications assigned to them or their department
-                $conditions[] = "n.user_id = ?";
-                $params[] = $userId;
-            } elseif ($userType === 'controller_nodal' && $division) {
-                // Controller nodals see notifications for tickets in their division
-                $conditions[] = "(c.division = ? AND n.user_type = 'controller_nodal' AND n.user_id = ?)";
-                $params[] = $division;
-                $params[] = $userId;
-            } elseif (in_array($userType, ['admin', 'superadmin'])) {
-                // Admins see notifications assigned to them
+            } else {
+                // All other roles (controller, admin, etc.) are user-based
                 $conditions[] = "n.user_id = ?";
                 $params[] = $userId;
             }

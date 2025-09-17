@@ -195,6 +195,7 @@ let notificationOverlay = null;
 let currentPage = 1;
 let isLoading = false;
 let notificationCenterInitialized = false;
+let lastUnreadCount = <?= $unreadCount ?>;
 
 document.addEventListener('DOMContentLoaded', function() {
     // Prevent multiple initializations
@@ -215,6 +216,45 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-refresh notifications every 30 seconds
     setInterval(refreshNotificationCount, 30000);
 });
+
+function showNewNotificationToast(notification) {
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'info',
+        title: notification.title,
+        text: notification.message,
+        showConfirmButton: false,
+        timer: 10000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+            toast.addEventListener('click', () => {
+                if (notification.action_url) {
+                    window.location.href = notification.action_url;
+                }
+            })
+        }
+    });
+}
+
+function fetchNewestNotification() {
+    fetch(`${APP_URL}/api/notifications?limit=1&unread_only=true`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-Token': CSRF_TOKEN
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.notifications && data.notifications.length > 0) {
+            showNewNotificationToast(data.notifications[0]);
+        }
+    })
+    .catch(error => console.error('Error fetching newest notification:', error));
+}
 
 function toggleNotificationPanel() {
     if (!notificationPanel) {
@@ -522,6 +562,11 @@ function refreshNotificationCount() {
     .then(response => response.json())
     .then(data => {
         if (data.success && data.counts) {
+            const newUnreadCount = data.counts.unread;
+            if (newUnreadCount > lastUnreadCount) {
+                fetchNewestNotification();
+            }
+            lastUnreadCount = newUnreadCount;
             updateNotificationBadge(data.counts.unread, data.counts.high_priority);
         }
     })

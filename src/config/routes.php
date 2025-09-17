@@ -105,6 +105,12 @@ $router->post('/admin/reports/export', 'Admin@exportReport', ['auth', 'role:admi
 // Admin notification management
 $router->get('/admin/notifications', 'Admin@notifications', ['auth', 'role:admin,superadmin']);
 
+// Admin testing routes
+$router->get('/admin/testing/notifications', 'Test@notifications', ['auth', 'role:superadmin']);
+$router->post('/admin/testing/notifications/send', 'Test@sendNotification', ['auth', 'role:superadmin']);
+$router->get('/admin/testing/emails', 'Test@emails', ['auth', 'role:superadmin']);
+$router->post('/admin/testing/emails/send', 'Test@sendTestEmail', ['auth', 'role:superadmin']);
+
 // Admin ticket management routes
 $router->get('/admin/tickets', 'Admin@tickets', ['auth', 'role:admin,superadmin']);
 $router->get('/admin/tickets/debug', 'Admin@debug', ['auth', 'role:admin,superadmin']);

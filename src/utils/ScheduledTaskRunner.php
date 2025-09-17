@@ -5,7 +5,7 @@
  */
 
 require_once 'WorkflowEngine.php';
-require_once 'SLAManager.php';
+// require_once 'SLAManager.php'; // SLA functionality removed
 require_once 'NotificationService.php';
 require_once 'ActivityLogger.php';
 require_once 'FileUploader.php';
@@ -14,7 +14,7 @@ class ScheduledTaskRunner {
     
     private $db;
     private $workflowEngine;
-    private $slaManager;
+    // private $slaManager; // SLA functionality removed
     private $notificationService;
     private $logger;
     private $fileUploader;
@@ -22,7 +22,7 @@ class ScheduledTaskRunner {
     public function __construct() {
         $this->db = Database::getInstance();
         $this->workflowEngine = new WorkflowEngine();
-        $this->slaManager = new SLAManager();
+        // $this->slaManager = new SLAManager(); // SLA functionality removed
         $this->notificationService = new NotificationService();
         $this->logger = new ActivityLogger();
         $this->fileUploader = new FileUploader();
@@ -88,27 +88,12 @@ class ScheduledTaskRunner {
      * Run SLA monitoring
      */
     public function runSLAMonitoring() {
-        $startTime = microtime(true);
-        
-        try {
-            $result = $this->slaManager->monitorSLACompliance();
-            
-            $endTime = microtime(true);
-            $duration = round($endTime - $startTime, 2);
-            
-            return [
-                'status' => 'completed',
-                'duration' => $duration,
-                'result' => $result
-            ];
-            
-        } catch (Exception $e) {
-            return [
-                'status' => 'failed',
-                'error' => $e->getMessage(),
-                'duration' => round(microtime(true) - $startTime, 2)
-            ];
-        }
+        // SLA functionality has been removed
+        return [
+            'status' => 'completed',
+            'duration' => 0,
+            'result' => 'SLA monitoring disabled'
+        ];
     }
     
     /**
@@ -249,7 +234,8 @@ class ScheduledTaskRunner {
             // Generate daily SLA compliance report
             if ($this->shouldGenerateDailyReport()) {
                 $yesterday = date('Y-m-d', strtotime('-1 day'));
-                $slaReport = $this->slaManager->generateComplianceReport($yesterday, $yesterday);
+                // $slaReport = $this->slaManager->generateComplianceReport($yesterday, $yesterday); // SLA disabled
+                $slaReport = [];
                 
                 // Store report in database or send to management
                 $this->storeDailyReport('sla_compliance', $slaReport);
@@ -476,10 +462,13 @@ class ScheduledTaskRunner {
     }
     
     private function sendSLAWarningDigest() {
-        $approachingTickets = $this->slaManager->getTicketsApproachingSLA(8); // 8 hours threshold
-        $sent = 0;
-        
-        foreach ($approachingTickets as $ticket) {
+        // SLA functionality has been removed
+        return 0;
+
+        // $approachingTickets = $this->slaManager->getTicketsApproachingSLA(8); // 8 hours threshold
+        // $sent = 0;
+
+        // foreach ($approachingTickets as $ticket) {
             if ($ticket['assigned_user_email']) {
                 $recipients = [[
                     'user_id' => $ticket['assigned_to_user_id'],
@@ -498,10 +487,11 @@ class ScheduledTaskRunner {
                     $sent++;
                 }
             }
+            return $sent;
         }
         
-        return $sent;
-    }
+        
+    
     
     private function generateNodalControllerDigest($division) {
         $sql = "SELECT 

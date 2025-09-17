@@ -6,7 +6,7 @@
 
 $page_title = 'Notification Management - SAMPARK Admin';
 $additional_css = [
-    Config::getAppUrl() . '/assets/css/admin.css'
+    
 ];
 $additional_js = [
     Config::getAppUrl() . '/assets/js/admin-notifications.js'

@@ -1,0 +1,181 @@
+<?php
+
+require_once 'BaseController.php';
+require_once __DIR__ . '/../utils/OnSiteNotificationService.php';
+require_once __DIR__ . '/../utils/EmailService.php';
+require_once __DIR__ . '/../models/UserModel.php';
+require_once __DIR__ . '/../models/CustomerModel.php';
+require_once __DIR__ . '/../models/NotificationModel.php';
+
+class TestController extends BaseController {
+
+    private $userModel;
+    private $customerModel;
+
+    public function __construct() {
+        parent::__construct();
+        $this->requireAuth();
+        $this->requireRole(['superadmin']);
+        $this->userModel = new UserModel();
+        $this->customerModel = new CustomerModel();
+    }
+
+    public function notifications() {
+        $data = [
+            'page_title' => 'Test Notifications',
+            'user' => $this->getCurrentUser(),
+            'csrf_token' => $this->session->getCSRFToken(),
+            'user_types' => $this->userModel->getDistinct('role'),
+            'divisions' => $this->userModel->getDistinct('division'),
+            'zones' => $this->userModel->getDistinct('zone'),
+            'departments' => $this->userModel->getDistinct('department'),
+            'customers' => $this->customerModel->findAll([], 'name ASC'),
+            'users' => $this->userModel->findAll([], 'name ASC'),
+        ];
+
+        $this->view('admin/testing/notifications', $data);
+    }
+
+    public function emails() {
+        $data = [
+            'page_title' => 'Test Emails',
+            'user' => $this->getCurrentUser(),
+            'csrf_token' => $this->session->getCSRFToken(),
+            'user_types' => $this->userModel->getDistinct('role'),
+            'divisions' => $this->userModel->getDistinct('division'),
+            'zones' => $this->userModel->getDistinct('zone'),
+            'departments' => $this->userModel->getDistinct('department'),
+            'customers' => $this->customerModel->findAll([], 'name ASC'),
+            'users' => $this->userModel->findAll([], 'name ASC'),
+        ];
+
+        $this->view('admin/testing/emails', $data);
+    }
+
+    public function sendNotification() {
+        $this->validateCSRF();
+
+        $title = $_POST['title'];
+        $message = $_POST['message'];
+        $sendTo = $_POST['send_to'];
+
+        $notificationModel = new NotificationModel();
+        $recipients = [];
+
+        switch ($sendTo) {
+            case 'all_customers':
+                $customers = $this->customerModel->findAll();
+                foreach ($customers as $customer) {
+                    $recipients[] = ['customer_id' => $customer['customer_id']];
+                }
+                break;
+            case 'specific_customers':
+                $customerIds = $_POST['specific_customers'] ?? [];
+                foreach ($customerIds as $customerId) {
+                    $recipients[] = ['customer_id' => $customerId];
+                }
+                break;
+            case 'all_users':
+                $users = $this->userModel->findAll();
+                foreach ($users as $user) {
+                    if ($user['role'] !== 'superadmin') {
+                        $recipients[] = ['user_id' => $user['id']];
+                    }
+                }
+                break;
+            case 'user_type':
+                $users = $this->userModel->getUsersByRole($_POST['user_type']);
+                foreach ($users as $user) {
+                    if ($user['role'] !== 'superadmin') {
+                        $recipients[] = ['user_id' => $user['id']];
+                    }
+                }
+                break;
+            case 'division':
+                $conditions = ['status' => 'active'];
+                if (!empty($_POST['division'])) $conditions['division'] = $_POST['division'];
+                if (!empty($_POST['zone'])) $conditions['zone'] = $_POST['zone'];
+                if (!empty($_POST['department'])) $conditions['department'] = $_POST['department'];
+                $users = $this->userModel->findAll($conditions);
+                foreach ($users as $user) {
+                    if ($user['role'] !== 'superadmin') {
+                        $recipients[] = ['user_id' => $user['id']];
+                    }
+                }
+                break;
+            case 'specific_users':
+                $userIds = $_POST['specific_users'] ?? [];
+                foreach ($userIds as $userId) {
+                    $recipients[] = ['user_id' => $userId];
+                }
+                break;
+        }
+
+        foreach ($recipients as $recipient) {
+            $notificationData = [
+                'title' => $title,
+                'message' => $message,
+                'type' => 'manual',
+            ];
+            if (isset($recipient['user_id'])) {
+                $notificationData['user_id'] = $recipient['user_id'];
+            } else {
+                $notificationData['customer_id'] = $recipient['customer_id'];
+            }
+            $notificationModel->createNotification($notificationData);
+        }
+
+        $this->json(['success' => true, 'message' => 'Sent ' . count($recipients) . ' notifications.']);
+    }
+
+    public function sendTestEmail() {
+        $this->validateCSRF();
+
+        $subject = $_POST['subject'];
+        $body = $_POST['body'];
+        $sendTo = $_POST['send_to'];
+
+        $emailService = new EmailService();
+        $recipients = [];
+
+        switch ($sendTo) {
+            case 'all_customers':
+                $recipients = $this->customerModel->findAll();
+                break;
+            case 'specific_customers':
+                $customerIds = $_POST['specific_customers'] ?? [];
+                $recipients = $this->customerModel->findAll(['customer_id' => $customerIds]);
+                break;
+            case 'all_users':
+                $recipients = $this->userModel->findAll();
+                break;
+            case 'user_type':
+                $recipients = $this->userModel->getUsersByRole($_POST['user_type']);
+                break;
+            case 'division':
+                $conditions = ['status' => 'active'];
+                if (!empty($_POST['division'])) $conditions['division'] = $_POST['division'];
+                if (!empty($_POST['zone'])) $conditions['zone'] = $_POST['zone'];
+                if (!empty($_POST['department'])) $conditions['department'] = $_POST['department'];
+                $recipients = $this->userModel->findAll($conditions);
+                break;
+            case 'specific_users':
+                $userIds = $_POST['specific_users'] ?? [];
+                $recipients = $this->userModel->findAll(['id' => $userIds]);
+                break;
+        }
+
+        $sentCount = 0;
+        foreach ($recipients as $recipient) {
+            if (isset($recipient['email']) && !empty($recipient['email'])) {
+                if ($sendTo === 'all_users' || $sendTo === 'user_type' || $sendTo === 'division' || $sendTo === 'specific_users') {
+                    if ($recipient['role'] === 'superadmin') continue;
+                }
+                $emailService->sendEmail($recipient['email'], $subject, $body, true);
+                $sentCount++;
+            }
+        }
+
+        $this->json(['success' => true, 'message' => 'Sent ' . $sentCount . ' emails.']);
+    }
+}

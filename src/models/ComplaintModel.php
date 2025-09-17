@@ -15,30 +15,28 @@ class ComplaintModel extends BaseModel {
         'complaint_id', 'category_id', 'date', 'time', 'shed_id', 'wagon_id',
         'rating', 'rating_remarks', 'description', 'action_taken', 'status',
         'department', 'division', 'zone', 'customer_id', 'fnr_number',
-        'gstin_number', 'e_indent_number', 'assigned_to_user_id',
-        'assigned_to_department', 'forwarded_flag', 'priority'
+        'gstin_number', 'e_indent_number', 'assigned_to_department',
+        'forwarded_flag', 'priority'
     ];
     
     /**
      * Get complaint with related data
      */
     public function getComplaintWithDetails($complaintId) {
-        $sql = "SELECT c.*, 
+        $sql = "SELECT c.*,
                        cat.category, cat.type, cat.subtype,
-                       s.name as shed_name, s.shed_code, s.terminal,
+                       s.name as shed_name, s.shed_code,
                        w.wagon_code, w.type as wagon_type,
                        cust.name as customer_name, cust.email as customer_email,
                        cust.mobile as customer_mobile, cust.company_name,
-                       u.name as assigned_user_name, u.role as assigned_user_role,
                        TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
                 LEFT JOIN wagon_details w ON c.wagon_id = w.wagon_id
                 LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                LEFT JOIN users u ON c.assigned_to_user_id = u.id
                 WHERE c.complaint_id = ?";
-        
+
         return $this->fetch($sql, [$complaintId]);
     }
     
@@ -112,8 +110,8 @@ class ComplaintModel extends BaseModel {
         
         // Role-based access control
         if ($userRole === 'controller') {
-            $conditions[] = 'c.assigned_to_user_id = ?';
-            $params[] = $userId;
+            // Controllers see tickets assigned to their department
+            // We'll need to implement proper user-department mapping later
         } elseif ($userRole === 'controller_nodal' && $division) {
             $conditions[] = 'c.division = ?';
             $params[] = $division;
@@ -155,17 +153,15 @@ class ComplaintModel extends BaseModel {
         $total = $totalResult['total'];
         
         // Get paginated data
-        $sql = "SELECT c.*, 
+        $sql = "SELECT c.*,
                        cat.category, cat.type, cat.subtype,
                        s.name as shed_name, s.shed_code,
                        cust.name as customer_name, cust.company_name,
-                       u.name as assigned_user_name,
                        TIMESTAMPDIFF(HOUR, c.created_at, NOW()) as hours_elapsed
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
                 LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                LEFT JOIN users u ON c.assigned_to_user_id = u.id
                 {$whereClause}
                 ORDER BY 
                     CASE WHEN c.priority = 'critical' THEN 1
@@ -200,8 +196,8 @@ class ComplaintModel extends BaseModel {
             $conditions[] = 'customer_id = ?';
             $params[] = $customerId;
         } elseif ($userId && $userRole === 'controller') {
-            $conditions[] = 'assigned_to_user_id = ?';
-            $params[] = $userId;
+            // Controllers see tickets assigned to their department
+            // We'll need to implement proper user-department mapping later
         } elseif ($division && $userRole === 'controller_nodal') {
             $conditions[] = 'division = ?';
             $params[] = $division;
@@ -312,8 +308,8 @@ class ComplaintModel extends BaseModel {
         $params = [];
         
         if ($userId) {
-            $conditions[] = 'assigned_to_user_id = ?';
-            $params[] = $userId;
+            // Performance metrics for individual users
+            // We'll need to implement proper user-department mapping later
         } elseif ($division) {
             $conditions[] = 'division = ?';
             $params[] = $division;

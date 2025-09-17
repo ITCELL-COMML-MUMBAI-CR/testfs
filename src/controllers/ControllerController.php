@@ -8,6 +8,7 @@ require_once 'BaseController.php';
 require_once __DIR__ . '/../utils/Validator.php';
 require_once __DIR__ . '/../utils/NotificationService.php';
 require_once __DIR__ . '/../utils/BackgroundPriorityService.php';
+require_once __DIR__ . '/../utils/OnSiteNotificationService.php';
 
 class ControllerController extends BaseController {
     
@@ -665,6 +666,10 @@ class ControllerController extends BaseController {
             $this->sendForwardNotifications($ticketId, $ticket, $user, $targetDivision, $_POST['internal_remarks']);
             
             $this->db->commit();
+
+            // Send on-site notification
+            $onSiteNotificationService = new OnSiteNotificationService();
+            $onSiteNotificationService->notifyUsersOfForwardedTicket($ticketId, $targetDivision, $_POST['department']);
             
             $forwardMessage = $user['role'] === 'controller_nodal' 
                 ? 'Ticket forwarded successfully to ' . $_POST['department'] . ' department in ' . $targetDivision . ' division'
@@ -921,6 +926,10 @@ class ControllerController extends BaseController {
             $this->sendApprovalNotifications($ticketId, $ticket, $user, 'approved');
             
             $this->db->commit();
+
+            // Send on-site notification
+            $onSiteNotificationService = new OnSiteNotificationService();
+            $onSiteNotificationService->notifyCustomerOfStatusChange($ticketId, 'awaiting_feedback');
             
             $this->json([
                 'success' => true,
@@ -1172,6 +1181,10 @@ class ControllerController extends BaseController {
             }
             
             $this->db->commit();
+
+            // Send on-site notification
+            $onSiteNotificationService = new OnSiteNotificationService();
+            $onSiteNotificationService->notifyCustomerOfStatusChange($ticketId, 'awaiting_info');
             
             $this->json([
                 'success' => true,
@@ -1995,13 +2008,8 @@ class ControllerController extends BaseController {
     }
     
     private function updateSLADeadline($ticketId, $priority) {
-        // Get SLA hours for the priority
-        $slaInfo = $this->db->fetch(
-            "SELECT resolution_hours FROM sla_definitions WHERE priority_level = ? AND is_active = 1",
-            [$priority]
-        );
-        
-        // No longer tracking SLA deadlines
+        // SLA functionality has been removed - this method is now a no-op
+        return true;
     }
     
     private function createTransaction($complaintId, $type, $remarks, $fromUserId, $toUserId = null, $remarksType = 'internal_remarks') {

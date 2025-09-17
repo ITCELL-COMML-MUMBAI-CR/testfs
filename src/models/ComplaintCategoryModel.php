@@ -11,11 +11,10 @@ class ComplaintCategoryModel extends BaseModel {
     protected $table = 'complaint_categories';
     protected $fillable = [
         'name',
-        'description', 
+        'description',
         'parent_id',
         'category_type',
         'priority_level',
-        'sla_hours',
         'is_active',
         'sort_order',
         'color_code',
@@ -182,7 +181,8 @@ class ComplaintCategoryModel extends BaseModel {
      * Get category SLA information
      */
     public function getCategorySLA($id) {
-        $sql = "SELECT name, sla_hours, priority_level FROM {$this->table} WHERE id = ?";
+        // SLA functionality removed
+        $sql = "SELECT category as name, 'normal' as priority_level FROM {$this->table} WHERE category_id = ?";
         return $this->db->fetch($sql, [$id]);
     }
     
@@ -238,10 +238,7 @@ class ComplaintCategoryModel extends BaseModel {
             $errors[] = "Priority level must be between 1 and 5";
         }
         
-        // Validate SLA hours
-        if (isset($data['sla_hours']) && (!is_numeric($data['sla_hours']) || $data['sla_hours'] < 1)) {
-            $errors[] = "SLA hours must be a positive number";
-        }
+        // SLA hours validation removed
         
         return $errors;
     }
@@ -258,7 +255,7 @@ class ComplaintCategoryModel extends BaseModel {
         // Set defaults
         $data['is_active'] = $data['is_active'] ?? 1;
         $data['sort_order'] = $data['sort_order'] ?? 0;
-        $data['sla_hours'] = $data['sla_hours'] ?? 24;
+        // SLA hours default removed
         $data['priority_level'] = $data['priority_level'] ?? 3;
         
         $result = $this->create($data);

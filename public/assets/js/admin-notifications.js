@@ -20,7 +20,8 @@ function initializeNotificationsTable() {
         processing: true,
         serverSide: false,
         ajax: {
-            url: APP_URL + '/api/notifications/admin-list',
+            url: APP_URL + '/api/notifications',
+            dataSrc: 'notifications',
             type: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',

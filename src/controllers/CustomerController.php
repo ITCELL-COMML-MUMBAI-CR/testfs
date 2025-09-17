@@ -8,6 +8,7 @@ require_once 'BaseController.php';
 require_once __DIR__ . '/../utils/Validator.php';
 require_once __DIR__ . '/../utils/FileUploader.php';
 require_once __DIR__ . '/../utils/WorkflowEngine.php';
+require_once __DIR__ . '/../utils/OnSiteNotificationService.php';
 
 class CustomerController extends BaseController {
     
@@ -436,6 +437,10 @@ class CustomerController extends BaseController {
             $this->sendTicketCreatedNotifications($complaintId, $customer, $shedInfo);
             
             $this->db->commit();
+
+            // Send on-site notification to controller nodals
+            $onSiteNotificationService = new OnSiteNotificationService();
+            $onSiteNotificationService->notifyUsersOfNewTicket($complaintId);
             
             $this->json([
                 'success' => true,
