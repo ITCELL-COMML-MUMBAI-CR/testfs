@@ -195,7 +195,7 @@ class BackgroundRefreshService {
                        CASE 
                            WHEN c.status = 'awaiting_feedback' THEN TIMESTAMPDIFF(DAY, c.updated_at, NOW())
                            ELSE 0
-                       END as days_since_revert,
+                       END as days_since_revert
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -236,7 +236,7 @@ class BackgroundRefreshService {
                        CASE 
                            WHEN c.status = 'awaiting_feedback' THEN TIMESTAMPDIFF(DAY, c.updated_at, NOW())
                            ELSE 0
-                       END as days_since_revert,
+                       END as days_since_revert
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id
@@ -270,7 +270,7 @@ class BackgroundRefreshService {
                        CASE 
                            WHEN c.status = 'awaiting_feedback' THEN TIMESTAMPDIFF(DAY, c.updated_at, NOW())
                            ELSE 0
-                       END as days_since_revert,
+                       END as days_since_revert
                 FROM complaints c
                 LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                 LEFT JOIN shed s ON c.shed_id = s.shed_id

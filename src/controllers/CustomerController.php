@@ -851,7 +851,7 @@ class CustomerController extends BaseController {
             complaint_id, transaction_type, remarks, 
             remarks_type, created_by_id, created_by_customer_id, created_by_type, 
             created_by_role, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())";
         
         $params = [
             $complaintId,
