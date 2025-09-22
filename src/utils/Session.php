@@ -49,14 +49,15 @@ class Session {
     private function checkTimeout() {
         $currentTime = time();
 
-        // Always set last_activity if not set
-        if (!isset($_SESSION['last_activity'])) {
+        // Only check timeout if user is logged in
+        if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
+            // For non-logged-in users, just update activity timestamp without checking timeout
             $_SESSION['last_activity'] = $currentTime;
             return;
         }
 
-        // Only check timeout if user is logged in
-        if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
+        // Always set last_activity if not set for logged-in users
+        if (!isset($_SESSION['last_activity'])) {
             $_SESSION['last_activity'] = $currentTime;
             return;
         }
@@ -241,13 +242,25 @@ class Session {
     }
 
     public function isExpired() {
+        // If user is not logged in, they cannot be "expired"
+        if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
+            return false;
+        }
+
+        // If no last activity, consider expired only if user was logged in
         if (!isset($_SESSION['last_activity'])) {
             return true;
         }
+
         return (time() - $_SESSION['last_activity']) > Config::SESSION_TIMEOUT;
     }
 
     public function getTimeRemaining() {
+        // If user is not logged in, return full timeout duration
+        if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
+            return Config::SESSION_TIMEOUT;
+        }
+
         if (!isset($_SESSION['last_activity'])) {
             return 0;
         }

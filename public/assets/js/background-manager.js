@@ -168,7 +168,8 @@ class BackgroundManager {
         if (this.retryCount >= this.maxRetries) {
             console.warn('Max retries reached. Stopping background tasks.');
             this.stop();
-            this.showErrorNotification('Background sync stopped due to repeated failures');
+            // Toast notification removed as per user request
+            // this.showErrorNotification('Background sync stopped due to repeated failures');
         }
     }
     

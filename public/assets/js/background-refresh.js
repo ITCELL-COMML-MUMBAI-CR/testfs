@@ -591,6 +591,12 @@ window.backgroundRefreshManager = null;
 
 // Auto-initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
+    // Only initialize for logged-in users
+    if (!window.USER_LOGGED_IN && !document.body.classList.contains('logged-in')) {
+        console.log('Background refresh manager skipped - user not logged in');
+        return;
+    }
+
     // Initialize background refresh manager
     console.log('Background refresh manager enabled');
     window.backgroundRefreshManager = new BackgroundRefreshManager({

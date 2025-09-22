@@ -78,7 +78,7 @@
         }
     </style>
 </head>
-<body class="<?= $body_class ?? '' ?>">
+<body class="<?= $body_class ?? '' ?><?= isset($is_logged_in) && $is_logged_in ? ' logged-in' : '' ?>">
     
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg fixed-top apple-glass-nav" id="mainNavbar">
@@ -401,6 +401,7 @@
     <script>
         const APP_URL = '<?= Config::getAppUrl() ?>';
         const CSRF_TOKEN = '<?= $csrf_token ?? '' ?>';
+        window.USER_LOGGED_IN = <?= isset($is_logged_in) && $is_logged_in ? 'true' : 'false' ?>;
     </script>
     
     <!-- Common JavaScript -->
