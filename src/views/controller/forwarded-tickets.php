@@ -160,6 +160,7 @@ $page_title = 'Forwarded Tickets - SAMPARK';
                             <th class="border-0" style="width: 160px;">Forwarded To</th>
                             <th class="border-0" style="width: 120px;">Created</th>
                             <th class="border-0" style="width: 300px;">Description</th>
+                            <th class="border-0" style="width: 100px;">SLA</th>
                             <th class="border-0" style="width: 100px;">Actions</th>
                         </tr>
                     </thead>
