@@ -445,54 +445,61 @@ function validateForm() {
 function submitForm() {
     const form = document.getElementById('registrationForm');
     const submitButton = document.getElementById('submitButton');
-    
+
     // Show loading state
     const originalText = submitButton.innerHTML;
     submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating Account...';
     submitButton.disabled = true;
-    
-    // Submit form
+
+    // Submit form with AJAX header
     fetch(form.action, {
         method: 'POST',
-        body: new FormData(form)
-    })
-    .then(response => {
-        if (response.redirected) {
-            window.location.href = response.url;
-        } else {
-            return response.text();
+        body: new FormData(form),
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
         }
     })
-    .then(text => {
-        if (text) {
-            // Reset button
-            submitButton.innerHTML = originalText;
-            submitButton.disabled = false;
-            
-            // Parse response for errors
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(text, 'text/html');
-            const errorAlert = doc.querySelector('.alert-danger');
-            
-            if (errorAlert) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Registration Failed',
-                    html: errorAlert.innerHTML
-                });
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Registration Failed',
-                    text: 'An unexpected error occurred. Please try again.'
-                });
+    .then(response => {
+        return response.json();
+    })
+    .then(data => {
+        // Reset button
+        submitButton.innerHTML = originalText;
+        submitButton.disabled = false;
+
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Registration Successful!',
+                text: data.message,
+                showConfirmButton: true,
+                confirmButtonText: 'Go to Login'
+            }).then((result) => {
+                if (result.isConfirmed && data.redirect) {
+                    window.location.href = data.redirect;
+                }
+            });
+        } else {
+            let errorMessage = data.message || 'Registration failed. Please try again.';
+
+            // Handle validation errors
+            if (data.errors && Array.isArray(data.errors)) {
+                errorMessage = data.errors.join('<br>');
             }
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Registration Failed',
+                html: errorMessage
+            });
         }
     })
     .catch(error => {
         submitButton.innerHTML = originalText;
         submitButton.disabled = false;
-        
+
+        console.error('Registration error:', error);
+
         Swal.fire({
             icon: 'error',
             title: 'Connection Error',
@@ -530,18 +537,12 @@ function updateZoneBasedOnDivision(division) {
 
 .form-control.is-valid {
     border-color: #28a745;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73.94-.94 2.5 2.5 5-5 .94.94L5.24 8.5z'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right calc(0.375em + 0.1875rem) center;
-    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    background-color: #f8fff9;
 }
 
 .form-control.is-invalid {
     border-color: #dc3545;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 4.6 0.4 0.9 0.4-0.9'/%3e%3cpath d='M6 8.2V6.4'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right calc(0.375em + 0.1875rem) center;
-    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    background-color: #fff5f5;
 }
 
 .progress {

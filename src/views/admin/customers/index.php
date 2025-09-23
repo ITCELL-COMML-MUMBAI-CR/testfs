@@ -483,6 +483,19 @@ function confirmStatusChange(customerId, newStatus) {
         cancelButtonText: 'Cancel'
     }).then((result) => {
         if (result.isConfirmed) {
+            // Show loading state
+            Swal.fire({
+                title: `${newStatus === 'approved' ? 'Reactivating' : 'Suspending'} Customer...`,
+                text: 'Please wait while we update the customer status.',
+                icon: 'info',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             // Send AJAX request to change customer status
             fetch(`${APP_URL}/admin/customers/${customerId}/status`, {
                 method: 'POST',
@@ -496,8 +509,8 @@ function confirmStatusChange(customerId, newStatus) {
             .then(data => {
                 if (data.success) {
                     Swal.fire(
-                        'Updated!', 
-                        `Customer has been ${newStatus === 'approved' ? 'reactivated' : 'suspended'}.`, 
+                        'Updated!',
+                        `Customer has been ${newStatus === 'approved' ? 'reactivated' : 'suspended'}.`,
                         'success'
                     );
                     setTimeout(() => {
@@ -525,6 +538,19 @@ function verifyCustomer(customerId) {
         cancelButtonText: 'Cancel'
     }).then((result) => {
         if (result.isConfirmed) {
+            // Show loading state
+            Swal.fire({
+                title: 'Approving Customer...',
+                text: 'Please wait while we process the approval.',
+                icon: 'info',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
             fetch(`${APP_URL}/admin/customers/${customerId}/verify`, {
                 method: 'POST',
                 headers: {

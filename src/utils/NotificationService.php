@@ -41,6 +41,51 @@ class NotificationService {
     }
     
     /**
+     * Send templated email
+     */
+    public function sendTemplateEmail($to, $templateCode, $data = []) {
+        try {
+            // Get template from database
+            $template = $this->db->fetch(
+                "SELECT * FROM email_templates WHERE template_code = ? AND is_active = 1",
+                [$templateCode]
+            );
+
+            if (!$template) {
+                throw new Exception("Email template '{$templateCode}' not found or inactive");
+            }
+
+            // Process template
+            $processed = $this->processTemplate($template, $data);
+
+            // Send email
+            $result = $this->sendEmail($to, $processed['subject'], $processed['body_html'], $processed['body_text']);
+
+            if ($result['success']) {
+                Config::logInfo("Template email sent successfully", [
+                    'template_code' => $templateCode,
+                    'recipient' => $to
+                ]);
+            } else {
+                Config::logError("Failed to send template email", [
+                    'template_code' => $templateCode,
+                    'recipient' => $to,
+                    'error' => $result['error']
+                ]);
+            }
+
+            return $result;
+
+        } catch (Exception $e) {
+            Config::logError("Template email error: " . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Send notification to single recipient
      */
     private function sendToRecipient($type, $recipient, $data) {

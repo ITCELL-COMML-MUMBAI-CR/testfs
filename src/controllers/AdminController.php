@@ -13,6 +13,12 @@ require_once __DIR__ . '/../models/EmailTemplateModel.php';
 
 class AdminController extends BaseController
 {
+    public function __construct() {
+        parent::__construct();
+        $this->requireAuth();
+        $this->requireRole(['admin', 'superadmin']);
+    }
+
     /**
      * Sanitize input string to prevent XSS and trim whitespace
      */
@@ -3028,22 +3034,22 @@ class AdminController extends BaseController
     {
         try {
             if ($status === 'approved') {
-                // Send approval email directly
-                $subject = "SAMPARK Account Approved - Welcome!";
-                $body = "Dear " . htmlspecialchars($customer['name']) . ",\n\n";
-                $body .= "Your SAMPARK account has been approved!\n\n";
-                $body .= "Account Details:\n";
-                $body .= "Customer ID: " . $customer['customer_id'] . "\n";
-                $body .= "Company: " . htmlspecialchars($customer['company_name']) . "\n\n";
-                $body .= "You can now log in to access our freight support services at:\n";
-                $body .= Config::getAppUrl() . "/login\n\n";
-                $body .= "Best regards,\nSAMPARK Team";
+                $notificationService = new NotificationService();
 
-                $headers = "From: noreply@sampark.railway.gov.in\r\n";
-                $headers .= "Reply-To: support@sampark.railway.gov.in\r\n";
-                $headers .= "X-Mailer: PHP/" . phpversion();
-
-                mail($customer['email'], $subject, $body, $headers);
+                // Send approval email using template
+                $notificationService->sendTemplateEmail(
+                    $customer['email'],
+                    'account_approved',
+                    [
+                        'app_name' => 'SAMPARK',
+                        'customer_name' => $customer['name'],
+                        'customer_id' => $customer['customer_id'],
+                        'email' => $customer['email'],
+                        'company_name' => $customer['company_name'],
+                        'division' => $customer['division'],
+                        'login_url' => Config::getAppUrl() . '/login'
+                    ]
+                );
 
                 Config::logInfo("Approval notification sent to customer", [
                     'customer_id' => $customer['customer_id'],

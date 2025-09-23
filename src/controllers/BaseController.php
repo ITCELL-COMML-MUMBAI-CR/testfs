@@ -70,16 +70,24 @@ class BaseController {
      */
     protected function requireRole($roles) {
         $this->requireAuth();
-        
+
         $userRole = $this->session->get('user_role');
-        
+
         if (is_string($roles)) {
             $roles = [$roles];
         }
-        
+
         if (!in_array($userRole, $roles)) {
             $this->json(['error' => 'Access denied'], 403);
         }
+    }
+
+    /**
+     * Check if the request is an AJAX request
+     */
+    protected function isAjaxRequest() {
+        return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
+               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
     }
     
     /**

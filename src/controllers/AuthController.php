@@ -6,6 +6,8 @@
 
 require_once 'BaseController.php';
 require_once __DIR__ . '/../utils/Validator.php';
+require_once __DIR__ . '/../utils/NotificationService.php';
+
 
 class AuthController extends BaseController {
     
@@ -245,18 +247,31 @@ class AuthController extends BaseController {
             'gstin' => 'gstin',
             'division' => 'required|exists:shed,division',
             'password' => 'required|password',
-            'password_confirmation' => 'required',
-            'terms' => 'required'
+            'password_confirmation' => 'required'
         ]);
         
         if (!$isValid) {
+            if ($this->isAjaxRequest()) {
+                $this->json([
+                    'success' => false,
+                    'errors' => $validator->getAllErrorMessages()
+                ], 400);
+                return;
+            }
             $this->setFlash('error', implode('<br>', $validator->getAllErrorMessages()));
             $this->redirect(Config::getAppUrl() . '/signup');
             return;
         }
-        
+
         // Check password confirmation
         if ($_POST['password'] !== $_POST['password_confirmation']) {
+            if ($this->isAjaxRequest()) {
+                $this->json([
+                    'success' => false,
+                    'message' => 'Password confirmation does not match'
+                ], 400);
+                return;
+            }
             $this->setFlash('error', 'Password confirmation does not match');
             $this->redirect(Config::getAppUrl() . '/signup');
             return;
@@ -296,16 +311,34 @@ class AuthController extends BaseController {
             
             // Send notification email to customer
             $this->sendRegistrationNotification($customerId, $_POST['email'], $_POST['name']);
-            
+
             // Send approval notification to admin
             $this->sendApprovalRequestToAdmin($customerId, $_POST);
-            
+
+            if ($this->isAjaxRequest()) {
+                $this->json([
+                    'success' => true,
+                    'message' => 'Registration successful! Your account is pending approval. You will receive an email confirmation once approved.',
+                    'redirect' => Config::getAppUrl() . '/login'
+                ]);
+                return;
+            }
+
             $this->setFlash('success', 'Registration successful! Your account is pending approval. You will receive an email confirmation once approved.');
             $this->redirect(Config::getAppUrl() . '/login');
-            
+
         } catch (Exception $e) {
             $this->db->rollback();
             error_log("Registration error: " . $e->getMessage());
+
+            if ($this->isAjaxRequest()) {
+                $this->json([
+                    'success' => false,
+                    'message' => 'Registration failed. Please try again. Error: ' . $e->getMessage()
+                ], 500);
+                return;
+            }
+
             $this->setFlash('error', 'Registration failed. Please try again.');
             $this->redirect(Config::getAppUrl() . '/signup');
         }
@@ -415,20 +448,32 @@ class AuthController extends BaseController {
     
     private function sendRegistrationNotification($customerId, $email, $name) {
         try {
-            $subject = "Welcome to SAMPARK - Registration Confirmation";
-            $body = "Dear " . htmlspecialchars($name) . ",\n\n";
-            $body .= "Thank you for registering with SAMPARK (Customer ID: " . $customerId . ").\n\n";
-            $body .= "Your account is currently pending approval by our admin team. ";
-            $body .= "You will receive another email once your account has been approved and you can start using our services.\n\n";
-            $body .= "If you have any questions, please contact our support team.\n\n";
-            $body .= "Best regards,\nSAMPARK Team";
+            // Get customer data for the email
+            $customer = $this->db->fetch(
+                "SELECT * FROM customers WHERE customer_id = ?",
+                [$customerId]
+            );
 
-            // Use mail function or email service
-            $headers = "From: noreply@sampark.railway.gov.in\r\n";
-            $headers .= "Reply-To: support@sampark.railway.gov.in\r\n";
-            $headers .= "X-Mailer: PHP/" . phpversion();
+            if (!$customer) {
+                throw new Exception("Customer not found");
+            }
 
-            mail($email, $subject, $body, $headers);
+            $notificationService = new NotificationService();
+
+            // Send registration confirmation email using template
+            $notificationService->sendTemplateEmail(
+                $email,
+                'customer_registration',
+                [
+                    'app_name' => 'SAMPARK',
+                    'customer_name' => $name,
+                    'customer_id' => $customerId,
+                    'email' => $email,
+                    'company_name' => $customer['company_name'],
+                    'division' => $customer['division'],
+                    'app_url' => Config::getAppUrl()
+                ]
+            );
 
             Config::logInfo("Registration notification sent to customer", [
                 'customer_id' => $customerId,
@@ -444,7 +489,7 @@ class AuthController extends BaseController {
             // Create notification for admin users
             $sql = "INSERT INTO notifications (
                 user_id, customer_id, type, title, message,
-                data, is_read, created_at
+                metadata, is_read, created_at
             ) VALUES (?, ?, ?, ?, ?, ?, 0, NOW())";
 
             $adminUsers = $this->db->fetchAll(
