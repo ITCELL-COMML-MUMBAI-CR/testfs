@@ -107,8 +107,8 @@ window.SAMPARK = {
             if (mergedOptions.headers['Content-Type'] === 'application/json' && mergedOptions.body) {
                 mergedOptions.body = JSON.stringify(mergedOptions.body);
             }
-            
-            return fetch(window.SAMPARK.config.app_url + url, mergedOptions)
+
+            return fetch(window.APP_URL + url, mergedOptions)
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
