@@ -2876,4 +2876,415 @@ class ControllerController extends BaseController {
 
         return $this->db->fetchAll($sql, $params);
     }
+
+    // New RBAC-based ticket view methods
+
+    /**
+     * Display tickets for controller's department only (RBAC restricted)
+     */
+    public function myDepartmentTickets() {
+        $user = $this->getCurrentUser();
+
+        if ($user['role'] !== 'controller') {
+            $this->redirect('/controller/dashboard');
+        }
+
+        // Get filters from query parameters
+        $filters = [
+            'status' => $_GET['status'] ?? '',
+            'priority' => $_GET['priority'] ?? '',
+            'date_from' => $_GET['date_from'] ?? '',
+            'date_to' => $_GET['date_to'] ?? ''
+        ];
+
+        // Get paginated tickets for this department only
+        $page = (int)($_GET['page'] ?? 1);
+        $perPage = 25;
+        $tickets = $this->getDepartmentTickets($user, $page, $perPage, $filters);
+
+        $data = [
+            'page_title' => 'My Department Tickets - SAMPARK',
+            'user' => $user,
+            'tickets' => $tickets,
+            'filters' => $filters
+        ];
+
+        $this->view('controller/my-department-tickets', $data);
+    }
+
+    /**
+     * Display tickets for controller_nodal's division (RBAC restricted)
+     */
+    public function myDivisionTickets() {
+        $user = $this->getCurrentUser();
+
+        if ($user['role'] !== 'controller_nodal') {
+            $this->redirect('/controller/dashboard');
+        }
+
+        // Get filters from query parameters
+        $filters = [
+            'status' => $_GET['status'] ?? '',
+            'priority' => $_GET['priority'] ?? '',
+            'department' => $_GET['department'] ?? '',
+            'date_from' => $_GET['date_from'] ?? '',
+            'date_to' => $_GET['date_to'] ?? ''
+        ];
+
+        // Get paginated tickets for this division
+        $page = (int)($_GET['page'] ?? 1);
+        $perPage = 25;
+        $tickets = $this->getDivisionTickets($user, $page, $perPage, $filters);
+
+        // Get departments in this division for filter
+        $departments = $this->getDepartmentsInDivision($user['division']);
+
+        $data = [
+            'page_title' => 'My Division Tickets - SAMPARK',
+            'user' => $user,
+            'tickets' => $tickets,
+            'filters' => $filters,
+            'departments' => $departments
+        ];
+
+        $this->view('controller/my-division-tickets', $data);
+    }
+
+    /**
+     * Search all tickets without RBAC restrictions
+     */
+    public function searchAllTickets() {
+        $user = $this->getCurrentUser();
+
+        $data = [
+            'page_title' => 'Search All Tickets - SAMPARK',
+            'user' => $user
+        ];
+
+        if ($user['role'] === 'controller_nodal') {
+            $this->view('controller/search-all-tickets-nodal', $data);
+        } else {
+            $this->view('controller/search-all-tickets', $data);
+        }
+    }
+
+    /**
+     * AJAX endpoint for search tickets data
+     */
+    public function searchAllTicketsData() {
+        $this->requireAjax();
+        $user = $this->getCurrentUser();
+
+        // Get search parameters
+        $search = [
+            'complaint_number' => $_POST['complaint_number'] ?? '',
+            'date_from' => $_POST['date_from'] ?? '',
+            'date_to' => $_POST['date_to'] ?? '',
+            'customer_mobile' => $_POST['customer_mobile'] ?? '',
+            'customer_email' => $_POST['customer_email'] ?? '',
+            'status' => $_POST['status'] ?? '',
+            'priority' => $_POST['priority'] ?? '',
+            'zone' => $_POST['zone'] ?? '',
+            'division' => $_POST['division'] ?? '',
+            'department' => $_POST['department'] ?? ''
+        ];
+
+        // Validate that at least one search criteria is provided
+        $hasSearchCriteria = false;
+        foreach ($search as $value) {
+            if (!empty(trim($value))) {
+                $hasSearchCriteria = true;
+                break;
+            }
+        }
+
+        if (!$hasSearchCriteria) {
+            $this->jsonResponse([
+                'success' => false,
+                'message' => 'Please provide at least one search criterion'
+            ]);
+            return;
+        }
+
+        try {
+            $results = $this->performTicketSearch($search);
+
+            // Format data for DataTables
+            $data = [];
+            foreach ($results as $ticket) {
+                $row = [
+                    $ticket['complaint_id'],
+                    $ticket['description'] ?? '',
+                    $ticket['customer_name'] ?? 'N/A',
+                    $ticket['shed_name'] ?? 'N/A',
+                    $ticket['category'] ?? 'N/A',
+                    $ticket['status'],
+                    $ticket['priority'],
+                    $ticket['zone'] ?? 'N/A',
+                    $ticket['division'] ?? 'N/A',
+                    $ticket['assigned_to'] ?? 'Unassigned',
+                    date('M d, Y H:i', strtotime($ticket['created_at'])),
+                    '' // Actions column will be rendered by frontend
+                ];
+                $data[] = $row;
+            }
+
+            $this->jsonResponse([
+                'success' => true,
+                'draw' => intval($_POST['draw'] ?? 1),
+                'recordsTotal' => count($data),
+                'recordsFiltered' => count($data),
+                'data' => $data
+            ]);
+
+        } catch (Exception $e) {
+            $this->jsonResponse([
+                'success' => false,
+                'message' => 'Search failed: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // Helper methods for new functionality
+
+    private function getDepartmentTickets($user, $page, $perPage, $filters) {
+        // Controller sees only CLOSED tickets from their department
+        $conditions = ['c.assigned_to_department = ?', 'c.status = ?'];
+        $params = [$user['department'], 'closed'];
+
+        // Apply filters (status is fixed to 'closed' for controllers)
+        if (!empty($filters['priority'])) {
+            $conditions[] = 'c.priority = ?';
+            $params[] = $filters['priority'];
+        }
+
+        if (!empty($filters['date_from'])) {
+            $conditions[] = 'c.created_at >= ?';
+            $params[] = $filters['date_from'] . ' 00:00:00';
+        }
+
+        if (!empty($filters['date_to'])) {
+            $conditions[] = 'c.created_at <= ?';
+            $params[] = $filters['date_to'] . ' 23:59:59';
+        }
+
+        $whereClause = implode(' AND ', $conditions);
+        $offset = ($page - 1) * $perPage;
+
+        // Get tickets
+        $sql = "SELECT c.complaint_id, c.status, c.priority, c.description, c.created_at,
+                       cat.category, cat.type, cat.subtype,
+                       cust.name as customer_name, cust.company_name,
+                       s.name as shed_name
+                FROM complaints c
+                LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
+                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                LEFT JOIN shed s ON c.shed_id = s.shed_id
+                WHERE {$whereClause}
+                ORDER BY c.created_at DESC
+                LIMIT ? OFFSET ?";
+
+        $params[] = $perPage;
+        $params[] = $offset;
+
+        $ticketData = $this->db->fetchAll($sql, $params);
+
+        // Get total count
+        $countSql = "SELECT COUNT(*) as total FROM complaints c WHERE {$whereClause}";
+        $countParams = array_slice($params, 0, -2); // Remove LIMIT and OFFSET params
+        $totalResult = $this->db->fetch($countSql, $countParams);
+        $total = $totalResult['total'] ?? 0;
+
+        // Get stats
+        $statsParams = array_slice($params, 0, -2); // Remove LIMIT and OFFSET params
+        $statsSql = "SELECT
+                        SUM(CASE WHEN c.status = 'pending' THEN 1 ELSE 0 END) as pending_count,
+                        SUM(CASE WHEN c.priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority_count,
+                        SUM(CASE WHEN c.created_at >= CURDATE() AND c.status = 'closed' THEN 1 ELSE 0 END) as resolved_today_count,
+                        SUM(CASE WHEN c.created_at < DATE_SUB(NOW(), INTERVAL 48 HOUR) AND c.status IN ('pending', 'awaiting_info') THEN 1 ELSE 0 END) as overdue_count
+                     FROM complaints c WHERE {$whereClause}";
+
+        $stats = $this->db->fetch($statsSql, $statsParams);
+
+        return [
+            'data' => $ticketData,
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+            'total_pages' => ceil($total / $perPage),
+            'has_prev' => $page > 1,
+            'has_next' => $page < ceil($total / $perPage),
+            'pending' => $stats['pending_count'] ?? 0,
+            'high_priority' => $stats['high_priority_count'] ?? 0,
+            'resolved_today' => $stats['resolved_today_count'] ?? 0,
+            'overdue' => $stats['overdue_count'] ?? 0
+        ];
+    }
+
+    private function getDivisionTickets($user, $page, $perPage, $filters) {
+        // Controller nodal sees ALL tickets in their division (any status)
+        $conditions = ['c.division = ?'];
+        $params = [$user['division']];
+
+        // Apply filters
+        if (!empty($filters['status'])) {
+            $conditions[] = 'c.status = ?';
+            $params[] = $filters['status'];
+        }
+
+        if (!empty($filters['priority'])) {
+            $conditions[] = 'c.priority = ?';
+            $params[] = $filters['priority'];
+        }
+
+        if (!empty($filters['department'])) {
+            $conditions[] = 'c.assigned_to_department = ?';
+            $params[] = $filters['department'];
+        }
+
+        if (!empty($filters['date_from'])) {
+            $conditions[] = 'c.created_at >= ?';
+            $params[] = $filters['date_from'] . ' 00:00:00';
+        }
+
+        if (!empty($filters['date_to'])) {
+            $conditions[] = 'c.created_at <= ?';
+            $params[] = $filters['date_to'] . ' 23:59:59';
+        }
+
+        $whereClause = implode(' AND ', $conditions);
+        $offset = ($page - 1) * $perPage;
+
+        // Get tickets with assignment information
+        $sql = "SELECT c.complaint_id, c.status, c.priority, c.description, c.created_at,
+                       c.assigned_to_department, c.division, c.zone,
+                       cat.category, cat.type, cat.subtype,
+                       cust.name as customer_name, cust.company_name,
+                       s.name as shed_name
+                FROM complaints c
+                LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
+                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                LEFT JOIN shed s ON c.shed_id = s.shed_id
+                WHERE {$whereClause}
+                ORDER BY c.created_at DESC
+                LIMIT ? OFFSET ?";
+
+        $params[] = $perPage;
+        $params[] = $offset;
+
+        $ticketData = $this->db->fetchAll($sql, $params);
+
+        // Get total count
+        $countSql = "SELECT COUNT(*) as total FROM complaints c WHERE {$whereClause}";
+        $countParams = array_slice($params, 0, -2); // Remove LIMIT and OFFSET params
+        $totalResult = $this->db->fetch($countSql, $countParams);
+        $total = $totalResult['total'] ?? 0;
+
+        // Get stats specific to controller_nodal
+        $statsParams = array_slice($params, 0, -2);
+        $statsSql = "SELECT
+                        SUM(CASE WHEN c.status = 'pending' THEN 1 ELSE 0 END) as pending_count,
+                        SUM(CASE WHEN c.priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority_count,
+                        SUM(CASE WHEN c.forwarded_flag = 1 THEN 1 ELSE 0 END) as forwarded_count,
+                        SUM(CASE WHEN c.status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval_count
+                     FROM complaints c WHERE {$whereClause}";
+
+        $stats = $this->db->fetch($statsSql, $statsParams);
+
+        return [
+            'data' => $ticketData,
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+            'total_pages' => ceil($total / $perPage),
+            'has_prev' => $page > 1,
+            'has_next' => $page < ceil($total / $perPage),
+            'pending' => $stats['pending_count'] ?? 0,
+            'high_priority' => $stats['high_priority_count'] ?? 0,
+            'forwarded' => $stats['forwarded_count'] ?? 0,
+            'awaiting_approval' => $stats['awaiting_approval_count'] ?? 0
+        ];
+    }
+
+    private function getDepartmentsInDivision($division) {
+        $sql = "SELECT DISTINCT department_code, department_name
+                FROM departments
+                WHERE is_active = 1
+                ORDER BY department_name";
+        return $this->db->fetchAll($sql);
+    }
+
+    private function performTicketSearch($search) {
+        $conditions = [];
+        $params = [];
+
+        // Build search conditions
+        if (!empty($search['complaint_number'])) {
+            $conditions[] = 'c.complaint_id LIKE ?';
+            $params[] = '%' . $search['complaint_number'] . '%';
+        }
+
+        if (!empty($search['date_from'])) {
+            $conditions[] = 'c.created_at >= ?';
+            $params[] = $search['date_from'] . ' 00:00:00';
+        }
+
+        if (!empty($search['date_to'])) {
+            $conditions[] = 'c.created_at <= ?';
+            $params[] = $search['date_to'] . ' 23:59:59';
+        }
+
+        if (!empty($search['customer_mobile'])) {
+            $conditions[] = 'cust.mobile LIKE ?';
+            $params[] = '%' . $search['customer_mobile'] . '%';
+        }
+
+        if (!empty($search['customer_email'])) {
+            $conditions[] = 'cust.email LIKE ?';
+            $params[] = '%' . $search['customer_email'] . '%';
+        }
+
+        if (!empty($search['status'])) {
+            $conditions[] = 'c.status = ?';
+            $params[] = $search['status'];
+        }
+
+        if (!empty($search['priority'])) {
+            $conditions[] = 'c.priority = ?';
+            $params[] = $search['priority'];
+        }
+
+        if (!empty($search['zone'])) {
+            $conditions[] = 'c.zone = ?';
+            $params[] = $search['zone'];
+        }
+
+        if (!empty($search['division'])) {
+            $conditions[] = 'c.division = ?';
+            $params[] = $search['division'];
+        }
+
+        if (!empty($search['department'])) {
+            $conditions[] = 'c.assigned_to_department = ?';
+            $params[] = $search['department'];
+        }
+
+        $whereClause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
+
+        $sql = "SELECT c.complaint_id, c.status, c.priority, c.description, c.created_at,
+                       c.zone, c.division, c.assigned_to_department,
+                       cat.category, cat.type, cat.subtype,
+                       cust.name as customer_name, cust.company_name,
+                       s.name as shed_name,
+                       c.assigned_to_department as assigned_to
+                FROM complaints c
+                LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
+                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                LEFT JOIN shed s ON c.shed_id = s.shed_id
+                {$whereClause}
+                ORDER BY c.created_at DESC
+                LIMIT 1000"; // Limit search results for performance
+
+        return $this->db->fetchAll($sql, $params);
+    }
 }

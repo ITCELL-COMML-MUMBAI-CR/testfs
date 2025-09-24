@@ -37,6 +37,12 @@ $router->get('/controller/dashboard', 'Controller@dashboard', ['auth', 'role:con
 $router->get('/controller/tickets', 'Controller@tickets', ['auth', 'role:controller,controller_nodal']);
 $router->get('/controller/forwarded-tickets', 'Controller@forwardedTickets', ['auth', 'role:controller_nodal']);
 $router->get('/controller/tickets/{id}', 'Controller@viewTicket', ['auth', 'role:controller,controller_nodal']);
+
+// Department and division specific ticket views
+$router->get('/controller/my-department', 'Controller@myDepartmentTickets', ['auth', 'role:controller']);
+$router->get('/controller/my-division', 'Controller@myDivisionTickets', ['auth', 'role:controller_nodal']);
+$router->get('/controller/search-all', 'Controller@searchAllTickets', ['auth', 'role:controller,controller_nodal']);
+$router->post('/controller/search-all/data', 'Controller@searchAllTicketsData', ['auth', 'role:controller,controller_nodal']);
 $router->post('/controller/tickets/{id}/forward', 'Controller@forwardTicket', ['auth', 'role:controller,controller_nodal']);
 $router->post('/controller/tickets/{id}/reply', 'Controller@replyTicket', ['auth', 'role:controller,controller_nodal']);
 $router->post('/controller/tickets/{id}/approve', 'Controller@approveReply', ['auth', 'role:controller_nodal']);

@@ -164,10 +164,31 @@
                                     <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="<?= Config::getAppUrl() ?>/controller/tickets">
-                                    <i class="fas fa-ticket-alt me-1"></i>Support Hub
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-ticket-alt me-1"></i>Tickets
                                 </a>
+                                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-apple">
+                                    <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/controller/tickets">
+                                        <i class="fas fa-list me-2"></i>Support Hub
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <?php if ($userRole === 'controller'): ?>
+                                    <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/controller/my-department">
+                                        <i class="fas fa-check-circle me-2"></i>Closed Tickets (Dept)
+                                    </a></li>
+                                    <?php elseif ($userRole === 'controller_nodal'): ?>
+                                    <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/controller/my-division">
+                                        <i class="fas fa-sitemap me-2"></i>All Division Tickets
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/controller/forwarded-tickets">
+                                        <i class="fas fa-share-alt me-2"></i>Forwarded Tickets
+                                    </a></li>
+                                    <?php endif; ?>
+                                    <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/controller/search-all">
+                                        <i class="fas fa-search me-2"></i>Search All Tickets
+                                    </a></li>
+                                </ul>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="<?= Config::getAppUrl() ?>/controller/reports">
