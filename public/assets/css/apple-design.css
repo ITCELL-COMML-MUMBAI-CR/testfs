@@ -1271,3 +1271,54 @@ html {
         color: #ffffff !important;
     }
 }
+
+/* ===== PASSWORD FIELD VALIDATION ICON FIX ===== */
+/* Override Bootstrap validation styles to prevent icon overlapping with password toggle buttons */
+
+/* Position-relative password fields (signup, login) */
+.position-relative .form-control-apple[type="password"].is-valid,
+.position-relative .form-control[type="password"].is-valid,
+.was-validated .position-relative .form-control-apple[type="password"]:valid,
+.was-validated .position-relative .form-control[type="password"]:valid,
+body .position-relative .form-control-apple[type="password"].is-valid,
+body .position-relative .form-control[type="password"].is-valid {
+    background-position: right 3.5rem center !important;
+    padding-right: 4rem !important;
+}
+
+.position-relative .form-control-apple[type="password"].is-invalid,
+.position-relative .form-control[type="password"].is-invalid,
+.was-validated .position-relative .form-control-apple[type="password"]:invalid,
+.was-validated .position-relative .form-control[type="password"]:invalid,
+body .position-relative .form-control-apple[type="password"].is-invalid,
+body .position-relative .form-control[type="password"].is-invalid {
+    background-position: right 3.5rem center !important;
+    padding-right: 4rem !important;
+}
+
+/* Input-group password fields (change-password, admin forms) */
+.input-group .form-control-apple[type="password"].is-valid,
+.input-group .form-control[type="password"].is-valid,
+.was-validated .input-group .form-control-apple[type="password"]:valid,
+.was-validated .input-group .form-control[type="password"]:valid,
+body .input-group .form-control-apple[type="password"].is-valid,
+body .input-group .form-control[type="password"].is-valid {
+    background-position: right calc(0.75rem + 40px) center !important;
+    padding-right: calc(0.75rem + 45px) !important;
+}
+
+.input-group .form-control-apple[type="password"].is-invalid,
+.input-group .form-control[type="password"].is-invalid,
+.was-validated .input-group .form-control-apple[type="password"]:invalid,
+.was-validated .input-group .form-control[type="password"]:invalid,
+body .input-group .form-control-apple[type="password"].is-invalid,
+body .input-group .form-control[type="password"].is-invalid {
+    background-position: right calc(0.75rem + 40px) center !important;
+    padding-right: calc(0.75rem + 45px) !important;
+}
+
+/* Ensure password toggle buttons are above validation icons */
+.position-relative .btn-link,
+.input-group .btn {
+    z-index: 10 !important;
+}

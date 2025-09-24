@@ -561,6 +561,71 @@
     background-size: 1rem;
 }
 
+/* Fix for password fields with toggle buttons - adjust validation icon position */
+/* Higher specificity to override Bootstrap validation styles */
+.position-relative:has(.btn-link) .form-control-apple.is-valid,
+.position-relative .form-control-apple.is-valid:has(+ .btn-link),
+.was-validated .position-relative:has(.btn-link) .form-control-apple:valid,
+.was-validated .position-relative .form-control-apple:valid:has(+ .btn-link),
+.position-relative:has(.btn-link) .form-control.is-valid,
+.position-relative .form-control.is-valid:has(+ .btn-link),
+.was-validated .position-relative:has(.btn-link) .form-control:valid,
+.was-validated .position-relative .form-control:valid:has(+ .btn-link) {
+    background-position: right 3.5rem center !important;
+    padding-right: 4rem !important;
+}
+
+.position-relative:has(.btn-link) .form-control-apple.is-invalid,
+.position-relative .form-control-apple.is-invalid:has(+ .btn-link),
+.was-validated .position-relative:has(.btn-link) .form-control-apple:invalid,
+.was-validated .position-relative .form-control-apple:invalid:has(+ .btn-link),
+.position-relative:has(.btn-link) .form-control.is-invalid,
+.position-relative .form-control.is-invalid:has(+ .btn-link),
+.was-validated .position-relative:has(.btn-link) .form-control:invalid,
+.was-validated .position-relative .form-control:invalid:has(+ .btn-link) {
+    background-position: right 3.5rem center !important;
+    padding-right: 4rem !important;
+}
+
+/* Fallback for browsers that don't support :has() - with higher specificity */
+.position-relative .form-control-apple[type="password"].is-valid,
+.was-validated .position-relative .form-control-apple[type="password"]:valid,
+.position-relative .form-control[type="password"].is-valid,
+.was-validated .position-relative .form-control[type="password"]:valid {
+    background-position: right 3.5rem center !important;
+    padding-right: 4rem !important;
+}
+
+.position-relative .form-control-apple[type="password"].is-invalid,
+.was-validated .position-relative .form-control-apple[type="password"]:invalid,
+.position-relative .form-control[type="password"].is-invalid,
+.was-validated .position-relative .form-control[type="password"]:invalid {
+    background-position: right 3.5rem center !important;
+    padding-right: 4rem !important;
+}
+
+/* Ensure password toggle buttons don't interfere with validation styles */
+.position-relative .btn-link {
+    z-index: 5;
+}
+
+/* Fix for input-group pattern (like change-password.php) - adjust validation icon position */
+.input-group .form-control-apple.is-valid,
+.was-validated .input-group .form-control-apple:valid,
+.input-group .form-control.is-valid,
+.was-validated .input-group .form-control:valid {
+    background-position: right calc(0.75rem + 40px) center !important;
+    padding-right: calc(0.75rem + 45px) !important;
+}
+
+.input-group .form-control-apple.is-invalid,
+.was-validated .input-group .form-control-apple:invalid,
+.input-group .form-control.is-invalid,
+.was-validated .input-group .form-control:invalid {
+    background-position: right calc(0.75rem + 40px) center !important;
+    padding-right: calc(0.75rem + 45px) !important;
+}
+
 /* ===== MODAL ENHANCEMENTS ===== */
 .modal-apple .modal-dialog {
     animation: modalSlideIn 0.3s ease-out;
