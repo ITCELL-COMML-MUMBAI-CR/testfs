@@ -2972,7 +2972,13 @@ class ControllerController extends BaseController {
      * AJAX endpoint for search tickets data
      */
     public function searchAllTicketsData() {
-        $this->requireAjax();
+        // Simple AJAX check - if not AJAX, return JSON error
+        if (!$this->isAjaxRequest()) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'AJAX request required']);
+            return;
+        }
+
         $user = $this->getCurrentUser();
 
         // Get search parameters
@@ -2999,7 +3005,8 @@ class ControllerController extends BaseController {
         }
 
         if (!$hasSearchCriteria) {
-            $this->jsonResponse([
+            header('Content-Type: application/json');
+            echo json_encode([
                 'success' => false,
                 'message' => 'Please provide at least one search criterion'
             ]);
@@ -3029,7 +3036,8 @@ class ControllerController extends BaseController {
                 $data[] = $row;
             }
 
-            $this->jsonResponse([
+            header('Content-Type: application/json');
+            echo json_encode([
                 'success' => true,
                 'draw' => intval($_POST['draw'] ?? 1),
                 'recordsTotal' => count($data),
@@ -3038,7 +3046,8 @@ class ControllerController extends BaseController {
             ]);
 
         } catch (Exception $e) {
-            $this->jsonResponse([
+            header('Content-Type: application/json');
+            echo json_encode([
                 'success' => false,
                 'message' => 'Search failed: ' . $e->getMessage()
             ]);
