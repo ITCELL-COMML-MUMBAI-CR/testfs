@@ -235,6 +235,9 @@ function createFilePreview(file, status = 'pending') {
     const fileIcon = getFileIcon(file.type);
     const fileSize = formatFileSize(file.size);
 
+    // Create a safe ID by replacing invalid characters
+    const safeId = file.name.replace(/[^a-zA-Z0-9-_]/g, '_');
+
     fileDiv.innerHTML = `
         <div class="d-flex align-items-center">
             <div class="file-icon me-3">
@@ -245,7 +248,7 @@ function createFilePreview(file, status = 'pending') {
                 <div class="text-muted small">${fileSize}</div>
             </div>
             <div class="file-status me-2">
-                <span class="badge bg-${getStatusBadgeClass(status)}" id="status-${file.name}">
+                <span class="badge bg-${getStatusBadgeClass(status)}" id="status-${safeId}">
                     ${getStatusText(status)}
                 </span>
             </div>
@@ -261,7 +264,9 @@ function createFilePreview(file, status = 'pending') {
 }
 
 function updateFilePreviewStatus(fileName, status) {
-    const statusElement = document.getElementById(`status-${fileName}`);
+    // Create the same safe ID used in createFilePreview
+    const safeId = fileName.replace(/[^a-zA-Z0-9-_]/g, '_');
+    const statusElement = document.getElementById(`status-${safeId}`);
     if (statusElement) {
         statusElement.className = `badge bg-${getStatusBadgeClass(status)}`;
         statusElement.textContent = getStatusText(status);
