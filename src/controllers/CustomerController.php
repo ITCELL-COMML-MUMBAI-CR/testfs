@@ -831,7 +831,7 @@ class CustomerController extends BaseController {
                     $evidence[] = [
                         'id' => $record['id'] . '_additional_' . $i, // Create a unique ID for each additional file slot
                         'file_name' => $record[$fileNameField],
-                        'original_name' => $record[$fileNameField], // Use file_name as original_name
+                        'original_name' => $record[$fileNameField], // Use the system-generated filename
                         'file_type' => $record[$fileTypeField],
                         'file_path' => $record[$filePathField],
                         'file_size' => $record[$compressedSizeField] ?? 0,
@@ -1370,7 +1370,7 @@ class CustomerController extends BaseController {
             // Add transaction log
             $remarkText = $additionalInfo;
             if ($uploadResult && !empty($uploadResult['files'])) {
-                $fileNames = array_column($uploadResult['files'], 'original_name');
+                $fileNames = array_column($uploadResult['files'], 'filename');
                 $remarkText .= " (with " . count($fileNames) . " supporting image(s): " . implode(', ', $fileNames) . ")";
             }
             

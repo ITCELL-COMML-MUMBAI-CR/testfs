@@ -149,12 +149,26 @@ class FileUploader {
                 [$complaintId]
             );
 
+            // If no evidence record exists, create one
             if (!$existingEvidence) {
-                return [
-                    'success' => false,
-                    'files' => [],
-                    'errors' => ['No evidence record found for this ticket']
-                ];
+                $db->query(
+                    "INSERT INTO evidence (complaint_id, uploaded_by_type, uploaded_by_id) VALUES (?, ?, ?)",
+                    [$complaintId, $uploaderType, $uploaderId]
+                );
+
+                // Fetch the newly created record
+                $existingEvidence = $db->fetch(
+                    "SELECT id, additional_file_name_1, additional_file_name_2 FROM evidence WHERE complaint_id = ?",
+                    [$complaintId]
+                );
+
+                if (!$existingEvidence) {
+                    return [
+                        'success' => false,
+                        'files' => [],
+                        'errors' => ['Failed to create evidence record for this ticket']
+                    ];
+                }
             }
 
             // Check if additional files already exist

@@ -58,8 +58,8 @@
                                 <button type="button" class="btn btn-outline-primary btn-sm mb-2" onclick="selectAdditionalFiles()">
                                     <i class="fas fa-folder-open me-1"></i>Browse Files
                                 </button>
-                                <small class="text-muted d-block">Maximum 2 additional files, 50MB each (auto-compressed)</small>
-                                <small class="text-muted">Supported: Images, PDF, Word, Excel, Text files</small>
+                                <small class="text-muted d-block">Maximum 2 additional files, 5MB each (auto-compressed)</small>
+                                <small class="text-muted">Only images are supported.</small>
                             </div>
 
                             <div class="upload-preview mt-3" id="uploadPreview"></div>

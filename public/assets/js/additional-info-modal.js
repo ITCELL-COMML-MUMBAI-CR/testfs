@@ -7,6 +7,7 @@
 let selectedAdditionalFiles = [];
 let compressedAdditionalFiles = [];
 let isCompressing = false;
+let compressionQueue = 0; // Track how many files are actively compressing
 
 // Initialize when DOM loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -49,6 +50,12 @@ function selectAdditionalFiles() {
 }
 
 function handleAdditionalFileSelection(files) {
+    // Check if compression is already in progress
+    if (isCompressing || compressionQueue > 0) {
+        window.SAMPARK.ui.showError('Please Wait', 'Please wait for current file compression to complete before selecting new files');
+        return;
+    }
+
     // Validate file count
     if (selectedAdditionalFiles.length + files.length > 2) {
         window.SAMPARK.ui.showError('File Limit', 'Maximum 2 additional files allowed');
@@ -130,6 +137,7 @@ function hideCompressionProgress() {
     }
 
     isCompressing = false;
+    compressionQueue = 0; // Reset compression queue
 
     // Re-enable submit button after compression
     if (submitButton) {
@@ -151,6 +159,7 @@ async function compressAdditionalFiles(files) {
     const preview = document.getElementById('uploadPreview');
     let processedCount = 0;
 
+    // Process files sequentially and wait for each to complete
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
 
@@ -172,6 +181,7 @@ async function compressAdditionalFiles(files) {
         updateCompressionProgress((processedCount / files.length) * 100);
     }
 
+    // Only hide progress and enable submit when ALL files are processed
     hideCompressionProgress();
 }
 
@@ -529,7 +539,7 @@ class AdditionalInfoModal {
         }
 
         // Check if compression is in progress
-        if (isCompressing) {
+        if (isCompressing || compressionQueue > 0) {
             window.SAMPARK.ui.showError('Please Wait', 'Please wait for file compression to complete');
             return;
         }
@@ -609,9 +619,11 @@ class AdditionalInfoModal {
         if (ticketIdInput) ticketIdInput.value = '';
         if (additionalInfoText) additionalInfoText.value = '';
 
-        // Clear file selections
+        // Clear file selections and reset compression state
         selectedAdditionalFiles = [];
         compressedAdditionalFiles = [];
+        isCompressing = false;
+        compressionQueue = 0;
 
         // Clear containers
         const existingContainer = document.getElementById('existingFilesContainer');
