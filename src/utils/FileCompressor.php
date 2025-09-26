@@ -5,9 +5,7 @@
  * Optimized for speed and supports multiple file types
  * 
  * Supported file types:
- * - Images: JPEG, PNG, GIF, WebP, BMP
- * - Documents: PDF, DOC, DOCX, TXT, RTF
- * - Archives: Already compressed, minimal processing
+ * - Images: JPEG, PNG, GIF, WebP, BMP, HEIF, HEIC, TIFF
  */
 
 class FileCompressor {
@@ -16,26 +14,17 @@ class FileCompressor {
     private const SCALE_STEPS = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2];
     
     private static $supportedTypes = [
-        // Images
+        // Images only
         'image/jpeg' => 'compressImage',
-        'image/jpg' => 'compressImage', 
+        'image/jpg' => 'compressImage',
         'image/png' => 'compressImage',
         'image/gif' => 'compressImage',
         'image/webp' => 'compressImage',
         'image/bmp' => 'compressImage',
-        
-        // Documents
-        'application/pdf' => 'compressPDF',
-        'application/msword' => 'compressDocument',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'compressDocument',
-        'text/plain' => 'compressText',
-        'text/rtf' => 'compressText',
-        'application/rtf' => 'compressText',
-        
-        // Archives (minimal compression)
-        'application/zip' => 'handleArchive',
-        'application/x-rar' => 'handleArchive',
-        'application/x-7z-compressed' => 'handleArchive'
+        'image/heif' => 'compressImage',
+        'image/heic' => 'compressImage',
+        'image/tiff' => 'compressImage',
+        'image/tif' => 'compressImage'
     ];
     
     public static function compressFile($inputFile, $maxSizeKB = 5120, $outputFile = null) {
@@ -140,6 +129,38 @@ class FileCompressor {
                 return function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($inputFile) : false;
             case 'image/bmp':
                 return function_exists('imagecreatefrombmp') ? @imagecreatefrombmp($inputFile) : false;
+            case 'image/heif':
+            case 'image/heic':
+                // HEIF/HEIC support requires PHP 7.1+ and proper imagick extension
+                if (extension_loaded('imagick')) {
+                    try {
+                        $imagick = new \Imagick($inputFile);
+                        $imagick->setImageFormat('jpeg');
+                        $tempJpeg = tempnam(sys_get_temp_dir(), 'heif_convert_') . '.jpg';
+                        $imagick->writeImage($tempJpeg);
+                        $imagick->destroy();
+                        return @imagecreatefromjpeg($tempJpeg);
+                    } catch (Exception $e) {
+                        return false;
+                    }
+                }
+                return false;
+            case 'image/tiff':
+            case 'image/tif':
+                // TIFF support requires imagick
+                if (extension_loaded('imagick')) {
+                    try {
+                        $imagick = new \Imagick($inputFile);
+                        $imagick->setImageFormat('jpeg');
+                        $tempJpeg = tempnam(sys_get_temp_dir(), 'tiff_convert_') . '.jpg';
+                        $imagick->writeImage($tempJpeg);
+                        $imagick->destroy();
+                        return @imagecreatefromjpeg($tempJpeg);
+                    } catch (Exception $e) {
+                        return false;
+                    }
+                }
+                return false;
             default:
                 return false;
         }
@@ -246,79 +267,10 @@ class FileCompressor {
         }
     }
     
-    private static function compressPDF($inputFile, $outputFile, $maxSizeBytes, $mimeType) {
-        // For PDFs, we'll use basic compression techniques
-        // In a production environment, you might want to use libraries like TCPDF or pdftk
-        
-        // Simple approach: if PDF is too large, we return false
-        // Advanced PDF compression would require specialized libraries
-        $originalSize = filesize($inputFile);
-        
-        if ($originalSize <= $maxSizeBytes) {
-            copy($inputFile, $outputFile);
-            return $outputFile;
-        }
-        
-        // Try gzip compression as fallback
-        if (self::compressWithGzip($inputFile, $outputFile . '.gz', $maxSizeBytes)) {
-            return $outputFile . '.gz';
-        }
-        
-        trigger_error("PDF compression not implemented for files over {$maxSizeBytes} bytes", E_USER_WARNING);
-        return false;
-    }
     
-    private static function compressDocument($inputFile, $outputFile, $maxSizeBytes, $mimeType) {
-        // For DOC/DOCX files, use gzip compression
-        return self::compressWithGzip($inputFile, $outputFile . '.gz', $maxSizeBytes);
-    }
     
-    private static function compressText($inputFile, $outputFile, $maxSizeBytes, $mimeType) {
-        // Text files compress very well with gzip
-        return self::compressWithGzip($inputFile, $outputFile . '.gz', $maxSizeBytes);
-    }
     
-    private static function handleArchive($inputFile, $outputFile, $maxSizeBytes, $mimeType) {
-        // Archive files are already compressed, just check size
-        $originalSize = filesize($inputFile);
-        
-        if ($originalSize <= $maxSizeBytes) {
-            copy($inputFile, $outputFile);
-            return $outputFile;
-        }
-        
-        trigger_error("Archive file is too large and cannot be further compressed", E_USER_WARNING);
-        return false;
-    }
     
-    private static function compressWithGzip($inputFile, $outputFile, $maxSizeBytes) {
-        $input = fopen($inputFile, 'rb');
-        $output = gzopen($outputFile, 'wb9'); // Maximum compression
-        
-        if (!$input || !$output) {
-            if ($input) fclose($input);
-            if ($output) gzclose($output);
-            return false;
-        }
-        
-        // Stream compression to handle large files
-        while (!feof($input)) {
-            $chunk = fread($input, 8192);
-            gzwrite($output, $chunk);
-        }
-        
-        fclose($input);
-        gzclose($output);
-        
-        // Check if compressed file is within size limit
-        if (filesize($outputFile) <= $maxSizeBytes) {
-            return $outputFile;
-        }
-        
-        // Clean up failed compression
-        @unlink($outputFile);
-        return false;
-    }
     
     private static function cleanupTempFiles($tempFiles) {
         foreach ($tempFiles as $file) {

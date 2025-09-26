@@ -23,7 +23,19 @@ function initializeAdditionalInfoModal() {
 
     // File input change handler
     fileInput.addEventListener('change', function() {
-        handleAdditionalFileSelection(Array.from(this.files));
+        const files = Array.from(this.files);
+
+        // Quick validation to immediately alert about non-image files
+        const nonImageFiles = files.filter(file => !file.type.startsWith('image/'));
+        if (nonImageFiles.length > 0) {
+            const fileNames = nonImageFiles.map(f => f.name).join(', ');
+            window.SAMPARK.ui.showError('Invalid File Type',
+                `Only image files are allowed. The following files are not supported: ${fileNames}`);
+            this.value = ''; // Clear input
+            return;
+        }
+
+        handleAdditionalFileSelection(files);
         this.value = ''; // Clear input to allow re-selection
     });
 }
@@ -77,11 +89,11 @@ function validateAdditionalFile(file) {
     const errors = [];
 
     if (file.size > maxSize) {
-        errors.push('File too large (max 50MB before compression)');
+        errors.push('File size is too large. Please reduce the image size and try again.');
     }
 
     if (!allowedTypes.includes(file.type)) {
-        errors.push('File type not supported');
+        errors.push('Only image files are allowed.');
     }
 
     return {
@@ -310,12 +322,8 @@ function updateFileDisplay() {
 
 // Utility functions
 function getFileIcon(mimeType) {
-    if (mimeType.startsWith('image/')) return 'fas fa-image text-primary';
-    if (mimeType === 'application/pdf') return 'fas fa-file-pdf text-danger';
-    if (mimeType.includes('word')) return 'fas fa-file-word text-primary';
-    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'fas fa-file-excel text-success';
-    if (mimeType === 'text/plain') return 'fas fa-file-alt text-muted';
-    return 'fas fa-file text-muted';
+    // Only images are supported now
+    return 'fas fa-image text-primary';
 }
 
 function formatFileSize(bytes) {
@@ -501,13 +509,13 @@ class AdditionalInfoModal {
     }
 
     getFileTypeFromExtension(extension) {
-        const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
-        if (imageTypes.includes(extension)) return 'image/' + extension;
-        if (extension === 'pdf') return 'application/pdf';
-        if (extension === 'doc' || extension === 'docx') return 'application/msword';
-        if (extension === 'xls' || extension === 'xlsx') return 'application/vnd.ms-excel';
-        if (extension === 'txt') return 'text/plain';
-        return 'application/octet-stream';
+        const imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heif', 'heic', 'tiff', 'tif'];
+        if (imageTypes.includes(extension)) {
+            if (extension === 'jpg') return 'image/jpeg';
+            if (extension === 'tif') return 'image/tiff';
+            return 'image/' + extension;
+        }
+        return 'image/jpeg'; // Default to jpeg for unknown extensions
     }
 
     async handleSubmit() {

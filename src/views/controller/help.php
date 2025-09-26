@@ -177,7 +177,7 @@ $page_title = 'Help & Support - SAMPARK';
                                             <li>Review the customer's issue and any attached evidence</li>
                                             <li>Click the "Reply to Customer" button</li>
                                             <li>Enter your response and describe the action taken</li>
-                                            <li>Attach any supporting documents if needed</li>
+                                            <li>Attach any supporting images if needed</li>
                                             <li>Click "Send Reply" to notify the customer</li>
                                         </ol>
                                     </div>

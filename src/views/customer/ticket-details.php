@@ -309,15 +309,15 @@ ob_start();
                 <div class="card-apple mb-4">
                     <div class="card-body">
                         <h5 class="card-title">
-                            <i class="fas fa-paperclip text-apple-blue me-2"></i>
-                            Supporting Documents
+                            <i class="fas fa-images text-apple-blue me-2"></i>
+                            Supporting Images
                             <small class="text-muted">(<?= count($evidence ?? []) ?> files)</small>
                         </h5>
 
                         <?php if (empty($evidence)): ?>
                             <div class="text-center py-4">
-                                <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
-                                <p class="text-muted mb-2">No supporting documents uploaded</p>
+                                <i class="fas fa-image fa-3x text-muted mb-3"></i>
+                                <p class="text-muted mb-2">No supporting images uploaded</p>
                                 <?php if ($ticket['status'] === 'awaiting_info'): ?>
                                     <small class="text-info">You can upload additional files when providing additional information.</small>
                                 <?php else: ?>
@@ -329,7 +329,7 @@ ob_start();
                             <?php if ($ticket['status'] === 'awaiting_info'): ?>
                                 <div class="alert alert-info mb-3">
                                     <i class="fas fa-info-circle me-2"></i>
-                                    <strong>Additional Information Required:</strong> You can upload additional supporting documents when providing the requested information.
+                                    <strong>Additional Information Required:</strong> You can upload additional supporting images when providing the requested information.
                                 </div>
                             <?php endif; ?>
 
@@ -353,7 +353,7 @@ ob_start();
 
                                                     <?php if ($isImage): ?>
                                                         <img src="<?= Config::getPublicUploadPath() ?><?= htmlspecialchars($file['file_name']) ?>"
-                                                             alt="Supporting Document"
+                                                             alt="Supporting Image"
                                                              class="img-thumbnail mb-2"
                                                              style="max-height: 150px; cursor: pointer;"
                                                              onclick="viewImage('<?= Config::getPublicUploadPath() ?><?= htmlspecialchars($file['file_name']) ?>', '<?= htmlspecialchars($file['original_name']) ?>')">

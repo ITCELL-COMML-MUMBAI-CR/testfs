@@ -54,7 +54,7 @@
                             <ul>
                                 <li>Ticket information including descriptions, locations, and wagon details</li>
                                 <li>Communication records and correspondence</li>
-                                <li>Evidence files including documents, images, and other attachments</li>
+                                <li>Evidence files including images and photo attachments</li>
                                 <li>Transaction and service history</li>
                                 <li>Feedback and survey responses</li>
                             </ul>

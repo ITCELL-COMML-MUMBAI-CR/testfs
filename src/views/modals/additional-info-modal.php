@@ -36,7 +36,7 @@
 
                     <!-- Existing Files Section -->
                     <div id="existingFilesSection" class="mb-4" style="display: none;">
-                        <label class="form-label">Current Supporting Documents (<span id="currentFileCount">0</span> files uploaded during ticket creation)</label>
+                        <label class="form-label">Current Supporting Images (<span id="currentFileCount">0</span> files uploaded during ticket creation)</label>
                         <div id="existingFilesContainer" class="border rounded p-3 bg-light">
                             <!-- Existing files will be populated here -->
                         </div>
@@ -45,16 +45,16 @@
                     <!-- File Upload Section -->
                     <div id="uploadSection" class="mb-4">
                         <label class="form-label">
-                            Add Additional Supporting Documents (Maximum 2 files)
+                            Add Additional Supporting Images (Maximum 2 files)
                         </label>
                         <input type="file" class="d-none" id="fileInput"
-                               accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.txt,.xls,.xlsx"
+                               accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.heif,.heic,.tiff,.tif"
                                name="supporting_files[]">
 
                         <div class="upload-zone border-2 border-dashed rounded p-4 text-center" id="uploadZone">
                             <div class="upload-placeholder">
                                 <i class="fas fa-cloud-upload-alt text-muted mb-3" style="font-size: 2.5rem;"></i>
-                                <p class="mb-2">Upload Additional Supporting Documents</p>
+                                <p class="mb-2">Upload Additional Supporting Images</p>
                                 <button type="button" class="btn btn-outline-primary btn-sm mb-2" onclick="selectAdditionalFiles()">
                                     <i class="fas fa-folder-open me-1"></i>Browse Files
                                 </button>

@@ -33,7 +33,7 @@ class Config {
     // File Upload Configuration
     const MAX_FILE_SIZE = 5242880; // 5MB in bytes (final compressed size)
     const MAX_FILES_PER_TICKET = 3;
-    const ALLOWED_FILE_TYPES = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'pdf', 'doc', 'docx', 'txt', 'xls', 'xlsx'];
+    const ALLOWED_FILE_TYPES = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heif', 'heic', 'tiff', 'tif'];
     const UPLOAD_PATH = '/uploads/evidence/';
     
     // Pagination

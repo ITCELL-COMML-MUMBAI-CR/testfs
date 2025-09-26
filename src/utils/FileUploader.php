@@ -385,19 +385,19 @@ class FileUploader {
     private function validateFile($file) {
         $errors = [];
         
-        // Check file size - allow larger files since compression is handled by FileCompressor.php
-        $maxAllowedSize = 50 * 1024 * 1024; // 50MB (will be compressed to 5MB by FileCompressor)
+        // Check file size - images only up to 25MB for compression to 5MB
+        $maxAllowedSize = 25 * 1024 * 1024; // 25MB (will be compressed to 5MB by FileCompressor)
         if ($file['size'] > $maxAllowedSize) {
-            $errors[] = 'File size exceeds ' . ($maxAllowedSize / 1024 / 1024) . 'MB limit';
+            $errors[] = 'File size is too large. Please reduce the image size and try again.';
         }
         
         // Check file type
         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         if (!in_array($extension, $this->allowedTypes)) {
-            $errors[] = 'File type not allowed. Allowed: ' . implode(', ', $this->allowedTypes);
+            $errors[] = 'Only image files are allowed. Please upload JPG, PNG, GIF, WebP, BMP, HEIF, HEIC, or TIFF files.';
         }
         
-        // Check MIME type for security
+        // Check MIME type for security - images only
         $allowedMimes = [
             'jpg' => 'image/jpeg',
             'jpeg' => 'image/jpeg',
@@ -405,12 +405,10 @@ class FileUploader {
             'gif' => 'image/gif',
             'webp' => 'image/webp',
             'bmp' => 'image/bmp',
-            'pdf' => 'application/pdf',
-            'doc' => 'application/msword',
-            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'txt' => 'text/plain',
-            'xls' => 'application/vnd.ms-excel',
-            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            'heif' => 'image/heif',
+            'heic' => 'image/heic',
+            'tiff' => 'image/tiff',
+            'tif' => 'image/tiff'
         ];
         
         if (isset($allowedMimes[$extension])) {
@@ -419,13 +417,13 @@ class FileUploader {
             finfo_close($finfo);
             
             if ($mimeType !== $allowedMimes[$extension]) {
-                $errors[] = 'File content does not match extension';
+                $errors[] = 'This file appears to be corrupted or is not a valid image file. Please try another image.';
             }
         }
         
         // Check for malicious content
         if ($this->containsMaliciousContent($file['tmp_name'])) {
-            $errors[] = 'File contains potentially harmful content';
+            $errors[] = 'This file is not allowed for security reasons. Please upload a clean image file.';
         }
         
         return [

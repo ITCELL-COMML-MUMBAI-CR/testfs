@@ -28,20 +28,21 @@ class FileCompressionController extends BaseController {
         $file = $_FILES['file'];
         $maxSizeKB = 5120; // 5MB limit (5120 KB)
         
-        // Validate file type using FileCompressor's supported types
-        if (!FileCompressor::isTypeSupported($file['type'])) {
+        // Validate file type - images only
+        $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp', 'image/heif', 'image/heic', 'image/tiff'];
+        if (!in_array($file['type'], $allowedMimes)) {
             $this->json([
                 'success' => false,
-                'message' => 'File type not supported: ' . $file['type']
+                'message' => 'Only image files are allowed.'
             ], 400);
             return;
         }
         
-        // Validate file size (max 50MB before compression)
-        if ($file['size'] > 50 * 1024 * 1024) {
+        // Validate file size (max 25MB before compression)
+        if ($file['size'] > 25 * 1024 * 1024) {
             $this->json([
                 'success' => false,
-                'message' => 'File too large (max 50MB before compression)'
+                'message' => 'File size is too large. Please reduce the image size and try again.'
             ], 400);
             return;
         }

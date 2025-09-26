@@ -1083,11 +1083,11 @@ class CustomerController extends BaseController {
             'Getting Started' => [
                 [
                     'question' => 'How do I create my first support ticket?',
-                    'answer' => 'Navigate to "Create New Ticket" from your dashboard, select the appropriate category and subcategory, fill in all required details including location and wagon information, describe your issue clearly, and upload any supporting documents.'
+                    'answer' => 'Navigate to "Create New Ticket" from your dashboard, select the appropriate category and subcategory, fill in all required details including location and wagon information, describe your issue clearly, and upload any supporting images.'
                 ],
                 [
                     'question' => 'What information should I include in my ticket?',
-                    'answer' => 'Include detailed information about the issue location (shed/terminal), affected wagon numbers, specific problem description, time of occurrence, and any relevant documentation or photos as supporting documents.'
+                    'answer' => 'Include detailed information about the issue location (shed/terminal), affected wagon numbers, specific problem description, time of occurrence, and any relevant photos as supporting images.'
                 ],
                 [
                     'question' => 'How long does it take to get a response?',
@@ -1101,7 +1101,7 @@ class CustomerController extends BaseController {
                 ],
                 [
                     'question' => 'Can I add more information to my ticket after submission?',
-                    'answer' => 'Yes, you can respond to your ticket with additional information, clarifications, or new supporting documents. Railway staff may also request additional information.'
+                    'answer' => 'Yes, you can respond to your ticket with additional information, clarifications, or new supporting images. Railway staff may also request additional information.'
                 ],
                 [
                     'question' => 'What do the different ticket statuses mean?',
@@ -1124,8 +1124,8 @@ class CustomerController extends BaseController {
             ],
             'Technical Issues' => [
                 [
-                    'question' => 'What file types can I upload as supporting documents?',
-                    'answer' => 'Supported formats: Images (JPG, PNG, GIF), Documents (PDF, DOC, DOCX), Spreadsheets (XLS, XLSX). Maximum file size is 10MB per file, maximum 5 files per ticket.'
+                    'question' => 'What image types can I upload as supporting files?',
+                    'answer' => 'Supported formats: Images only (JPG, PNG, GIF, WebP, BMP, HEIF, HEIC, TIFF). Maximum file size is 5MB per file after compression, maximum 3 files per ticket.'
                 ],
                 [
                     'question' => 'The website is running slowly. What should I do?',
@@ -1208,11 +1208,11 @@ class CustomerController extends BaseController {
                 'description' => 'Learn how to monitor your ticket status and responses'
             ],
             [
-                'title' => 'Uploading Supporting Documents',
+                'title' => 'Uploading Supporting Images',
                 'duration' => '2:15',
                 'thumbnail' => '/assets/images/tutorials/upload-evidence-thumb.jpg',
                 'url' => '/help/videos/upload-evidence',
-                'description' => 'Best practices for uploading supporting documents and images'
+                'description' => 'Best practices for uploading supporting images and photos'
             ],
             [
                 'title' => 'Profile Management',
@@ -1371,7 +1371,7 @@ class CustomerController extends BaseController {
             $remarkText = $additionalInfo;
             if ($uploadResult && !empty($uploadResult['files'])) {
                 $fileNames = array_column($uploadResult['files'], 'original_name');
-                $remarkText .= " (with " . count($fileNames) . " supporting document(s): " . implode(', ', $fileNames) . ")";
+                $remarkText .= " (with " . count($fileNames) . " supporting image(s): " . implode(', ', $fileNames) . ")";
             }
             
             $this->db->query(
@@ -1446,7 +1446,7 @@ class CustomerController extends BaseController {
         if ($currentEvidenceCount >= 3) {
             return $this->json([
                 'success' => false,
-                'message' => 'Maximum 3 supporting documents allowed per ticket.'
+                'message' => 'Maximum 3 supporting images allowed per ticket.'
             ], 400);
         }
         
@@ -1489,7 +1489,7 @@ class CustomerController extends BaseController {
             
             return $this->json([
                 'success' => true,
-                'message' => 'Supporting document uploaded successfully.',
+                'message' => 'Supporting image uploaded successfully.',
                 'evidence_id' => $evidenceId,
                 'file_info' => [
                     'original_name' => $uploadResult['original_name'],
@@ -1503,7 +1503,7 @@ class CustomerController extends BaseController {
             
             return $this->json([
                 'success' => false,
-                'message' => 'Failed to upload supporting document. Please try again.'
+                'message' => 'Failed to upload supporting image. Please try again.'
             ], 500);
         }
     }
@@ -1523,7 +1523,7 @@ class CustomerController extends BaseController {
         if (!$evidence) {
             return $this->json([
                 'success' => false,
-                'message' => 'Supporting document not found.'
+                'message' => 'Supporting image not found.'
             ], 404);
         }
         
@@ -1549,7 +1549,7 @@ class CustomerController extends BaseController {
             
             return $this->json([
                 'success' => true,
-                'message' => 'Supporting document deleted successfully.'
+                'message' => 'Supporting image deleted successfully.'
             ]);
             
         } catch (Exception $e) {
@@ -1558,7 +1558,7 @@ class CustomerController extends BaseController {
             
             return $this->json([
                 'success' => false,
-                'message' => 'Failed to delete supporting document. Please try again.'
+                'message' => 'Failed to delete supporting image. Please try again.'
             ], 500);
         }
     }

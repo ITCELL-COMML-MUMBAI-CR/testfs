@@ -190,23 +190,23 @@ ob_start();
                             
                             <!-- File Upload Section -->
                             <div class="mb-4">
-                                <label class="form-label-apple">Supporting Documents</label>
+                                <label class="form-label-apple">Supporting Images</label>
                                 
                                 <!-- Hidden file input -->
-                                <input type="file" class="d-none" id="fileInput" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.pdf,.doc,.docx,.txt,.xls,.xlsx" multiple>
+                                <input type="file" class="d-none" id="fileInput" accept=".jpg,.jpeg,.png,.gif,.webp,.bmp,.heif,.heic,.tiff,.tif" multiple>
                                 
                                 <!-- Upload Zone -->
                                 <div class="upload-zone border-2 border-dashed rounded p-4 text-center" id="uploadZone">
                                     <div class="upload-placeholder">
                                         <i class="fas fa-cloud-upload-alt text-muted mb-3" style="font-size: 3rem;"></i>
-                                        <h5 class="mb-3">Upload Supporting Documents</h5>
+                                        <h5 class="mb-3">Upload Supporting Images</h5>
                                         <button type="button" class="btn btn-apple-primary btn-lg mb-3" onclick="selectFiles()">
                                             <i class="fas fa-folder-open me-2"></i>Browse Files
                                         </button>
                                         <p class="mb-2 text-muted">or drag and drop files here</p>
                                         <small class="text-muted">
                                             Maximum 3 files, Max 5MB each (auto-compressed)<br>
-                                            Supported: Images (JPG, PNG, GIF, WebP, BMP), Documents (PDF, DOC, DOCX, TXT, XLS, XLSX)
+                                            Supported: Images only (JPG, PNG, GIF, WebP, BMP, HEIF, HEIC, TIFF)
                                         </small>
                                     </div>
                                     
@@ -464,14 +464,38 @@ function setupFileUpload() {
     uploadZone.addEventListener('drop', function(e) {
         e.preventDefault();
         this.classList.remove('border-primary');
-        
+
         const files = Array.from(e.dataTransfer.files);
+
+        // Quick validation to immediately alert about non-image files
+        const nonImageFiles = files.filter(file => !file.type.startsWith('image/'));
+        if (nonImageFiles.length > 0) {
+            const fileNames = nonImageFiles.map(f => f.name).join(', ');
+            window.SAMPARK.ui.showError('Invalid File Type',
+                `Only image files are allowed. The following files are not supported: ${fileNames}`);
+            return;
+        }
+
         handleFileSelection(files);
     });
     
     // File input change handler
     fileInput.addEventListener('change', function() {
-        handleFileSelection(Array.from(this.files));
+        const files = Array.from(this.files);
+
+        // Quick validation to immediately alert about non-image files
+        const nonImageFiles = files.filter(file => !file.type.startsWith('image/'));
+        if (nonImageFiles.length > 0) {
+            const fileNames = nonImageFiles.map(f => f.name).join(', ');
+            window.SAMPARK.ui.showError('Invalid File Type',
+                `Only image files are allowed. The following files are not supported: ${fileNames}`);
+
+            // Clear the input
+            this.value = '';
+            return;
+        }
+
+        handleFileSelection(files);
     });
 }
 
@@ -510,23 +534,33 @@ function handleFileSelection(files) {
 }
 
 function validateFile(file) {
-    const maxSize = 50 * 1024 * 1024; // 50MB (will be compressed to 5MB)
+    const maxSize = 25 * 1024 * 1024; // 25MB
     const allowedTypes = [
         'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/bmp',
-        'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        'image/heif', 'image/heic', 'image/tiff', 'image/tif'
     ];
-    
+
     const errors = [];
-    
-    if (file.size > maxSize) {
-        errors.push('File too large (max 20MB before compression)');
-    }
-    
+
+    // Check if file type is an image
     if (!allowedTypes.includes(file.type)) {
-        errors.push('File type not supported');
+        if (file.type.startsWith('application/') && (file.type.includes('pdf') || file.type.includes('word') || file.type.includes('excel') || file.type.includes('spreadsheet'))) {
+            errors.push('Only image files are allowed. Documents (PDF, Word, Excel) are not supported.');
+        } else if (file.type === 'text/plain') {
+            errors.push('Only image files are allowed. Text files are not supported.');
+        } else {
+            errors.push('Only image files are allowed. Please select JPG, PNG, GIF, WebP, BMP, HEIF, HEIC, or TIFF files.');
+        }
+        return {
+            valid: false,
+            errors: errors
+        };
     }
-    
+
+    if (file.size > maxSize) {
+        errors.push('File size is too large. Please reduce the image size and try again.');
+    }
+
     return {
         valid: errors.length === 0,
         errors: errors

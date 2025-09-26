@@ -370,7 +370,7 @@ window.SAMPARK = {
     // File upload utilities
     fileUpload: {
         // Validate file
-        validateFile: function(file, maxSize = 2097152, allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx']) {
+        validateFile: function(file, maxSize = 26214400, allowedTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heif', 'heic', 'tiff', 'tif']) {
             const errors = [];
             
             if (file.size > maxSize) {
