@@ -46,7 +46,13 @@ ob_start();
                                     <input type="text" class="form-control form-control-apple" id="name" name="name" value="<?= htmlspecialchars($user_to_edit['name']) ?>" required>
                                     <div class="invalid-feedback">Please provide a name.</div>
                                 </div>
-                                
+
+                                <div class="col-md-6">
+                                    <label for="designation" class="form-label-apple">Designation</label>
+                                    <input type="text" class="form-control form-control-apple" id="designation" name="designation" value="<?= htmlspecialchars($user_to_edit['designation'] ?? '') ?>" placeholder="e.g., Chief Engineer, Assistant Manager">
+                                    <div class="invalid-feedback">Please provide a designation.</div>
+                                </div>
+
                                 <div class="col-md-6">
                                     <label for="email" class="form-label-apple">Email Address <span class="text-danger">*</span></label>
                                     <input type="email" class="form-control form-control-apple" id="email" name="email" value="<?= htmlspecialchars($user_to_edit['email']) ?>" required>
@@ -87,9 +93,9 @@ ob_start();
                                     </div>
                                     
                                     <div class="col-md-6">
-                                        <label for="designation" class="form-label-apple">Designation <span class="text-danger">*</span></label>
+                                        <label for="department" class="form-label-apple">Department <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control form-control-apple" id="department" name="department" value="<?= htmlspecialchars($user_to_edit['department'] ?? '') ?>">
-                                        <div class="invalid-feedback">Please provide a designation.</div>
+                                        <div class="invalid-feedback">Please provide a department.</div>
                                     </div>
                                     
                                     <div class="col-md-6">

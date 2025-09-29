@@ -50,12 +50,17 @@ $page_title = 'Profile - SAMPARK';
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label-apple">Full Name *</label>
-                                <input type="text" class="form-control-apple" name="name" 
+                                <input type="text" class="form-control-apple" name="name"
                                        value="<?= htmlspecialchars($user_details['name'] ?? '') ?>" readonly>
                             </div>
                             <div class="col-md-6">
+                                <label class="form-label-apple">Designation</label>
+                                <input type="text" class="form-control-apple" name="designation"
+                                       value="<?= htmlspecialchars($user_details['designation'] ?? '') ?>" readonly>
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label-apple">Employee ID</label>
-                                <input type="text" class="form-control-apple" name="employee_id" 
+                                <input type="text" class="form-control-apple" name="employee_id"
                                        value="<?= htmlspecialchars($user_details['employee_id'] ?? '') ?>" readonly>
                             </div>
                             <div class="col-md-6">

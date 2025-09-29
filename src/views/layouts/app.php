@@ -135,9 +135,10 @@
                         
                     <?php else: ?>
                         <!-- Authenticated Navigation -->
-                        <?php 
+                        <?php
                         $userRole = $user_role ?? '';
                         $userName = $user_name ?? 'User';
+                        $userDesignation = $_SESSION['user_designation'] ?? '';
                         ?>
                         
                         <!-- Role-specific navigation -->
@@ -295,6 +296,9 @@
                             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-apple">
                                 <li class="dropdown-header">
                                     <div class="fw-semibold"><?= htmlspecialchars($userName) ?></div>
+                                    <?php if (!empty($userDesignation) && $userRole !== 'customer'): ?>
+                                        <small class="text-muted d-block"><?= htmlspecialchars($userDesignation) ?></small>
+                                    <?php endif; ?>
                                     <small class="text-muted"><?= ucfirst($userRole) ?></small>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
@@ -541,7 +545,7 @@
     <script>
     // Real-time approval count update for admin users
     function updateApprovalCount() {
-        fetch('/api/admin/approval-stats')
+        fetch('<?= Config::getAppUrl() ?>/api/admin/approval-stats')
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.data) {

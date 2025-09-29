@@ -41,7 +41,13 @@ ob_start();
                                     <input type="text" class="form-control form-control-apple" id="name" name="name" required>
                                     <div class="invalid-feedback">Please provide a name.</div>
                                 </div>
-                                
+
+                                <div class="col-md-6">
+                                    <label for="designation" class="form-label-apple">Designation</label>
+                                    <input type="text" class="form-control form-control-apple" id="designation" name="designation" placeholder="e.g., Chief Engineer, Assistant Manager">
+                                    <div class="invalid-feedback">Please provide a designation.</div>
+                                </div>
+
                                 <div class="col-md-6">
                                     <label for="email" class="form-label-apple">Email Address <span class="text-danger">*</span></label>
                                     <input type="email" class="form-control form-control-apple" id="email" name="email" required>
@@ -436,16 +442,12 @@ function toggleRoleFields() {
     // Show appropriate fields based on role
     if (role === 'controller' || role === 'controller_nodal') {
         controllerFields.style.display = 'block';
-        
+
         // Make controller-specific fields required
         document.getElementById('division').required = true;
-        document.getElementById('designation').required = true;
-        document.getElementById('employee_id').required = true;
     } else {
         // Remove required attribute from controller-specific fields
         document.getElementById('division').required = false;
-        document.getElementById('designation').required = false;
-        document.getElementById('employee_id').required = false;
     }
 }
 </script>

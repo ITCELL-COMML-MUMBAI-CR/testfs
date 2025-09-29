@@ -123,6 +123,7 @@ class Session {
             $_SESSION['user_department'] = $userData['department'] ?? '';
             $_SESSION['user_division'] = $userData['division'] ?? '';
             $_SESSION['user_zone'] = $userData['zone'] ?? '';
+            $_SESSION['user_designation'] = $userData['designation'] ?? '';
             $_SESSION['login_id'] = $userData['login_id'] ?? '';
         } else {
             $_SESSION['customer_id'] = $userData['customer_id'] ?? '';

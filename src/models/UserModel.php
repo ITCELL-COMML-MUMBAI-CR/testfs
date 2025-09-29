@@ -13,7 +13,7 @@ class UserModel extends BaseModel {
     
     protected $fillable = [
         'login_id', 'password', 'role', 'department', 'division', 'zone',
-        'name', 'email', 'mobile', 'status', 'created_by'
+        'name', 'designation', 'email', 'mobile', 'status', 'created_by'
     ];
     
     /**
@@ -163,7 +163,7 @@ class UserModel extends BaseModel {
      * Get distinct values for a column
      */
     public function getDistinct($column) {
-        $allowedColumns = ['role', 'division', 'zone', 'department', 'status'];
+        $allowedColumns = ['role', 'division', 'zone', 'department', 'designation', 'status'];
 
         if (!in_array($column, $allowedColumns)) {
             throw new InvalidArgumentException("Column '$column' is not allowed for distinct queries");

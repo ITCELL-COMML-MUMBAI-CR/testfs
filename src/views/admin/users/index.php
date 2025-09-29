@@ -108,8 +108,11 @@ ob_start();
                                                 </div>
                                                 <div>
                                                     <div class="fw-medium"><?= htmlspecialchars($user['name']) ?></div>
-                                                    <?php if ($user['role'] === 'controller'): ?>
-                                                        <small class="text-muted"><?= htmlspecialchars($user['division'] ?? '') ?></small>
+                                                    <?php if (!empty($user['designation'])): ?>
+                                                        <small class="text-muted d-block"><?= htmlspecialchars($user['designation']) ?></small>
+                                                    <?php endif; ?>
+                                                    <?php if ($user['role'] === 'controller' && !empty($user['division'])): ?>
+                                                        <small class="text-muted"><?= htmlspecialchars($user['division']) ?></small>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>

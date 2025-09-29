@@ -197,7 +197,8 @@ class AuthController extends BaseController {
             'department' => $user['department'], // This is the department code
             'department_name' => $user['department_name'], // This is the department name for display
             'division' => $user['division'],
-            'zone' => $user['zone']
+            'zone' => $user['zone'],
+            'designation' => $user['designation']
         ]);
 
         // Ensure session activity is properly set after login
