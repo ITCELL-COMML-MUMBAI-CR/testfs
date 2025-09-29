@@ -131,6 +131,16 @@ $router->post('/admin/tickets/data', 'Admin@getTicketsData', ['auth', 'role:admi
 $router->post('/admin/tickets/search/data', 'Admin@getSearchTicketsData', ['auth', 'role:admin,superadmin']);
 $router->post('/admin/tickets/{id}/remarks', 'Admin@addAdminRemarks', ['auth', 'role:admin,superadmin']);
 
+// Admin approval workflow routes
+$router->get('/admin/approvals/pending', 'Admin@pendingApprovals', ['auth', 'role:admin,superadmin']);
+$router->get('/admin/approvals/review/{id}', 'Admin@reviewApproval', ['auth', 'role:admin,superadmin']);
+$router->post('/admin/approvals/process', 'Admin@processApproval', ['auth', 'role:admin,superadmin']);
+
+// Admin remarks management routes
+$router->get('/admin/remarks', 'Admin@adminRemarks', ['auth', 'role:admin,superadmin']);
+$router->post('/admin/remarks/add', 'Admin@addAdminRemarks', ['auth', 'role:admin,superadmin']);
+$router->get('/admin/reports/remarks', 'Admin@adminRemarksReport', ['auth', 'role:admin,superadmin']);
+
 // API Routes
 $router->get('/api/sheds/search', 'Api@searchSheds');
 $router->get('/api/categories/{type}/subtypes', 'Api@getSubtypes');
@@ -143,6 +153,7 @@ $router->get('/api/departments', 'Api@getDepartments', ['auth']);
 $router->get('/api/tickets/stats', 'Api@getTicketStats', ['auth']);
 $router->get('/api/customer/stats', 'Api@getCustomerStats', ['auth']);
 $router->get('/api/customer/export-data', 'Api@exportCustomerData', ['auth']);
+$router->get('/api/admin/approval-stats', 'Admin@getApprovalStats', ['auth', 'role:admin,superadmin']);
 $router->post('/api/tickets/{id}/upload', 'Api@uploadEvidence', ['auth']);
 $router->get('/api/tickets/{id}/evidence/{file}', 'Api@getEvidence', ['auth']);
 $router->get('/api/tickets/{id}/files', 'Api@getTicketFiles', ['auth']);

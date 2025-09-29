@@ -461,7 +461,10 @@ class ControllerController extends BaseController {
                    !$isAssignedToOtherDept &&
                    !$isAwaitingCustomerInfo;
         
-        $canApprove = $user['role'] === 'controller_nodal' && 
+        // Controllers can only approve tickets in old workflow (awaiting_approval status)
+        // Admin approval workflow tickets (awaiting_dept_admin_approval, awaiting_cml_admin_approval)
+        // should be handled by admin interfaces only
+        $canApprove = $user['role'] === 'controller_nodal' &&
                      $ticket['status'] === 'awaiting_approval' &&
                      !$isAssignedToOtherDept;
         
@@ -781,34 +784,63 @@ class ControllerController extends BaseController {
                 // Interim replies don't change status - just acknowledge receipt
                 $newStatus = $ticket['status']; // Keep current status
             } else {
-                // All tickets need controller_nodal approval - no exceptions
-                $newStatus = 'awaiting_approval';
+                // Check system settings for admin approval workflow
+                $requireDeptAdminApproval = $this->db->fetch(
+                    "SELECT setting_value FROM system_settings WHERE setting_key = 'require_dept_admin_approval'"
+                );
+
+                if ($requireDeptAdminApproval && $requireDeptAdminApproval['setting_value'] == '1') {
+                    // Use new admin approval workflow
+                    $newStatus = 'awaiting_dept_admin_approval';
+                } else {
+                    // Fallback to old controller_nodal approval
+                    $newStatus = 'awaiting_approval';
+                }
             }
             
             // Update ticket only if it's a final reply (not interim)
             if (!$isInterimReply && !empty($_POST['action_taken'])) {
-                // Check if this reply is closing the ticket (when status moves to awaiting_approval)
-                $isClosingTicket = ($newStatus === 'awaiting_approval');
-                
+                // Check if this reply is closing the ticket (for either approval workflow)
+                $isClosingTicket = ($newStatus === 'awaiting_approval' || $newStatus === 'awaiting_dept_admin_approval');
+
                 if ($isClosingTicket) {
                     // When closing ticket: set department, reset forwarded_flag, set closed_at
-                    // Set assigned_to_department to controller_nodal for approval workflow
-                    $sql = "UPDATE complaints SET
-                            action_taken = ?,
-                            status = ?,
-                            department = ?,
-                            assigned_to_department = 'CML',
-                            forwarded_flag = 0,
-                            closed_at = NOW(),
-                            updated_at = NOW()
-                            WHERE complaint_id = ?";
+                    if ($newStatus === 'awaiting_dept_admin_approval') {
+                        // New admin approval workflow - keep in same department for dept admin approval
+                        $sql = "UPDATE complaints SET
+                                action_taken = ?,
+                                status = ?,
+                                department = ?,
+                                forwarded_flag = 0,
+                                closed_at = NOW(),
+                                updated_at = NOW()
+                                WHERE complaint_id = ?";
 
-                    $this->db->query($sql, [
-                        trim($_POST['action_taken']),
-                        $newStatus,
-                        $user['department'],
-                        $ticketId
-                    ]);
+                        $this->db->query($sql, [
+                            trim($_POST['action_taken']),
+                            $newStatus,
+                            $user['department'],
+                            $ticketId
+                        ]);
+                    } else {
+                        // Old controller_nodal approval workflow
+                        $sql = "UPDATE complaints SET
+                                action_taken = ?,
+                                status = ?,
+                                department = ?,
+                                assigned_to_department = 'CML',
+                                forwarded_flag = 0,
+                                closed_at = NOW(),
+                                updated_at = NOW()
+                                WHERE complaint_id = ?";
+
+                        $this->db->query($sql, [
+                            trim($_POST['action_taken']),
+                            $newStatus,
+                            $user['department'],
+                            $ticketId
+                        ]);
+                    }
                 } else {
                     // Regular reply update
                     $sql = "UPDATE complaints SET 
@@ -848,9 +880,10 @@ class ControllerController extends BaseController {
             
             $this->db->commit();
             
-            $message = $isInterimReply ? 
-                'Interim reply sent to customer - ticket remains in current status' : 
-                ($newStatus === 'awaiting_approval' ? 'Reply submitted for approval' : 'Reply sent to customer successfully');
+            $message = $isInterimReply ?
+                'Interim reply sent to customer - ticket remains in current status' :
+                ($newStatus === 'awaiting_dept_admin_approval' ? 'Reply submitted for department admin approval' :
+                ($newStatus === 'awaiting_approval' ? 'Reply submitted for approval' : 'Reply sent to customer successfully'));
             
             $this->json([
                 'success' => true,
@@ -1919,6 +1952,8 @@ class ControllerController extends BaseController {
                     SUM(CASE WHEN c.status = 'pending' THEN 1 ELSE 0 END) as pending,
                     SUM(CASE WHEN c.status = 'awaiting_info' THEN 1 ELSE 0 END) as awaiting_info,
                     SUM(CASE WHEN c.status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
+                    SUM(CASE WHEN c.status = 'awaiting_dept_admin_approval' THEN 1 ELSE 0 END) as awaiting_dept_admin_approval,
+                    SUM(CASE WHEN c.status = 'awaiting_cml_admin_approval' THEN 1 ELSE 0 END) as awaiting_cml_admin_approval,
                     SUM(CASE WHEN c.status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
                     SUM(CASE WHEN c.status = 'closed' THEN 1 ELSE 0 END) as closed,
                     SUM(CASE WHEN c.priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority_count
@@ -1934,7 +1969,7 @@ class ControllerController extends BaseController {
                             FROM complaints c
                             WHERE c.division = ?
                             AND c.forwarded_flag = 1
-                            AND c.status IN ('pending', 'awaiting_info', 'awaiting_approval')";
+                            AND c.status IN ('pending', 'awaiting_info', 'awaiting_approval', 'awaiting_dept_admin_approval', 'awaiting_cml_admin_approval')";
 
             $forwardedResult = $this->db->fetch($forwardedSql, [$user['division']]);
             $stats['forwarded_complaints'] = $forwardedResult['forwarded_complaints'] ?? 0;
@@ -2454,6 +2489,8 @@ class ControllerController extends BaseController {
                        SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
                        SUM(CASE WHEN status = 'awaiting_info' THEN 1 ELSE 0 END) as awaiting_info,
                        SUM(CASE WHEN status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
+                       SUM(CASE WHEN status = 'awaiting_dept_admin_approval' THEN 1 ELSE 0 END) as awaiting_dept_admin_approval,
+                       SUM(CASE WHEN status = 'awaiting_cml_admin_approval' THEN 1 ELSE 0 END) as awaiting_cml_admin_approval,
                        SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed
                     FROM complaints
                     WHERE division = ?
@@ -2466,6 +2503,8 @@ class ControllerController extends BaseController {
                     'awaiting_feedback' => $row['awaiting_feedback'],
                     'awaiting_info' => $row['awaiting_info'],
                     'awaiting_approval' => $row['awaiting_approval'],
+                    'awaiting_dept_admin_approval' => $row['awaiting_dept_admin_approval'],
+                    'awaiting_cml_admin_approval' => $row['awaiting_cml_admin_approval'],
                     'closed' => $row['closed'],
                     'total' => $row['total']
                 ];
@@ -2478,6 +2517,8 @@ class ControllerController extends BaseController {
                        SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
                        SUM(CASE WHEN status = 'awaiting_info' THEN 1 ELSE 0 END) as awaiting_info,
                        SUM(CASE WHEN status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
+                       SUM(CASE WHEN status = 'awaiting_dept_admin_approval' THEN 1 ELSE 0 END) as awaiting_dept_admin_approval,
+                       SUM(CASE WHEN status = 'awaiting_cml_admin_approval' THEN 1 ELSE 0 END) as awaiting_cml_admin_approval,
                        SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed
                     FROM complaints
                     WHERE division = ? AND assigned_to_department = ?";
@@ -2488,6 +2529,8 @@ class ControllerController extends BaseController {
                 'awaiting_feedback' => $result['awaiting_feedback'] ?? 0,
                 'awaiting_info' => $result['awaiting_info'] ?? 0,
                 'awaiting_approval' => $result['awaiting_approval'] ?? 0,
+                'awaiting_dept_admin_approval' => $result['awaiting_dept_admin_approval'] ?? 0,
+                'awaiting_cml_admin_approval' => $result['awaiting_cml_admin_approval'] ?? 0,
                 'closed' => $result['closed'] ?? 0,
                 'total' => $result['total'] ?? 0
             ];
@@ -2508,6 +2551,8 @@ class ControllerController extends BaseController {
                    SUM(CASE WHEN status = 'awaiting_feedback' THEN 1 ELSE 0 END) as awaiting_feedback,
                    SUM(CASE WHEN status = 'awaiting_info' THEN 1 ELSE 0 END) as awaiting_info,
                    SUM(CASE WHEN status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval,
+                   SUM(CASE WHEN status = 'awaiting_dept_admin_approval' THEN 1 ELSE 0 END) as awaiting_dept_admin_approval,
+                   SUM(CASE WHEN status = 'awaiting_cml_admin_approval' THEN 1 ELSE 0 END) as awaiting_cml_admin_approval,
                    SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as closed
                 FROM complaints
                 WHERE division = ?
@@ -2522,6 +2567,8 @@ class ControllerController extends BaseController {
                 'awaiting_feedback' => $row['awaiting_feedback'],
                 'awaiting_info' => $row['awaiting_info'],
                 'awaiting_approval' => $row['awaiting_approval'],
+                'awaiting_dept_admin_approval' => $row['awaiting_dept_admin_approval'],
+                'awaiting_cml_admin_approval' => $row['awaiting_cml_admin_approval'],
                 'closed' => $row['closed'],
                 'total' => $row['total']
             ];
@@ -3195,7 +3242,9 @@ class ControllerController extends BaseController {
                         SUM(CASE WHEN c.status = 'pending' THEN 1 ELSE 0 END) as pending_count,
                         SUM(CASE WHEN c.priority IN ('high', 'critical') THEN 1 ELSE 0 END) as high_priority_count,
                         SUM(CASE WHEN c.forwarded_flag = 1 THEN 1 ELSE 0 END) as forwarded_count,
-                        SUM(CASE WHEN c.status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval_count
+                        SUM(CASE WHEN c.status = 'awaiting_approval' THEN 1 ELSE 0 END) as awaiting_approval_count,
+                        SUM(CASE WHEN c.status = 'awaiting_dept_admin_approval' THEN 1 ELSE 0 END) as awaiting_dept_admin_approval_count,
+                        SUM(CASE WHEN c.status = 'awaiting_cml_admin_approval' THEN 1 ELSE 0 END) as awaiting_cml_admin_approval_count
                      FROM complaints c WHERE {$whereClause}";
 
         $stats = $this->db->fetch($statsSql, $statsParams);
@@ -3211,7 +3260,9 @@ class ControllerController extends BaseController {
             'pending' => $stats['pending_count'] ?? 0,
             'high_priority' => $stats['high_priority_count'] ?? 0,
             'forwarded' => $stats['forwarded_count'] ?? 0,
-            'awaiting_approval' => $stats['awaiting_approval_count'] ?? 0
+            'awaiting_approval' => $stats['awaiting_approval_count'] ?? 0,
+            'awaiting_dept_admin_approval' => $stats['awaiting_dept_admin_approval_count'] ?? 0,
+            'awaiting_cml_admin_approval' => $stats['awaiting_cml_admin_approval_count'] ?? 0
         ];
     }
 

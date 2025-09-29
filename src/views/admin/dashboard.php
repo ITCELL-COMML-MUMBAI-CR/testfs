@@ -57,6 +57,65 @@ $customer_registration_stats = $customer_registration_stats ?? [];
             </div>
         </div>
 
+        <!-- Admin Approval Notifications -->
+        <?php if (isset($admin_approval_counts) && ($admin_approval_counts['is_dept_admin'] || $admin_approval_counts['is_cml_admin'])): ?>
+            <?php if (($admin_approval_counts['is_dept_admin'] && $admin_approval_counts['dept_admin_pending'] > 0) ||
+                      ($admin_approval_counts['is_cml_admin'] && $admin_approval_counts['cml_admin_pending'] > 0)): ?>
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <?php if ($admin_approval_counts['is_dept_admin'] && $admin_approval_counts['dept_admin_pending'] > 0): ?>
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h5 class="alert-heading mb-1">
+                                            <i class="fas fa-user-check me-2"></i>Department Admin Approval Required
+                                        </h5>
+                                        <p class="mb-2">
+                                            You have <strong><?= $admin_approval_counts['dept_admin_pending'] ?></strong>
+                                            ticket<?= $admin_approval_counts['dept_admin_pending'] > 1 ? 's' : '' ?> from
+                                            <strong><?= htmlspecialchars($admin_approval_counts['user_department']) ?></strong> department
+                                            awaiting your approval.
+                                        </p>
+                                        <a href="<?= Config::getAppUrl() ?>/admin/approvals/pending" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-tasks me-2"></i>Review Pending Approvals
+                                        </a>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if ($admin_approval_counts['is_cml_admin'] && $admin_approval_counts['cml_admin_pending'] > 0): ?>
+                            <div class="alert alert-primary alert-dismissible fade show" role="alert">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-user-shield fa-2x text-primary"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h5 class="alert-heading mb-1">
+                                            <i class="fas fa-shield-alt me-2"></i>CML Admin Approval Required
+                                        </h5>
+                                        <p class="mb-2">
+                                            You have <strong><?= $admin_approval_counts['cml_admin_pending'] ?></strong>
+                                            ticket<?= $admin_approval_counts['cml_admin_pending'] > 1 ? 's' : '' ?>
+                                            that have been approved by department admins and now require your final approval.
+                                        </p>
+                                        <a href="<?= Config::getAppUrl() ?>/admin/approvals/pending" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-tasks me-2"></i>Review Pending Approvals
+                                        </a>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+
         <!-- 1) Overview of Count of Complaints -->
         <div class="row g-4 mb-5">
             <div class="col-12">

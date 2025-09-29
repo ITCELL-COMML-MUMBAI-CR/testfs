@@ -72,6 +72,9 @@ class AdminController extends BaseController
         $terminal_stats = $this->getTerminalStats();
         $customer_registration_stats = $this->getCustomerRegistrationStats();
 
+        // Get admin approval counts
+        $admin_approval_counts = $this->getAdminApprovalCounts($user);
+
         $data = [
             'page_title' => 'Admin Dashboard - SAMPARK',
             'user' => $user,
@@ -80,6 +83,7 @@ class AdminController extends BaseController
             'division_stats' => $division_stats,
             'terminal_stats' => $terminal_stats,
             'customer_registration_stats' => $customer_registration_stats,
+            'admin_approval_counts' => $admin_approval_counts,
             'dashboard_data' => [
                 'system_stats' => $systemStats,
                 'recent_registrations' => $this->getRecentRegistrations(),
@@ -2590,82 +2594,6 @@ class AdminController extends BaseController
         }
     }
 
-    /**
-     * Add admin remarks to a ticket
-     */
-    public function addAdminRemarks($complaintId)
-    {
-        $this->validateCSRF();
-        $user = $this->getCurrentUser();
-
-        $validator = new Validator();
-        $isValid = $validator->validate($_POST, [
-            'remarks' => 'required|min:10|max:1000'
-        ]);
-
-        if (!$isValid) {
-            $this->json([
-                'success' => false,
-                'errors' => $validator->getErrors()
-            ], 400);
-            return;
-        }
-
-        try {
-            // Check if ticket exists
-            $ticket = $this->db->fetch(
-                "SELECT * FROM complaints WHERE complaint_id = ?",
-                [$complaintId]
-            );
-
-            if (!$ticket) {
-                $this->json(['success' => false, 'message' => 'Ticket not found'], 404);
-                return;
-            }
-
-            // Check if ticket is closed
-            if ($ticket['status'] === 'closed') {
-                $this->json(['success' => false, 'message' => 'Cannot add remarks to closed tickets'], 400);
-                return;
-            }
-
-            $this->db->beginTransaction();
-
-            // Add admin remarks as transaction
-            $sql = "INSERT INTO transactions (
-                complaint_id, remarks, remarks_type, transaction_type,
-                created_by_id, created_by_type, created_by_role, created_at
-            ) VALUES (?, ?, 'admin_remarks', 'admin_remarks', ?, 'user', ?, NOW())";
-
-            $this->db->query($sql, [
-                $complaintId,
-                trim($_POST['remarks']),
-                $user['id'],
-                $user['role']
-            ]);
-
-            $this->db->commit();
-
-            // Log activity
-            $this->logActivity('admin_remarks_added', [
-                'complaint_id' => $complaintId,
-                'remarks_preview' => substr($_POST['remarks'], 0, 100)
-            ]);
-
-            $this->json([
-                'success' => true,
-                'message' => 'Admin remarks added successfully'
-            ]);
-        } catch (Exception $e) {
-            $this->db->rollback();
-            Config::logError("Admin remarks error: " . $e->getMessage());
-
-            $this->json([
-                'success' => false,
-                'message' => 'Failed to add remarks. Please try again.'
-            ], 500);
-        }
-    }
 
     /**
      * Toggle content status (active/inactive)
@@ -2933,6 +2861,51 @@ class AdminController extends BaseController
         }
 
         return $alerts;
+    }
+
+    /**
+     * Get admin approval counts based on user role and department
+     */
+    private function getAdminApprovalCounts($user)
+    {
+        $counts = [
+            'dept_admin_pending' => 0,
+            'cml_admin_pending' => 0,
+            'user_department' => $user['department'] ?? '',
+            'is_dept_admin' => false,
+            'is_cml_admin' => false
+        ];
+
+        // Determine admin type based on department
+        $isDeptAdmin = ($user['department'] !== 'CML');
+        $isCmlAdmin = ($user['department'] === 'CML');
+
+        $counts['is_dept_admin'] = $isDeptAdmin;
+        $counts['is_cml_admin'] = $isCmlAdmin;
+
+        try {
+            if ($isDeptAdmin) {
+                // Department admin sees tickets from their department awaiting dept admin approval
+                $sql = "SELECT COUNT(*) as count FROM complaints
+                        WHERE status = 'awaiting_dept_admin_approval'
+                        AND department = ?";
+                $result = $this->db->fetch($sql, [$user['department']]);
+                $counts['dept_admin_pending'] = $result['count'] ?? 0;
+            }
+
+            if ($isCmlAdmin) {
+                // CML admin sees all tickets awaiting CML admin approval
+                $sql = "SELECT COUNT(*) as count FROM complaints
+                        WHERE status = 'awaiting_cml_admin_approval'";
+                $result = $this->db->fetch($sql);
+                $counts['cml_admin_pending'] = $result['count'] ?? 0;
+            }
+
+        } catch (\Exception $e) {
+            error_log("Error in getAdminApprovalCounts: " . $e->getMessage());
+        }
+
+        return $counts;
     }
 
     private function getDivisions()
@@ -3639,10 +3612,13 @@ class AdminController extends BaseController
         }
 
         // Get evidence files
-        $evidence = $this->db->fetchAll(
+        $evidenceRaw = $this->db->fetchAll(
             "SELECT * FROM evidence WHERE complaint_id = ? ORDER BY uploaded_at ASC",
             [$complaintId]
         );
+
+        // Transform evidence data for display
+        $evidence = $this->transformEvidenceForDisplay($evidenceRaw);
 
         // Get transaction history
         $allTransactions = $this->db->fetchAll(
@@ -3689,6 +3665,35 @@ class AdminController extends BaseController
             [$complaintId]
         );
 
+        // Determine the back URL based on referrer
+        $backUrl = Config::getAppUrl() . '/admin/tickets/search'; // Default fallback
+        $backText = 'Back to Search';
+
+        if (isset($_SERVER['HTTP_REFERER'])) {
+            $referrer = $_SERVER['HTTP_REFERER'];
+            $appUrl = Config::getAppUrl();
+
+            // Check if referrer is from our app
+            if (strpos($referrer, $appUrl) === 0) {
+                $referrerPath = str_replace($appUrl, '', $referrer);
+
+                // Determine appropriate back URL and text based on referrer
+                if (strpos($referrerPath, '/admin/tickets') === 0) {
+                    $backUrl = $referrer;
+                    $backText = 'Back to Tickets';
+                } elseif (strpos($referrerPath, '/admin/approvals') === 0) {
+                    $backUrl = $referrer;
+                    $backText = 'Back to Approvals';
+                } elseif (strpos($referrerPath, '/admin/dashboard') === 0) {
+                    $backUrl = $referrer;
+                    $backText = 'Back to Dashboard';
+                } elseif (strpos($referrerPath, '/admin') === 0) {
+                    $backUrl = $referrer;
+                    $backText = 'Back';
+                }
+            }
+        }
+
         $data = [
             'page_title' => 'View Ticket #' . $complaintId . ' - Admin',
             'user' => $user,
@@ -3700,6 +3705,8 @@ class AdminController extends BaseController
             'is_viewing_other_dept' => false,
             'is_forwarded_ticket' => false,
             'is_awaiting_customer_info' => $ticket['status'] === 'awaiting_info',
+            'back_url' => $backUrl,
+            'back_text' => $backText,
             'permissions' => [
                 'can_reply' => false,
                 'can_forward' => false,
@@ -4597,5 +4604,531 @@ class AdminController extends BaseController
             'user_name' => $user['name'] ?? 'Admin',
             'user_role' => $user['role']
         ]);
+    }
+
+    // ==================== ADMIN APPROVAL METHODS ====================
+
+    /**
+     * Show pending approvals dashboard
+     */
+    public function pendingApprovals()
+    {
+        $user = $this->getCurrentUser();
+
+        // Only allow admin/superadmin
+        if (!in_array($user['role'], ['admin', 'superadmin'])) {
+            $this->redirect(Config::getAppUrl() . '/');
+            return;
+        }
+
+        // Determine admin type based on department
+        $isDeptAdmin = ($user['department'] !== 'CML');
+        $isCmlAdmin = ($user['department'] === 'CML');
+
+        // Filter tickets based on admin type
+        if ($isDeptAdmin) {
+            $statusFilter = 'awaiting_dept_admin_approval';
+            $pageTitle = 'Pending Department Admin Approvals';
+        } else {
+            $statusFilter = 'awaiting_cml_admin_approval';
+            $pageTitle = 'Pending CML Admin Approvals';
+        }
+
+        // Pagination
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 20;
+        $offset = ($page - 1) * $limit;
+
+        // Build query based on admin permissions
+        $whereClause = "c.status = ?";
+        $params = [$statusFilter];
+
+        if ($isDeptAdmin) {
+            // Department admin can only see tickets from their department
+            $whereClause .= " AND c.department = ?";
+            $params[] = $user['department'];
+        } else {
+            // CML admin can only see tickets from their division and zone
+            $whereClause .= " AND c.division = ? AND c.zone = ?";
+            $params[] = $user['division'];
+            $params[] = $user['zone'];
+        }
+
+        if (isset($_GET['division']) && !empty($_GET['division'])) {
+            $whereClause .= " AND c.division = ?";
+            $params[] = $_GET['division'];
+        }
+
+        if (isset($_GET['priority']) && !empty($_GET['priority'])) {
+            $whereClause .= " AND c.priority = ?";
+            $params[] = $_GET['priority'];
+        }
+
+        // Get pending tickets
+        $sql = "SELECT c.*,
+                       cat.category, cat.type, cat.subtype,
+                       cust.name as customer_name, cust.email as customer_email,
+                       shed.name as shed_name,
+                       u_dept.name as dept_admin_name,
+                       u_cml.name as cml_admin_name,
+                       TIMESTAMPDIFF(HOUR, c.updated_at, NOW()) as hours_pending
+                FROM complaints c
+                LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
+                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                LEFT JOIN shed ON c.shed_id = shed.shed_id
+                LEFT JOIN users u_dept ON c.dept_admin_approved_by = u_dept.id
+                LEFT JOIN users u_cml ON c.cml_admin_approved_by = u_cml.id
+                WHERE {$whereClause}
+                ORDER BY c.priority = 'critical' DESC,
+                         c.priority = 'high' DESC,
+                         c.priority = 'medium' DESC,
+                         c.created_at ASC
+                LIMIT ? OFFSET ?";
+
+        $params[] = $limit;
+        $params[] = $offset;
+
+        $tickets = $this->db->fetchAll($sql, $params);
+
+        // Get total count for pagination
+        $countSql = "SELECT COUNT(*) as total FROM complaints c WHERE {$whereClause}";
+        $countParams = array_slice($params, 0, -2); // Remove limit and offset
+        $totalResult = $this->db->fetch($countSql, $countParams);
+        $totalCount = $totalResult['total'] ?? 0;
+        $totalPages = ceil($totalCount / $limit);
+
+        // Get filter options
+        $divisions = $this->db->fetchAll("SELECT DISTINCT division FROM complaints WHERE status = ? ORDER BY division", [$statusFilter]);
+
+        // Pass all necessary data to the view
+        $this->view('admin/approvals/pending', [
+            'page_title' => $pageTitle . ' - SAMPARK Admin',
+            'user' => $user,
+            'user_name' => $user['name'] ?? 'Admin',
+            'user_role' => $user['role'],
+            'current_user' => $user,
+            'is_dept_admin' => $isDeptAdmin,
+            'is_cml_admin' => $isCmlAdmin,
+            'status_filter' => $statusFilter,
+            'page_title_display' => $pageTitle,
+            'tickets' => $tickets,
+            'total_count' => $totalCount,
+            'total_pages' => $totalPages,
+            'current_page' => $page,
+            'limit' => $limit,
+            'offset' => $offset,
+            'divisions' => $divisions
+        ]);
+    }
+
+    /**
+     * Review specific ticket for approval
+     */
+    public function reviewApproval($complaintId = null)
+    {
+        $user = $this->getCurrentUser();
+
+        // Only allow admin/superadmin
+        if (!in_array($user['role'], ['admin', 'superadmin'])) {
+            $this->redirect(Config::getAppUrl() . '/');
+            return;
+        }
+
+        if (!$complaintId) {
+            $this->redirect('/admin/approvals/pending');
+            return;
+        }
+
+        // Get ticket details with full context
+        $sql = "SELECT c.*,
+                       cat.category, cat.type, cat.subtype,
+                       cust.customer_id, cust.name as customer_name, cust.email as customer_email,
+                       cust.mobile as customer_mobile, cust.company_name,
+                       shed.name as shed_name,
+                       u_dept.name as dept_admin_name, u_dept.email as dept_admin_email,
+                       u_cml.name as cml_admin_name, u_cml.email as cml_admin_email
+                FROM complaints c
+                LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
+                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                LEFT JOIN shed ON c.shed_id = shed.shed_id
+                LEFT JOIN users u_dept ON c.dept_admin_approved_by = u_dept.id
+                LEFT JOIN users u_cml ON c.cml_admin_approved_by = u_cml.id
+                WHERE c.complaint_id = ?";
+
+        $ticket = $this->db->fetch($sql, [$complaintId]);
+
+        if (!$ticket) {
+            $this->redirect('/admin/approvals/pending');
+            return;
+        }
+
+        // Check if current user can approve this ticket
+        $canApprove = false;
+        $approvalType = '';
+        $pageTitle = '';
+
+        if ($ticket['status'] === 'awaiting_dept_admin_approval' && $user['department'] === $ticket['department']) {
+            $canApprove = true;
+            $approvalType = 'dept_admin';
+            $pageTitle = 'Department Admin Review';
+        } elseif ($ticket['status'] === 'awaiting_cml_admin_approval' && $user['department'] === 'CML') {
+            $canApprove = true;
+            $approvalType = 'cml_admin';
+            $pageTitle = 'CML Admin Review';
+        }
+
+        if (!$canApprove) {
+            $this->redirect('/admin/approvals/pending');
+            return;
+        }
+
+        // Get transaction history
+        $transactionsSql = "SELECT t.*, u.name as user_name, u.role as user_role
+                           FROM transactions t
+                           LEFT JOIN users u ON t.created_by_id = u.id
+                           WHERE t.complaint_id = ?
+                           ORDER BY t.created_at DESC";
+        $transactions = $this->db->fetchAll($transactionsSql, [$complaintId]);
+
+        // Get approval workflow log
+        $workflowSql = "SELECT awl.*, u.name as user_name
+                        FROM approval_workflow_log awl
+                        LEFT JOIN users u ON awl.performed_by = u.id
+                        WHERE awl.complaint_id = ?
+                        ORDER BY awl.created_at ASC";
+        $workflowLog = $this->db->fetchAll($workflowSql, [$complaintId]);
+
+        // Get evidence files
+        $evidenceSql = "SELECT * FROM evidence WHERE complaint_id = ? ORDER BY uploaded_at DESC";
+        $evidenceRaw = $this->db->fetchAll($evidenceSql, [$complaintId]);
+        $evidenceFiles = $this->transformEvidenceForDisplay($evidenceRaw);
+
+        $this->view('admin/approvals/review', [
+            'page_title' => $pageTitle . ' - SAMPARK Admin',
+            'user' => $user,
+            'user_name' => $user['name'] ?? 'Admin',
+            'user_role' => $user['role'],
+            'complaint_id' => $complaintId,
+            'ticket' => $ticket,
+            'can_approve' => $canApprove,
+            'approval_type' => $approvalType,
+            'transactions' => $transactions,
+            'workflow_log' => $workflowLog,
+            'evidence_files' => $evidenceFiles,
+            'csrf_token' => $this->session->getCSRFToken()
+        ]);
+    }
+
+    /**
+     * Process approval action
+     */
+    public function processApproval()
+    {
+        try {
+            $this->validateCSRF();
+            $user = $this->getCurrentUser();
+
+            // Only allow admin/superadmin
+            if (!in_array($user['role'], ['admin', 'superadmin'])) {
+                $this->json(['success' => false, 'message' => 'Unauthorized access'], 403);
+                return;
+            }
+
+            $validator = new Validator();
+            $isValid = $validator->validate($_POST, [
+                'complaint_id' => 'required|string',
+                'approval_type' => 'required|in:dept_admin,cml_admin',
+                'action' => 'required|string',
+                'remarks' => 'string'
+            ]);
+
+            if (!$isValid) {
+                $this->json([
+                    'success' => false,
+                    'message' => 'Invalid input data',
+                    'errors' => $validator->getErrors()
+                ], 400);
+                return;
+            }
+
+            require_once __DIR__ . '/../utils/WorkflowEngine.php';
+            $workflowEngine = new WorkflowEngine();
+
+            $data = [
+                'remarks' => $_POST['remarks'] ?? null,
+                'reason' => $_POST['remarks'] ?? null // For rejections
+            ];
+
+            // Add edited content if action includes editing
+            if (strpos($_POST['action'], 'edit') !== false && !empty($_POST['edited_content'])) {
+                $data['edited_content'] = $_POST['edited_content'];
+            }
+
+            $result = $workflowEngine->processTicketWorkflow(
+                $_POST['complaint_id'],
+                $_POST['action'],
+                $user['id'],
+                'admin',
+                $data
+            );
+
+            if ($result['success']) {
+                // Log activity
+                $this->logActivity($_POST['action'], [
+                    'complaint_id' => $_POST['complaint_id'],
+                    'approval_type' => $_POST['approval_type'],
+                    'remarks' => $_POST['remarks'] ?? null
+                ]);
+
+                $this->json([
+                    'success' => true,
+                    'message' => $result['message'],
+                    'redirect' => '/admin/approvals/pending'
+                ]);
+            } else {
+                $this->json([
+                    'success' => false,
+                    'message' => $result['error']
+                ], 400);
+            }
+
+        } catch (Exception $e) {
+            Config::logError("Approval processing error: " . $e->getMessage());
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to process approval. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Admin remarks management page
+     */
+    public function adminRemarks()
+    {
+        $user = $this->getCurrentUser();
+
+        // Only allow admin/superadmin
+        if (!in_array($user['role'], ['admin', 'superadmin'])) {
+            $this->redirect(Config::getAppUrl() . '/');
+            return;
+        }
+
+        $this->view('admin/remarks/index', [
+            'page_title' => 'Admin Remarks - SAMPARK Admin',
+            'user' => $user,
+            'user_name' => $user['name'] ?? 'Admin',
+            'user_role' => $user['role']
+        ]);
+    }
+
+    /**
+     * Add admin remarks to a closed ticket
+     */
+    public function addAdminRemarks()
+    {
+        try {
+            $this->validateCSRF();
+            $user = $this->getCurrentUser();
+
+            // Only allow admin/superadmin
+            if (!in_array($user['role'], ['admin', 'superadmin'])) {
+                $this->json(['success' => false, 'message' => 'Unauthorized access'], 403);
+                return;
+            }
+
+            $validator = new Validator();
+            $isValid = $validator->validate($_POST, [
+                'complaint_id' => 'required|string',
+                'remarks' => 'required|string|min:10',
+                'remarks_category' => 'string',
+                'is_recurring_issue' => 'boolean'
+            ]);
+
+            if (!$isValid) {
+                $this->json([
+                    'success' => false,
+                    'message' => 'Invalid input data',
+                    'errors' => $validator->getErrors()
+                ], 400);
+                return;
+            }
+
+            require_once __DIR__ . '/../models/AdminRemarksModel.php';
+            $adminRemarksModel = new AdminRemarksModel();
+
+            // Determine admin type
+            $adminType = $user['department'] === 'CML' ? 'cml_admin' : 'dept_admin';
+
+            $result = $adminRemarksModel->addAdminRemarks(
+                $_POST['complaint_id'],
+                $user['id'],
+                $adminType,
+                $_POST['remarks'],
+                $_POST['remarks_category'] ?? null,
+                isset($_POST['is_recurring_issue']) && $_POST['is_recurring_issue'] === 'true'
+            );
+
+            if ($result['success']) {
+                // Log activity
+                $this->logActivity('admin_remarks_added', [
+                    'complaint_id' => $_POST['complaint_id'],
+                    'remarks_category' => $_POST['remarks_category'] ?? null
+                ]);
+
+                $this->json($result);
+            } else {
+                $this->json($result, 400);
+            }
+
+        } catch (Exception $e) {
+            Config::logError("Admin remarks error: " . $e->getMessage());
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to add admin remarks. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Admin remarks report page
+     */
+    public function adminRemarksReport()
+    {
+        $user = $this->getCurrentUser();
+
+        // Only allow admin/superadmin
+        if (!in_array($user['role'], ['admin', 'superadmin'])) {
+            $this->redirect(Config::getAppUrl() . '/');
+            return;
+        }
+
+        $this->view('admin/reports/remarks', [
+            'page_title' => 'Admin Remarks Report - SAMPARK Admin',
+            'user' => $user,
+            'user_name' => $user['name'] ?? 'Admin',
+            'user_role' => $user['role']
+        ]);
+    }
+
+    /**
+     * Get approval statistics for dashboard
+     */
+    public function getApprovalStats()
+    {
+        try {
+            $user = $this->getCurrentUser();
+
+            // Only allow admin/superadmin
+            if (!in_array($user['role'], ['admin', 'superadmin'])) {
+                $this->json(['success' => false, 'message' => 'Unauthorized access'], 403);
+                return;
+            }
+
+            $whereClause = '';
+            $params = [];
+
+            // Filter by department for non-superadmin
+            if ($user['role'] !== 'superadmin') {
+                $whereClause = ' AND c.department = ?';
+                $params[] = $user['department'];
+            }
+
+            // Get pending department admin approvals
+            $deptApprovalsSql = "SELECT COUNT(*) as count
+                                FROM complaints c
+                                WHERE c.status = 'awaiting_dept_admin_approval'" . $whereClause;
+            $deptApprovals = $this->db->fetch($deptApprovalsSql, $params)['count'] ?? 0;
+
+            // Get pending CML admin approvals
+            if ($user['department'] === 'CML') {
+                $cmlApprovalsSql = "SELECT COUNT(*) as count
+                                   FROM complaints c
+                                   WHERE c.status = 'awaiting_cml_admin_approval'
+                                     AND c.division = ? AND c.zone = ?";
+                $cmlApprovals = $this->db->fetch($cmlApprovalsSql, [$user['division'], $user['zone']])['count'] ?? 0;
+            } else {
+                $cmlApprovals = 0; // Non-CML admins cannot see CML approvals
+            }
+
+            // Get overdue approvals (more than 24 hours pending)
+            $overdueSql = "SELECT COUNT(*) as count
+                          FROM complaints c
+                          WHERE c.status IN ('awaiting_dept_admin_approval', 'awaiting_cml_admin_approval')
+                            AND TIMESTAMPDIFF(HOUR, c.updated_at, NOW()) > 24" . $whereClause;
+            $overdueApprovals = $this->db->fetch($overdueSql, $params)['count'] ?? 0;
+
+            $this->json([
+                'success' => true,
+                'data' => [
+                    'dept_approvals' => $deptApprovals,
+                    'cml_approvals' => $cmlApprovals,
+                    'overdue_approvals' => $overdueApprovals,
+                    'total_pending' => $deptApprovals + $cmlApprovals
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            Config::logError("Approval stats error: " . $e->getMessage());
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to fetch approval statistics'
+            ], 500);
+        }
+    }
+
+    private function transformEvidenceForDisplay($evidenceRaw) {
+        $evidence = [];
+
+        foreach ($evidenceRaw as $record) {
+            // Check all three initial file columns
+            for ($i = 1; $i <= 3; $i++) {
+                $fileNameField = "file_name_$i";
+                $fileTypeField = "file_type_$i";
+                $filePathField = "file_path_$i";
+                $compressedSizeField = "compressed_size_$i";
+
+                if (!empty($record[$fileNameField])) {
+                    $evidence[] = [
+                        'id' => $record['id'] . '_' . $i, // Create a unique ID for each file slot
+                        'file_name' => $record[$fileNameField],
+                        'original_name' => $record[$fileNameField], // Use file_name as original_name
+                        'file_type' => $record[$fileTypeField] ?? 'application/octet-stream',
+                        'file_path' => $record[$filePathField],
+                        'file_size' => $record[$compressedSizeField] ?? 0,
+                        'compressed_size' => $record[$compressedSizeField] ?? 0,
+                        'uploaded_at' => $record['uploaded_at'],
+                        'uploaded_by_type' => $record['uploaded_by_type'],
+                        'uploaded_by_id' => $record['uploaded_by_id']
+                    ];
+                }
+            }
+
+            // Check additional file columns
+            for ($i = 1; $i <= 2; $i++) {
+                $fileNameField = "additional_file_name_$i";
+                $fileTypeField = "additional_file_type_$i";
+                $filePathField = "additional_file_path_$i";
+                $compressedSizeField = "additional_compressed_size_$i";
+
+                if (!empty($record[$fileNameField])) {
+                    $evidence[] = [
+                        'id' => $record['id'] . '_add_' . $i, // Create a unique ID for each additional file slot
+                        'file_name' => $record[$fileNameField],
+                        'original_name' => $record[$fileNameField], // Use file_name as original_name
+                        'file_type' => $record[$fileTypeField] ?? 'application/octet-stream',
+                        'file_path' => $record[$filePathField],
+                        'file_size' => $record[$compressedSizeField] ?? 0,
+                        'compressed_size' => $record[$compressedSizeField] ?? 0,
+                        'uploaded_at' => $record['additional_files_uploaded_at'] ?? $record['uploaded_at'],
+                        'uploaded_by_type' => $record['uploaded_by_type'],
+                        'uploaded_by_id' => $record['uploaded_by_id'],
+                        'is_additional' => true
+                    ];
+                }
+            }
+        }
+
+        return $evidence;
     }
 }

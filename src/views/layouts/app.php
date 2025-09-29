@@ -224,6 +224,17 @@
                                     <i class="fas fa-search me-2"></i>Search Tickets
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/approvals/pending">
+                                    <i class="fas fa-check-circle me-2"></i>Pending Approvals
+                                    <span id="approval-count-badge" class="badge bg-warning ms-2" style="display: none;">0</span>
+                                </a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/remarks">
+                                    <i class="fas fa-comment-dots me-2"></i>Admin Remarks
+                                </a></li>
+                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/reports/remarks">
+                                    <i class="fas fa-chart-line me-2"></i>Remarks Report
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/users">
                                     <i class="fas fa-users me-2"></i>Users
                                 </a></li>
@@ -525,6 +536,46 @@
             }
         }
     </style>
-    
+
+    <?php if (in_array($userRole ?? '', ['admin', 'superadmin'])): ?>
+    <script>
+    // Real-time approval count update for admin users
+    function updateApprovalCount() {
+        fetch('/api/admin/approval-stats')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    const totalPending = data.data.total_pending || 0;
+                    const badge = document.getElementById('approval-count-badge');
+
+                    if (badge) {
+                        if (totalPending > 0) {
+                            badge.textContent = totalPending;
+                            badge.style.display = 'inline-block';
+                            badge.className = totalPending > 5 ? 'badge bg-danger ms-2' : 'badge bg-warning ms-2';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+
+                    // Update page title with pending count
+                    if (totalPending > 0 && window.location.pathname.includes('admin')) {
+                        document.title = `(${totalPending}) ${document.title.replace(/^\(\d+\)\s*/, '')}`;
+                    }
+                }
+            })
+            .catch(error => {
+                console.warn('Could not fetch approval stats:', error);
+            });
+    }
+
+    // Update approval count immediately and then every 30 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+        updateApprovalCount();
+        setInterval(updateApprovalCount, 30000); // 30 seconds
+    });
+    </script>
+    <?php endif; ?>
+
 </body>
 </html>

@@ -75,8 +75,8 @@ $page_title = 'View Ticket Details - SAMPARK Admin';
         </div>
         <div class="col-auto">
             <div class="btn-toolbar gap-2">
-                <a href="<?= Config::getAppUrl() ?>/admin/tickets/search" class="btn btn-apple-secondary">
-                    <i class="fas fa-arrow-left me-2"></i>Back to Search
+                <a href="<?= htmlspecialchars($back_url) ?>" class="btn btn-apple-secondary">
+                    <i class="fas fa-arrow-left me-2"></i><?= htmlspecialchars($back_text) ?>
                 </a>
             </div>
         </div>
@@ -88,14 +88,23 @@ $page_title = 'View Ticket Details - SAMPARK Admin';
         'pending' => ['class' => 'warning', 'icon' => 'clock', 'text' => 'This ticket is pending action'],
         'awaiting_info' => ['class' => 'info', 'icon' => 'info-circle', 'text' => 'Waiting for additional information from customer'],
         'awaiting_approval' => ['class' => 'primary', 'icon' => 'check-circle', 'text' => 'Reply is awaiting nodal controller approval'],
+        'awaiting_dept_admin_approval' => ['class' => 'primary', 'icon' => 'user-check', 'text' => 'Reply is awaiting department admin approval'],
+        'awaiting_cml_admin_approval' => ['class' => 'primary', 'icon' => 'user-shield', 'text' => 'Reply is awaiting CML admin approval'],
         'awaiting_feedback' => ['class' => 'success', 'icon' => 'comment', 'text' => 'Reply sent, waiting for customer feedback'],
         'closed' => ['class' => 'dark', 'icon' => 'check', 'text' => 'This ticket has been resolved and closed']
     ][$ticket['status']] ?? ['class' => 'secondary', 'icon' => 'question', 'text' => 'Status unknown'];
     ?>
 
-    <div class="alert alert-<?= $statusInfo['class'] ?> d-flex align-items-center mb-4" role="alert">
-        <i class="fas fa-<?= $statusInfo['icon'] ?> me-2"></i>
-        <strong>Status: <?= ucwords(str_replace('_', ' ', $ticket['status'])) ?></strong> - <?= $statusInfo['text'] ?>
+    <div class="alert alert-<?= $statusInfo['class'] ?> d-flex align-items-center justify-content-between mb-4" role="alert">
+        <div>
+            <i class="fas fa-<?= $statusInfo['icon'] ?> me-2"></i>
+            <strong>Status: <?= ucwords(str_replace('_', ' ', $ticket['status'])) ?></strong> - <?= $statusInfo['text'] ?>
+        </div>
+        <?php if (in_array($ticket['status'], ['awaiting_dept_admin_approval', 'awaiting_cml_admin_approval'])): ?>
+            <a href="<?= Config::getAppUrl() ?>/admin/approvals/review/<?= $ticket['complaint_id'] ?>" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-gavel me-1"></i>Review & Approve
+            </a>
+        <?php endif; ?>
     </div>
 
     <!-- Latest Important Remark -->
