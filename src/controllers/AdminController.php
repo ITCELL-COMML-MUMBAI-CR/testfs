@@ -98,6 +98,24 @@ class AdminController extends BaseController
         $this->view('admin/dashboard', $data);
     }
 
+    /**
+     * Handle dashboard refresh requests
+     */
+    public function dashboardRefresh()
+    {
+        $user = $this->getCurrentUser();
+
+        // Only allow admin/superadmin
+        if (!in_array($user['role'], ['admin', 'superadmin'])) {
+            $this->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            return;
+        }
+
+        // For now, just return success - the frontend will reload the page
+        // In the future, this could return updated dashboard data as JSON
+        $this->json(['success' => true, 'message' => 'Dashboard refreshed']);
+    }
+
     public function users()
     {
         $user = $this->getCurrentUser();
@@ -4918,7 +4936,8 @@ class AdminController extends BaseController
             'page_title' => 'Admin Remarks - SAMPARK Admin',
             'user' => $user,
             'user_name' => $user['name'] ?? 'Admin',
-            'user_role' => $user['role']
+            'user_role' => $user['role'],
+            'db' => $this->db
         ]);
     }
 
@@ -5007,7 +5026,8 @@ class AdminController extends BaseController
             'page_title' => 'Admin Remarks Report - SAMPARK Admin',
             'user' => $user,
             'user_name' => $user['name'] ?? 'Admin',
-            'user_role' => $user['role']
+            'user_role' => $user['role'],
+            'db' => $this->db
         ]);
     }
 

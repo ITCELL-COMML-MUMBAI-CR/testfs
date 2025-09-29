@@ -3,6 +3,7 @@
  * Admin Remarks Management Interface
  * View and manage admin remarks on closed tickets
  */
+ob_start();
 
 $currentUser = $_SESSION['user'];
 $currentDepartment = $currentUser['department'];
@@ -410,4 +411,6 @@ function getPriorityColor($priority) {
     ];
     return $colors[$priority] ?? 'secondary';
 }
+$content = ob_get_clean();
+include '../src/views/layouts/app.php';
 ?>

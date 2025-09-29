@@ -154,6 +154,7 @@ $router->get('/api/tickets/stats', 'Api@getTicketStats', ['auth']);
 $router->get('/api/customer/stats', 'Api@getCustomerStats', ['auth']);
 $router->get('/api/customer/export-data', 'Api@exportCustomerData', ['auth']);
 $router->get('/api/admin/approval-stats', 'Admin@getApprovalStats', ['auth', 'role:admin,superadmin']);
+$router->post('/api/admin/dashboard-refresh', 'Admin@dashboardRefresh', ['auth', 'role:admin,superadmin']);
 $router->post('/api/tickets/{id}/upload', 'Api@uploadEvidence', ['auth']);
 $router->get('/api/tickets/{id}/evidence/{file}', 'Api@getEvidence', ['auth']);
 $router->get('/api/tickets/{id}/files', 'Api@getTicketFiles', ['auth']);
