@@ -263,12 +263,6 @@ ob_start();
                                 <span><?= !empty($user_to_edit['password_changed_at']) ? date('M d, Y', strtotime($user_to_edit['password_changed_at'])) : 'Never' ?></span>
                             </li>
                             <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">
-                                <span>2FA Status</span>
-                                <span class="badge <?= ($user_to_edit['two_factor_enabled'] ?? false) ? 'bg-success' : 'bg-secondary' ?>">
-                                    <?= ($user_to_edit['two_factor_enabled'] ?? false) ? 'Enabled' : 'Disabled' ?>
-                                </span>
-                            </li>
-                            <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">
                                 <span>Account Lockouts</span>
                                 <span><?= $user_stats['lockouts'] ?? 0 ?></span>
                             </li>

@@ -327,25 +327,13 @@ $page_title = 'Profile - SAMPARK';
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex justify-content-between align-items-center">
                         <span>Password Last Changed</span>
                         <small class="text-muted">
-                            <?= isset($user_details['password_changed_at']) ? 
-                                date('M d, Y', strtotime($user_details['password_changed_at'])) : 
+                            <?= isset($user_details['password_changed_at']) ?
+                                date('M d, Y', strtotime($user_details['password_changed_at'])) :
                                 'More than 90 days ago' ?>
                         </small>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span>Two-Factor Auth</span>
-                        <span class="badge bg-<?= ($user_details['two_factor_enabled'] ?? false) ? 'success' : 'warning' ?>">
-                            <?= ($user_details['two_factor_enabled'] ?? false) ? 'Enabled' : 'Disabled' ?>
-                        </span>
-                    </div>
-                    <div class="d-grid">
-                        <button class="btn btn-sm btn-apple-warning" onclick="enable2FA()">
-                            <i class="fas fa-shield-alt me-2"></i>
-                            <?= ($user_details['two_factor_enabled'] ?? false) ? 'Manage 2FA' : 'Enable 2FA' ?>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -551,21 +539,6 @@ function downloadProfile() {
     });
 }
 
-function enable2FA() {
-    Swal.fire({
-        title: 'Two-Factor Authentication',
-        text: 'Two-factor authentication adds an extra layer of security to your account.',
-        icon: 'info',
-        showCancelButton: true,
-        confirmButtonText: 'Setup 2FA',
-        cancelButtonText: 'Later'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Redirect to 2FA setup page
-            window.location.href = `${APP_URL}/controller/profile/2fa-setup`;
-        }
-    });
-}
 
 // Password confirmation validation
 document.getElementById('confirmPassword').addEventListener('input', function() {
