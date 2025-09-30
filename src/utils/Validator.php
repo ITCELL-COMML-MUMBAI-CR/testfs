@@ -70,7 +70,17 @@ class Validator {
                     $this->addError($field, ucfirst($field) . ' must contain only letters and numbers');
                 }
                 break;
-                
+
+            case 'digits':
+                if (!empty($value)) {
+                    if (!ctype_digit($value)) {
+                        $this->addError($field, ucfirst($field) . ' must contain only digits');
+                    } elseif (strlen($value) != $parameter) {
+                        $this->addError($field, ucfirst($field) . " must be exactly {$parameter} digits");
+                    }
+                }
+                break;
+
             case 'phone':
                 if (!empty($value) && !preg_match('/^[6-9]\d{9}$/', $value)) {
                     $this->addError($field, ucfirst($field) . ' must be a valid 10-digit mobile number');

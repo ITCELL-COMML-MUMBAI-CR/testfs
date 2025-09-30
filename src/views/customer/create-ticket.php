@@ -117,11 +117,14 @@ ob_start();
                             <div class="row g-3 mb-4">
                                 <div class="col-md-6">
                                     <label for="fnr_number" class="form-label-apple">FNR Number</label>
-                                    <input type="text" 
-                                           class="form-control form-control-apple" 
-                                           id="fnr_number" 
-                                           name="fnr_number" 
-                                           placeholder="Enter FNR number if available">
+                                    <input type="text"
+                                           class="form-control form-control-apple"
+                                           id="fnr_number"
+                                           name="fnr_number"
+                                           placeholder="Enter 11-digit FNR number"
+                                           pattern="[0-9]{11}"
+                                           maxlength="11"
+                                           title="FNR number must be exactly 11 digits">
                                 </div>
                                 
                                 <div class="col-md-6">
@@ -275,10 +278,10 @@ function initializeForm() {
     // Setup character counter
     const description = document.getElementById('description');
     const charCount = document.getElementById('charCount');
-    
+
     description.addEventListener('input', function() {
         charCount.textContent = this.value.length;
-        
+
         if (this.value.length < 20) {
             charCount.className = 'text-danger';
         } else if (this.value.length > 1800) {
@@ -287,10 +290,34 @@ function initializeForm() {
             charCount.className = 'text-success';
         }
     });
-    
+
+    // Setup FNR number validation
+    const fnrInput = document.getElementById('fnr_number');
+    if (fnrInput) {
+        fnrInput.addEventListener('input', function(e) {
+            // Remove non-digit characters
+            this.value = this.value.replace(/[^0-9]/g, '');
+
+            // Validate length
+            if (this.value.length > 0 && this.value.length !== 11) {
+                this.setCustomValidity('FNR number must be exactly 11 digits');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+
+        // Prevent paste of non-numeric content
+        fnrInput.addEventListener('paste', function(e) {
+            const pastedData = e.clipboardData.getData('text');
+            if (!/^\d+$/.test(pastedData)) {
+                e.preventDefault();
+            }
+        });
+    }
+
     // Setup category cascading
     setupCategoryCascading();
-    
+
     // Setup shed search and division filter
     setupShedSearch();
     setupDivisionFilter();

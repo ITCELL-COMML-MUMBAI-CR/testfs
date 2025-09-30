@@ -362,7 +362,8 @@ class CustomerController extends BaseController {
             'category_id' => 'required|exists:complaint_categories,category_id',
             'shed_id' => 'required|exists:shed,shed_id',
             'wagon_type' => 'nullable',
-            'description' => 'required|min:20|max:2000'
+            'description' => 'required|min:20|max:2000',
+            'fnr_number' => 'nullable|digits:11'
         ]);
         
         if (!$isValid) {
