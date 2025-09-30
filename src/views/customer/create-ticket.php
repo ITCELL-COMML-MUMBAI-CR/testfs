@@ -158,7 +158,6 @@ ob_start();
                                         <option value="">Search and select shed...</option>
                                     </select>
                                     <div class="invalid-feedback"></div>
-                                    <small class="text-muted">Start typing to search sheds</small>
                                 </div>
                             </div>
                             
@@ -328,6 +327,9 @@ function initializeForm() {
     // Setup division filter first, then shed search
     setupDivisionFilter();
     setupShedSearch();
+
+    // Setup wagon type search
+    setupWagonTypeSearch();
 }
 
 function setupCategoryCascading() {
@@ -474,6 +476,20 @@ function setupShedSearch() {
             shedSelect.value = '';
         }
     });
+}
+
+function setupWagonTypeSearch() {
+    const wagonTypeSelect = document.getElementById('wagon_type');
+
+    // Initialize Select2 for wagon type search
+    if (typeof $ !== 'undefined' && $.fn.select2) {
+        $(wagonTypeSelect).select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Search wagon types...',
+            allowClear: true,
+            width: '100%'
+        });
+    }
 }
 
 // Global variables for file management
