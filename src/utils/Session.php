@@ -129,6 +129,8 @@ class Session {
             $_SESSION['customer_id'] = $userData['customer_id'] ?? '';
             $_SESSION['company_name'] = $userData['company_name'] ?? '';
             $_SESSION['mobile'] = $userData['mobile'] ?? '';
+            $_SESSION['customer_division'] = $userData['customer_division'] ?? '';
+            $_SESSION['customer_zone'] = $userData['customer_zone'] ?? '';
         }
         
         $_SESSION['login_time'] = time();

@@ -135,8 +135,10 @@ class BaseController {
             $userData['customer_id'] = $this->session->get('customer_id');
             $userData['company_name'] = $this->session->get('company_name');
             $userData['mobile'] = $this->session->get('mobile');
+            $userData['division'] = $this->session->get('customer_division');
+            $userData['zone'] = $this->session->get('customer_zone');
         }
-        
+
         return $userData;
     }
     

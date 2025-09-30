@@ -117,7 +117,9 @@ class AuthController extends BaseController {
             'name' => $customer['name'],
             'email' => $customer['email'],
             'mobile' => $customer['mobile'],
-            'company_name' => $customer['company_name']
+            'company_name' => $customer['company_name'],
+            'customer_division' => $customer['division'],
+            'customer_zone' => $customer['zone']
         ]);
 
         // Ensure session activity is properly set after login

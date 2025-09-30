@@ -143,7 +143,12 @@ ob_start();
                                     <label for="division_filter" class="form-label-apple">Filter by Division</label>
                                     <select class="form-control form-control-apple" id="division_filter">
                                         <option value="">All Divisions</option>
-                                        <!-- Will be populated dynamically -->
+                                        <?php foreach ($divisions as $div): ?>
+                                            <option value="<?= htmlspecialchars($div['division']) ?>"
+                                                    <?= ($customer['division'] ?? '') === $div['division'] ? 'selected' : '' ?>>
+                                                <?= htmlspecialchars($div['division']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
                                 
@@ -267,6 +272,8 @@ const categoriesData = <?= json_encode($categories) ?>;
 const shedsData = <?= json_encode($sheds) ?>;
 // Divisions data from PHP
 const divisionsData = <?= json_encode($divisions) ?>;
+// Customer division
+const customerDivision = <?= json_encode($customer['division'] ?? '') ?>;
 
 document.addEventListener('DOMContentLoaded', function() {
     initializeForm();
@@ -318,9 +325,9 @@ function initializeForm() {
     // Setup category cascading
     setupCategoryCascading();
 
-    // Setup shed search and division filter
-    setupShedSearch();
+    // Setup division filter first, then shed search
     setupDivisionFilter();
+    setupShedSearch();
 }
 
 function setupCategoryCascading() {
@@ -381,15 +388,8 @@ function setupCategoryCascading() {
 }
 
 function setupDivisionFilter() {
-    const divisionFilter = document.getElementById('division_filter');
-    
-    // Populate division filter dropdown
-    divisionsData.forEach(div => {
-        const option = document.createElement('option');
-        option.value = div.division;
-        option.textContent = div.division;
-        divisionFilter.appendChild(option);
-    });
+    // Division filter is already populated via PHP with selected option
+    // No need to populate dynamically
 }
 
 function setupShedSearch() {
@@ -406,8 +406,10 @@ function setupShedSearch() {
         }));
         
         $(shedSelect).select2({
-            placeholder: 'Search sheds...',
+            theme: 'bootstrap-5',
+            placeholder: 'Search sheds by code, name, or division...',
             allowClear: true,
+            width: '100%',
             data: shedOptions,
             matcher: function(params, data) {
                 // If no search term, return all data
@@ -418,21 +420,26 @@ function setupShedSearch() {
                     }
                     return data;
                 }
-                
+
                 // Apply division filter if selected
                 if (divisionFilter.value && data.division !== divisionFilter.value) {
                     return null;
                 }
-                
+
                 // Search in code and name
                 const term = params.term.toLowerCase();
                 if (data.text.toLowerCase().indexOf(term) > -1) {
                     return data;
                 }
-                
+
                 return null;
             }
         });
+
+        // Trigger initial filter based on customer's division
+        if (customerDivision) {
+            $(shedSelect).trigger('change.select2');
+        }
     } else {
         // Fallback if Select2 is not available - populate regular select
         shedSelect.innerHTML = '<option value="">Select Shed/Terminal</option>';
