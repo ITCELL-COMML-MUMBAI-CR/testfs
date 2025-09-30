@@ -82,8 +82,8 @@ class Validator {
                 break;
 
             case 'phone':
-                if (!empty($value) && !preg_match('/^[6-9]\d{9}$/', $value)) {
-                    $this->addError($field, ucfirst($field) . ' must be a valid 10-digit mobile number');
+                if (!empty($value) && !preg_match('/^[1-9]\d{9}$/', $value)) {
+                    $this->addError($field, ucfirst($field) . ' must be a valid 10-digit mobile number (cannot start with 0)');
                 }
                 break;
                 
@@ -171,8 +171,8 @@ class Validator {
     }
     
     private function validateGSTIN($gstin) {
-        // GSTIN validation pattern
-        $pattern = '/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1}$/';
+        // GSTIN validation pattern - 15 digit alphanumeric code
+        $pattern = '/^[A-Z0-9]{15}$/';
         return preg_match($pattern, $gstin);
     }
     

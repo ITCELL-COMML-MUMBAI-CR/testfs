@@ -355,11 +355,77 @@ class PublicController extends BaseController {
                 'email' => $email,
                 'subject' => $subject
             ]);
-            
+
             return true;
         } catch (Exception $e) {
             $this->log('error', 'Failed to send contact notification', ['error' => $e->getMessage()]);
             return false;
+        }
+    }
+
+    /**
+     * Get company name suggestions for autocomplete
+     */
+    public function getCompanySuggestions() {
+        try {
+            $search = isset($_GET['search']) ? trim(htmlspecialchars($_GET['search'], ENT_QUOTES, 'UTF-8')) : '';
+
+            if (strlen($search) < 2) {
+                return $this->json([]);
+            }
+
+            $sql = "SELECT DISTINCT company_name
+                    FROM customers
+                    WHERE company_name LIKE ?
+                    AND company_name IS NOT NULL
+                    AND company_name != ''
+                    ORDER BY company_name ASC
+                    LIMIT 10";
+
+            $results = $this->db->fetchAll($sql, ["%{$search}%"]);
+
+            $suggestions = array_map(function($row) {
+                return $row['company_name'];
+            }, $results);
+
+            return $this->json($suggestions);
+
+        } catch (Exception $e) {
+            error_log('Company suggestions error: ' . $e->getMessage());
+            return $this->json([]);
+        }
+    }
+
+    /**
+     * Get designation suggestions for autocomplete
+     */
+    public function getDesignationSuggestions() {
+        try {
+            $search = isset($_GET['search']) ? trim(htmlspecialchars($_GET['search'], ENT_QUOTES, 'UTF-8')) : '';
+
+            if (strlen($search) < 2) {
+                return $this->json([]);
+            }
+
+            $sql = "SELECT DISTINCT designation
+                    FROM customers
+                    WHERE designation LIKE ?
+                    AND designation IS NOT NULL
+                    AND designation != ''
+                    ORDER BY designation ASC
+                    LIMIT 10";
+
+            $results = $this->db->fetchAll($sql, ["%{$search}%"]);
+
+            $suggestions = array_map(function($row) {
+                return $row['designation'];
+            }, $results);
+
+            return $this->json($suggestions);
+
+        } catch (Exception $e) {
+            error_log('Designation suggestions error: ' . $e->getMessage());
+            return $this->json([]);
         }
     }
 }

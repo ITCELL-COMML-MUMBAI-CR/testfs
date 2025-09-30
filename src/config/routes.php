@@ -17,6 +17,10 @@ $router->get('/privacy-policy', 'Public@privacyPolicy');
 $router->get('/help', 'Public@help');
 $router->get('/help-standalone', 'Public@helpStandalone');
 
+// Autocomplete API Routes (Public)
+$router->get('/api/autocomplete/companies', 'Public@getCompanySuggestions');
+$router->get('/api/autocomplete/designations', 'Public@getDesignationSuggestions');
+
 // Customer Routes
 $router->get('/customer/dashboard', 'Customer@dashboard', ['auth', 'role:customer']);
 $router->get('/customer/tickets', 'Customer@tickets', ['auth', 'role:customer']);

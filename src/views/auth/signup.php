@@ -56,12 +56,12 @@ ob_start();
                                         
                                         <div class="col-md-6">
                                             <label for="mobile" class="form-label-apple required">Mobile Number</label>
-                                            <input type="tel" 
-                                                   class="form-control form-control-apple" 
-                                                   id="mobile" 
-                                                   name="mobile" 
+                                            <input type="tel"
+                                                   class="form-control form-control-apple"
+                                                   id="mobile"
+                                                   name="mobile"
                                                    placeholder="Enter 10-digit mobile number"
-                                                   pattern="[6-9][0-9]{9}"
+                                                   pattern="[1-9][0-9]{9}"
                                                    maxlength="10"
                                                    required>
                                             <div class="invalid-feedback"></div>
@@ -81,34 +81,38 @@ ob_start();
                                     <div class="row g-3">
                                         <div class="col-md-8">
                                             <label for="company_name" class="form-label-apple required">Company Name</label>
-                                            <input type="text" 
-                                                   class="form-control form-control-apple" 
-                                                   id="company_name" 
-                                                   name="company_name" 
+                                            <input type="text"
+                                                   class="form-control form-control-apple"
+                                                   id="company_name"
+                                                   name="company_name"
                                                    placeholder="Enter your company name"
+                                                   autocomplete="off"
                                                    required>
                                             <div class="invalid-feedback"></div>
+                                            <div class="autocomplete-dropdown" id="company_suggestions"></div>
                                         </div>
-                                        
+
                                         <div class="col-md-4">
                                             <label for="designation" class="form-label-apple">Designation</label>
-                                            <input type="text" 
-                                                   class="form-control form-control-apple" 
-                                                   id="designation" 
-                                                   name="designation" 
-                                                   placeholder="Your designation">
+                                            <input type="text"
+                                                   class="form-control form-control-apple"
+                                                   id="designation"
+                                                   name="designation"
+                                                   placeholder="Your designation"
+                                                   autocomplete="off">
+                                            <div class="autocomplete-dropdown" id="designation_suggestions"></div>
                                         </div>
                                         
                                         <div class="col-12">
                                             <label for="gstin" class="form-label-apple">GSTIN (Optional)</label>
-                                            <input type="text" 
-                                                   class="form-control form-control-apple" 
-                                                   id="gstin" 
-                                                   name="gstin" 
-                                                   placeholder="Enter GSTIN if available"
-                                                   pattern="[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1}"
+                                            <input type="text"
+                                                   class="form-control form-control-apple"
+                                                   id="gstin"
+                                                   name="gstin"
+                                                   placeholder="Enter 15-digit GSTIN if available"
+                                                   pattern="[A-Z0-9]{15}"
                                                    maxlength="15">
-                                            <small class="text-muted">Format: 22AAAAA0000A1Z5</small>
+                                            
                                         </div>
                                     </div>
                                 </div>
@@ -381,16 +385,16 @@ function validateField(field) {
             break;
             
         case 'mobile':
-            if (value && !/^[6-9]\d{9}$/.test(value)) {
+            if (value && !/^[1-9]\d{9}$/.test(value)) {
                 isValid = false;
-                message = 'Please enter a valid 10-digit mobile number';
+                message = 'Please enter a valid 10-digit mobile number (cannot start with 0)';
             }
             break;
             
         case 'gstin':
-            if (value && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1}$/.test(value)) {
+            if (value && !/^[A-Z0-9]{15}$/.test(value)) {
                 isValid = false;
-                message = 'Please enter a valid GSTIN';
+                message = 'Please enter a valid 15-digit alphanumeric GSTIN';
             }
             break;
             
@@ -527,6 +531,110 @@ function updateZoneBasedOnDivision(division) {
     // This would typically make an AJAX call to get the zone for the selected division
     // For now, we'll leave it as is since zone selection is optional
 }
+
+// Autocomplete functionality
+let companyDebounceTimer;
+let designationDebounceTimer;
+
+// Setup autocomplete for company name
+const companyInput = document.getElementById('company_name');
+const companySuggestions = document.getElementById('company_suggestions');
+
+companyInput.addEventListener('input', function() {
+    clearTimeout(companyDebounceTimer);
+    const searchTerm = this.value.trim();
+
+    if (searchTerm.length < 2) {
+        companySuggestions.innerHTML = '';
+        companySuggestions.style.display = 'none';
+        return;
+    }
+
+    companyDebounceTimer = setTimeout(() => {
+        fetchCompanySuggestions(searchTerm);
+    }, 300);
+});
+
+// Setup autocomplete for designation
+const designationInput = document.getElementById('designation');
+const designationSuggestionsDiv = document.getElementById('designation_suggestions');
+
+designationInput.addEventListener('input', function() {
+    clearTimeout(designationDebounceTimer);
+    const searchTerm = this.value.trim();
+
+    if (searchTerm.length < 2) {
+        designationSuggestionsDiv.innerHTML = '';
+        designationSuggestionsDiv.style.display = 'none';
+        return;
+    }
+
+    designationDebounceTimer = setTimeout(() => {
+        fetchDesignationSuggestions(searchTerm);
+    }, 300);
+});
+
+// Get app URL from meta tag
+const appUrl = document.querySelector('meta[name="app-url"]').getAttribute('content');
+
+// Fetch company suggestions
+function fetchCompanySuggestions(searchTerm) {
+    fetch(`${appUrl}/api/autocomplete/companies?search=${encodeURIComponent(searchTerm)}`)
+        .then(response => response.json())
+        .then(data => {
+            displaySuggestions(data, companySuggestions, companyInput);
+        })
+        .catch(error => {
+            console.error('Error fetching company suggestions:', error);
+        });
+}
+
+// Fetch designation suggestions
+function fetchDesignationSuggestions(searchTerm) {
+    fetch(`${appUrl}/api/autocomplete/designations?search=${encodeURIComponent(searchTerm)}`)
+        .then(response => response.json())
+        .then(data => {
+            displaySuggestions(data, designationSuggestionsDiv, designationInput);
+        })
+        .catch(error => {
+            console.error('Error fetching designation suggestions:', error);
+        });
+}
+
+// Display suggestions
+function displaySuggestions(suggestions, dropdownElement, inputElement) {
+    dropdownElement.innerHTML = '';
+
+    if (suggestions.length === 0) {
+        dropdownElement.style.display = 'none';
+        return;
+    }
+
+    suggestions.forEach(suggestion => {
+        const div = document.createElement('div');
+        div.className = 'autocomplete-item';
+        div.textContent = suggestion;
+        div.addEventListener('click', function() {
+            inputElement.value = suggestion;
+            dropdownElement.innerHTML = '';
+            dropdownElement.style.display = 'none';
+            inputElement.focus();
+        });
+        dropdownElement.appendChild(div);
+    });
+
+    dropdownElement.style.display = 'block';
+}
+
+// Close suggestions when clicking outside
+document.addEventListener('click', function(e) {
+    if (!companyInput.contains(e.target) && !companySuggestions.contains(e.target)) {
+        companySuggestions.style.display = 'none';
+    }
+    if (!designationInput.contains(e.target) && !designationSuggestionsDiv.contains(e.target)) {
+        designationSuggestionsDiv.style.display = 'none';
+    }
+});
 </script>
 
 <style>
@@ -551,6 +659,43 @@ function updateZoneBasedOnDivision(division) {
 
 .password-strength {
     transition: all 0.3s ease;
+}
+
+/* Autocomplete dropdown styles */
+.autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 0.5rem 0.5rem;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.autocomplete-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item:hover {
+    background-color: #f8f9fa;
+    color: #0066cc;
+}
+
+.col-md-8, .col-md-4 {
+    position: relative;
 }
 
 /* Mobile improvements */
