@@ -153,9 +153,9 @@ $divisions = $divisions;
                                             <?php endif; ?>
                                             <td>
                                                 <div class="btn-group" role="group">
-                                                    <a href="<?= Config::getAppUrl() ?>/admin/approvals/review/<?= $ticket['complaint_id'] ?>"
+                                                    <a href="<?= Config::getAppUrl() ?>/admin/tickets/view/<?= $ticket['complaint_id'] ?>"
                                                        class="btn btn-primary btn-sm">
-                                                        <i class="fas fa-eye"></i> Review
+                                                        <i class="fas fa-eye"></i> Review & Approve
                                                     </a>
                                                 </div>
                                             </td>

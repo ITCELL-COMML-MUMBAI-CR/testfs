@@ -118,10 +118,21 @@ $page_title = 'Ticket Details - SAMPARK';
 
     <!-- Status Alert -->
     <?php
+    // Build dynamic approval message based on approval_stage
+    $approvalText = 'Reply is awaiting admin approval';
+    if ($ticket['status'] === 'awaiting_approval') {
+        if ($ticket['approval_stage'] === 'dept_admin') {
+            $deptName = $ticket['assigned_to_department'] ?? 'Department';
+            $approvalText = "Approval on reply is pending from {$deptName} Admin";
+        } elseif ($ticket['approval_stage'] === 'cml_admin') {
+            $approvalText = "Approval on reply is pending from CML Admin";
+        }
+    }
+
     $statusInfo = [
         'pending' => ['class' => 'warning', 'icon' => 'clock', 'text' => 'This ticket is pending action'],
         'awaiting_info' => ['class' => 'info', 'icon' => 'info-circle', 'text' => 'Waiting for additional information from customer'],
-        'awaiting_approval' => ['class' => 'primary', 'icon' => 'check-circle', 'text' => 'Reply is awaiting nodal controller approval'],
+        'awaiting_approval' => ['class' => 'primary', 'icon' => 'check-circle', 'text' => $approvalText],
         'awaiting_feedback' => ['class' => 'success', 'icon' => 'comment', 'text' => 'Reply sent, waiting for customer feedback'],
         'closed' => ['class' => 'dark', 'icon' => 'check', 'text' => 'This ticket has been resolved and closed']
     ][$ticket['status']] ?? ['class' => 'secondary', 'icon' => 'question', 'text' => 'Status unknown'];

@@ -137,7 +137,6 @@ $router->post('/admin/tickets/{id}/remarks', 'Admin@addAdminRemarks', ['auth', '
 
 // Admin approval workflow routes
 $router->get('/admin/approvals/pending', 'Admin@pendingApprovals', ['auth', 'role:admin,superadmin']);
-$router->get('/admin/approvals/review/{id}', 'Admin@reviewApproval', ['auth', 'role:admin,superadmin']);
 $router->post('/admin/approvals/process', 'Admin@processApproval', ['auth', 'role:admin,superadmin']);
 
 // Admin remarks management routes

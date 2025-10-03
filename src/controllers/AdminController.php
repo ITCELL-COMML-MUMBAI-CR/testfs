@@ -2903,19 +2903,23 @@ class AdminController extends BaseController
 
         try {
             if ($isDeptAdmin) {
-                // Department admin sees tickets from their department awaiting dept admin approval
+                // Department admin sees tickets assigned to their department awaiting dept admin approval
                 $sql = "SELECT COUNT(*) as count FROM complaints
-                        WHERE status = 'awaiting_dept_admin_approval'
-                        AND department = ?";
+                        WHERE status = 'awaiting_approval'
+                        AND approval_stage = 'dept_admin'
+                        AND assigned_to_department = ?";
                 $result = $this->db->fetch($sql, [$user['department']]);
                 $counts['dept_admin_pending'] = $result['count'] ?? 0;
             }
 
             if ($isCmlAdmin) {
-                // CML admin sees all tickets awaiting CML admin approval
+                // CML admin sees all tickets assigned to CML awaiting CML admin approval
                 $sql = "SELECT COUNT(*) as count FROM complaints
-                        WHERE status = 'awaiting_cml_admin_approval'";
-                $result = $this->db->fetch($sql);
+                        WHERE status = 'awaiting_approval'
+                        AND approval_stage = 'cml_admin'
+                        AND assigned_to_department = 'CML'
+                        AND division = ? AND zone = ?";
+                $result = $this->db->fetch($sql, [$user['division'], $user['zone']]);
                 $counts['cml_admin_pending'] = $result['count'] ?? 0;
             }
 
@@ -3629,6 +3633,37 @@ class AdminController extends BaseController
             return;
         }
 
+        // Check if current admin has approval rights for this ticket
+        // Show approval buttons directly on this view page (like controller_nodal does)
+        $isAwaitingApproval = ($ticket['status'] === 'awaiting_approval' || $ticket['status'] === 'awaiting_dept_admin_approval');
+        $canApprove = false;
+        $approvalType = '';
+
+        if ($isAwaitingApproval) {
+            $isDeptAdmin = ($user['department'] !== 'CML');
+            $isCmlAdmin = ($user['department'] === 'CML');
+
+            // For dept admin approval
+            if ($isDeptAdmin) {
+                // Check both new workflow (approval_stage) and old status-based workflow
+                if (($ticket['approval_stage'] === 'dept_admin' || $ticket['status'] === 'awaiting_dept_admin_approval')
+                    && $ticket['assigned_to_department'] === $user['department']) {
+                    $canApprove = true;
+                    $approvalType = 'dept_admin';
+                }
+            }
+            // For CML admin approval
+            elseif ($isCmlAdmin) {
+                if ($ticket['approval_stage'] === 'cml_admin' && $ticket['assigned_to_department'] === 'CML') {
+                    // CML admin must also match division and zone
+                    if ($ticket['division'] === $user['division'] && $ticket['zone'] === $user['zone']) {
+                        $canApprove = true;
+                        $approvalType = 'cml_admin';
+                    }
+                }
+            }
+        }
+
         // Get evidence files
         $evidenceRaw = $this->db->fetchAll(
             "SELECT * FROM evidence WHERE complaint_id = ? ORDER BY uploaded_at ASC",
@@ -3725,10 +3760,12 @@ class AdminController extends BaseController
             'is_awaiting_customer_info' => $ticket['status'] === 'awaiting_info',
             'back_url' => $backUrl,
             'back_text' => $backText,
+            'approval_type' => $approvalType, // For approval workflow
+            'csrf_token' => $this->session->getCSRFToken(),
             'permissions' => [
                 'can_reply' => false,
                 'can_forward' => false,
-                'can_approve' => false,
+                'can_approve' => $canApprove, // Enable approval buttons if admin has rights
                 'can_internal_remarks' => false,
                 'can_interim_remarks' => false,
                 'can_revert_to_customer' => false,
@@ -4640,15 +4677,18 @@ class AdminController extends BaseController
         }
 
         // Determine admin type based on department
-        $isDeptAdmin = ($user['department'] !== 'CML');
-        $isCmlAdmin = ($user['department'] === 'CML');
+        $isDeptAdmin = $user['department'] !== 'CML';
+        $isCmlAdmin = $user['department'] === 'CML';
 
-        // Filter tickets based on admin type
+        // Per new requirements: Use assigned_to_department to determine which admin sees the ticket
+        // Department admin: tickets with assigned_to_department = their department AND approval_stage = 'dept_admin'
+        // CML admin: tickets with assigned_to_department = 'CML' AND approval_stage = 'cml_admin'
+
         if ($isDeptAdmin) {
-            $statusFilter = 'awaiting_dept_admin_approval';
+            $approvalStage = 'dept_admin';
             $pageTitle = 'Pending Department Admin Approvals';
         } else {
-            $statusFilter = 'awaiting_cml_admin_approval';
+            $approvalStage = 'cml_admin';
             $pageTitle = 'Pending CML Admin Approvals';
         }
 
@@ -4658,16 +4698,16 @@ class AdminController extends BaseController
         $offset = ($page - 1) * $limit;
 
         // Build query based on admin permissions
-        $whereClause = "c.status = ?";
-        $params = [$statusFilter];
+        $whereClause = "c.status = 'awaiting_approval' AND c.approval_stage = ?";
+        $params = [$approvalStage];
 
         if ($isDeptAdmin) {
-            // Department admin can only see tickets from their department
-            $whereClause .= " AND c.department = ?";
+            // Department admin can only see tickets assigned to their department
+            $whereClause .= " AND c.assigned_to_department = ?";
             $params[] = $user['department'];
         } else {
-            // CML admin can only see tickets from their division and zone
-            $whereClause .= " AND c.division = ? AND c.zone = ?";
+            // CML admin can only see tickets from their division and zone with assigned_to_department = 'CML'
+            $whereClause .= " AND c.assigned_to_department = 'CML' AND c.division = ? AND c.zone = ?";
             $params[] = $user['division'];
             $params[] = $user['zone'];
         }
@@ -4716,7 +4756,7 @@ class AdminController extends BaseController
         $totalPages = ceil($totalCount / $limit);
 
         // Get filter options
-        $divisions = $this->db->fetchAll("SELECT DISTINCT division FROM complaints WHERE status = ? ORDER BY division", [$statusFilter]);
+        $divisions = $this->db->fetchAll("SELECT DISTINCT division FROM complaints WHERE status = 'awaiting_approval' AND approval_stage = ? ORDER BY division", [$approvalStage]);
 
         // Pass all necessary data to the view
         $this->view('admin/approvals/pending', [
@@ -4740,104 +4780,6 @@ class AdminController extends BaseController
     }
 
     /**
-     * Review specific ticket for approval
-     */
-    public function reviewApproval($complaintId = null)
-    {
-        $user = $this->getCurrentUser();
-
-        // Only allow admin/superadmin
-        if (!in_array($user['role'], ['admin', 'superadmin'])) {
-            $this->redirect(Config::getAppUrl() . '/');
-            return;
-        }
-
-        if (!$complaintId) {
-            $this->redirect('/admin/approvals/pending');
-            return;
-        }
-
-        // Get ticket details with full context
-        $sql = "SELECT c.*,
-                       cat.category, cat.type, cat.subtype,
-                       cust.customer_id, cust.name as customer_name, cust.email as customer_email,
-                       cust.mobile as customer_mobile, cust.company_name,
-                       shed.name as shed_name,
-                       u_dept.name as dept_admin_name, u_dept.email as dept_admin_email,
-                       u_cml.name as cml_admin_name, u_cml.email as cml_admin_email
-                FROM complaints c
-                LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
-                LEFT JOIN customers cust ON c.customer_id = cust.customer_id
-                LEFT JOIN shed ON c.shed_id = shed.shed_id
-                LEFT JOIN users u_dept ON c.dept_admin_approved_by = u_dept.id
-                LEFT JOIN users u_cml ON c.cml_admin_approved_by = u_cml.id
-                WHERE c.complaint_id = ?";
-
-        $ticket = $this->db->fetch($sql, [$complaintId]);
-
-        if (!$ticket) {
-            $this->redirect('/admin/approvals/pending');
-            return;
-        }
-
-        // Check if current user can approve this ticket
-        $canApprove = false;
-        $approvalType = '';
-        $pageTitle = '';
-
-        if ($ticket['status'] === 'awaiting_dept_admin_approval' && $user['department'] === $ticket['department']) {
-            $canApprove = true;
-            $approvalType = 'dept_admin';
-            $pageTitle = 'Department Admin Review';
-        } elseif ($ticket['status'] === 'awaiting_cml_admin_approval' && $user['department'] === 'CML') {
-            $canApprove = true;
-            $approvalType = 'cml_admin';
-            $pageTitle = 'CML Admin Review';
-        }
-
-        if (!$canApprove) {
-            $this->redirect('/admin/approvals/pending');
-            return;
-        }
-
-        // Get transaction history
-        $transactionsSql = "SELECT t.*, u.name as user_name, u.role as user_role
-                           FROM transactions t
-                           LEFT JOIN users u ON t.created_by_id = u.id
-                           WHERE t.complaint_id = ?
-                           ORDER BY t.created_at DESC";
-        $transactions = $this->db->fetchAll($transactionsSql, [$complaintId]);
-
-        // Get approval workflow log
-        $workflowSql = "SELECT awl.*, u.name as user_name
-                        FROM approval_workflow_log awl
-                        LEFT JOIN users u ON awl.performed_by = u.id
-                        WHERE awl.complaint_id = ?
-                        ORDER BY awl.created_at ASC";
-        $workflowLog = $this->db->fetchAll($workflowSql, [$complaintId]);
-
-        // Get evidence files
-        $evidenceSql = "SELECT * FROM evidence WHERE complaint_id = ? ORDER BY uploaded_at DESC";
-        $evidenceRaw = $this->db->fetchAll($evidenceSql, [$complaintId]);
-        $evidenceFiles = $this->transformEvidenceForDisplay($evidenceRaw);
-
-        $this->view('admin/approvals/review', [
-            'page_title' => $pageTitle . ' - SAMPARK Admin',
-            'user' => $user,
-            'user_name' => $user['name'] ?? 'Admin',
-            'user_role' => $user['role'],
-            'complaint_id' => $complaintId,
-            'ticket' => $ticket,
-            'can_approve' => $canApprove,
-            'approval_type' => $approvalType,
-            'transactions' => $transactions,
-            'workflow_log' => $workflowLog,
-            'evidence_files' => $evidenceFiles,
-            'csrf_token' => $this->session->getCSRFToken()
-        ]);
-    }
-
-    /**
      * Process approval action
      */
     public function processApproval()
@@ -4855,7 +4797,6 @@ class AdminController extends BaseController
             $validator = new Validator();
             $isValid = $validator->validate($_POST, [
                 'complaint_id' => 'required|string',
-                'approval_type' => 'required|in:dept_admin,cml_admin',
                 'action' => 'required|string',
                 'remarks' => 'string'
             ]);
@@ -5057,14 +4998,16 @@ class AdminController extends BaseController
             // Get pending department admin approvals
             $deptApprovalsSql = "SELECT COUNT(*) as count
                                 FROM complaints c
-                                WHERE c.status = 'awaiting_dept_admin_approval'" . $whereClause;
+                                WHERE c.status = 'awaiting_approval'
+                                  AND c.approval_stage = 'dept_admin'" . $whereClause;
             $deptApprovals = $this->db->fetch($deptApprovalsSql, $params)['count'] ?? 0;
 
             // Get pending CML admin approvals
             if ($user['department'] === 'CML') {
                 $cmlApprovalsSql = "SELECT COUNT(*) as count
                                    FROM complaints c
-                                   WHERE c.status = 'awaiting_cml_admin_approval'
+                                   WHERE c.status = 'awaiting_approval'
+                                     AND c.approval_stage = 'cml_admin'
                                      AND c.division = ? AND c.zone = ?";
                 $cmlApprovals = $this->db->fetch($cmlApprovalsSql, [$user['division'], $user['zone']])['count'] ?? 0;
             } else {
@@ -5074,7 +5017,7 @@ class AdminController extends BaseController
             // Get overdue approvals (more than 24 hours pending)
             $overdueSql = "SELECT COUNT(*) as count
                           FROM complaints c
-                          WHERE c.status IN ('awaiting_dept_admin_approval', 'awaiting_cml_admin_approval')
+                          WHERE c.status = 'awaiting_approval'
                             AND TIMESTAMPDIFF(HOUR, c.updated_at, NOW()) > 24" . $whereClause;
             $overdueApprovals = $this->db->fetch($overdueSql, $params)['count'] ?? 0;
 

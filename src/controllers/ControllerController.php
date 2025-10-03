@@ -85,11 +85,16 @@ class ControllerController extends BaseController {
         $conditions = [];
         $params = [];
 
-        $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
+        // For controller_nodal: see all tickets in their division
+        // For controller: see only tickets assigned to their department
+        if ($user['role'] === 'controller_nodal') {
+            $conditions[] = 'c.division = ?';
+            $params[] = $user['division'];
+        } else {
+            $conditions[] = 'c.division = ? AND c.assigned_to_department = ?';
             $params[] = $user['division'];
             $params[] = $user['department'];
-        
-        
+        }
 
         // Exclude closed complaints by default
         $conditions[] = "c.status != 'closed'";
@@ -449,31 +454,34 @@ class ControllerController extends BaseController {
                                   $ticket['forwarded_flag'] == 1);
         
         // For controller_nodal: restrict actions on tickets awaiting customer response
-        $isAwaitingCustomerInfo = ($user['role'] === 'controller_nodal' && 
+        $isAwaitingCustomerInfo = ($user['role'] === 'controller_nodal' &&
                                    $ticket['status'] === 'awaiting_info');
-        
-        $canForward = in_array($user['role'], ['controller', 'controller_nodal']) && 
+
+        // Check if ticket is in admin approval workflow
+        $isInAdminApproval = ($ticket['status'] === 'awaiting_approval');
+
+        $canForward = in_array($user['role'], ['controller', 'controller_nodal']) &&
                      in_array($ticket['status'], ['pending', 'awaiting_info']) &&
                      !$isForwardedToOtherDept &&
-                     !$isAwaitingCustomerInfo;
+                     !$isAwaitingCustomerInfo &&
+                     !$isInAdminApproval;
         
         $canReply = in_array($ticket['status'], ['pending', 'awaiting_info']) &&
                    !$isAssignedToOtherDept &&
-                   !$isAwaitingCustomerInfo;
+                   !$isAwaitingCustomerInfo &&
+                   !$isInAdminApproval;
         
-        // Controllers can only approve tickets in old workflow (awaiting_approval status)
-        // Admin approval workflow tickets (awaiting_dept_admin_approval, awaiting_cml_admin_approval)
-        // should be handled by admin interfaces only
-        $canApprove = $user['role'] === 'controller_nodal' &&
-                     $ticket['status'] === 'awaiting_approval' &&
-                     !$isAssignedToOtherDept;
-        
-        $canRevert = $user['role'] === 'controller_nodal' && 
-                    in_array($ticket['status'], ['awaiting_approval', 'closed']) &&
+        // Per new requirements: Controller_nodal CANNOT take any action when status is 'awaiting_approval'
+        // All approval actions are handled by admins only
+        // Controller_nodal can only VIEW tickets in awaiting_approval status
+        $canApprove = false; // Disabled - only admins can approve now
+
+        $canRevert = $user['role'] === 'controller_nodal' &&
+                    $ticket['status'] === 'closed' &&
                     !$isAssignedToOtherDept;
-        
-        $canRevertToCustomer = $user['role'] === 'controller_nodal' && 
-                              in_array($ticket['status'], ['pending', 'awaiting_approval']) &&
+
+        $canRevertToCustomer = $user['role'] === 'controller_nodal' &&
+                              $ticket['status'] === 'pending' &&
                               !$isAssignedToOtherDept;
         
         $canInterimRemarks = $user['role'] === 'controller_nodal' &&
@@ -508,6 +516,7 @@ class ControllerController extends BaseController {
             'is_viewing_other_dept' => $isAssignedToOtherDept,
             'is_forwarded_ticket' => $isForwardedToOtherDept,
             'is_awaiting_customer_info' => $isAwaitingCustomerInfo,
+            'is_in_admin_approval' => $isInAdminApproval,
             'permissions' => [
                 'can_forward' => $canForward,
                 'can_reply' => $canReply,
@@ -768,17 +777,21 @@ class ControllerController extends BaseController {
                 $this->json(['success' => false, 'message' => 'Invalid ticket or cannot reply'], 400);
                 return;
             }
-            
-            // Controller_nodal cannot reply to tickets assigned to other departments
-            if ($user['role'] === 'controller_nodal' && 
-                $ticket['assigned_to_department'] !== $user['department']) {
-                $this->json(['success' => false, 'message' => 'Cannot reply to tickets assigned to other departments'], 403);
+
+            // Controller_nodal can only reply to tickets assigned to CML department
+            if ($user['role'] === 'controller_nodal' &&
+                $ticket['assigned_to_department'] !== 'CML') {
+                $this->json(['success' => false, 'message' => 'Controller Nodal can only close tickets assigned to CML department'], 403);
                 return;
             }
-            
+
             $isInterimReply = isset($_POST['is_interim_reply']) && $_POST['is_interim_reply'];
             $internalRemarks = isset($_POST['internal_remarks']) ? trim($_POST['internal_remarks']) : '';
-            
+
+            // Initialize approval stage and determine which department should approve
+            $approvalStage = null;
+            $approvalDepartment = null;
+
             // Determine status based on reply type
             if ($isInterimReply) {
                 // Interim replies don't change status - just acknowledge receipt
@@ -791,27 +804,45 @@ class ControllerController extends BaseController {
 
                 if ($requireDeptAdminApproval && $requireDeptAdminApproval['setting_value'] == '1') {
                     // Use new admin approval workflow
-                    $newStatus = 'awaiting_dept_admin_approval';
-                } else {
-                    // Fallback to old controller_nodal approval
                     $newStatus = 'awaiting_approval';
+
+                    // Determine approval workflow based on who is handling the ticket
+                    $currentAssignedDept = $ticket['assigned_to_department'];
+
+                    if ($user['role'] === 'controller_nodal' && $currentAssignedDept === 'CML') {
+                        // Controller_nodal closing a CML-assigned ticket → Go to CML admin
+                        $approvalStage = 'cml_admin';
+                        $approvalDepartment = 'CML';
+                    } else {
+                        // Regular controller closing dept-assigned ticket → Dept admin approval
+                        $approvalStage = 'dept_admin';
+                        $approvalDepartment = $currentAssignedDept ?: $user['department'];
+                    }
+                } else {
+                    // Fallback to old controller_nodal approval (legacy)
+                    $newStatus = 'awaiting_approval';
+                    $approvalStage = null; // No approval_stage for legacy workflow
+                    $approvalDepartment = 'CML';
                 }
             }
             
             // Update ticket only if it's a final reply (not interim)
             if (!$isInterimReply && !empty($_POST['action_taken'])) {
-                // Check if this reply is closing the ticket (for either approval workflow)
-                $isClosingTicket = ($newStatus === 'awaiting_approval' || $newStatus === 'awaiting_dept_admin_approval');
+                // Check if this reply is closing the ticket
+                $isClosingTicket = ($newStatus === 'awaiting_approval');
 
                 if ($isClosingTicket) {
-                    // When closing ticket: set department, reset forwarded_flag, set closed_at
-                    if ($newStatus === 'awaiting_dept_admin_approval') {
-                        // New admin approval workflow - keep in same department for dept admin approval
+                    // When closing ticket: set department, set closed_at
+                    // NOTE: forwarded_flag is NOT reset here - it stays until CML admin approves
+                    // This allows controller_nodal to track forwarded tickets until final approval
+                    if ($approvalStage === 'dept_admin' || $approvalStage === 'cml_admin') {
+                        // New admin approval workflow - dept/cml admin approval required
                         $sql = "UPDATE complaints SET
                                 action_taken = ?,
                                 status = ?,
+                                approval_stage = ?,
+                                assigned_to_department = ?,
                                 department = ?,
-                                forwarded_flag = 0,
                                 closed_at = NOW(),
                                 updated_at = NOW()
                                 WHERE complaint_id = ?";
@@ -819,17 +850,18 @@ class ControllerController extends BaseController {
                         $this->db->query($sql, [
                             trim($_POST['action_taken']),
                             $newStatus,
-                            $user['department'],
+                            $approvalStage,
+                            $approvalDepartment, // Department whose admin needs to approve
+                            $approvalDepartment, // Set department to match
                             $ticketId
                         ]);
                     } else {
-                        // Old controller_nodal approval workflow
+                        // Old controller_nodal approval workflow (legacy)
                         $sql = "UPDATE complaints SET
                                 action_taken = ?,
                                 status = ?,
                                 department = ?,
-                                assigned_to_department = 'CML',
-                                forwarded_flag = 0,
+                                assigned_to_department = ?,
                                 closed_at = NOW(),
                                 updated_at = NOW()
                                 WHERE complaint_id = ?";
@@ -838,17 +870,18 @@ class ControllerController extends BaseController {
                             trim($_POST['action_taken']),
                             $newStatus,
                             $user['department'],
+                            $approvalDepartment,
                             $ticketId
                         ]);
                     }
                 } else {
-                    // Regular reply update
-                    $sql = "UPDATE complaints SET 
+                    // Regular reply update (non-closing)
+                    $sql = "UPDATE complaints SET
                             action_taken = ?,
                             status = ?,
                             updated_at = NOW()
                             WHERE complaint_id = ?";
-                    
+
                     $this->db->query($sql, [
                         trim($_POST['action_taken']),
                         $newStatus,
@@ -880,15 +913,31 @@ class ControllerController extends BaseController {
             
             $this->db->commit();
             
-            $message = $isInterimReply ?
-                'Interim reply sent to customer - ticket remains in current status' :
-                ($newStatus === 'awaiting_dept_admin_approval' ? 'Reply submitted for department admin approval' :
-                ($newStatus === 'awaiting_approval' ? 'Reply submitted for approval' : 'Reply sent to customer successfully'));
-            
-            $this->json([
+            // Build appropriate message
+            if ($isInterimReply) {
+                $message = 'Interim reply sent to customer - ticket remains in current status';
+            } else {
+                if ($approvalStage === 'dept_admin') {
+                    $deptName = $approvalDepartment ?? 'department';
+                    $message = "Reply submitted for {$deptName} admin approval";
+                } elseif ($approvalStage === 'cml_admin') {
+                    $message = 'Reply submitted for CML admin approval';
+                } else {
+                    $message = 'Reply submitted for approval';
+                }
+            }
+
+            $response = [
                 'success' => true,
                 'message' => $message
-            ]);
+            ];
+
+            // If ticket is being closed (awaiting approval), redirect to support hub
+            if (!$isInterimReply && $newStatus === 'awaiting_approval') {
+                $response['redirect'] = Config::getAppUrl() . '/controller/tickets';
+            }
+
+            $this->json($response);
             
         } catch (Exception $e) {
             $this->db->rollback();

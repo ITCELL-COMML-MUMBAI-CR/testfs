@@ -79,7 +79,7 @@ $customer_registration_stats = $customer_registration_stats ?? [];
                                             <strong><?= htmlspecialchars($admin_approval_counts['user_department']) ?></strong> department
                                             awaiting your approval.
                                         </p>
-                                        <a href="<?= Config::getAppUrl() ?>/admin/approvals/pending" class="btn btn-warning btn-sm">
+                                        <a href="<?= Config::getAppUrl() ?>/admin/tickets?status=awaiting_approval" class="btn btn-warning btn-sm">
                                             <i class="fas fa-tasks me-2"></i>Review Pending Approvals
                                         </a>
                                     </div>
@@ -103,7 +103,7 @@ $customer_registration_stats = $customer_registration_stats ?? [];
                                             ticket<?= $admin_approval_counts['cml_admin_pending'] > 1 ? 's' : '' ?>
                                             that have been approved by department admins and now require your final approval.
                                         </p>
-                                        <a href="<?= Config::getAppUrl() ?>/admin/approvals/pending" class="btn btn-primary btn-sm">
+                                        <a href="<?= Config::getAppUrl() ?>/admin/tickets?status=awaiting_approval" class="btn btn-primary btn-sm">
                                             <i class="fas fa-tasks me-2"></i>Review Pending Approvals
                                         </a>
                                     </div>

@@ -230,19 +230,9 @@ class WorkflowEngine {
                 'close' => ['controller', 'controller_nodal']
             ],
             'awaiting_approval' => [
-                'approve' => ['controller_nodal'],
-                'reject' => ['controller_nodal'],
-                'close' => ['controller_nodal']
-            ],
-            'awaiting_dept_admin_approval' => [
-                'dept_admin_approve' => ['admin'],
-                'dept_admin_reject' => ['admin'],
-                'dept_admin_edit_approve' => ['admin']
-            ],
-            'awaiting_cml_admin_approval' => [
-                'cml_admin_approve' => ['admin'],
-                'cml_admin_reject' => ['admin'],
-                'cml_admin_edit_approve' => ['admin']
+                'admin_approve' => ['admin'],
+                'admin_reject' => ['admin'],
+                'admin_edit_approve' => ['admin']
             ],
             'awaiting_feedback' => [
                 'provide_feedback' => ['customer'],
@@ -286,29 +276,14 @@ class WorkflowEngine {
             case 'reply':
                 return $this->replyToTicket($ticket, $data['reply'], $data['action_taken'], $userId, $userType);
 
-            case 'approve':
-                return $this->approveReply($ticket, $data['remarks'], $userId);
+            case 'admin_approve':
+                return $this->adminApprove($ticket, $data['remarks'] ?? null, $userId);
 
-            case 'reject':
-                return $this->rejectReply($ticket, $data['reason'], $userId);
+            case 'admin_reject':
+                return $this->adminReject($ticket, $data['reason'], $userId);
 
-            case 'dept_admin_approve':
-                return $this->deptAdminApprove($ticket, $data['remarks'] ?? null, $userId);
-
-            case 'dept_admin_reject':
-                return $this->deptAdminReject($ticket, $data['reason'], $userId);
-
-            case 'dept_admin_edit_approve':
-                return $this->deptAdminEditAndApprove($ticket, $data['edited_content'], $data['remarks'] ?? null, $userId);
-
-            case 'cml_admin_approve':
-                return $this->cmlAdminApprove($ticket, $data['remarks'] ?? null, $userId);
-
-            case 'cml_admin_reject':
-                return $this->cmlAdminReject($ticket, $data['reason'], $userId);
-
-            case 'cml_admin_edit_approve':
-                return $this->cmlAdminEditAndApprove($ticket, $data['edited_content'], $data['remarks'] ?? null, $userId);
+            case 'admin_edit_approve':
+                return $this->adminEditAndApprove($ticket, $data['edited_content'], $data['remarks'] ?? null, $userId);
 
             case 'provide_feedback':
                 return $this->provideFeedback($ticket, $data['rating'], $data['remarks'], $userId);
@@ -321,13 +296,13 @@ class WorkflowEngine {
 
             case 'add_admin_remarks':
                 return $this->addAdminRemarks($ticket, $userId, $data);
-                
+
             case 'close':
                 return $this->closeTicket($ticket, $data['resolution'], $userId);
-                
+
             case 'reopen':
                 return $this->reopenTicket($ticket, $data['reason'], $userId);
-                
+
             default:
                 return ['success' => false, 'error' => "Unknown action: {$action}"];
         }
@@ -389,20 +364,22 @@ class WorkflowEngine {
      */
     private function replyToTicket($ticket, $reply, $actionTaken, $userId, $userType) {
         $needsApproval = $userType === 'controller' && $this->replyNeedsApproval($ticket, $reply);
-        $newStatus = $needsApproval ? 'awaiting_dept_admin_approval' : 'awaiting_feedback';
+        $newStatus = $needsApproval ? 'awaiting_approval' : 'awaiting_feedback';
 
         $sql = "UPDATE complaints SET
                 action_taken = ?,
                 status = ?,
+                approval_stage = ?,
                 updated_at = NOW()
                 WHERE complaint_id = ?";
 
-        $this->db->query($sql, [$actionTaken, $newStatus, $ticket['complaint_id']]);
+        $approvalStage = $needsApproval ? 'dept_admin' : NULL;
+        $this->db->query($sql, [$actionTaken, $newStatus, $approvalStage, $ticket['complaint_id']]);
 
         return [
             'success' => true,
             'new_status' => $newStatus,
-            'updates' => ['action_taken' => $actionTaken],
+            'updates' => ['action_taken' => $actionTaken, 'approval_stage' => $approvalStage],
             'message' => $needsApproval ? 'Reply submitted for department admin approval' : 'Reply sent to customer'
         ];
     }
@@ -526,7 +503,8 @@ class WorkflowEngine {
         if ($requireDeptApproval) {
             $sql = "UPDATE complaints SET
                     action_taken = ?,
-                    status = 'awaiting_dept_admin_approval',
+                    status = 'awaiting_approval',
+                    approval_stage = 'dept_admin',
                     updated_at = NOW()
                     WHERE complaint_id = ?";
 
@@ -534,8 +512,8 @@ class WorkflowEngine {
 
             return [
                 'success' => true,
-                'new_status' => 'awaiting_dept_admin_approval',
-                'updates' => ['action_taken' => $resolution],
+                'new_status' => 'awaiting_approval',
+                'updates' => ['action_taken' => $resolution, 'approval_stage' => 'dept_admin'],
                 'message' => 'Reply submitted for department admin approval'
             ];
         } else {
@@ -889,33 +867,56 @@ class WorkflowEngine {
      */
     private function sendInfoProvidedNotifications($ticket, $additionalInfo) {
         try {
-            
+            // Get all controllers in the assigned department
+            $assignedControllers = [];
+            if (!empty($ticket['assigned_to_department'])) {
+                $assignedControllers = $this->db->fetchAll(
+                    "SELECT id, name, email, mobile FROM users
+                     WHERE role = 'controller'
+                       AND department = ?
+                       AND division = ?
+                       AND status = 'active'",
+                    [$ticket['assigned_to_department'], $ticket['division']]
+                );
+            }
+
             // Get controller_nodal for the division
             $nodalController = $this->db->fetch(
                 "SELECT id, name, email, mobile FROM users WHERE role = 'controller_nodal' AND division = ? AND status = 'active' LIMIT 1",
                 [$ticket['division']]
             );
-            
+
             $recipients = [];
-            
-            // Add assigned controller if exists
-            if ($assignedUser) {
+
+            // Add all assigned controllers
+            foreach ($assignedControllers as $controller) {
                 $recipients[] = [
-                    'user_id' => $assignedUser['id'],
-                    'email' => $assignedUser['email'],
-                    'mobile' => $assignedUser['mobile'],
+                    'user_id' => $controller['id'],
+                    'email' => $controller['email'],
+                    'mobile' => $controller['mobile'],
                     'complaint_id' => $ticket['complaint_id']
                 ];
             }
-            
-            // Add controller_nodal if exists and different from assigned user
-            if ($nodalController && (!$assignedUser || $nodalController['id'] != $assignedUser['id'])) {
-                $recipients[] = [
-                    'user_id' => $nodalController['id'],
-                    'email' => $nodalController['email'],
-                    'mobile' => $nodalController['mobile'],
-                    'complaint_id' => $ticket['complaint_id']
-                ];
+
+            // Add controller_nodal if exists
+            if ($nodalController) {
+                // Check if nodal controller is already in recipients list
+                $alreadyAdded = false;
+                foreach ($recipients as $recipient) {
+                    if ($recipient['user_id'] == $nodalController['id']) {
+                        $alreadyAdded = true;
+                        break;
+                    }
+                }
+
+                if (!$alreadyAdded) {
+                    $recipients[] = [
+                        'user_id' => $nodalController['id'],
+                        'email' => $nodalController['email'],
+                        'mobile' => $nodalController['mobile'],
+                        'complaint_id' => $ticket['complaint_id']
+                    ];
+                }
             }
             
             // Per requirements: No emails to Controllers, Controller_nodal, Admins or Superadmins
@@ -1066,202 +1067,234 @@ class WorkflowEngine {
         // Only send auto-close emails to customers, not staff
         $this->notificationService->send('ticket_auto_closed', [$recipient], $data);
     }
-    
-    
+
     /**
-     * Department admin approve ticket
+     * Admin approve - unified method for both department and CML admin
      */
-    private function deptAdminApprove($ticket, $remarks, $adminId) {
-        // CML admin approval is ALWAYS required after department admin approval
-        $nextStatus = 'awaiting_cml_admin_approval';
+    private function adminApprove($ticket, $remarks, $adminId) {
+        $admin = $this->db->fetch("SELECT department, division, zone FROM users WHERE id = ?", [$adminId]);
+        $currentStage = $ticket['approval_stage'] ?? 'dept_admin';
 
-        // Priority escalation continues during admin approval - never stop escalation at dept admin level
-        $stopEscalation = false;
+        if ($currentStage === 'dept_admin') {
+            // Department admin approval - move to CML admin
+            $sql = "UPDATE complaints SET
+                    dept_admin_approved_by = ?,
+                    dept_admin_approved_at = NOW(),
+                    dept_admin_remarks = ?,
+                    approval_stage = 'cml_admin',
+                    assigned_to_department = 'CML',
+                    updated_at = NOW()
+                    WHERE complaint_id = ?";
 
-        $sql = "UPDATE complaints SET
-                dept_admin_approved_by = ?,
-                dept_admin_approved_at = NOW(),
-                dept_admin_remarks = ?,
-                status = ?" .
-                ($stopEscalation ? ", escalation_stopped = 1" : "") . ",
-                updated_at = NOW()
-                WHERE complaint_id = ?";
+            $this->db->query($sql, [$adminId, $remarks, $ticket['complaint_id']]);
+            $this->logApprovalWorkflow($ticket['complaint_id'], 'dept_admin_review', 'approve', $adminId, null, null, $remarks);
 
-        $this->db->query($sql, [$adminId, $remarks, $nextStatus, $ticket['complaint_id']]);
+            return [
+                'success' => true,
+                'new_status' => 'awaiting_approval',
+                'updates' => ['approval_stage' => 'cml_admin', 'assigned_to_department' => 'CML'],
+                'message' => 'Department admin approved. Sent to CML admin for approval.'
+            ];
+        } else {
+            // CML admin approval - final approval
+            // Reset forwarded_flag here as the ticket is now finalized
+            $sql = "UPDATE complaints SET
+                    cml_admin_approved_by = ?,
+                    cml_admin_approved_at = NOW(),
+                    cml_admin_remarks = ?,
+                    status = 'awaiting_feedback',
+                    approval_stage = 'completed',
+                    escalation_stopped = 1,
+                    forwarded_flag = 0,
+                    updated_at = NOW()
+                    WHERE complaint_id = ?";
 
-        // Log in approval workflow
-        $this->logApprovalWorkflow($ticket['complaint_id'], 'dept_admin_review', 'approve', $adminId, null, null, $remarks);
+            $this->db->query($sql, [$adminId, $remarks, $ticket['complaint_id']]);
+            $this->logApprovalWorkflow($ticket['complaint_id'], 'cml_admin_review', 'approve', $adminId, null, null, $remarks);
 
-        $message = 'Department admin approved. Sent to CML admin for approval.';
+            // Create customer-visible transaction to show the approved action_taken
+            if (!empty($ticket['action_taken'])) {
+                $this->db->query(
+                    "INSERT INTO transactions (
+                        complaint_id, transaction_type, remarks, remarks_type,
+                        created_by_id, created_by_type, created_by_role, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())",
+                    [
+                        $ticket['complaint_id'],
+                        'approved',
+                        $ticket['action_taken'],
+                        'customer_remarks',
+                        $adminId,
+                        'user',
+                        'admin'
+                    ]
+                );
+            }
 
-        $updates = [
-            'dept_admin_approved_by' => $adminId,
-            'dept_admin_remarks' => $remarks
-        ];
+            return [
+                'success' => true,
+                'new_status' => 'awaiting_feedback',
+                'updates' => ['approval_stage' => 'completed', 'escalation_stopped' => 1, 'forwarded_flag' => 0],
+                'message' => 'CML admin approved. Sent to customer for feedback.'
+            ];
+        }
+    }
 
-        if ($stopEscalation) {
-            $updates['escalation_stopped'] = 1;
+    /**
+     * Admin reject - unified method
+     */
+    private function adminReject($ticket, $reason, $adminId) {
+        $admin = $this->db->fetch("SELECT department, role FROM users WHERE id = ?", [$adminId]);
+        $currentStage = $ticket['approval_stage'] ?? 'dept_admin';
+
+        // Log the rejection remarks as a transaction (visible to controllers and admins)
+        if (!empty($reason)) {
+            $adminType = $currentStage === 'dept_admin' ? 'Department Admin' : 'CML Admin';
+            $transactionRemarks = "❌ {$adminType} Rejection:\n\n" . $reason;
+
+            $this->db->query(
+                "INSERT INTO transactions (
+                    complaint_id, transaction_type, remarks, remarks_type,
+                    created_by_id, created_by_type, created_by_role, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())",
+                [
+                    $ticket['complaint_id'],
+                    'admin_rejected',
+                    $transactionRemarks,
+                    'admin_remarks',
+                    $adminId,
+                    'user',
+                    $admin['role']
+                ]
+            );
         }
 
-        return [
-            'success' => true,
-            'new_status' => $nextStatus,
-            'updates' => $updates,
-            'message' => $message
-        ];
-    }
+        // Return ticket to the department that originally closed/replied to it
+        // The 'department' field stores which department handled the ticket
+        $returnToDepartment = $ticket['department'] ?: $ticket['assigned_to_department'];
 
-    /**
-     * Department admin reject ticket
-     */
-    private function deptAdminReject($ticket, $reason, $adminId) {
         $sql = "UPDATE complaints SET
                 status = 'pending',
-                updated_at = NOW()
-                WHERE complaint_id = ?";
-
-        $this->db->query($sql, [$ticket['complaint_id']]);
-
-        // Log in approval workflow
-        $this->logApprovalWorkflow($ticket['complaint_id'], 'dept_admin_review', 'reject', $adminId, null, null, null, $reason);
-
-        return [
-            'success' => true,
-            'new_status' => 'pending',
-            'updates' => [],
-            'message' => 'Department admin rejected. Returned for revision.'
-        ];
-    }
-
-    /**
-     * Department admin edit and approve ticket
-     */
-    private function deptAdminEditAndApprove($ticket, $editedContent, $remarks, $adminId) {
-        // CML admin approval is ALWAYS required after department admin approval
-        $nextStatus = 'awaiting_cml_admin_approval';
-
-        // Priority escalation continues during admin approval - never stop escalation at dept admin level
-        $stopEscalation = false;
-
-        $sql = "UPDATE complaints SET
-                action_taken = ?,
-                dept_admin_approved_by = ?,
-                dept_admin_approved_at = NOW(),
-                dept_admin_remarks = ?,
-                status = ?" .
-                ($stopEscalation ? ", escalation_stopped = 1" : "") . ",
-                updated_at = NOW()
-                WHERE complaint_id = ?";
-
-        $this->db->query($sql, [$editedContent, $adminId, $remarks, $nextStatus, $ticket['complaint_id']]);
-
-        // Log in approval workflow
-        $this->logApprovalWorkflow($ticket['complaint_id'], 'dept_admin_review', 'edit_and_approve', $adminId, $ticket['action_taken'], $editedContent, $remarks);
-
-        $message = 'Department admin edited and approved. Sent to CML admin for approval.';
-
-        $updates = [
-            'action_taken' => $editedContent,
-            'dept_admin_approved_by' => $adminId,
-            'dept_admin_remarks' => $remarks
-        ];
-
-        if ($stopEscalation) {
-            $updates['escalation_stopped'] = 1;
-        }
-
-        return [
-            'success' => true,
-            'new_status' => $nextStatus,
-            'updates' => $updates,
-            'message' => $message
-        ];
-    }
-
-    /**
-     * CML admin approve ticket
-     */
-    private function cmlAdminApprove($ticket, $remarks, $adminId) {
-        // Stop escalation only when CML admin approves (final approval before customer feedback)
-        $sql = "UPDATE complaints SET
-                cml_admin_approved_by = ?,
-                cml_admin_approved_at = NOW(),
-                cml_admin_remarks = ?,
-                status = 'awaiting_feedback',
-                escalation_stopped = 1,
-                updated_at = NOW()
-                WHERE complaint_id = ?";
-
-        $this->db->query($sql, [$adminId, $remarks, $ticket['complaint_id']]);
-
-        // Log in approval workflow
-        $this->logApprovalWorkflow($ticket['complaint_id'], 'cml_admin_review', 'approve', $adminId, null, null, $remarks);
-
-        return [
-            'success' => true,
-            'new_status' => 'awaiting_feedback',
-            'updates' => [
-                'cml_admin_approved_by' => $adminId,
-                'cml_admin_remarks' => $remarks,
-                'escalation_stopped' => 1
-            ],
-            'message' => 'CML admin approved. Sent to customer for feedback.'
-        ];
-    }
-
-    /**
-     * CML admin reject ticket
-     */
-    private function cmlAdminReject($ticket, $reason, $adminId) {
-        $sql = "UPDATE complaints SET
-                status = 'pending',
+                approval_stage = NULL,
+                assigned_to_department = ?,
                 dept_admin_approved_by = NULL,
                 dept_admin_approved_at = NULL,
                 dept_admin_remarks = NULL,
+                cml_admin_approved_by = NULL,
+                cml_admin_approved_at = NULL,
+                cml_admin_remarks = NULL,
                 updated_at = NOW()
                 WHERE complaint_id = ?";
 
-        $this->db->query($sql, [$ticket['complaint_id']]);
+        $this->db->query($sql, [$returnToDepartment, $ticket['complaint_id']]);
 
-        // Log in approval workflow
-        $this->logApprovalWorkflow($ticket['complaint_id'], 'cml_admin_review', 'reject', $adminId, null, null, null, $reason);
+        $workflowStep = $currentStage === 'dept_admin' ? 'dept_admin_review' : 'cml_admin_review';
+        $this->logApprovalWorkflow($ticket['complaint_id'], $workflowStep, 'reject', $adminId, null, null, null, $reason);
+
+        $rejectMessage = $currentStage === 'dept_admin'
+            ? "Department admin rejected. Returned to {$returnToDepartment} department for revision."
+            : "CML admin rejected. Returned to {$returnToDepartment} department for revision.";
 
         return [
             'success' => true,
             'new_status' => 'pending',
-            'updates' => [],
-            'message' => 'CML admin rejected. Returned for revision.'
+            'updates' => ['assigned_to_department' => $returnToDepartment],
+            'message' => $rejectMessage
         ];
     }
 
     /**
-     * CML admin edit and approve ticket
+     * Admin edit and approve - unified method
      */
-    private function cmlAdminEditAndApprove($ticket, $editedContent, $remarks, $adminId) {
-        $sql = "UPDATE complaints SET
-                action_taken = ?,
-                cml_admin_approved_by = ?,
-                cml_admin_approved_at = NOW(),
-                cml_admin_remarks = ?,
-                status = 'awaiting_feedback',
-                updated_at = NOW()
-                WHERE complaint_id = ?";
+    private function adminEditAndApprove($ticket, $editedContent, $remarks, $adminId) {
+        $admin = $this->db->fetch("SELECT department, role FROM users WHERE id = ?", [$adminId]);
+        $currentStage = $ticket['approval_stage'] ?? 'dept_admin';
 
-        $this->db->query($sql, [$editedContent, $adminId, $remarks, $ticket['complaint_id']]);
+        // Log the original reply as a transaction before editing
+        if (!empty($ticket['action_taken'])) {
+            $transactionRemarks = "Original Reply (Before Admin Edit):\n\n" . $ticket['action_taken'];
+            if ($remarks) {
+                $transactionRemarks .= "\n\nAdmin Edit Remarks: " . $remarks;
+            }
 
-        // Log in approval workflow
-        $this->logApprovalWorkflow($ticket['complaint_id'], 'cml_admin_review', 'edit_and_approve', $adminId, $ticket['action_taken'], $editedContent, $remarks);
+            $this->db->query(
+                "INSERT INTO transactions (
+                    complaint_id, transaction_type, remarks, remarks_type,
+                    created_by_id, created_by_type, created_by_role, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())",
+                [
+                    $ticket['complaint_id'],
+                    'admin_edited_reply',
+                    $transactionRemarks,
+                    'admin_remarks',
+                    $adminId,
+                    'user',
+                    $admin['role']
+                ]
+            );
+        }
 
-        return [
-            'success' => true,
-            'new_status' => 'awaiting_feedback',
-            'updates' => [
-                'action_taken' => $editedContent,
-                'cml_admin_approved_by' => $adminId,
-                'cml_admin_remarks' => $remarks
-            ],
-            'message' => 'CML admin edited and approved. Sent to customer for feedback.'
-        ];
+        if ($currentStage === 'dept_admin') {
+            $sql = "UPDATE complaints SET
+                    action_taken = ?,
+                    dept_admin_approved_by = ?,
+                    dept_admin_approved_at = NOW(),
+                    dept_admin_remarks = ?,
+                    approval_stage = 'cml_admin',
+                    assigned_to_department = 'CML',
+                    updated_at = NOW()
+                    WHERE complaint_id = ?";
+
+            $this->db->query($sql, [$editedContent, $adminId, $remarks, $ticket['complaint_id']]);
+            $this->logApprovalWorkflow($ticket['complaint_id'], 'dept_admin_review', 'edit_and_approve', $adminId, $ticket['action_taken'], $editedContent, $remarks);
+
+            return [
+                'success' => true,
+                'new_status' => 'awaiting_approval',
+                'updates' => ['action_taken' => $editedContent, 'approval_stage' => 'cml_admin', 'assigned_to_department' => 'CML'],
+                'message' => 'Department admin edited and approved. Sent to CML admin for approval.'
+            ];
+        } else {
+            // CML admin edit and approve - final approval, reset forwarded_flag
+            $sql = "UPDATE complaints SET
+                    action_taken = ?,
+                    cml_admin_approved_by = ?,
+                    cml_admin_approved_at = NOW(),
+                    cml_admin_remarks = ?,
+                    status = 'awaiting_feedback',
+                    approval_stage = 'completed',
+                    escalation_stopped = 1,
+                    forwarded_flag = 0,
+                    updated_at = NOW()
+                    WHERE complaint_id = ?";
+
+            $this->db->query($sql, [$editedContent, $adminId, $remarks, $ticket['complaint_id']]);
+            $this->logApprovalWorkflow($ticket['complaint_id'], 'cml_admin_review', 'edit_and_approve', $adminId, $ticket['action_taken'], $editedContent, $remarks);
+
+            // Create customer-visible transaction to show the approved (and possibly edited) action_taken
+            $this->db->query(
+                "INSERT INTO transactions (
+                    complaint_id, transaction_type, remarks, remarks_type,
+                    created_by_id, created_by_type, created_by_role, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())",
+                [
+                    $ticket['complaint_id'],
+                    'approved',
+                    $editedContent,
+                    'customer_remarks',
+                    $adminId,
+                    'user',
+                    'admin'
+                ]
+            );
+
+            return [
+                'success' => true,
+                'new_status' => 'awaiting_feedback',
+                'updates' => ['action_taken' => $editedContent, 'approval_stage' => 'completed', 'escalation_stopped' => 1, 'forwarded_flag' => 0],
+                'message' => 'CML admin edited and approved. Sent to customer for feedback.'
+            ];
+        }
     }
 
     /**

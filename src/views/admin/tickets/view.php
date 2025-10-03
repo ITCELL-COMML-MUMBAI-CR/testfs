@@ -84,12 +84,21 @@ $page_title = 'View Ticket Details - SAMPARK Admin';
 
     <!-- Status Alert -->
     <?php
+    // Build dynamic approval message based on approval_stage
+    $approvalText = 'Reply is awaiting admin approval';
+    if ($ticket['status'] === 'awaiting_approval') {
+        if ($ticket['approval_stage'] === 'dept_admin') {
+            $deptName = $ticket['assigned_to_department'] ?? 'Department';
+            $approvalText = "Approval on reply is pending from {$deptName} Admin";
+        } elseif ($ticket['approval_stage'] === 'cml_admin') {
+            $approvalText = "Approval on reply is pending from CML Admin";
+        }
+    }
+
     $statusInfo = [
         'pending' => ['class' => 'warning', 'icon' => 'clock', 'text' => 'This ticket is pending action'],
         'awaiting_info' => ['class' => 'info', 'icon' => 'info-circle', 'text' => 'Waiting for additional information from customer'],
-        'awaiting_approval' => ['class' => 'primary', 'icon' => 'check-circle', 'text' => 'Reply is awaiting nodal controller approval'],
-        'awaiting_dept_admin_approval' => ['class' => 'primary', 'icon' => 'user-check', 'text' => 'Reply is awaiting department admin approval'],
-        'awaiting_cml_admin_approval' => ['class' => 'primary', 'icon' => 'user-shield', 'text' => 'Reply is awaiting CML admin approval'],
+        'awaiting_approval' => ['class' => 'primary', 'icon' => 'user-check', 'text' => $approvalText],
         'awaiting_feedback' => ['class' => 'success', 'icon' => 'comment', 'text' => 'Reply sent, waiting for customer feedback'],
         'closed' => ['class' => 'dark', 'icon' => 'check', 'text' => 'This ticket has been resolved and closed']
     ][$ticket['status']] ?? ['class' => 'secondary', 'icon' => 'question', 'text' => 'Status unknown'];
@@ -100,10 +109,10 @@ $page_title = 'View Ticket Details - SAMPARK Admin';
             <i class="fas fa-<?= $statusInfo['icon'] ?> me-2"></i>
             <strong>Status: <?= ucwords(str_replace('_', ' ', $ticket['status'])) ?></strong> - <?= $statusInfo['text'] ?>
         </div>
-        <?php if (in_array($ticket['status'], ['awaiting_dept_admin_approval', 'awaiting_cml_admin_approval'])): ?>
-            <a href="<?= Config::getAppUrl() ?>/admin/approvals/review/<?= $ticket['complaint_id'] ?>" class="btn btn-outline-primary btn-sm">
-                <i class="fas fa-gavel me-1"></i>Review & Approve
-            </a>
+        <?php if ($ticket['status'] === 'awaiting_approval' && $permissions['can_approve']): ?>
+            <span class="badge bg-success">
+                <i class="fas fa-gavel me-1"></i>Approval Actions Available Below
+            </span>
         <?php endif; ?>
     </div>
 
@@ -541,6 +550,38 @@ $page_title = 'View Ticket Details - SAMPARK Admin';
 
         <!-- Sidebar -->
         <div class="col-lg-4">
+            <!-- Action Panel -->
+            <?php if ($permissions['can_approve']): ?>
+            <div class="card card-apple mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>Approval Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="action-section">
+                        <div class="row g-2">
+                            <div class="col-12">
+                                <button class="btn btn-success w-100 action-btn-approval" onclick="approveReply()">
+                                    <i class="fas fa-check me-2"></i>Approve Reply
+                                </button>
+                            </div>
+                            <div class="col-12">
+                                <button class="btn btn-primary w-100 action-btn-approval" onclick="editAndApproveReply()">
+                                    <i class="fas fa-edit me-2"></i>Edit & Approve
+                                </button>
+                            </div>
+                            <div class="col-12">
+                                <button class="btn btn-danger w-100 action-btn-approval" onclick="showRejectModal()">
+                                    <i class="fas fa-times me-2"></i>Reject Reply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
             <!-- Customer Information -->
             <div class="card card-apple mb-4">
                 <div class="card-header">
@@ -838,6 +879,189 @@ function viewImage(imageUrl, imageName) {
     color: #212529;
 }
 </style>
+
+<!-- Reject Modal -->
+<?php if ($permissions['can_approve']): ?>
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reject Reply</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="rejectForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="rejection-reason" class="form-label">Reason for Rejection *</label>
+                        <textarea id="rejection-reason" class="form-control" rows="4" required placeholder="Please provide detailed reason for rejection..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-apple-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-times me-2"></i>Reject Reply
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showRejectModal() {
+    new bootstrap.Modal(document.getElementById('rejectModal')).show();
+}
+
+function approveReply() {
+    Swal.fire({
+        title: 'Approve Reply',
+        text: 'Are you sure you want to approve this reply?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Approve',
+        cancelButtonText: 'Cancel',
+        input: 'textarea',
+        inputPlaceholder: 'Add approval remarks (optional)...',
+        inputAttributes: {
+            'aria-label': 'Approval remarks'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const remarks = result.value || '';
+
+            fetch('<?= Config::getAppUrl() ?>/admin/approvals/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'csrf_token': '<?= $csrf_token ?>',
+                    'complaint_id': '<?= $ticket['complaint_id'] ?>',
+                    'action': 'admin_approve',
+                    'remarks': remarks
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Approved!', data.message, 'success').then(() => {
+                        window.location.href = '<?= Config::getAppUrl() ?>/admin/tickets';
+                    });
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Failed to approve reply', 'error');
+            });
+        }
+    });
+}
+
+function editAndApproveReply() {
+    Swal.fire({
+        title: 'Edit and Approve Reply',
+        html: `
+            <div style="text-align: left;">
+                <label for="edit-action-taken" style="font-weight: bold; display: block; margin-bottom: 8px;">Edit Action Taken:</label>
+                <textarea id="edit-action-taken" class="swal2-textarea" placeholder="Edit the action taken..." style="height: 150px; width: 90%; margin-bottom: 15px;"><?= htmlspecialchars($ticket['action_taken'] ?? '') ?></textarea>
+
+                <label for="edit-approval-remarks" style="font-weight: bold; display: block; margin-bottom: 8px;">Approval Remarks (Optional):</label>
+                <textarea id="edit-approval-remarks" class="swal2-textarea" placeholder="Add approval remarks..." style="height: 80px; width: 90%;"></textarea>
+            </div>
+        `,
+        width: '600px',
+        showCancelButton: true,
+        confirmButtonText: 'Approve with Edits',
+        cancelButtonText: 'Cancel',
+        focusConfirm: false,
+        preConfirm: () => {
+            const editedAction = document.getElementById('edit-action-taken').value;
+            const approvalRemarks = document.getElementById('edit-approval-remarks').value;
+
+            if (!editedAction.trim()) {
+                Swal.showValidationMessage('Please provide action taken');
+                return false;
+            }
+
+            return { editedAction, approvalRemarks };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const { editedAction, approvalRemarks } = result.value;
+
+            fetch('<?= Config::getAppUrl() ?>/admin/approvals/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'csrf_token': '<?= $csrf_token ?>',
+                    'complaint_id': '<?= $ticket['complaint_id'] ?>',
+                    'action': 'admin_edit_approve',
+                    'edited_content': editedAction,
+                    'remarks': approvalRemarks
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Approved!', data.message, 'success').then(() => {
+                        window.location.href = '<?= Config::getAppUrl() ?>/admin/tickets';
+                    });
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'Failed to approve reply', 'error');
+            });
+        }
+    });
+}
+
+document.getElementById('rejectForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const reason = document.getElementById('rejection-reason').value;
+
+    if (!reason.trim()) {
+        Swal.fire('Error', 'Please provide a reason for rejection', 'error');
+        return;
+    }
+
+    fetch('<?= Config::getAppUrl() ?>/admin/approvals/process', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+            'csrf_token': '<?= $csrf_token ?>',
+            'complaint_id': '<?= $ticket['complaint_id'] ?>',
+            'action': 'admin_reject',
+            'remarks': reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('rejectModal')).hide();
+            Swal.fire('Rejected', data.message, 'success').then(() => {
+                window.location.href = '<?= Config::getAppUrl() ?>/admin/tickets';
+            });
+        } else {
+            Swal.fire('Error', data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire('Error', 'Failed to reject reply', 'error');
+    });
+});
+</script>
+<?php endif; ?>
 
 <?php
 $content = ob_get_clean();
