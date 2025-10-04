@@ -249,10 +249,7 @@
                                     <i class="fas fa-edit me-2"></i>Content
                                 </a></li>
                                 <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/emails">
-                                    <i class="fas fa-envelope me-2"></i>Email Management
-                                </a></li>
-                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/email-templates/editor">
-                                    <i class="fas fa-paint-brush me-2"></i>Email Templates
+                                    <i class="fas fa-envelope me-2"></i>Bulk Email
                                 </a></li>
                                 <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/notifications">
                                     <i class="fas fa-bell me-2"></i>Notifications

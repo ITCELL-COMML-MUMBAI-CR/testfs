@@ -1,19 +1,16 @@
-1.	Let us improve the emailing system.
-2.	Remove unnecessary methods or functions for emails.
-3.	The system will only send the mails to the customers. No mails to users will be sent.
-4.	Customer will get the Email in following conditions only none other than that:
-a.	Ticket is created successfully.
-b.	Ticket is reverted for More information.
-c.	Ticket is solved and feedback is pending.
-d.	Customer registration.
-e.	Customer registration approved by the admin.
-5.	Improving the email templates. Follow the below rules in templates or email going to customer.
-a.	Never tell the name of user or department in email.
-b.	Never give any timelines or ETA to resolve to tickets.
-c.	Give view ticket button which will redirect to that ticket after login.
-d.	In registration case if admin has approved provide the login ID and link to login page.
-e.	When ticket created or reverted so provide basic information of ticket in email. And button to view like point c.
-f.	In current email templates match the theme of all email templates.
-g.	Currently the icons in emails are not appearing instead a weird text or letter is appearing.
-6.	Check the database before any edit to get idea of emails and the tables schema.
-7.	Make a single system that will handle these tasks inside the main system to avoid redundant code.
+1.	We have to Improve the Dashboard and Reports system.
+2.	First make sure that every button for export and other schedule report button.
+3.	Dashboard must have these times lines:
+a.	Current day
+b.	Yesterday
+c.	This week
+d.	This Month
+4.	Use slider animation to give this timeline.
+5.	Re fresh the data as per time line.
+6.	In reports, the date range along with pre defined timelines such as yesterday, this month, this week, this year, last year, last week, last month, then custom for date range.
+7.	And the reports should generate according to this.
+8.	Make sure that all the filter buttons are working.
+9.	Use datatables wherever possible.
+10.	Do not create your own search functionality utilize the data tables search.
+11.	 Dashboard must be interactive and on click must show the detailed information.
+12.	Delete the unused and redundant code for reporting and dashboard.

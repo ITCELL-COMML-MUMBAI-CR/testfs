@@ -102,13 +102,7 @@ $router->post('/admin/content/announcements', 'Admin@storeAnnouncement', ['auth'
 $router->post('/admin/content/links', 'Admin@storeLink', ['auth', 'role:admin,superadmin']);
 
 $router->get('/admin/emails', 'Admin@emails', ['auth', 'role:admin,superadmin']);
-$router->get('/admin/email-templates/editor', 'EmailTemplate@editor', ['auth', 'role:admin,superadmin']);
 $router->post('/admin/emails/send', 'Admin@sendBulkEmail', ['auth', 'role:admin,superadmin']);
-
-// Email Template API routes
-$router->get('/api/email-templates', 'EmailTemplate@listAll', ['auth', 'role:admin,superadmin']);
-$router->get('/api/email-templates/{id}', 'EmailTemplate@get', ['auth', 'role:admin,superadmin']);
-$router->post('/api/email-templates/save', 'EmailTemplate@save', ['auth', 'role:admin,superadmin']);
 
 $router->get('/admin/reports', 'Admin@reports', ['auth', 'role:admin,superadmin']);
 $router->post('/admin/reports/generate-scheduled', 'Admin@generateScheduledReport', ['auth', 'role:admin,superadmin']);

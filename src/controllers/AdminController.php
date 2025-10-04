@@ -3117,7 +3117,8 @@ class AdminController extends BaseController
             'user' => $user,
             'email_stats' => $this->getEmailStats(),
             'recent_emails' => $this->getRecentEmails(),
-            'email_templates' => $this->getEmailTemplatesList(),
+            'divisions' => $this->getUniqueDivisions(),
+            'zones' => $this->getUniqueZones(),
             'csrf_token' => $this->session->getCSRFToken()
         ];
 
@@ -3126,29 +3127,13 @@ class AdminController extends BaseController
 
     /**
      * Display email templates management
+     * DEPRECATED: Email template editing has been removed. Templates are now code-based for system emails only.
      */
     public function emailTemplates()
     {
-        $user = $this->getCurrentUser();
-
-        $data = [
-            'page_title' => 'Email Templates - SAMPARK Admin',
-            'user' => $user,
-            'templates' => $this->getAllEmailTemplates(),
-            'template_types' => [
-                'welcome' => 'Welcome Email',
-                'approval' => 'Account Approval',
-                'rejection' => 'Account Rejection',
-                'password_reset' => 'Password Reset',
-                'ticket_created' => 'Ticket Created',
-                'ticket_updated' => 'Ticket Updated',
-                'ticket_resolved' => 'Ticket Resolved',
-                'announcement' => 'System Announcement'
-            ],
-            'csrf_token' => $this->session->getCSRFToken()
-        ];
-
-        $this->view('admin/email-templates', $data);
+        // Redirect to email management page
+        header('Location: ' . Config::getAppUrl() . '/admin/emails');
+        exit;
     }
 
     /**
@@ -3187,11 +3172,11 @@ class AdminController extends BaseController
         $isValid = $validator->validate($_POST, [
             'subject' => 'required|min:5|max:200',
             'message' => 'required|min:10',
-            'recipient_type' => 'required|in:all,customers,staff,admins,selected_customers',
-            'template_id' => 'optional|numeric',
+            'recipient_type' => 'required|in:all_customers,division,zone,division_zone,selected_customers',
+            'filter_division' => 'optional|string',
+            'filter_zone' => 'optional|string',
             'send_immediately' => 'optional|boolean',
-            'selected_customers' => 'optional|array',
-            'cc_emails' => 'optional|string'
+            'selected_customers' => 'optional|array'
         ]);
 
         if (!$isValid) {
@@ -3206,26 +3191,17 @@ class AdminController extends BaseController
             $subject = $this->sanitize($_POST['subject']);
             $message = $_POST['message']; // Keep HTML formatting
             $recipientType = $_POST['recipient_type'];
-            $templateId = $_POST['template_id'] ?? null;
+            $filterDivision = $_POST['filter_division'] ?? null;
+            $filterZone = $_POST['filter_zone'] ?? null;
             $sendImmediately = isset($_POST['send_immediately']) && $_POST['send_immediately'];
 
-            // Get recipients based on type
-            $recipients = $this->getBulkEmailRecipients($recipientType, $_POST['selected_customers'] ?? []);
-
-            // Add CC recipients if provided
-            if (!empty($_POST['cc_emails'])) {
-                $ccEmails = array_map('trim', explode(',', $_POST['cc_emails']));
-                foreach ($ccEmails as $ccEmail) {
-                    if (filter_var($ccEmail, FILTER_VALIDATE_EMAIL)) {
-                        $recipients[] = [
-                            'id' => 'cc_' . md5($ccEmail),
-                            'email' => $ccEmail,
-                            'name' => 'CC Recipient',
-                            'type' => 'cc'
-                        ];
-                    }
-                }
-            }
+            // Get recipients based on type and filters
+            $recipients = $this->getBulkEmailRecipients(
+                $recipientType,
+                $_POST['selected_customers'] ?? [],
+                $filterDivision,
+                $filterZone
+            );
 
             if (empty($recipients)) {
                 $this->json([
@@ -3240,7 +3216,8 @@ class AdminController extends BaseController
                 'subject' => $subject,
                 'message' => $message,
                 'recipient_type' => $recipientType,
-                'template_id' => $templateId,
+                'filter_division' => $filterDivision,
+                'filter_zone' => $filterZone,
                 'recipients' => $recipients,
                 'created_by' => $user['id'],
                 'send_immediately' => $sendImmediately
@@ -3395,62 +3372,84 @@ class AdminController extends BaseController
         }
     }
 
-    private function getEmailTemplatesList()
+    private function getUniqueDivisions()
     {
         try {
-            $templateModel = new EmailTemplateModel();
-            return $templateModel->getAllTemplates();
+            $sql = "SELECT DISTINCT division FROM customers
+                    WHERE division IS NOT NULL AND division != '' AND status = 'approved'
+                    ORDER BY division ASC";
+            $results = $this->db->fetchAll($sql);
+            return array_column($results, 'division');
         } catch (Exception $e) {
-            error_log("Error fetching email templates: " . $e->getMessage());
+            Config::logError("Get unique divisions error: " . $e->getMessage());
             return [];
         }
     }
 
-    private function getAllEmailTemplates()
+    private function getUniqueZones()
     {
         try {
-            $sql = "SELECT * FROM email_templates ORDER BY type, name";
-            return $this->db->fetchAll($sql);
+            $sql = "SELECT DISTINCT zone FROM customers
+                    WHERE zone IS NOT NULL AND zone != '' AND status = 'approved'
+                    ORDER BY zone ASC";
+            $results = $this->db->fetchAll($sql);
+            return array_column($results, 'zone');
         } catch (Exception $e) {
+            Config::logError("Get unique zones error: " . $e->getMessage());
             return [];
         }
     }
 
-    private function getBulkEmailRecipients($recipientType, $selectedCustomers = [])
+    private function getBulkEmailRecipients($recipientType, $selectedCustomers = [], $filterDivision = null, $filterZone = null)
     {
         try {
             $recipients = [];
+            $baseSql = "SELECT customer_id as id, email, name, division, zone, 'customer' as type FROM customers WHERE status = 'approved' AND email IS NOT NULL";
 
             switch ($recipientType) {
-                case 'all':
-                    $customers = $this->db->fetchAll("SELECT customer_id as id, email, name, 'customer' as type FROM customers WHERE status = 'approved' AND email IS NOT NULL");
-                    $staff = $this->db->fetchAll("SELECT id, email, name, role as type FROM users WHERE status = 'active' AND email IS NOT NULL");
-                    $recipients = array_merge($customers, $staff);
+                case 'all_customers':
+                    $recipients = $this->db->fetchAll($baseSql);
                     break;
 
-                case 'customers':
-                    $recipients = $this->db->fetchAll("SELECT customer_id as id, email, name, 'customer' as type FROM customers WHERE status = 'approved' AND email IS NOT NULL");
+                case 'division':
+                    if (!empty($filterDivision)) {
+                        $sql = $baseSql . " AND division = ?";
+                        $recipients = $this->db->fetchAll($sql, [$filterDivision]);
+                    }
+                    break;
+
+                case 'zone':
+                    if (!empty($filterZone)) {
+                        $sql = $baseSql . " AND zone = ?";
+                        $recipients = $this->db->fetchAll($sql, [$filterZone]);
+                    }
+                    break;
+
+                case 'division_zone':
+                    if (!empty($filterDivision) && !empty($filterZone)) {
+                        $sql = $baseSql . " AND division = ? AND zone = ?";
+                        $recipients = $this->db->fetchAll($sql, [$filterDivision, $filterZone]);
+                    } elseif (!empty($filterDivision)) {
+                        $sql = $baseSql . " AND division = ?";
+                        $recipients = $this->db->fetchAll($sql, [$filterDivision]);
+                    } elseif (!empty($filterZone)) {
+                        $sql = $baseSql . " AND zone = ?";
+                        $recipients = $this->db->fetchAll($sql, [$filterZone]);
+                    }
                     break;
 
                 case 'selected_customers':
                     if (!empty($selectedCustomers)) {
                         $placeholders = str_repeat('?,', count($selectedCustomers) - 1) . '?';
-                        $sql = "SELECT customer_id as id, email, name, 'customer' as type FROM customers WHERE customer_id IN ($placeholders) AND status = 'approved' AND email IS NOT NULL";
+                        $sql = $baseSql . " AND customer_id IN ($placeholders)";
                         $recipients = $this->db->fetchAll($sql, $selectedCustomers);
                     }
-                    break;
-
-                case 'staff':
-                    $recipients = $this->db->fetchAll("SELECT id, email, name, role as type FROM users WHERE status = 'active' AND email IS NOT NULL AND role IN ('controller', 'controller_nodal')");
-                    break;
-
-                case 'admins':
-                    $recipients = $this->db->fetchAll("SELECT id, email, name, user_type as type FROM users WHERE status = 'active' AND email IS NOT NULL AND user_type IN ('admin', 'superadmin')");
                     break;
             }
 
             return $recipients;
         } catch (Exception $e) {
+            Config::logError("Get bulk email recipients error: " . $e->getMessage());
             return [];
         }
     }
@@ -3459,16 +3458,22 @@ class AdminController extends BaseController
     {
         try {
             $sql = "INSERT INTO bulk_email_jobs (
-                        subject, message, recipient_type, template_id, 
+                        subject, message, recipient_type, template_id,
                         recipient_data, created_by, status, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())";
+                    ) VALUES (?, ?, ?, NULL, ?, ?, 'pending', NOW())";
+
+            // Store filter info in recipient_data along with recipients
+            $recipientData = [
+                'recipients' => $data['recipients'],
+                'filter_division' => $data['filter_division'] ?? null,
+                'filter_zone' => $data['filter_zone'] ?? null
+            ];
 
             $this->db->query($sql, [
                 $data['subject'],
                 $data['message'],
                 $data['recipient_type'],
-                $data['template_id'],
-                json_encode($data['recipients']),
+                json_encode($recipientData),
                 $data['created_by']
             ]);
 
@@ -3488,26 +3493,18 @@ class AdminController extends BaseController
                 return false;
             }
 
-            // 2. Get recipients
-            $recipients = json_decode($job['recipients'], true);
+            // 2. Get recipients from recipient_data
+            $recipientData = json_decode($job['recipient_data'], true);
+            $recipients = $recipientData['recipients'] ?? $recipientData; // Support both old and new format
+
             if (empty($recipients)) {
                 $this->db->query("UPDATE bulk_email_jobs SET status = 'failed', error_message = 'No recipients' WHERE id = ?", [$jobId]);
                 return false;
             }
 
-            // 3. Get template if provided
+            // 3. Use raw message and subject (no templates for bulk emails)
             $message = $job['message'];
             $subject = $job['subject'];
-            if (!empty($job['template_id'])) {
-                $templateModel = new EmailTemplateModel();
-                $template = $templateModel->getTemplate($job['template_id']);
-                if ($template) {
-                    $message = $template['template_html'];
-                    if (empty($subject)) {
-                        $subject = $template['name'];
-                    }
-                }
-            }
 
             // 4. Loop and send
             require_once __DIR__ . '/../utils/EmailService.php';
@@ -3516,27 +3513,40 @@ class AdminController extends BaseController
             $failedCount = 0;
 
             foreach ($recipients as $recipient) {
+                // Personalize message with recipient details
                 $personalizedMessage = $message;
-                
+                $personalizedSubject = $subject;
+
                 if (isset($recipient['name'])) {
-                    $personalizedMessage = str_replace('$customer_name', $recipient['name'], $personalizedMessage);
+                    $personalizedMessage = str_replace(['{{name}}', '$customer_name'], $recipient['name'], $personalizedMessage);
+                    $personalizedSubject = str_replace(['{{name}}', '$customer_name'], $recipient['name'], $personalizedSubject);
                 }
                 if (isset($recipient['email'])) {
-                    $personalizedMessage = str_replace('$customer_email', $recipient['email'], $personalizedMessage);
+                    $personalizedMessage = str_replace(['{{email}}', '$customer_email'], $recipient['email'], $personalizedMessage);
+                }
+                if (isset($recipient['division'])) {
+                    $personalizedMessage = str_replace(['{{division}}'], $recipient['division'], $personalizedMessage);
+                }
+                if (isset($recipient['zone'])) {
+                    $personalizedMessage = str_replace(['{{zone}}'], $recipient['zone'], $personalizedMessage);
                 }
 
-                $success = $emailService->sendEmail(
+                $result = $emailService->sendEmail(
                     $recipient['email'],
-                    $recipient['name'] ?? '',
-                    $subject,
-                    $personalizedMessage
+                    $personalizedSubject,
+                    $personalizedMessage,
+                    true // HTML email
                 );
 
-                if ($success) {
+                if ($result['success']) {
                     $sentCount++;
                 } else {
                     $failedCount++;
+                    error_log("Failed to send bulk email to {$recipient['email']}: " . ($result['error'] ?? 'Unknown error'));
                 }
+
+                // Add small delay to prevent overwhelming the email server
+                usleep(100000); // 0.1 second delay
             }
 
             // 5. Update job status

@@ -19,14 +19,9 @@ ob_start();
                         Email Management
                     </h1>
                     <div class="btn-toolbar mb-2 mb-md-0">
-                        <div class="btn-group me-2">
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bulkEmailModal">
-                                <i class="fas fa-paper-plane me-2"></i>Send Bulk Email
-                            </button>
-                            <a href="<?= Config::getAppUrl() ?>/admin/email-templates/editor" class="btn btn-outline-secondary">
-                                <i class="fas fa-file-alt me-2"></i>Manage Templates
-                            </a>
-                        </div>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#bulkEmailModal">
+                            <i class="fas fa-paper-plane me-2"></i>Send Bulk Email
+                        </button>
                     </div>
                 </div>
 
@@ -201,16 +196,44 @@ ob_start();
                     
                     <!-- Recipient Selection -->
                     <div class="mb-3">
-                        <label for="recipient_type" class="form-label">Recipients</label>
-                        <select class="form-select" id="recipient_type" name="recipient_type" required onchange="toggleCustomerSelection()">
+                        <label for="recipient_type" class="form-label">Recipients <span class="text-danger">*</span></label>
+                        <select class="form-select" id="recipient_type" name="recipient_type" required onchange="toggleRecipientFilters()">
                             <option value="">Choose recipients...</option>
-                            <option value="all">All Users (Customers & Staff)</option>
-                            <option value="customers">All Customers</option>
-                            <option value="selected_customers">Selected Customers</option>
-                            <option value="staff">Railway Staff</option>
-                            <option value="admins">Administrators Only</option>
+                            <option value="all_customers">All Customers</option>
+                            <option value="division">Customers by Division</option>
+                            <option value="zone">Customers by Zone</option>
+                            <option value="division_zone">Customers by Division & Zone</option>
+                            <option value="selected_customers">Specific Customers</option>
                         </select>
-                        <div class="form-text">Select who should receive this email.</div>
+                        <div class="form-text">Select customer recipients (system does not send emails to staff).</div>
+                    </div>
+
+                    <!-- Division Filter -->
+                    <div class="mb-3" id="division_filter" style="display: none;">
+                        <label for="filter_division" class="form-label">Division <span class="text-danger">*</span></label>
+                        <select class="form-select" id="filter_division" name="filter_division">
+                            <option value="">Select Division...</option>
+                            <?php foreach ($divisions as $division): ?>
+                                <option value="<?= htmlspecialchars($division) ?>"><?= htmlspecialchars($division) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?php if (empty($divisions)): ?>
+                            <div class="form-text text-warning">No divisions found in customer database</div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Zone Filter -->
+                    <div class="mb-3" id="zone_filter" style="display: none;">
+                        <label for="filter_zone" class="form-label">Zone <span class="text-danger">*</span></label>
+                        <select class="form-select" id="filter_zone" name="filter_zone">
+                            <option value="">Select Zone...</option>
+                            <?php foreach ($zones as $zone): ?>
+                                <option value="<?= htmlspecialchars($zone) ?>"><?= htmlspecialchars($zone) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?php if (empty($zones)): ?>
+                            <div class="form-text text-warning">No zones found in customer database</div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Customer Selection (shown when "Selected Customers" is chosen) -->
@@ -239,28 +262,6 @@ ob_start();
                         <div class="form-text">Select specific customers to receive this email.</div>
                     </div>
 
-                    <!-- CC Options -->
-                    <div class="mb-3">
-                        <label class="form-label">CC (Additional Recipients)</label>
-                        <input type="email" class="form-control" id="cc_emails" name="cc_emails"
-                               placeholder="Enter email addresses separated by commas" multiple>
-                        <div class="form-text">Enter additional email addresses to CC, separated by commas.</div>
-                    </div>
-                    
-                    <!-- Email Template -->
-                    <div class="mb-3">
-                        <label for="template_id" class="form-label">Email Template (Optional)</label>
-                        <select class="form-select" id="template_id" name="template_id">
-                            <option value="">Create custom message</option>
-                            <?php foreach ($email_templates as $template): ?>
-                            <option value="<?= $template['id'] ?>">
-                                <?= htmlspecialchars($template['name']) ?>
-                            </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div class="form-text">Choose a pre-designed template or create a custom message.</div>
-                    </div>
-                    
                     <!-- Subject -->
                     <div class="mb-3">
                         <label for="subject" class="form-label">Subject <span class="text-danger">*</span></label>
@@ -398,47 +399,36 @@ document.addEventListener('DOMContentLoaded', function() {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    document.getElementById('template_id').addEventListener('change', function() {
-        const templateId = this.value;
-        const subjectField = document.getElementById('subject');
-        const messageField = document.getElementById('message');
-
-        if (templateId) {
-            // Fetch template content
-            fetch(`/api/email-templates/${templateId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const template = data.template;
-                        subjectField.value = template.name; // Use template name as subject
-                        messageField.value = template.template_html;
-                        // Optionally, make the message field read-only
-                        // messageField.readOnly = true;
-                    } else {
-                        alert('Failed to load template.');
-                    }
-                })
-                .catch(() => alert('An error occurred while fetching the template.'));
-        } else {
-            // Clear fields if no template is selected
-            subjectField.value = '';
-            messageField.value = '';
-            // messageField.readOnly = false;
-        }
-    });
-
 });
 
-// Toggle customer selection visibility
-function toggleCustomerSelection() {
+// Toggle recipient filters based on selection
+function toggleRecipientFilters() {
     const recipientType = document.getElementById('recipient_type').value;
     const customerContainer = document.getElementById('customer_selection_container');
+    const divisionFilter = document.getElementById('division_filter');
+    const zoneFilter = document.getElementById('zone_filter');
 
-    if (recipientType === 'selected_customers') {
-        customerContainer.style.display = 'block';
-        loadCustomers();
-    } else {
-        customerContainer.style.display = 'none';
+    // Hide all filters first
+    customerContainer.style.display = 'none';
+    divisionFilter.style.display = 'none';
+    zoneFilter.style.display = 'none';
+
+    // Show relevant filters based on selection
+    switch (recipientType) {
+        case 'selected_customers':
+            customerContainer.style.display = 'block';
+            loadCustomers();
+            break;
+        case 'division':
+            divisionFilter.style.display = 'block';
+            break;
+        case 'zone':
+            zoneFilter.style.display = 'block';
+            break;
+        case 'division_zone':
+            divisionFilter.style.display = 'block';
+            zoneFilter.style.display = 'block';
+            break;
     }
 }
 
