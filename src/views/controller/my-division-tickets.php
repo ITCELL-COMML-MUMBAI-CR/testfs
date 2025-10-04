@@ -470,7 +470,7 @@ $page_title = 'My Division Tickets - SAMPARK';
                     <button type="button" class="action-btn action-btn-secondary action-btn-with-text" data-bs-dismiss="modal">
                         <i class="fas fa-times"></i>Cancel
                     </button>
-                    <button type="submit" class="action-btn action-btn-primary action-btn-with-text">
+                    <button type="submit" class="action-btn action-btn-primary action-btn-with-text" id="forwardSubmitBtn">
                         <i class="fas fa-share"></i>Forward Ticket
                     </button>
                 </div>
@@ -800,6 +800,13 @@ function addInternalRemarks(ticketId) {
 document.getElementById('forwardForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
+    const submitBtn = document.getElementById('forwardSubmitBtn');
+    const originalContent = submitBtn.innerHTML;
+
+    // Disable button and show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Forwarding...';
+
     const ticketId = this.dataset.ticketId;
     const formData = new FormData(this);
     formData.append('csrf_token', CSRF_TOKEN);
@@ -819,6 +826,10 @@ document.getElementById('forwardForm').addEventListener('submit', async function
                 location.reload();
             });
         } else {
+            // Re-enable button on error
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalContent;
+
             if (result.errors) {
                 const errors = Object.values(result.errors).join('\n');
                 Swal.fire('Validation Error', errors, 'error');
@@ -828,6 +839,9 @@ document.getElementById('forwardForm').addEventListener('submit', async function
         }
     } catch (error) {
         hideLoading();
+        // Re-enable button on error
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalContent;
         Swal.fire('Error', 'Failed to forward ticket', 'error');
     }
 

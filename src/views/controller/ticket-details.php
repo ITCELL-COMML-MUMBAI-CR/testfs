@@ -840,7 +840,7 @@ $page_title = 'Ticket Details - SAMPARK';
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-apple-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-apple-primary">
+                    <button type="submit" class="btn btn-apple-primary" id="forwardSubmitBtn">
                         <i class="fas fa-share me-2"></i>Forward Ticket
                     </button>
                 </div>
@@ -1133,25 +1133,36 @@ document.getElementById('replyForm').addEventListener('submit', async function(e
 <?php if ($permissions['can_forward']): ?>
 document.getElementById('forwardForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
+    const submitBtn = document.getElementById('forwardSubmitBtn');
+    const originalContent = submitBtn.innerHTML;
+
+    // Disable button and show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Forwarding...';
+
     const formData = new FormData(this);
     formData.append('csrf_token', CSRF_TOKEN);
-    
+
     try {
         showLoading();
         const response = await fetch(`${APP_URL}/controller/tickets/${ticketId}/forward`, {
             method: 'POST',
             body: formData
         });
-        
+
         const result = await response.json();
         hideLoading();
-        
+
         if (result.success) {
             Swal.fire('Success', result.message, 'success').then(() => {
                 location.reload();
             });
         } else {
+            // Re-enable button on error
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalContent;
+
             if (result.errors) {
                 const errors = Object.values(result.errors).join('\n');
                 Swal.fire('Validation Error', errors, 'error');
@@ -1161,9 +1172,12 @@ document.getElementById('forwardForm').addEventListener('submit', async function
         }
     } catch (error) {
         hideLoading();
+        // Re-enable button on error
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalContent;
         Swal.fire('Error', 'Failed to forward ticket', 'error');
     }
-    
+
     bootstrap.Modal.getInstance(document.getElementById('forwardModal')).hide();
 });
 <?php endif; ?>
