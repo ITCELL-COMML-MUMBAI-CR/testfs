@@ -384,12 +384,21 @@ class NotificationService {
             ];
         }
 
+        // Retrieve ticket details to get type, subtype, and description
+        $ticket = $this->getTicketDetails($complaintId);
+        $type = $ticket['type'] ?? '';
+        $subtype = $ticket['subtype'] ?? '';
+        $description = $ticket['description'] ?? '';
+
         // Send email using centralized CustomerEmailService
         $result = $this->customerEmailService->sendTicketCreated(
             $complaintId,
             $customer['email'],
             $customer['name'],
-            $customer['company_name'] ?? ''
+            $customer['company_name'] ?? '',
+            $type,
+            $subtype,
+            $description
         );
 
         // Note: Intentionally NOT sending emails to staff per requirements

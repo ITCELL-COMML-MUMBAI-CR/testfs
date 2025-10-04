@@ -30,7 +30,7 @@ class CustomerEmailService {
     /**
      * Send ticket created email to customer
      */
-    public function sendTicketCreated($ticketId, $customerEmail, $customerName, $companyName = '') {
+    public function sendTicketCreated($ticketId, $customerEmail, $customerName, $companyName = '', $type = '', $subtype = '', $description = '') {
         $subject = "Ticket #{$ticketId} Created Successfully";
 
         $viewUrl = Config::getAppUrl() . '/login?redirect=' . urlencode('/customer/tickets/' . $ticketId);
@@ -39,6 +39,9 @@ class CustomerEmailService {
             'ticket_id' => $ticketId,
             'customer_name' => $customerName,
             'company_name' => $companyName,
+            'type' => $type,
+            'subtype' => $subtype,
+            'description' => $description,
             'view_url' => $viewUrl,
             'app_name' => Config::APP_NAME,
             'app_url' => Config::getAppUrl()
@@ -50,7 +53,7 @@ class CustomerEmailService {
     /**
      * Send ticket reverted/more info needed email to customer
      */
-    public function sendTicketReverted($ticketId, $customerEmail, $customerName, $ticketSubject = '', $companyName = '') {
+    public function sendTicketReverted($ticketId, $customerEmail, $customerName, $requestedInfo = '', $companyName = '') {
         $subject = "Additional Information Required - Ticket #{$ticketId}";
 
         $viewUrl = Config::getAppUrl() . '/login?redirect=' . urlencode('/customer/tickets/' . $ticketId);
@@ -59,7 +62,7 @@ class CustomerEmailService {
             'ticket_id' => $ticketId,
             'customer_name' => $customerName,
             'company_name' => $companyName,
-            'ticket_subject' => $ticketSubject,
+            'requested_info' => $requestedInfo,
             'view_url' => $viewUrl,
             'app_name' => Config::APP_NAME,
             'app_url' => Config::getAppUrl()
@@ -71,7 +74,7 @@ class CustomerEmailService {
     /**
      * Send feedback requested email to customer
      */
-    public function sendFeedbackRequested($ticketId, $customerEmail, $customerName, $ticketSubject = '', $companyName = '') {
+    public function sendFeedbackRequested($ticketId, $customerEmail, $customerName, $actionTaken = '', $companyName = '') {
         $subject = "Ticket #{$ticketId} - Your Feedback Required";
 
         $viewUrl = Config::getAppUrl() . '/login?redirect=' . urlencode('/customer/tickets/' . $ticketId);
@@ -80,7 +83,7 @@ class CustomerEmailService {
             'ticket_id' => $ticketId,
             'customer_name' => $customerName,
             'company_name' => $companyName,
-            'ticket_subject' => $ticketSubject,
+            'action_taken' => $actionTaken,
             'view_url' => $viewUrl,
             'app_name' => Config::APP_NAME,
             'app_url' => Config::getAppUrl()
@@ -192,11 +195,22 @@ class CustomerEmailService {
                     '<tr>
                         <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Company:</td>
                         <td style="padding: 8px 0; color: #1f2937;">' . htmlspecialchars($data['company_name']) . '</td>
+                    </tr>' : '') .
+                    (!empty($data['type']) ?
+                    '<tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Type:</td>
+                        <td style="padding: 8px 0; color: #1f2937;">' . htmlspecialchars($data['type']) . '</td>
+                    </tr>' : '') .
+                    (!empty($data['subtype']) ?
+                    '<tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Subtype:</td>
+                        <td style="padding: 8px 0; color: #1f2937;">' . htmlspecialchars($data['subtype']) . '</td>
+                    </tr>' : '') .
+                    (!empty($data['description']) ?
+                    '<tr>
+                        <td style="padding: 8px 0; color: #6b7280; font-weight: 600; vertical-align: top;">Description:</td>
+                        <td style="padding: 8px 0; color: #1f2937; line-height: 1.6;">' . nl2br(htmlspecialchars($data['description'])) . '</td>
                     </tr>' : '') . '
-                    <tr>
-                        <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Status:</td>
-                        <td style="padding: 8px 0;"><span style="background: #86efac; color: #065f46; padding: 4px 12px; border-radius: 4px; font-size: 13px; font-weight: 600;">ACTIVE</span></td>
-                    </tr>
                 </table>
             </div>
 
@@ -214,13 +228,6 @@ class CustomerEmailService {
             <!-- View Ticket Button -->
             <div style="text-align: center; margin: 30px 0;">
                 <a href="' . htmlspecialchars($data['view_url']) . '" style="display: inline-block; background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 2px 4px rgba(96,165,250,0.3);">View Ticket Details</a>
-            </div>
-
-            <!-- Important Note -->
-            <div style="background-color: #fef9c3; border: 1px solid #fde68a; border-radius: 8px; padding: 15px; margin: 25px 0;">
-                <p style="margin: 0; color: #78350f; font-size: 14px;">
-                    <strong>Note:</strong> Please save this email for your records. You can use Ticket ID <strong>#' . htmlspecialchars($data['ticket_id']) . '</strong> to track your ticket.
-                </p>
             </div>
         </div>
 
@@ -276,31 +283,26 @@ class CustomerEmailService {
                 <h4 style="margin: 0 0 15px 0; color: #dc2626; font-size: 18px;">Ticket Information</h4>
                 <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="padding: 8px 0; color: #6b7280; font-weight: bold;">Ticket ID:</td>
-                        <td style="padding: 8px 0; color: #dc2626; font-weight: bold; font-size: 16px;">#' . htmlspecialchars($data['ticket_id']) . '</td>
+                        <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Ticket ID:</td>
+                        <td style="padding: 8px 0; color: #dc2626; font-weight: 600; font-size: 16px;">#' . htmlspecialchars($data['ticket_id']) . '</td>
                     </tr>' .
-                    (!empty($data['ticket_subject']) ?
-                    '<tr>
-                        <td style="padding: 8px 0; color: #6b7280; font-weight: bold;">Subject:</td>
-                        <td style="padding: 8px 0; color: #111827;">' . htmlspecialchars($data['ticket_subject']) . '</td>
-                    </tr>' : '') .
                     (!empty($data['company_name']) ?
                     '<tr>
-                        <td style="padding: 8px 0; color: #6b7280; font-weight: bold;">Company:</td>
-                        <td style="padding: 8px 0; color: #111827;">' . htmlspecialchars($data['company_name']) . '</td>
+                        <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Company:</td>
+                        <td style="padding: 8px 0; color: #1f2937;">' . htmlspecialchars($data['company_name']) . '</td>
                     </tr>' : '') . '
-                    <tr>
-                        <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Status:</td>
-                        <td style="padding: 8px 0;"><span style="background: #fca5a5; color: #991b1b; padding: 4px 12px; border-radius: 4px; font-size: 13px; font-weight: 600;">AWAITING INFO</span></td>
-                    </tr>
                 </table>
             </div>
 
-            <!-- Action Required Box -->
+            <!-- Information Requested Box -->
             <div style="background-color: #fef9c3; border: 1px solid #fde68a; border-radius: 8px; padding: 20px; margin: 25px 0;">
-                <h4 style="margin: 0 0 15px 0; color: #b45309;">Action Required</h4>
-                <p style="margin: 0; color: #78350f; line-height: 1.6;">
-                    Please login to your account to view the information request and provide the necessary details to help us process your ticket.
+                <h4 style="margin: 0 0 15px 0; color: #b45309;">Information Requested</h4>
+                <p style="margin: 0; color: #78350f; line-height: 1.6;">' .
+                    (!empty($data['requested_info']) ?
+                        nl2br(htmlspecialchars($data['requested_info']))
+                    :
+                        'Please login to your account to view the information request and provide the necessary details to help us process your ticket.'
+                    ) . '
                 </p>
             </div>
 
@@ -365,27 +367,25 @@ class CustomerEmailService {
                         <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Ticket ID:</td>
                         <td style="padding: 8px 0; color: #7c3aed; font-weight: 600; font-size: 16px;">#' . htmlspecialchars($data['ticket_id']) . '</td>
                     </tr>' .
-                    (!empty($data['ticket_subject']) ?
-                    '<tr>
-                        <td style="padding: 8px 0; color: #6b7280; font-weight: bold;">Subject:</td>
-                        <td style="padding: 8px 0; color: #111827;">' . htmlspecialchars($data['ticket_subject']) . '</td>
-                    </tr>' : '') .
                     (!empty($data['company_name']) ?
                     '<tr>
-                        <td style="padding: 8px 0; color: #6b7280; font-weight: bold;">Company:</td>
-                        <td style="padding: 8px 0; color: #111827;">' . htmlspecialchars($data['company_name']) . '</td>
+                        <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Company:</td>
+                        <td style="padding: 8px 0; color: #1f2937;">' . htmlspecialchars($data['company_name']) . '</td>
                     </tr>' : '') . '
-                    <tr>
-                        <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Status:</td>
-                        <td style="padding: 8px 0;"><span style="background: #c4b5fd; color: #5b21b6; padding: 4px 12px; border-radius: 4px; font-size: 13px; font-weight: 600;">AWAITING FEEDBACK</span></td>
-                    </tr>
                 </table>
             </div>
 
-            <!-- Feedback Request Box -->
+            <!-- Action Taken Box -->
             <div style="background-color: #f5f3ff; border: 1px solid #c4b5fd; border-radius: 8px; padding: 20px; margin: 25px 0;">
-                <h4 style="margin: 0 0 15px 0; color: #7c3aed;">Help Us Improve</h4>
-                <p style="margin: 0; color: #5b21b6; line-height: 1.6;">
+                <h4 style="margin: 0 0 15px 0; color: #7c3aed;">Action Taken</h4>
+                <p style="margin: 0 0 15px 0; color: #5b21b6; line-height: 1.6;">' .
+                    (!empty($data['action_taken']) ?
+                        nl2br(htmlspecialchars($data['action_taken']))
+                    :
+                        'Your ticket has been processed.'
+                    ) . '
+                </p>
+                <p style="margin: 0; color: #5b21b6; line-height: 1.6; font-weight: 600;">
                     Your feedback helps us serve you better. Please take a moment to share your experience and rate our service.
                 </p>
             </div>
@@ -572,13 +572,6 @@ class CustomerEmailService {
             <!-- Login Button -->
             <div style="text-align: center; margin: 30px 0;">
                 <a href="' . htmlspecialchars($data['login_url']) . '" style="display: inline-block; background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 2px 4px rgba(96,165,250,0.3);">Login to Your Account</a>
-            </div>
-
-            <!-- Getting Started Box -->
-            <div style="background-color: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 15px; margin: 25px 0;">
-                <p style="margin: 0; color: #1e40af; font-size: 14px;">
-                    <strong>Getting Started:</strong> After logging in, explore the dashboard to familiarize yourself with all available features.
-                </p>
             </div>
         </div>
 
