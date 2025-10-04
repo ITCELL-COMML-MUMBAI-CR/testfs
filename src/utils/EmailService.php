@@ -219,6 +219,7 @@ class EmailService {
 
     /**
      * Build email headers
+     * Marks emails as important and prevents threading/stacking
      */
     private function buildHeaders($to, $subject, $isHtml) {
         $headers = [];
@@ -226,7 +227,11 @@ class EmailService {
         $headers[] = "To: {$to}";
         $headers[] = "Subject: =?UTF-8?B?" . base64_encode($subject) . "?=";
         $headers[] = "Date: " . date('r');
-        $headers[] = "Message-ID: <" . time() . "." . uniqid() . "@{$_SERVER['HTTP_HOST']}>";
+
+        // Unique Message-ID with microtime to prevent any threading
+        $uniqueId = microtime(true) . "." . uniqid('', true) . "." . mt_rand();
+        $headers[] = "Message-ID: <{$uniqueId}@{$_SERVER['HTTP_HOST']}>";
+
         $headers[] = "MIME-Version: 1.0";
 
         if ($isHtml) {
@@ -237,7 +242,17 @@ class EmailService {
 
         $headers[] = "Content-Transfer-Encoding: quoted-printable";
         $headers[] = "X-Mailer: SAMPARK v" . Config::APP_VERSION;
-        $headers[] = "X-Priority: 3";
+
+        // Mark as HIGH PRIORITY / IMPORTANT
+        $headers[] = "X-Priority: 1";              // 1 = High, 3 = Normal, 5 = Low
+        $headers[] = "Priority: urgent";           // urgent, normal, non-urgent
+        $headers[] = "Importance: high";           // high, normal, low
+        $headers[] = "X-MSMail-Priority: High";    // For Microsoft email clients
+
+        // Prevent threading/stacking in email clients
+        // Do NOT set References or In-Reply-To headers
+        // Each email should appear as a separate conversation
+        $headers[] = "X-Auto-Response-Suppress: All"; // Prevent auto-responses
 
         return implode("\r\n", $headers);
     }
