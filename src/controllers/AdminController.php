@@ -3021,8 +3021,16 @@ class AdminController extends BaseController
 
     private function sendWelcomeEmail($userId, $email, $name, $loginId)
     {
-        $notificationService = new NotificationService();
-        // Implementation for sending welcome email
+        // DISABLED: Per requirements, no emails are sent to users (Controllers, Admins, etc.)
+        // Users only receive on-screen notifications
+        // This method is kept for backward compatibility but does nothing
+
+        Config::logInfo("User welcome email skipped (emails to users disabled)", [
+            'user_id' => $userId,
+            'email' => $email
+        ]);
+
+        return true;
     }
 
     private function sendCustomerApprovalEmail($customer, $status, $reason = null)
@@ -3031,24 +3039,13 @@ class AdminController extends BaseController
             if ($status === 'approved') {
                 $notificationService = new NotificationService();
 
-                // Send approval email using template
-                $notificationService->sendTemplateEmail(
-                    $customer['email'],
-                    'account_approved',
-                    [
-                        'app_name' => 'SAMPARK',
-                        'customer_name' => $customer['name'],
-                        'customer_id' => $customer['customer_id'],
-                        'email' => $customer['email'],
-                        'company_name' => $customer['company_name'],
-                        'division' => $customer['division'],
-                        'login_url' => Config::getAppUrl() . '/login'
-                    ]
-                );
+                // Send approval email using centralized CustomerEmailService
+                $emailResult = $notificationService->sendSignupApproved($customer);
 
                 Config::logInfo("Approval notification sent to customer", [
                     'customer_id' => $customer['customer_id'],
-                    'email' => $customer['email']
+                    'email' => $customer['email'],
+                    'success' => $emailResult[0]['email_sent'] ?? false
                 ]);
 
             } elseif ($status === 'rejected') {

@@ -467,24 +467,13 @@ class AuthController extends BaseController {
 
             $notificationService = new NotificationService();
 
-            // Send registration confirmation email using template
-            $notificationService->sendTemplateEmail(
-                $email,
-                'customer_registration',
-                [
-                    'app_name' => 'SAMPARK',
-                    'customer_name' => $name,
-                    'customer_id' => $customerId,
-                    'email' => $email,
-                    'company_name' => $customer['company_name'],
-                    'division' => $customer['division'],
-                    'app_url' => Config::getAppUrl()
-                ]
-            );
+            // Send registration confirmation email using centralized CustomerEmailService
+            $emailResult = $notificationService->sendCustomerRegistration($customer);
 
             Config::logInfo("Registration notification sent to customer", [
                 'customer_id' => $customerId,
-                'email' => $email
+                'email' => $email,
+                'success' => $emailResult[0]['email_sent'] ?? false
             ]);
         } catch (Exception $e) {
             Config::logError("Failed to send registration notification: " . $e->getMessage());

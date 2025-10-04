@@ -13,6 +13,7 @@ class NotificationService {
     private $emailEnabled;
     private $smsEnabled;
     private $emailService;
+    private $customerEmailService;
 
     public function __construct() {
         $this->db = Database::getInstance();
@@ -24,27 +25,56 @@ class NotificationService {
             require_once __DIR__ . '/EmailService.php';
         }
         $this->emailService = new EmailService();
+
+        // Include CustomerEmailService for centralized customer email handling
+        if (!class_exists('CustomerEmailService')) {
+            require_once __DIR__ . '/CustomerEmailService.php';
+        }
+        $this->customerEmailService = new CustomerEmailService();
     }
     
     /**
      * Send notification
+     * DEPRECATED: Use specific customer email methods instead (sendTicketCreated, sendTicketReverted, etc.)
+     * This method is kept for backward compatibility but should not be used for customer emails
      */
     public function send($type, $recipients, $data) {
+        // Log deprecation warning
+        Config::logInfo("DEPRECATED: NotificationService->send() called. Use specific customer email methods instead.", [
+            'type' => $type,
+            'recipient_count' => count($recipients)
+        ]);
+
         $results = [];
-        
+
         foreach ($recipients as $recipient) {
             $result = $this->sendToRecipient($type, $recipient, $data);
             $results[] = $result;
         }
-        
+
         return $results;
     }
     
     /**
      * Send templated email
+     *
+     * WARNING: This method uses database templates and is DEPRECATED for customer emails.
+     * For customer emails, use: sendTicketCreated(), sendTicketReverted(), sendTicketAwaitingFeedback(),
+     * sendCustomerRegistration(), sendSignupApproved()
+     *
+     * This method should only be used for:
+     * - Testing purposes
+     * - Admin-to-admin communications (if needed)
+     * - Special one-off emails
      */
     public function sendTemplateEmail($to, $templateCode, $data = []) {
         try {
+            // Log usage for monitoring
+            Config::logInfo("sendTemplateEmail called (consider using specific customer email methods)", [
+                'template_code' => $templateCode,
+                'recipient' => $to
+            ]);
+
             // Get template from database
             $template = $this->db->fetch(
                 "SELECT * FROM email_templates WHERE template_code = ? AND is_active = 1",
@@ -87,6 +117,7 @@ class NotificationService {
 
     /**
      * Send notification to single recipient
+     * DEPRECATED: Use specific customer email methods instead
      */
     private function sendToRecipient($type, $recipient, $data) {
         $result = [
@@ -95,19 +126,29 @@ class NotificationService {
             'sms_sent' => false,
             'errors' => []
         ];
-        
+
         try {
+            // Check if this is a customer email type that should use new service
+            $customerEmailTypes = ['ticket_created', 'ticket_awaiting_info', 'ticket_awaiting_feedback',
+                                   'customer_registration', 'registration_approved', 'signup_approved'];
+
+            if (in_array($type, $customerEmailTypes)) {
+                $result['errors'][] = "DEPRECATED: Type '{$type}' should use specific customer email methods";
+                Config::logInfo("DEPRECATED sendToRecipient called for customer email type", ['type' => $type]);
+                return $result;
+            }
+
             // Get template
             $template = $this->getTemplate($type);
             if (!$template) {
                 $result['errors'][] = "Template not found for type: {$type}";
                 return $result;
             }
-            
+
             // Process template
             $processedTemplate = $this->processTemplate($template, $data);
-            
-            // Send email
+
+            // Send email (only for non-customer emails)
             if ($this->emailEnabled && !empty($recipient['email'])) {
                 $emailResult = $this->sendEmail(
                     $recipient['email'],
@@ -115,34 +156,34 @@ class NotificationService {
                     $processedTemplate['body_html'],
                     $processedTemplate['body_text']
                 );
-                
+
                 $result['email_sent'] = $emailResult['success'];
                 if (!$emailResult['success']) {
                     $result['errors'][] = "Email error: " . $emailResult['error'];
                 }
             }
-            
+
             // Send SMS
             if ($this->smsEnabled && !empty($recipient['mobile']) && !empty($processedTemplate['sms_text'])) {
                 $smsResult = $this->sendSMS(
                     $recipient['mobile'],
                     $processedTemplate['sms_text']
                 );
-                
+
                 $result['sms_sent'] = $smsResult['success'];
                 if (!$smsResult['success']) {
                     $result['errors'][] = "SMS error: " . $smsResult['error'];
                 }
             }
-            
+
             // Log notification
             $this->logNotification($type, $recipient, $result);
-            
+
         } catch (Exception $e) {
             $result['errors'][] = "Notification error: " . $e->getMessage();
             error_log("Notification error: " . $e->getMessage());
         }
-        
+
         return $result;
     }
     
@@ -329,103 +370,181 @@ class NotificationService {
     
     /**
      * Send ticket created notification (only to customers, no emails to staff)
+     * Uses centralized CustomerEmailService
      */
     public function sendTicketCreated($complaintId, $customer, $assignedUser = null) {
-        $data = [
-            'complaint_id' => $complaintId,
-            'customer_name' => $customer['name'],
-            'customer_email' => $customer['email'],
-            'company_name' => $customer['company_name'],
-            'view_url' => Config::getAppUrl() . '/customer/tickets/' . $complaintId
-        ];
+        if (!$this->emailEnabled || empty($customer['email'])) {
+            return [
+                [
+                    'recipient' => $customer,
+                    'email_sent' => false,
+                    'sms_sent' => false,
+                    'errors' => ['Email disabled or no email address']
+                ]
+            ];
+        }
 
-        // Only send email to customer - no emails to staff per requirements
-        $recipients = [
-            [
-                'customer_id' => $customer['customer_id'],
-                'email' => $customer['email'],
-                'mobile' => $customer['mobile']
-            ]
-        ];
+        // Send email using centralized CustomerEmailService
+        $result = $this->customerEmailService->sendTicketCreated(
+            $complaintId,
+            $customer['email'],
+            $customer['name'],
+            $customer['company_name'] ?? ''
+        );
 
-        // Note: Intentionally NOT adding assigned user to email recipients per requirements
+        // Note: Intentionally NOT sending emails to staff per requirements
         // Staff will only receive on-screen notifications
 
-        return $this->send('ticket_created', $recipients, $data);
+        return [
+            [
+                'recipient' => $customer,
+                'email_sent' => $result['success'],
+                'sms_sent' => false,
+                'errors' => $result['success'] ? [] : [$result['error']]
+            ]
+        ];
     }
 
     /**
      * Send customer signup approved notification
+     * Uses centralized CustomerEmailService
      */
     public function sendSignupApproved($customer) {
-        $data = [
-            'customer_name' => $customer['name'],
-            'customer_email' => $customer['email'],
-            'company_name' => $customer['company_name'],
-            'login_url' => Config::getAppUrl() . '/login'
-        ];
+        if (!$this->emailEnabled || empty($customer['email'])) {
+            return [
+                [
+                    'recipient' => $customer,
+                    'email_sent' => false,
+                    'sms_sent' => false,
+                    'errors' => ['Email disabled or no email address']
+                ]
+            ];
+        }
 
-        $recipients = [
+        // Send email using centralized CustomerEmailService
+        $result = $this->customerEmailService->sendRegistrationApproved(
+            $customer['customer_id'],
+            $customer['email'],
+            $customer['name'],
+            $customer['company_name'] ?? '',
+            $customer['division'] ?? ''
+        );
+
+        return [
             [
-                'customer_id' => $customer['customer_id'],
-                'email' => $customer['email'],
-                'mobile' => $customer['mobile']
+                'recipient' => $customer,
+                'email_sent' => $result['success'],
+                'sms_sent' => false,
+                'errors' => $result['success'] ? [] : [$result['error']]
             ]
         ];
-
-        return $this->send('signup_approved', $recipients, $data);
     }
 
     /**
-     * Send ticket status awaiting info notification
+     * Send ticket status awaiting info notification (ticket reverted)
+     * Uses centralized CustomerEmailService
      */
     public function sendTicketAwaitingInfo($complaintId, $customer, $message = '') {
-        $data = [
-            'complaint_id' => $complaintId,
-            'customer_name' => $customer['name'],
-            'customer_email' => $customer['email'],
-            'company_name' => $customer['company_name'],
-            'message' => $message,
-            'view_url' => Config::getAppUrl() . '/customer/tickets/' . $complaintId,
-            'login_url' => Config::getAppUrl() . '/login?redirect=' . urlencode('/customer/tickets/' . $complaintId)
-        ];
+        if (!$this->emailEnabled || empty($customer['email'])) {
+            return [
+                [
+                    'recipient' => $customer,
+                    'email_sent' => false,
+                    'sms_sent' => false,
+                    'errors' => ['Email disabled or no email address']
+                ]
+            ];
+        }
 
-        $recipients = [
+        // Send email using centralized CustomerEmailService
+        $result = $this->customerEmailService->sendTicketReverted(
+            $complaintId,
+            $customer['email'],
+            $customer['name'],
+            $message,
+            $customer['company_name'] ?? ''
+        );
+
+        return [
             [
-                'customer_id' => $customer['customer_id'],
-                'email' => $customer['email'],
-                'mobile' => $customer['mobile']
+                'recipient' => $customer,
+                'email_sent' => $result['success'],
+                'sms_sent' => false,
+                'errors' => $result['success'] ? [] : [$result['error']]
             ]
         ];
-
-        return $this->send('ticket_awaiting_info', $recipients, $data);
     }
 
     /**
      * Send ticket status awaiting feedback notification
+     * Uses centralized CustomerEmailService
      */
     public function sendTicketAwaitingFeedback($complaintId, $customer, $message = '') {
-        $data = [
-            'complaint_id' => $complaintId,
-            'customer_name' => $customer['name'],
-            'customer_email' => $customer['email'],
-            'company_name' => $customer['company_name'],
-            'message' => $message,
-            'view_url' => Config::getAppUrl() . '/customer/tickets/' . $complaintId,
-            'login_url' => Config::getAppUrl() . '/login?redirect=' . urlencode('/customer/tickets/' . $complaintId)
-        ];
+        if (!$this->emailEnabled || empty($customer['email'])) {
+            return [
+                [
+                    'recipient' => $customer,
+                    'email_sent' => false,
+                    'sms_sent' => false,
+                    'errors' => ['Email disabled or no email address']
+                ]
+            ];
+        }
 
-        $recipients = [
+        // Send email using centralized CustomerEmailService
+        $result = $this->customerEmailService->sendFeedbackRequested(
+            $complaintId,
+            $customer['email'],
+            $customer['name'],
+            $message,
+            $customer['company_name'] ?? ''
+        );
+
+        return [
             [
-                'customer_id' => $customer['customer_id'],
-                'email' => $customer['email'],
-                'mobile' => $customer['mobile']
+                'recipient' => $customer,
+                'email_sent' => $result['success'],
+                'sms_sent' => false,
+                'errors' => $result['success'] ? [] : [$result['error']]
             ]
         ];
-
-        return $this->send('ticket_awaiting_feedback', $recipients, $data);
     }
     
+    /**
+     * Send customer registration confirmation email
+     * Uses centralized CustomerEmailService
+     */
+    public function sendCustomerRegistration($customer) {
+        if (!$this->emailEnabled || empty($customer['email'])) {
+            return [
+                [
+                    'recipient' => $customer,
+                    'email_sent' => false,
+                    'sms_sent' => false,
+                    'errors' => ['Email disabled or no email address']
+                ]
+            ];
+        }
+
+        // Send email using centralized CustomerEmailService
+        $result = $this->customerEmailService->sendRegistrationReceived(
+            $customer['customer_id'],
+            $customer['email'],
+            $customer['name'],
+            $customer['company_name'] ?? '',
+            $customer['division'] ?? ''
+        );
+
+        return [
+            [
+                'recipient' => $customer,
+                'email_sent' => $result['success'],
+                'sms_sent' => false,
+                'errors' => $result['success'] ? [] : [$result['error']]
+            ]
+        ];
+    }
+
     /**
      * Send ticket assigned notification (no emails to staff per requirements)
      */

@@ -1,21 +1,19 @@
-1.	Enhance the notification system.
-2.	Currently it is generating some unnecessary notification like ‘ticket_created_notification’ and no information with it.
-3.	Also, there are some notifications it generating that are good.
-4.	Make Seamless all the notifications including those which are appearing on login of user/ customer.
-5.	Make notifications minimal but informative.
-6.	And provide the ticket view link with ticket number.
-7.	In some cases (majorly when controller try) the link is not working and saying access denied.
-8.	On Screen notifications are getting on screen. Check for every user role such as Customer, Controller, Controller_nodal and admin.
-9.	Every activity on ticket under that users RBAC should show the notification to the users.
-10.	For customer notification of ticket generated, Awaiting feedback and Awaiting Info only these to be shown.
-11.	Customer must not see system update notification which shows 2 tickets priority escalated or such notification.
-12.	Integrate the scattered methods and function and classes of notification to create a single system which will generate notifications for every purpose.
-13.	Notification will be seen by three types 
-a.	On Screen toast alert – Use sweetalert 2 for this
-b.	In notification bell icon 
-c.	On login Those notifications when user was unavailable only I those are not read yet.
-14.	The notifications will be department specific not the user specific. Any user who will read the notification log the entry that which user has read the notification in that department.
-15.	After any user that had read the notification in department then not need to show it to others in that department.
-16.	Refresh for notifications should be 1 min (Only for notifications).
-17.	So that the notifications will arrive near to real time.
-18. Take reference from the database schema before starting any edits. Go for mysql directly to understand the database instead of files.
+1.	Let us improve the emailing system.
+2.	Remove unnecessary methods or functions for emails.
+3.	The system will only send the mails to the customers. No mails to users will be sent.
+4.	Customer will get the Email in following conditions only none other than that:
+a.	Ticket is created successfully.
+b.	Ticket is reverted for More information.
+c.	Ticket is solved and feedback is pending.
+d.	Customer registration.
+e.	Customer registration approved by the admin.
+5.	Improving the email templates. Follow the below rules in templates or email going to customer.
+a.	Never tell the name of user or department in email.
+b.	Never give any timelines or ETA to resolve to tickets.
+c.	Give view ticket button which will redirect to that ticket after login.
+d.	In registration case if admin has approved provide the login ID and link to login page.
+e.	When ticket created or reverted so provide basic information of ticket in email. And button to view like point c.
+f.	In current email templates match the theme of all email templates.
+g.	Currently the icons in emails are not appearing instead a weird text or letter is appearing.
+6.	Check the database before any edit to get idea of emails and the tables schema.
+7.	Make a single system that will handle these tasks inside the main system to avoid redundant code.
