@@ -47,7 +47,8 @@ class NotificationController extends BaseController {
             }
 
             $userId = $_SESSION['user_id'] ?? $_SESSION['customer_id'] ?? null;
-            $userRole = $_SESSION['user_role'] ?? 'customer';
+            $sessionUserType = $_SESSION['user_type'] ?? 'customer';
+            $userRole = ($sessionUserType === 'user') ? ($_SESSION['user_role'] ?? 'controller') : $sessionUserType;
             $division = $_SESSION['division'] ?? null;
 
             if (!$userId) {
@@ -131,7 +132,8 @@ class NotificationController extends BaseController {
             }
 
             $userId = $_SESSION['user_id'] ?? $_SESSION['customer_id'] ?? null;
-            $userType = $_SESSION['user_type'] ?? 'customer';
+            $sessionUserType = $_SESSION['user_type'] ?? 'customer';
+            $userType = ($sessionUserType === 'user') ? ($_SESSION['user_role'] ?? 'controller') : $sessionUserType;
 
             if (!$userId) {
                 return $this->jsonResponse(['success' => false, 'error' => 'User ID not found'], 400);
@@ -160,7 +162,8 @@ class NotificationController extends BaseController {
             }
 
             $userId = $_SESSION['user_id'] ?? $_SESSION['customer_id'] ?? null;
-            $userType = $_SESSION['user_type'] ?? 'customer';
+            $sessionUserType = $_SESSION['user_type'] ?? 'customer';
+            $userType = ($sessionUserType === 'user') ? ($_SESSION['user_role'] ?? 'controller') : $sessionUserType;
 
             if (!$userId || !$notificationId) {
                 return $this->jsonResponse(['success' => false, 'error' => 'Invalid parameters'], 400);
@@ -197,7 +200,8 @@ class NotificationController extends BaseController {
             }
 
             $userId = $_SESSION['user_id'] ?? $_SESSION['customer_id'] ?? null;
-            $userType = $_SESSION['user_type'] ?? 'customer';
+            $sessionUserType = $_SESSION['user_type'] ?? 'customer';
+            $userType = ($sessionUserType === 'user') ? ($_SESSION['user_role'] ?? 'controller') : $sessionUserType;
 
             if (!$userId) {
                 return $this->jsonResponse(['success' => false, 'error' => 'User ID not found'], 400);
@@ -227,7 +231,8 @@ class NotificationController extends BaseController {
             }
 
             $userId = $_SESSION['user_id'] ?? $_SESSION['customer_id'] ?? null;
-            $userType = $_SESSION['user_type'] ?? 'customer';
+            $sessionUserType = $_SESSION['user_type'] ?? 'customer';
+            $userType = ($sessionUserType === 'user') ? ($_SESSION['user_role'] ?? 'controller') : $sessionUserType;
 
             if (!$userId || !$notificationId) {
                 return $this->jsonResponse(['success' => false, 'error' => 'Invalid parameters'], 400);

@@ -449,7 +449,7 @@ class CustomerController extends BaseController {
                 'success' => true,
                 'message' => 'Support ticket created successfully',
                 'ticket_id' => $complaintId,
-                'redirect' => Config::getAppUrl() . '/customer/tickets/' . $complaintId
+                'redirect' => Config::getAppUrl() . '/customer/tickets/' . $complaintId . '?show_created_notification=1'
             ]);
             
         } catch (Exception $e) {

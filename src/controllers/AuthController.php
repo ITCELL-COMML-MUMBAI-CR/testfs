@@ -137,7 +137,9 @@ class AuthController extends BaseController {
         $redirectUrl = $this->session->get('login_redirect');
         if ($redirectUrl) {
             $this->session->remove('login_redirect');
-            $this->redirect(Config::getAppUrl() . $redirectUrl);
+            // Add login=1 parameter to show notifications
+            $separator = strpos($redirectUrl, '?') !== false ? '&' : '?';
+            $this->redirect(Config::getAppUrl() . $redirectUrl . $separator . 'login=1');
         } else {
             $this->redirect(Config::getAppUrl() . '/?login=1');
         }
@@ -218,7 +220,9 @@ class AuthController extends BaseController {
         $redirectUrl = $this->session->get('login_redirect');
         if ($redirectUrl) {
             $this->session->remove('login_redirect');
-            $this->redirect(Config::getAppUrl() . $redirectUrl);
+            // Add login=1 parameter to show notifications
+            $separator = strpos($redirectUrl, '?') !== false ? '&' : '?';
+            $this->redirect(Config::getAppUrl() . $redirectUrl . $separator . 'login=1');
         } else {
             $this->redirectToDashboard($user['role'], true);
         }

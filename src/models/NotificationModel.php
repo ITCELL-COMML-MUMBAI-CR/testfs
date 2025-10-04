@@ -65,9 +65,13 @@ class NotificationModel extends BaseModel {
             $params = [];
 
             if ($userRole === 'customer') {
-                // Customers see notifications for their own tickets AND broadcast notifications for customers
+                // Customers see ONLY three types: ticket_created, awaiting_feedback, awaiting_info
+                // NO other status changes or priority changes
                 $conditions[] = "(n.customer_id = ? OR (n.user_id IS NULL AND n.customer_id IS NULL AND (n.user_type IS NULL OR n.user_type = '' OR n.user_type = 'customer')))";
                 $params[] = $userId;
+
+                // STRICT FILTERING: Only allow these three specific notification types for customers
+                $conditions[] = "n.type IN ('ticket_created', 'awaiting_info', 'awaiting_feedback')";
             } else {
                 // Build complex condition for department-based notifications
                 $userConditions = [];
@@ -128,6 +132,16 @@ class NotificationModel extends BaseModel {
      * Get unread notification count for user
      */
     public function getUnreadCount($userId, $userType) {
+        // For customers, only count allowed notification types
+        if ($userType === 'customer') {
+            $sql = "SELECT COUNT(*) as count FROM {$this->table}
+                    WHERE customer_id = ? AND is_read = 0
+                    AND type IN ('ticket_created', 'awaiting_info', 'awaiting_feedback')";
+            $result = $this->db->fetch($sql, [$userId]);
+            return $result ? $result['count'] : 0;
+        }
+
+        // For other users, use standard count
         return $this->count([
             'user_id' => $userId,
             'user_type' => $userType,
@@ -283,7 +297,7 @@ class NotificationModel extends BaseModel {
     }
     
     /**
-     * Create notification
+     * Create notification with proper validation and defaults
      */
     public function createNotification($data) {
         // Set defaults
@@ -291,13 +305,247 @@ class NotificationModel extends BaseModel {
         $data['priority'] = $data['priority'] ?? self::PRIORITY_MEDIUM;
         $data['type'] = $data['type'] ?? self::TYPE_SYSTEM_ANNOUNCEMENT;
 
+        // Ensure complaint_id is set if related_id is a ticket
+        if (isset($data['related_id']) && isset($data['related_type']) && $data['related_type'] === 'ticket') {
+            $data['complaint_id'] = $data['related_id'];
+        }
+
         // Encode metadata if it's an array
         if (isset($data['metadata']) && is_array($data['metadata'])) {
             $data['metadata'] = json_encode($data['metadata']);
         }
 
+        // Validate that we have either user_id or customer_id or it's a broadcast
+        if (empty($data['user_id']) && empty($data['customer_id']) && empty($data['user_type'])) {
+            error_log("Warning: Creating notification without user_id, customer_id, or user_type: " . json_encode($data));
+        }
+
         $result = $this->create($data);
         return $result ? $result['id'] : false;
+    }
+
+    /**
+     * Unified notification trigger for ticket activities
+     * This method consolidates all ticket-related notifications
+     */
+    public function triggerTicketNotification($ticketId, $eventType, $additionalData = []) {
+        // Get ticket details
+        $ticket = $this->db->fetch(
+            "SELECT c.*, cust.name as customer_name, cust.email as customer_email, cust.customer_id
+             FROM complaints c
+             LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+             WHERE c.complaint_id = ?",
+            [$ticketId]
+        );
+
+        if (!$ticket) {
+            error_log("Ticket not found for notification: $ticketId");
+            return false;
+        }
+
+        $notifications = [];
+
+        switch ($eventType) {
+            case 'ticket_created':
+                $notifications = $this->getTicketCreatedNotifications($ticket, $additionalData);
+                break;
+            case 'status_changed':
+                $notifications = $this->getStatusChangedNotifications($ticket, $additionalData);
+                break;
+            case 'ticket_replied':
+                $notifications = $this->getTicketRepliedNotifications($ticket, $additionalData);
+                break;
+            case 'ticket_assigned':
+                $notifications = $this->getTicketAssignedNotifications($ticket, $additionalData);
+                break;
+            case 'info_provided':
+                $notifications = $this->getInfoProvidedNotifications($ticket, $additionalData);
+                break;
+            default:
+                error_log("Unknown notification event type: $eventType");
+                return false;
+        }
+
+        // Create all notifications
+        foreach ($notifications as $notifData) {
+            $this->createNotification($notifData);
+        }
+
+        return true;
+    }
+
+    /**
+     * Get notifications for ticket created event
+     */
+    private function getTicketCreatedNotifications($ticket, $additionalData) {
+        $notifications = [];
+        $baseUrl = $this->getBaseUrl();
+
+        // Notification for customer
+        if ($ticket['customer_id']) {
+            $notifications[] = [
+                'customer_id' => $ticket['customer_id'],
+                'user_type' => 'customer',
+                'title' => 'Ticket Created Successfully',
+                'message' => "Your ticket #{$ticket['complaint_id']} for {$ticket['category']} has been created and assigned. We'll update you on the progress.",
+                'type' => 'ticket_created',
+                'priority' => 'medium',
+                'complaint_id' => $ticket['complaint_id'],
+                'related_id' => $ticket['complaint_id'],
+                'related_type' => 'ticket',
+                'action_url' => $baseUrl . '/customer/tickets/' . $ticket['complaint_id']
+            ];
+        }
+
+        // Notification for controller_nodal of the division
+        if ($ticket['division']) {
+            $notifications[] = [
+                'user_id' => null,
+                'user_type' => 'controller_nodal',
+                'title' => 'New Ticket Assigned',
+                'message' => "New ticket #{$ticket['complaint_id']} for {$ticket['category']} in {$ticket['division']} division. Priority: {$ticket['priority']}",
+                'type' => 'ticket_created',
+                'priority' => $ticket['priority'] === 'high' ? 'high' : 'medium',
+                'complaint_id' => $ticket['complaint_id'],
+                'related_id' => $ticket['complaint_id'],
+                'related_type' => 'ticket',
+                'action_url' => $baseUrl . '/controller/tickets/' . $ticket['complaint_id'],
+                'metadata' => ['target_division' => $ticket['division'], 'notification_scope' => 'division']
+            ];
+        }
+
+        return $notifications;
+    }
+
+    /**
+     * Get notifications for status changed event
+     */
+    private function getStatusChangedNotifications($ticket, $additionalData) {
+        $notifications = [];
+        $baseUrl = $this->getBaseUrl();
+        $newStatus = $additionalData['new_status'] ?? $ticket['status'];
+
+        // Customers ONLY see awaiting_info and awaiting_feedback notifications
+        // NO other status changes (resolved, closed, etc.)
+        $customerNotifiableStatuses = ['awaiting_info', 'awaiting_feedback'];
+
+        if ($ticket['customer_id'] && in_array($newStatus, $customerNotifiableStatuses)) {
+            $statusMessages = [
+                'awaiting_info' => 'Additional information required for your ticket',
+                'awaiting_feedback' => 'Please provide feedback on the resolution'
+            ];
+
+            // Use the status itself as the type for proper filtering
+            $notifications[] = [
+                'customer_id' => $ticket['customer_id'],
+                'user_type' => 'customer',
+                'title' => 'Ticket Status Updated',
+                'message' => $statusMessages[$newStatus] . " #{$ticket['complaint_id']}",
+                'type' => $newStatus, // 'awaiting_info' or 'awaiting_feedback'
+                'priority' => 'medium',
+                'complaint_id' => $ticket['complaint_id'],
+                'related_id' => $ticket['complaint_id'],
+                'related_type' => 'ticket',
+                'action_url' => $baseUrl . '/customer/tickets/' . $ticket['complaint_id']
+            ];
+        }
+
+        return $notifications;
+    }
+
+    /**
+     * Get notifications for ticket replied event
+     */
+    private function getTicketRepliedNotifications($ticket, $additionalData) {
+        $notifications = [];
+        $baseUrl = $this->getBaseUrl();
+        $repliedBy = $additionalData['replied_by'] ?? 'Staff';
+
+        // NO notifications to customers for replies (as per requirements)
+        // Customers only see: ticket_created, awaiting_info, awaiting_feedback
+
+        // Notify staff when customer replies (department-based)
+        if (isset($additionalData['reply_by_customer']) && $additionalData['reply_by_customer'] && $ticket['assigned_to_department']) {
+            $notifications[] = [
+                'user_id' => null,
+                'user_type' => 'controller',
+                'title' => 'Customer Reply Received',
+                'message' => "Customer replied on ticket #{$ticket['complaint_id']}. Please review.",
+                'type' => 'ticket_replied',
+                'priority' => 'medium',
+                'complaint_id' => $ticket['complaint_id'],
+                'related_id' => $ticket['complaint_id'],
+                'related_type' => 'ticket',
+                'action_url' => $baseUrl . '/controller/tickets/' . $ticket['complaint_id'],
+                'metadata' => ['target_department' => $ticket['assigned_to_department'], 'notification_scope' => 'department']
+            ];
+        }
+
+        return $notifications;
+    }
+
+    /**
+     * Get notifications for ticket assigned event
+     */
+    private function getTicketAssignedNotifications($ticket, $additionalData) {
+        $notifications = [];
+        $baseUrl = $this->getBaseUrl();
+
+        // Notify department when ticket is assigned
+        if ($ticket['assigned_to_department']) {
+            $notifications[] = [
+                'user_id' => null,
+                'user_type' => 'controller',
+                'title' => 'Ticket Assigned to Your Department',
+                'message' => "Ticket #{$ticket['complaint_id']} for {$ticket['category']} has been assigned to your department. Priority: {$ticket['priority']}",
+                'type' => 'ticket_assigned',
+                'priority' => $ticket['priority'] === 'high' ? 'high' : 'medium',
+                'complaint_id' => $ticket['complaint_id'],
+                'related_id' => $ticket['complaint_id'],
+                'related_type' => 'ticket',
+                'action_url' => $baseUrl . '/controller/tickets/' . $ticket['complaint_id'],
+                'metadata' => ['target_department' => $ticket['assigned_to_department'], 'notification_scope' => 'department']
+            ];
+        }
+
+        return $notifications;
+    }
+
+    /**
+     * Get notifications for info provided event
+     */
+    private function getInfoProvidedNotifications($ticket, $additionalData) {
+        $notifications = [];
+        $baseUrl = $this->getBaseUrl();
+
+        // Notify department when customer provides info
+        if ($ticket['assigned_to_department']) {
+            $notifications[] = [
+                'user_id' => null,
+                'user_type' => 'controller',
+                'title' => 'Customer Provided Information',
+                'message' => "Customer has provided additional information for ticket #{$ticket['complaint_id']}. Please review.",
+                'type' => 'ticket_updated',
+                'priority' => 'medium',
+                'complaint_id' => $ticket['complaint_id'],
+                'related_id' => $ticket['complaint_id'],
+                'related_type' => 'ticket',
+                'action_url' => $baseUrl . '/controller/tickets/' . $ticket['complaint_id'],
+                'metadata' => ['target_department' => $ticket['assigned_to_department'], 'notification_scope' => 'department']
+            ];
+        }
+
+        return $notifications;
+    }
+
+    /**
+     * Get base URL for action URLs
+     */
+    private function getBaseUrl() {
+        if (class_exists('Config')) {
+            return Config::getAppUrl();
+        }
+        return '';
     }
     
     /**

@@ -901,8 +901,16 @@ class ControllerController extends BaseController {
             // Internal remarks are internal only
             if (!empty($internalRemarks)) {
                 $this->createTransaction($ticketId, $transactionType, $internalRemarks, $user['id'], null, 'internal_remarks');
+
+                // Notify all admin, controller, controller_nodal users about internal note
+                $this->notifyInternalNote($ticketId, $ticket, $user);
             }
-            
+
+            // Notify users about interim reply
+            if ($isInterimReply && !empty($_POST['action_taken'])) {
+                $this->notifyInterimReply($ticketId, $ticket, $user);
+            }
+
             // Handle file uploads if any
             if (!empty($_FILES['attachments']['name'][0])) {
                 $this->handleEvidenceUpload($ticketId, $_FILES['attachments']);
@@ -2240,9 +2248,161 @@ class ControllerController extends BaseController {
                     $notificationService->sendTicketAwaitingFeedback($ticketId, $customer, $reply);
                 }
             }
+
+            // Notify admin when ticket is awaiting approval
+            if ($status === 'awaiting_approval') {
+                require_once '../src/models/NotificationModel.php';
+                $notificationModel = new NotificationModel();
+
+                // Get ticket details to check approval_stage
+                $ticketDetails = $this->db->fetch(
+                    "SELECT approval_stage, department, assigned_to_department FROM complaints WHERE complaint_id = ?",
+                    [$ticketId]
+                );
+
+                $approvalStage = $ticketDetails['approval_stage'] ?? null;
+                $targetDepartment = $ticketDetails['department'] ?? $ticketDetails['assigned_to_department'];
+
+                if ($approvalStage === 'dept_admin') {
+                    // Notify department admin
+                    $deptAdmins = $this->db->fetchAll(
+                        "SELECT id, name FROM users WHERE role = 'admin' AND department = ? AND status = 'active'",
+                        [$targetDepartment]
+                    );
+
+                    foreach ($deptAdmins as $admin) {
+                        $notificationModel->createNotification([
+                            'user_id' => $admin['id'],
+                            'user_type' => 'admin',
+                            'title' => 'Ticket Awaiting Your Approval',
+                            'message' => "Controller {$user['name']} has closed ticket #{$ticketId} in {$targetDepartment} department. Your approval is required.",
+                            'type' => 'approval_pending',
+                            'priority' => 'high',
+                            'related_id' => $ticketId,
+                            'related_type' => 'ticket',
+                            'action_url' => Config::getAppUrl() . '/admin/tickets/' . $ticketId . '/view',
+                            'complaint_id' => $ticketId,
+                        ]);
+                    }
+                } elseif ($approvalStage === 'cml_admin') {
+                    // Notify CML admin
+                    $cmlAdmins = $this->db->fetchAll(
+                        "SELECT id, name FROM users WHERE role = 'admin' AND department = 'CML' AND status = 'active'"
+                    );
+
+                    foreach ($cmlAdmins as $admin) {
+                        $notificationModel->createNotification([
+                            'user_id' => $admin['id'],
+                            'user_type' => 'admin',
+                            'title' => 'CML Approval Required',
+                            'message' => "Ticket #{$ticketId} from {$targetDepartment} department is awaiting your CML admin approval.",
+                            'type' => 'approval_pending',
+                            'priority' => 'high',
+                            'related_id' => $ticketId,
+                            'related_type' => 'ticket',
+                            'action_url' => Config::getAppUrl() . '/admin/tickets/' . $ticketId . '/view',
+                            'complaint_id' => $ticketId,
+                        ]);
+                    }
+                }
+            }
         } catch (Exception $e) {
             // Log error but don't fail the reply process
             error_log("Reply notification error: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Notify users when internal note is added
+     */
+    private function notifyInternalNote($ticketId, $ticket, $author) {
+        try {
+            require_once '../src/models/NotificationModel.php';
+            require_once '../src/models/UserModel.php';
+
+            $notificationModel = new NotificationModel();
+            $userModel = new UserModel();
+
+            // Get all active admin, controller, controller_nodal users
+            $usersToNotify = $userModel->findAll(['status' => 'active']);
+
+            foreach ($usersToNotify as $user) {
+                // Skip the author, superadmin, and customers
+                if ($user['id'] == $author['id'] ||
+                    $user['role'] === 'superadmin' ||
+                    $user['role'] === 'customer') {
+                    continue;
+                }
+
+                // Only notify admin, controller, controller_nodal
+                if (!in_array($user['role'], ['admin', 'controller', 'controller_nodal'])) {
+                    continue;
+                }
+
+                $actionUrl = $this->getTicketUrlByRole($ticketId, $user['role']);
+
+                $notificationModel->createNotification([
+                    'user_id' => $user['id'],
+                    'user_type' => $user['role'],
+                    'title' => 'Internal Note Added',
+                    'message' => "{$author['name']} added an internal note to ticket #{$ticketId} regarding {$ticket['category']} - {$ticket['type']}. Please review.",
+                    'type' => 'internal_note',
+                    'priority' => 'medium',
+                    'related_id' => $ticketId,
+                    'related_type' => 'ticket',
+                    'action_url' => $actionUrl,
+                    'complaint_id' => $ticketId,
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log("Internal note notification error: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Notify users when interim reply is sent
+     */
+    private function notifyInterimReply($ticketId, $ticket, $author) {
+        try {
+            require_once '../src/models/NotificationModel.php';
+            require_once '../src/models/UserModel.php';
+
+            $notificationModel = new NotificationModel();
+            $userModel = new UserModel();
+
+            // Get all active admin, controller, controller_nodal users
+            $usersToNotify = $userModel->findAll(['status' => 'active']);
+
+            foreach ($usersToNotify as $user) {
+                // Skip the author, superadmin, and customers
+                if ($user['id'] == $author['id'] ||
+                    $user['role'] === 'superadmin' ||
+                    $user['role'] === 'customer') {
+                    continue;
+                }
+
+                // Only notify admin, controller, controller_nodal
+                if (!in_array($user['role'], ['admin', 'controller', 'controller_nodal'])) {
+                    continue;
+                }
+
+                $actionUrl = $this->getTicketUrlByRole($ticketId, $user['role']);
+
+                $notificationModel->createNotification([
+                    'user_id' => $user['id'],
+                    'user_type' => $user['role'],
+                    'title' => 'Interim Reply Sent',
+                    'message' => "{$author['name']} sent an interim reply to ticket #{$ticketId} regarding {$ticket['category']} - {$ticket['type']}. The ticket remains in current status.",
+                    'type' => 'interim_reply',
+                    'priority' => 'medium',
+                    'related_id' => $ticketId,
+                    'related_type' => 'ticket',
+                    'action_url' => $actionUrl,
+                    'complaint_id' => $ticketId,
+                ]);
+            }
+        } catch (Exception $e) {
+            error_log("Interim reply notification error: " . $e->getMessage());
         }
     }
 
@@ -2371,22 +2531,48 @@ class ControllerController extends BaseController {
             "SELECT id, name, email, mobile FROM users WHERE role = 'controller_nodal' AND division = ? AND status = 'active' LIMIT 1",
             [$user['division']]
         );
-        
+
         if ($nodalController) {
             $data = [
                 'complaint_id' => $ticketId,
                 'closed_by' => $user['name'],
                 'department' => $user['department']
             ];
-            
+
             $recipients = [[
                 'user_id' => $nodalController['id'],
                 'email' => $nodalController['email'],
                 'mobile' => $nodalController['mobile'],
                 'complaint_id' => $ticketId
             ]];
-            
+
             $notificationService->send('closed_ticket_approval_needed', $recipients, $data);
+        }
+
+        // Notify admin of the department when ticket is closed
+        require_once '../src/utils/OnSiteNotificationService.php';
+        $onSiteNotificationService = new OnSiteNotificationService();
+
+        // Get admin users in the same department
+        $adminUsers = $this->db->fetchAll(
+            "SELECT id, name FROM users WHERE role = 'admin' AND department = ? AND status = 'active'",
+            [$user['department']]
+        );
+
+        foreach ($adminUsers as $admin) {
+            $notificationModel = new NotificationModel();
+            $notificationModel->createNotification([
+                'user_id' => $admin['id'],
+                'user_type' => 'admin',
+                'title' => 'Ticket Closed by Controller',
+                'message' => "Controller {$user['name']} has closed ticket #{$ticketId} in {$user['department']} department. Awaiting approval.",
+                'type' => 'ticket_closed',
+                'priority' => 'medium',
+                'related_id' => $ticketId,
+                'related_type' => 'ticket',
+                'action_url' => Config::getAppUrl() . '/admin/tickets/' . $ticketId . '/view',
+                'complaint_id' => $ticketId,
+            ]);
         }
     }
     

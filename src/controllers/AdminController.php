@@ -4712,14 +4712,24 @@ class AdminController extends BaseController
             $params[] = $user['zone'];
         }
 
-        if (isset($_GET['division']) && !empty($_GET['division'])) {
+        // Filter variables for view
+        $statusFilter = $_GET['status'] ?? '';
+        $divisionFilter = $_GET['division'] ?? '';
+        $priorityFilter = $_GET['priority'] ?? '';
+
+        if (!empty($divisionFilter)) {
             $whereClause .= " AND c.division = ?";
-            $params[] = $_GET['division'];
+            $params[] = $divisionFilter;
         }
 
-        if (isset($_GET['priority']) && !empty($_GET['priority'])) {
+        if (!empty($priorityFilter)) {
             $whereClause .= " AND c.priority = ?";
-            $params[] = $_GET['priority'];
+            $params[] = $priorityFilter;
+        }
+
+        if (!empty($statusFilter)) {
+            $whereClause .= " AND c.status = ?";
+            $params[] = $statusFilter;
         }
 
         // Get pending tickets
@@ -4768,6 +4778,8 @@ class AdminController extends BaseController
             'is_dept_admin' => $isDeptAdmin,
             'is_cml_admin' => $isCmlAdmin,
             'status_filter' => $statusFilter,
+            'division_filter' => $divisionFilter,
+            'priority_filter' => $priorityFilter,
             'page_title_display' => $pageTitle,
             'tickets' => $tickets,
             'total_count' => $totalCount,
@@ -4936,6 +4948,50 @@ class AdminController extends BaseController
                     'remarks_category' => $_POST['remarks_category'] ?? null
                 ]);
 
+                // Notify relevant users (admin, controller, controller_nodal) excluding the author
+                require_once __DIR__ . '/../models/NotificationModel.php';
+                require_once __DIR__ . '/../models/UserModel.php';
+                require_once __DIR__ . '/../models/ComplaintModel.php';
+
+                $notificationModel = new NotificationModel();
+                $userModel = new UserModel();
+                $complaintModel = new ComplaintModel();
+
+                $ticket = $complaintModel->getComplaintWithDetails($_POST['complaint_id']);
+                if ($ticket) {
+                    // Get all active admin, controller, controller_nodal users
+                    $usersToNotify = $userModel->findAll(['status' => 'active']);
+
+                    foreach ($usersToNotify as $notifyUser) {
+                        // Skip the author, superadmin, and customers
+                        if ($notifyUser['id'] == $user['id'] ||
+                            $notifyUser['role'] === 'superadmin' ||
+                            $notifyUser['role'] === 'customer') {
+                            continue;
+                        }
+
+                        // Only notify admin, controller, controller_nodal
+                        if (!in_array($notifyUser['role'], ['admin', 'controller', 'controller_nodal'])) {
+                            continue;
+                        }
+
+                        $actionUrl = $this->getTicketUrlByRole($_POST['complaint_id'], $notifyUser['role']);
+
+                        $notificationModel->createNotification([
+                            'user_id' => $notifyUser['id'],
+                            'user_type' => $notifyUser['role'],
+                            'title' => 'Admin Remark Added',
+                            'message' => "Admin remark has been added to ticket #{$_POST['complaint_id']} regarding {$ticket['category']} - {$ticket['type']}. Please review.",
+                            'type' => 'admin_remark',
+                            'priority' => 'medium',
+                            'related_id' => $_POST['complaint_id'],
+                            'related_type' => 'ticket',
+                            'action_url' => $actionUrl,
+                            'complaint_id' => $_POST['complaint_id'],
+                        ]);
+                    }
+                }
+
                 $this->json($result);
             } else {
                 $this->json($result, 400);
@@ -5093,5 +5149,25 @@ class AdminController extends BaseController
         }
 
         return $evidence;
+    }
+
+    /**
+     * Get ticket URL based on user role
+     */
+    private function getTicketUrlByRole($ticketId, $role) {
+        $baseUrl = Config::getAppUrl();
+
+        switch ($role) {
+            case 'customer':
+                return $baseUrl . '/customer/tickets/' . $ticketId;
+            case 'controller':
+            case 'controller_nodal':
+                return $baseUrl . '/controller/tickets/' . $ticketId;
+            case 'admin':
+            case 'superadmin':
+                return $baseUrl . '/admin/tickets/' . $ticketId . '/view';
+            default:
+                return $baseUrl . '/controller/tickets/' . $ticketId;
+        }
     }
 }

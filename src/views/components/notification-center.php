@@ -6,7 +6,9 @@
 
 // Get current user info
 $userId = $_SESSION['user_id'] ?? $_SESSION['customer_id'] ?? null;
-$userType = $_SESSION['user_type'] ?? 'customer';
+// For staff users, use user_role (controller, admin, etc.). For customers, use user_type
+$sessionUserType = $_SESSION['user_type'] ?? 'customer';
+$userType = ($sessionUserType === 'user') ? ($_SESSION['user_role'] ?? 'controller') : $sessionUserType;
 
 if (!$userId) {
     return;
@@ -216,6 +218,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-refresh notifications every 30 seconds
     setInterval(refreshNotificationCount, 30000);
 
+    // Check if we should show the ticket created notification
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('show_created_notification') === '1') {
+        // Remove the parameter from URL without reloading
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        // Fetch and show the newest notification
+        setTimeout(() => {
+            fetchNewestNotification();
+        }, 500);
+    }
+
     // Check for unread notifications on page load and show them
     checkForUnreadNotificationsOnLoad();
 });
@@ -243,25 +257,20 @@ function showNewNotificationToast(notification) {
                 </div>
             ` : ''}
         `,
-        showConfirmButton: true,
-        confirmButtonText: 'Close',
-        showCancelButton: hasTicketLink,
-        cancelButtonText: hasTicketLink ? 'View Ticket' : undefined,
-        allowOutsideClick: false,
+        showConfirmButton: false,
+        timer: 5000,
+        timerProgressBar: true,
+        showCloseButton: true,
+        allowOutsideClick: true,
         allowEscapeKey: true,
         didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
             toast.addEventListener('click', (e) => {
                 if (e.target.tagName === 'A') {
                     return true; // Allow link clicks
                 }
             });
-        }
-    }).then((result) => {
-        if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel && hasTicketLink) {
-            window.location.href = ticketUrl;
-        }
-        if (notification.action_url && !hasTicketLink) {
-            window.location.href = notification.action_url;
         }
     });
 }
@@ -669,15 +678,21 @@ function checkForUnreadNotificationsOnLoad() {
     const urlParams = new URLSearchParams(window.location.search);
     const isLoginRedirect = urlParams.get('login') === '1';
 
+    console.log('Checking for login redirect:', isLoginRedirect);
+
     // Only show notification modal on login (when login=1 parameter is present)
     if (!isLoginRedirect) {
+        console.log('Not a login redirect, skipping notification check');
         return;
     }
 
     // Check if already shown for this login session
     if (sessionStorage.getItem('notificationsShownThisLogin') === 'true') {
+        console.log('Notifications already shown this login session');
         return;
     }
+
+    console.log('Will show login notifications...');
 
     // Mark as shown for this login session
     sessionStorage.setItem('notificationsShownThisLogin', 'true');
@@ -692,12 +707,18 @@ function checkForUnreadNotificationsOnLoad() {
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Login notifications response:', data);
+
         if (data.success && data.notifications && data.notifications.length > 0) {
             const unreadCount = data.notifications.length;
             const hasHighPriority = data.notifications.some(n => n.priority === 'high' || n.priority === 'urgent' || n.priority === 'critical');
 
+            console.log('Showing notification dialog with', unreadCount, 'notifications');
+
             // Show notification summary popup
             showUnreadNotificationsSummary(data.notifications, unreadCount, hasHighPriority);
+        } else {
+            console.log('No unread notifications to show');
         }
     })
     .catch(error => console.error('Error checking unread notifications:', error));

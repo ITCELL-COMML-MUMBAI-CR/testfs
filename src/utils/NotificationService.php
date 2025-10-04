@@ -313,30 +313,17 @@ class NotificationService {
     
     /**
      * Log notification
+     * DISABLED: On-site notifications are now handled by OnSiteNotificationService
+     * This method previously created duplicate/ugly notifications
      */
     private function logNotification($type, $recipient, $result) {
-        try {
-            $sql = "INSERT INTO notifications (
-                user_id, customer_id, title, message, type, 
-                complaint_id, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, NOW())";
-            
-            $params = [
-                $recipient['user_id'] ?? null,
-                $recipient['customer_id'] ?? null,
-                $type . ' notification',
-                'Notification sent via ' . 
-                    ($result['email_sent'] ? 'email' : '') . 
-                    ($result['email_sent'] && $result['sms_sent'] ? ' and ' : '') .
-                    ($result['sms_sent'] ? 'SMS' : ''),
-                'info',
-                $recipient['complaint_id'] ?? null
-            ];
-            
-            $this->db->query($sql, $params);
-            
-        } catch (Exception $e) {
-            error_log("Notification logging error: " . $e->getMessage());
+        // Do NOT create on-site notifications here
+        // OnSiteNotificationService handles all on-site notifications with proper formatting
+
+        // Only log to error_log for debugging email/SMS delivery
+        if (!$result['email_sent'] && !$result['sms_sent']) {
+            error_log("Notification delivery failed for type: $type, recipient: " .
+                     ($recipient['email'] ?? $recipient['customer_id'] ?? 'unknown'));
         }
     }
     
@@ -693,6 +680,12 @@ class NotificationService {
 
             $whereClause = $userType === 'customer' ? 'customer_id = ?' : 'user_id = ?';
 
+            // For customers, add type filtering to match display query
+            $typeFilter = '';
+            if ($userType === 'customer') {
+                $typeFilter = " AND type IN ('ticket_created', 'awaiting_info', 'awaiting_feedback')";
+            }
+
             if ($hasEnhancedColumns) {
                 // Use enhanced query with new columns
                 $sql = "SELECT COUNT(*) as total, " .
@@ -701,7 +694,8 @@ class NotificationService {
                        "COUNT(CASE WHEN priority IN ('high', 'critical', 'urgent') AND dismissed_at IS NULL THEN 1 END) as priority_high " .
                        "FROM notifications " .
                        "WHERE {$whereClause} " .
-                       "AND (expires_at IS NULL OR expires_at > NOW())";
+                       "AND (expires_at IS NULL OR expires_at > NOW())" .
+                       $typeFilter;
             } else {
                 // Use basic query for backward compatibility
                 $sql = "SELECT COUNT(*) as total, " .
@@ -709,7 +703,8 @@ class NotificationService {
                        "COUNT(*) as active, " .
                        "0 as priority_high " .
                        "FROM notifications " .
-                       "WHERE {$whereClause}";
+                       "WHERE {$whereClause}" .
+                       $typeFilter;
             }
 
             $result = $this->db->fetch($sql, [$userId]);

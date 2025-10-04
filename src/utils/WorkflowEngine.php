@@ -409,19 +409,67 @@ class WorkflowEngine {
      * Reject reply
      */
     private function rejectReply($ticket, $reason, $rejectedBy) {
-        $sql = "UPDATE complaints SET 
+        $sql = "UPDATE complaints SET
                 status = 'pending',
                 updated_at = NOW()
                 WHERE complaint_id = ?";
-        
+
         $this->db->query($sql, [$ticket['complaint_id']]);
-        
+
+        // Notify department controllers when reply is rejected
+        require_once __DIR__ . '/../models/NotificationModel.php';
+        $notificationModel = new NotificationModel();
+
+        // Get all controllers in the ticket's department
+        $departmentControllers = $this->db->fetchAll(
+            "SELECT id, name FROM users
+             WHERE role IN ('controller', 'controller_nodal')
+             AND department = ?
+             AND status = 'active'",
+            [$ticket['assigned_to_department'] ?? $ticket['department']]
+        );
+
+        foreach ($departmentControllers as $controller) {
+            $notificationModel->createNotification([
+                'user_id' => $controller['id'],
+                'user_type' => 'controller',
+                'title' => 'Reply Rejected - Revision Required',
+                'message' => "Your reply for ticket #{$ticket['complaint_id']} has been rejected by admin. Reason: {$reason}. Please revise and resubmit.",
+                'type' => 'reply_rejected',
+                'priority' => 'high',
+                'related_id' => $ticket['complaint_id'],
+                'related_type' => 'ticket',
+                'action_url' => $this->getTicketUrlByRole($ticket['complaint_id'], 'controller'),
+                'complaint_id' => $ticket['complaint_id'],
+            ]);
+        }
+
         return [
             'success' => true,
             'new_status' => 'pending',
             'updates' => [],
             'message' => 'Reply rejected and returned for revision'
         ];
+    }
+
+    /**
+     * Get ticket URL based on user role
+     */
+    private function getTicketUrlByRole($ticketId, $role) {
+        $baseUrl = Config::getAppUrl();
+
+        switch ($role) {
+            case 'customer':
+                return $baseUrl . '/customer/tickets/' . $ticketId;
+            case 'controller':
+            case 'controller_nodal':
+                return $baseUrl . '/controller/tickets/' . $ticketId;
+            case 'admin':
+            case 'superadmin':
+                return $baseUrl . '/admin/tickets/' . $ticketId . '/view';
+            default:
+                return $baseUrl . '/controller/tickets/' . $ticketId;
+        }
     }
     
     /**
@@ -1089,6 +1137,29 @@ class WorkflowEngine {
             $this->db->query($sql, [$adminId, $remarks, $ticket['complaint_id']]);
             $this->logApprovalWorkflow($ticket['complaint_id'], 'dept_admin_review', 'approve', $adminId, null, null, $remarks);
 
+            // Notify CML admin that ticket needs approval
+            require_once __DIR__ . '/../models/NotificationModel.php';
+            $notificationModel = new NotificationModel();
+
+            $cmlAdmins = $this->db->fetchAll(
+                "SELECT id, name FROM users WHERE role = 'admin' AND department = 'CML' AND status = 'active'"
+            );
+
+            foreach ($cmlAdmins as $cmlAdmin) {
+                $notificationModel->createNotification([
+                    'user_id' => $cmlAdmin['id'],
+                    'user_type' => 'admin',
+                    'title' => 'CML Approval Required',
+                    'message' => "Department admin has approved ticket #{$ticket['complaint_id']}. Your CML admin approval is now required.",
+                    'type' => 'approval_pending',
+                    'priority' => 'high',
+                    'related_id' => $ticket['complaint_id'],
+                    'related_type' => 'ticket',
+                    'action_url' => Config::getAppUrl() . '/admin/tickets/' . $ticket['complaint_id'] . '/view',
+                    'complaint_id' => $ticket['complaint_id'],
+                ]);
+            }
+
             return [
                 'success' => true,
                 'new_status' => 'awaiting_approval',
@@ -1191,6 +1262,36 @@ class WorkflowEngine {
         $workflowStep = $currentStage === 'dept_admin' ? 'dept_admin_review' : 'cml_admin_review';
         $this->logApprovalWorkflow($ticket['complaint_id'], $workflowStep, 'reject', $adminId, null, null, null, $reason);
 
+        // Notify department controllers when reply is rejected
+        require_once __DIR__ . '/../models/NotificationModel.php';
+        $notificationModel = new NotificationModel();
+
+        // Get all controllers in the ticket's department
+        $departmentControllers = $this->db->fetchAll(
+            "SELECT id, name, role FROM users
+             WHERE role IN ('controller', 'controller_nodal')
+             AND department = ?
+             AND status = 'active'",
+            [$returnToDepartment]
+        );
+
+        foreach ($departmentControllers as $controller) {
+            $actionUrl = $this->getTicketUrlByRole($ticket['complaint_id'], $controller['role']);
+
+            $notificationModel->createNotification([
+                'user_id' => $controller['id'],
+                'user_type' => $controller['role'],
+                'title' => 'Reply Rejected - Revision Required',
+                'message' => "Your reply for ticket #{$ticket['complaint_id']} has been rejected by admin. Reason: {$reason}. Please revise and resubmit.",
+                'type' => 'reply_rejected',
+                'priority' => 'high',
+                'related_id' => $ticket['complaint_id'],
+                'related_type' => 'ticket',
+                'action_url' => $actionUrl,
+                'complaint_id' => $ticket['complaint_id'],
+            ]);
+        }
+
         $rejectMessage = $currentStage === 'dept_admin'
             ? "Department admin rejected. Returned to {$returnToDepartment} department for revision."
             : "CML admin rejected. Returned to {$returnToDepartment} department for revision.";
@@ -1247,6 +1348,29 @@ class WorkflowEngine {
 
             $this->db->query($sql, [$editedContent, $adminId, $remarks, $ticket['complaint_id']]);
             $this->logApprovalWorkflow($ticket['complaint_id'], 'dept_admin_review', 'edit_and_approve', $adminId, $ticket['action_taken'], $editedContent, $remarks);
+
+            // Notify CML admin that ticket needs approval (with edits)
+            require_once __DIR__ . '/../models/NotificationModel.php';
+            $notificationModel = new NotificationModel();
+
+            $cmlAdmins = $this->db->fetchAll(
+                "SELECT id, name FROM users WHERE role = 'admin' AND department = 'CML' AND status = 'active'"
+            );
+
+            foreach ($cmlAdmins as $cmlAdmin) {
+                $notificationModel->createNotification([
+                    'user_id' => $cmlAdmin['id'],
+                    'user_type' => 'admin',
+                    'title' => 'CML Approval Required (Edited)',
+                    'message' => "Department admin has edited and approved ticket #{$ticket['complaint_id']}. Your CML admin approval is now required.",
+                    'type' => 'approval_pending',
+                    'priority' => 'high',
+                    'related_id' => $ticket['complaint_id'],
+                    'related_type' => 'ticket',
+                    'action_url' => Config::getAppUrl() . '/admin/tickets/' . $ticket['complaint_id'] . '/view',
+                    'complaint_id' => $ticket['complaint_id'],
+                ]);
+            }
 
             return [
                 'success' => true,

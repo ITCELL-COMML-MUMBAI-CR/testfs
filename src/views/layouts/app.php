@@ -306,7 +306,7 @@
                                     <i class="fas fa-user-circle me-2"></i>Profile
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-danger" href="<?= Config::getAppUrl() ?>/logout">
+                                <li><a class="dropdown-item text-danger" href="<?= Config::getAppUrl() ?>/logout" onclick="sessionStorage.removeItem('notificationsShownThisLogin');">
                                     <i class="fas fa-sign-out-alt me-2"></i>Logout
                                 </a></li>
                             </ul>
