@@ -839,6 +839,7 @@ class ControllerController extends BaseController {
                         // New admin approval workflow - dept/cml admin approval required
                         $sql = "UPDATE complaints SET
                                 action_taken = ?,
+                                action_taken_by = ?,
                                 status = ?,
                                 approval_stage = ?,
                                 assigned_to_department = ?,
@@ -849,6 +850,7 @@ class ControllerController extends BaseController {
 
                         $this->db->query($sql, [
                             trim($_POST['action_taken']),
+                            $user['id'],
                             $newStatus,
                             $approvalStage,
                             $approvalDepartment, // Department whose admin needs to approve
@@ -859,6 +861,7 @@ class ControllerController extends BaseController {
                         // Old controller_nodal approval workflow (legacy)
                         $sql = "UPDATE complaints SET
                                 action_taken = ?,
+                                action_taken_by = ?,
                                 status = ?,
                                 department = ?,
                                 assigned_to_department = ?,
@@ -868,6 +871,7 @@ class ControllerController extends BaseController {
 
                         $this->db->query($sql, [
                             trim($_POST['action_taken']),
+                            $user['id'],
                             $newStatus,
                             $user['department'],
                             $approvalDepartment,
@@ -878,12 +882,14 @@ class ControllerController extends BaseController {
                     // Regular reply update (non-closing)
                     $sql = "UPDATE complaints SET
                             action_taken = ?,
+                            action_taken_by = ?,
                             status = ?,
                             updated_at = NOW()
                             WHERE complaint_id = ?";
 
                     $this->db->query($sql, [
                         trim($_POST['action_taken']),
+                        $user['id'],
                         $newStatus,
                         $ticketId
                     ]);
@@ -1011,11 +1017,12 @@ class ControllerController extends BaseController {
                 // Update with edited reply
                 $sql = "UPDATE complaints SET
                         action_taken = ?,
+                        action_taken_by = ?,
                         status = 'awaiting_feedback',
                         updated_at = NOW()
                         WHERE complaint_id = ?";
 
-                $this->db->query($sql, [$editedActionTaken, $ticketId]);
+                $this->db->query($sql, [$editedActionTaken, $user['id'], $ticketId]);
 
                 // Create transaction for new action taken (customer-facing)
                 $this->createTransaction($ticketId, 'reply_approved_edited', $editedActionTaken, $user['id'], null, 'customer_remarks');
@@ -1362,17 +1369,19 @@ class ControllerController extends BaseController {
             }
             
             // Update ticket with action taken, set status to closed, set closing department, and reset forwarding flag
-            $sql = "UPDATE complaints SET 
+            $sql = "UPDATE complaints SET
                     action_taken = ?,
+                    action_taken_by = ?,
                     status = 'closed',
                     department = ?,
                     forwarded_flag = 0,
                     closed_at = NOW(),
                     updated_at = NOW()
                     WHERE complaint_id = ?";
-            
+
             $this->db->query($sql, [
                 trim($_POST['action_taken']),
+                $user['id'],
                 $user['department'],
                 $ticketId
             ]);

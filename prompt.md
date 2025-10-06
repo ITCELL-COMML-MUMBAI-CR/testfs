@@ -14,3 +14,4 @@ d.	This Month
 10.	Do not create your own search functionality utilize the data tables search.
 11.	 Dashboard must be interactive and on click must show the detailed information.
 12.	Delete the unused and redundant code for reporting and dashboard.
+13. Make sure every button on those page works and has valid route.

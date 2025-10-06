@@ -36,7 +36,7 @@ if ($user_division && $user_division !== 'HQ') {
 ?>
 
 <section class="py-4">
-    <div class="container-xl">
+    <div class="container-fluid">
 
         <!-- Welcome Header -->
         <div class="row mb-4">

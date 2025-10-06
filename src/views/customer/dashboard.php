@@ -5,7 +5,7 @@ ob_start();
 
 <!-- Customer Dashboard -->
 <section class="py-apple-6">
-    <div class="container-xl">
+    <div class="container-fluid">
         
         <!-- Welcome Header -->
         <div class="row mb-4">

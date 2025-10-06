@@ -37,7 +37,7 @@ $status_legend = [
 ?>
 
 <section class="py-4">
-    <div class="container-xl">
+    <div class="container-fluid">
 
         <!-- Page Header -->
         <div class="row align-items-center mb-4">
@@ -157,9 +157,14 @@ $status_legend = [
                                     <label class="form-label-apple">Date Range</label>
                                     <select class="form-control-apple" id="dateRangeSelector" onchange="applyDateRange(this.value)">
                                         <option value="custom">Custom Range</option>
-                                        <option value="last_7_days">Last 7 Days</option>
+                                        <option value="today">Today</option>
+                                        <option value="yesterday">Yesterday</option>
+                                        <option value="this_week">This Week</option>
+                                        <option value="last_week">Last Week</option>
+                                        <option value="this_month">This Month</option>
                                         <option value="last_month">Last Month</option>
-                                        <option value="all_time">All Time</option>
+                                        <option value="this_year">This Year</option>
+                                        <option value="last_year">Last Year</option>
                                     </select>
                                 </div>
 
@@ -333,10 +338,14 @@ $status_legend = [
                                         <div class="col-md-6">
                                             <label class="form-label-apple">Date Range</label>
                                             <select class="form-control-apple" id="reportDateRange" name="report_date_range" onchange="toggleCustomDates(this.value)" required>
-                                                <option value="last_7_days">Last 7 Days</option>
+                                                <option value="today">Today</option>
+                                                <option value="yesterday">Yesterday</option>
+                                                <option value="this_week">This Week</option>
+                                                <option value="last_week">Last Week</option>
+                                                <option value="this_month">This Month</option>
                                                 <option value="last_month" selected>Last Month</option>
-                                                <option value="current_month">Current Month</option>
-                                                <option value="last_3_months">Last 3 Months</option>
+                                                <option value="this_year">This Year</option>
+                                                <option value="last_year">Last Year</option>
                                                 <option value="custom">Custom Range</option>
                                             </select>
                                         </div>
@@ -457,17 +466,22 @@ $status_legend = [
                                 <table class="table table-hover align-middle mb-0" id="complaintsTable">
                                     <thead class="table-light">
                                         <tr>
-                                            <th class="border-0">Serial No.</th>
                                             <th class="border-0">Complaint No.</th>
                                             <th class="border-0">Complaint Date</th>
                                             <th class="border-0">Update Date</th>
                                             <th class="border-0">Duration (Hours)</th>
                                             <th class="border-0">Terminal</th>
+                                            <th class="border-0">Department</th>
+                                            <th class="border-0">Division</th>
+                                            <th class="border-0">Zone</th>
                                             <th class="border-0">Complainant</th>
                                             <th class="border-0">Type Subtype</th>
                                             <th class="border-0">FNR No</th>
                                             <th class="border-0 description-col">Description</th>
                                             <th class="border-0 action-col">Action Taken</th>
+                                            <th class="border-0">Action Taken By</th>
+                                            <th class="border-0">Dept Admin</th>
+                                            <th class="border-0">CML Admin</th>
                                             <th class="border-0">Status</th>
                                             <th class="border-0">Priority</th>
                                             <th class="border-0">Actions</th>
@@ -476,7 +490,7 @@ $status_legend = [
                                     <tbody>
                                         <?php if (empty($complaints_data)): ?>
                                         <tr>
-                                            <td colspan="14" class="text-center py-5">
+                                            <td colspan="19" class="text-center py-5">
                                                 <div class="text-muted">
                                                     <i class="fas fa-search fa-2x mb-3"></i>
                                                     <h5>No complaints found</h5>
@@ -488,7 +502,6 @@ $status_legend = [
                                             <?php foreach ($complaints_data as $index => $complaint): ?>
                                             <tr class="clickable-row status-<?= $complaint['status'] ?>"
                                                 onclick="viewComplaintDetails('<?= $complaint['complaint_id'] ?>')">
-                                                <td><?= $index + 1 ?></td>
                                                 <td class="fw-semibold text-primary"><?= htmlspecialchars($complaint['complaint_id']) ?></td>
                                                 <td><?= date('M d, Y', strtotime($complaint['date'])) ?></td>
                                                 <td><?= date('M d, Y', strtotime($complaint['updated_at'])) ?></td>
@@ -497,28 +510,56 @@ $status_legend = [
                                                         <?= $complaint['duration_hours'] ?>h
                                                     </span>
                                                 </td>
-                                                <td><?= htmlspecialchars($complaint['shed_name'] ?? 'N/A') ?></td>
+                                                <td><?= htmlspecialchars($complaint['shed_name'] ?? '-') ?></td>
+                                                <td><?= htmlspecialchars($complaint['department'] ?? '-') ?></td>
+                                                <td><?= htmlspecialchars($complaint['division'] ?? '-') ?></td>
+                                                <td><?= htmlspecialchars($complaint['zone'] ?? '-') ?></td>
                                                 <td>
-                                                    <div class="fw-medium"><?= htmlspecialchars($complaint['customer_name'] ?? 'N/A') ?></div>
+                                                    <div class="fw-medium"><?= htmlspecialchars($complaint['customer_name'] ?? '-') ?></div>
                                                     <small class="text-muted"><?= htmlspecialchars($complaint['company_name'] ?? '') ?></small>
                                                     <small class="d-block text-muted"><?= htmlspecialchars($complaint['customer_mobile'] ?? '') ?></small>
                                                 </td>
                                                 <td>
-                                                    <div><?= htmlspecialchars($complaint['category'] ?? 'N/A') ?></div>
+                                                    <div><?= htmlspecialchars($complaint['category'] ?? '-') ?></div>
                                                     <small class="text-muted"><?= htmlspecialchars($complaint['type'] ?? '') ?></small>
                                                 </td>
-                                                <td><?= htmlspecialchars($complaint['fnr_number'] ?? 'N/A') ?></td>
+                                                <td><?= htmlspecialchars($complaint['fnr_number'] ?? '-') ?></td>
                                                 <td class="description-col">
                                                     <div class="description-text">
-                                                        <?= htmlspecialchars(substr($complaint['description'] ?? '', 0, 100)) ?>
-                                                        <?= strlen($complaint['description'] ?? '') > 100 ? '...' : '' ?>
+                                                        <?= htmlspecialchars($complaint['description'] ?? '') ?>
                                                     </div>
                                                 </td>
                                                 <td class="action-col">
                                                     <div class="action-text">
-                                                        <?= htmlspecialchars(substr($complaint['action_taken'] ?? 'No action taken yet', 0, 100)) ?>
-                                                        <?= strlen($complaint['action_taken'] ?? '') > 100 ? '...' : '' ?>
+                                                        <?= htmlspecialchars($complaint['action_taken'] ?? 'No action taken yet') ?>
                                                     </div>
+                                                </td>
+                                                <td>
+                                                    <?php if (!empty($complaint['action_taken_by_name'])): ?>
+                                                        <div class="fw-medium"><?= htmlspecialchars($complaint['action_taken_by_name']) ?></div>
+                                                        <small class="text-muted"><?= htmlspecialchars($complaint['action_taken_by_role']) ?></small>
+                                                        <small class="d-block text-muted"><?= htmlspecialchars($complaint['action_taken_by_department']) ?> - <?= htmlspecialchars($complaint['action_taken_by_division']) ?></small>
+                                                    <?php else: ?>
+                                                        <span class="text-muted">-</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <?php if (!empty($complaint['dept_admin_name'])): ?>
+                                                        <div class="fw-medium"><?= htmlspecialchars($complaint['dept_admin_name']) ?></div>
+                                                        <small class="text-muted"><?= htmlspecialchars($complaint['dept_admin_role']) ?></small>
+                                                        <small class="d-block text-muted"><?= htmlspecialchars($complaint['dept_admin_department']) ?> - <?= htmlspecialchars($complaint['dept_admin_division']) ?></small>
+                                                    <?php else: ?>
+                                                        <span class="text-muted">-</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td>
+                                                    <?php if (!empty($complaint['cml_admin_name'])): ?>
+                                                        <div class="fw-medium"><?= htmlspecialchars($complaint['cml_admin_name']) ?></div>
+                                                        <small class="text-muted"><?= htmlspecialchars($complaint['cml_admin_role']) ?></small>
+                                                        <small class="d-block text-muted"><?= htmlspecialchars($complaint['cml_admin_department']) ?> - <?= htmlspecialchars($complaint['cml_admin_division']) ?></small>
+                                                    <?php else: ?>
+                                                        <span class="text-muted">-</span>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td>
                                                     <span class="badge bg-<?= $status_legend[$complaint['status']]['color'] ?>">
@@ -545,13 +586,7 @@ $status_legend = [
                                                                 title="View Details">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
-                                                        <?php if ($complaint['status'] !== 'closed'): ?>
-                                                        <button class="btn btn-outline-success btn-sm"
-                                                                onclick="event.stopPropagation(); quickReply('<?= $complaint['complaint_id'] ?>')"
-                                                                title="Quick Reply">
-                                                            <i class="fas fa-reply"></i>
-                                                        </button>
-                                                        <?php endif; ?>
+                                                        <!-- Quick Reply removed - Reports are view-only -->
                                                     </div>
                                                 </td>
                                             </tr>
@@ -604,8 +639,8 @@ $status_legend = [
                                                     </span>
                                                 </td>
                                                 <td><?= htmlspecialchars($transaction['user_name'] ?? 'System') ?></td>
-                                                <td><?= htmlspecialchars($transaction['from_division'] ?? 'N/A') ?></td>
-                                                <td><?= htmlspecialchars($transaction['to_division'] ?? 'N/A') ?></td>
+                                                <td><?= htmlspecialchars($transaction['from_division'] ?? '-') ?></td>
+                                                <td><?= htmlspecialchars($transaction['to_division'] ?? '-') ?></td>
                                                 <td>
                                                     <?php if ($transaction['old_status'] !== $transaction['new_status']): ?>
                                                         <span class="badge bg-secondary"><?= $transaction['old_status'] ?></span>
@@ -672,7 +707,7 @@ $status_legend = [
                                                         <?= ucfirst($customer['customer_type']) ?>
                                                     </span>
                                                 </td>
-                                                <td><?= htmlspecialchars($customer['division'] ?? 'N/A') ?></td>
+                                                <td><?= htmlspecialchars($customer['division'] ?? '-') ?></td>
                                                 <td>
                                                     <?php
                                                     $status_colors = [
@@ -703,46 +738,7 @@ $status_legend = [
     </div>
 </section>
 
-<!-- Quick Reply Modal -->
-<div class="modal fade" id="quickReplyModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Quick Reply - Ticket #<span id="replyTicketId"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="quickReplyForm">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label-apple">Reply Message</label>
-                        <textarea class="form-control-apple" name="reply" rows="4" required
-                                  placeholder="Enter your reply to the customer..."></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label-apple">Action Taken</label>
-                        <textarea class="form-control-apple" name="action_taken" rows="3" required
-                                  placeholder="Describe the action taken to resolve this issue..."></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label-apple">Status Update</label>
-                        <select class="form-control-apple" name="new_status" required>
-                            <option value="">Select Status</option>
-                            <option value="awaiting_feedback">Awaiting Customer Feedback</option>
-                            <option value="awaiting_info">Awaiting Additional Information</option>
-                            <option value="closed">Resolve and Close</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-apple-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-apple-primary">
-                        <i class="fas fa-paper-plane me-2"></i>Send Reply & Update
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<!-- Quick Reply Modal - REMOVED (Reports are view-only) -->
 
 <script>
 // Report data and functionality
@@ -758,7 +754,7 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeDataTables();
         setupColumnSelector();
         setupRowClickHandlers();
-        setupQuickReplyModal();
+        // setupQuickReplyModal(); // Removed - Reports are view-only
     }, 100);
 });
 
@@ -811,13 +807,11 @@ function initializeDataTables() {
                     table.DataTable({
                         pageLength: 25,
                         lengthMenu: [10, 25, 50, 100],
-                        responsive: true,
-                        dom: '<"top"lf>rt<"bottom"ip><"clear">',
                         language: {
                             search: "_INPUT_",
                             searchPlaceholder: "Search records..."
                         },
-                        order: [[1, 'desc']], // Default order by first sortable column
+                        order: [[0, 'desc']], // Default order by complaint number
                         columnDefs: [
                             {
                                 targets: 'no-sort',
@@ -844,26 +838,34 @@ function setupColumnSelector() {
     const columnSelector = document.getElementById('columnSelector');
     if (!columnSelector) return;
 
+    // Load saved column preferences from localStorage
+    const savedPreferences = localStorage.getItem('columnPreferences_' + reportData.current_view);
+    const preferences = savedPreferences ? JSON.parse(savedPreferences) : {};
+
     // Define available columns for each view
     const columnsConfig = {
         complaints: [
-            {id: 'serial', label: 'Serial No.', default: true},
             {id: 'complaint_id', label: 'Complaint No.', default: true},
             {id: 'date', label: 'Complaint Date', default: true},
             {id: 'updated_at', label: 'Update Date', default: true},
             {id: 'duration', label: 'Duration (Hours)', default: true},
             {id: 'terminal', label: 'Terminal', default: true},
+            {id: 'department', label: 'Department', default: true},
+            {id: 'division', label: 'Division', default: true},
+            {id: 'zone', label: 'Zone', default: true},
             {id: 'complainant', label: 'Complainant', default: true},
             {id: 'type_subtype', label: 'Type Subtype', default: true},
-            {id: 'fnr_number', label: 'FNR No', default: true},
+            {id: 'fnr_number', label: 'FNR No', default: false},
             {id: 'description', label: 'Description', default: true},
             {id: 'action_taken', label: 'Action Taken', default: true},
+            {id: 'action_taken_by', label: 'Action Taken By', default: true},
+            {id: 'dept_admin', label: 'Dept Admin', default: true},
+            {id: 'cml_admin', label: 'CML Admin', default: true},
             {id: 'status', label: 'Status', default: true},
             {id: 'priority', label: 'Priority', default: true},
             {id: 'actions', label: 'Actions', default: true}
         ],
         transactions: [
-            {id: 'serial', label: 'Serial No.', default: true},
             {id: 'transaction_id', label: 'Transaction ID', default: true},
             {id: 'complaint_id', label: 'Complaint ID', default: true},
             {id: 'transaction_type', label: 'Transaction Type', default: true},
@@ -875,7 +877,6 @@ function setupColumnSelector() {
             {id: 'created_at', label: 'Date & Time', default: true}
         ],
         customers: [
-            {id: 'serial', label: 'Serial No.', default: true},
             {id: 'customer_id', label: 'Customer ID', default: true},
             {id: 'name', label: 'Name', default: true},
             {id: 'company_name', label: 'Company', default: true},
@@ -894,19 +895,105 @@ function setupColumnSelector() {
     const columns = columnsConfig[reportData.current_view] || [];
     columnSelector.innerHTML = '';
 
+    // Add Select All / Deselect All options
+    const selectAllLi = document.createElement('li');
+    selectAllLi.innerHTML = `
+        <label class="dropdown-item fw-bold border-bottom">
+            <input type="checkbox" class="form-check-input me-2" id="selectAllColumns" onchange="toggleAllColumns(this.checked)">
+            Select All
+        </label>
+    `;
+    columnSelector.appendChild(selectAllLi);
+
+    // Add divider
+    const divider = document.createElement('li');
+    divider.innerHTML = '<hr class="dropdown-divider">';
+    columnSelector.appendChild(divider);
+
     columns.forEach(column => {
+        // Use saved preference if available, otherwise use default
+        const isVisible = preferences[column.id] !== undefined ? preferences[column.id] : column.default;
+
         const li = document.createElement('li');
         li.innerHTML = `
             <label class="dropdown-item">
                 <input type="checkbox" class="form-check-input me-2"
                        id="col_${column.id}"
-                       ${column.default ? 'checked' : ''}
+                       ${isVisible ? 'checked' : ''}
                        onchange="toggleColumn('${column.id}', this.checked)">
                 ${column.label}
             </label>
         `;
         columnSelector.appendChild(li);
+
+        // Apply saved visibility to table if DataTable is initialized
+        setTimeout(() => {
+            const tableElement = $('#' + reportData.current_view + 'Table');
+            if (tableElement.length && $.fn.DataTable.isDataTable(tableElement[0])) {
+                const columnIndex = getColumnIndex(column.id);
+                if (columnIndex !== -1) {
+                    tableElement.DataTable().column(columnIndex).visible(isVisible);
+                }
+            }
+        }, 100);
     });
+
+    // Update Select All checkbox state based on current selections
+    updateSelectAllState();
+}
+
+function toggleAllColumns(selectAll) {
+    const tableElement = $('#' + reportData.current_view + 'Table');
+    if (!tableElement.length || !$.fn.DataTable.isDataTable(tableElement[0])) return;
+
+    const table = tableElement.DataTable();
+    const columnSelector = document.getElementById('columnSelector');
+    const checkboxes = columnSelector.querySelectorAll('input[type="checkbox"]:not(#selectAllColumns)');
+
+    checkboxes.forEach(checkbox => {
+        if (!checkbox.disabled) {
+            checkbox.checked = selectAll;
+            const columnId = checkbox.id.replace('col_', '');
+            const columnIndex = getColumnIndex(columnId);
+
+            if (columnIndex !== -1) {
+                table.column(columnIndex).visible(selectAll);
+            }
+        }
+    });
+
+    // Save all preferences to localStorage
+    const savedPreferences = localStorage.getItem('columnPreferences_' + reportData.current_view);
+    const preferences = savedPreferences ? JSON.parse(savedPreferences) : {};
+
+    checkboxes.forEach(checkbox => {
+        const columnId = checkbox.id.replace('col_', '');
+        preferences[columnId] = selectAll;
+    });
+
+    localStorage.setItem('columnPreferences_' + reportData.current_view, JSON.stringify(preferences));
+}
+
+function updateSelectAllState() {
+    const columnSelector = document.getElementById('columnSelector');
+    if (!columnSelector) return;
+
+    const selectAllCheckbox = document.getElementById('selectAllColumns');
+    if (!selectAllCheckbox) return;
+
+    const checkboxes = columnSelector.querySelectorAll('input[type="checkbox"]:not(#selectAllColumns)');
+    const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+
+    if (checkedCount === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    } else if (checkedCount === checkboxes.length) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+    } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+    }
 }
 
 function toggleColumn(columnId, show) {
@@ -918,6 +1005,15 @@ function toggleColumn(columnId, show) {
 
             if (columnIndex !== -1) {
                 table.column(columnIndex).visible(show);
+
+                // Save preference to localStorage
+                const savedPreferences = localStorage.getItem('columnPreferences_' + reportData.current_view);
+                const preferences = savedPreferences ? JSON.parse(savedPreferences) : {};
+                preferences[columnId] = show;
+                localStorage.setItem('columnPreferences_' + reportData.current_view, JSON.stringify(preferences));
+
+                // Update Select All checkbox state
+                updateSelectAllState();
             }
         } catch (error) {
             console.error('Error toggling column:', error);
@@ -926,9 +1022,30 @@ function toggleColumn(columnId, show) {
 }
 
 function getColumnIndex(columnId) {
-    // Map column IDs to their indices in the table
-    // This would need to be implemented based on actual column structure
-    return -1;
+    // Map column IDs to their indices in the complaints table
+    const columnMapping = {
+        'complaint_id': 0,
+        'date': 1,
+        'updated_at': 2,
+        'duration': 3,
+        'terminal': 4,
+        'department': 5,
+        'division': 6,
+        'zone': 7,
+        'complainant': 8,
+        'type_subtype': 9,
+        'fnr_number': 10,
+        'description': 11,
+        'action_taken': 12,
+        'action_taken_by': 13,
+        'dept_admin': 14,
+        'cml_admin': 15,
+        'status': 16,
+        'priority': 17,
+        'actions': 18
+    };
+
+    return columnMapping[columnId] !== undefined ? columnMapping[columnId] : -1;
 }
 
 // Date range selector functionality
@@ -940,40 +1057,74 @@ function applyDateRange(range) {
 
     const today = new Date();
     let fromDate, toDate;
+    let hideCustomDates = true;
 
     switch(range) {
-        case 'last_7_days':
+        case 'today':
+            fromDate = toDate = new Date(today);
+            break;
+
+        case 'yesterday':
+            fromDate = toDate = new Date(today);
+            fromDate.setDate(today.getDate() - 1);
+            toDate = new Date(fromDate);
+            break;
+
+        case 'this_week':
+            // Start of current week (Sunday)
             fromDate = new Date(today);
-            fromDate.setDate(today.getDate() - 7);
-            toDate = today;
-            dateFromContainer.style.display = 'none';
-            dateToContainer.style.display = 'none';
+            fromDate.setDate(today.getDate() - today.getDay());
+            toDate = new Date(today);
+            break;
+
+        case 'last_week':
+            // Start of last week (Sunday)
+            fromDate = new Date(today);
+            fromDate.setDate(today.getDate() - today.getDay() - 7);
+            // End of last week (Saturday)
+            toDate = new Date(fromDate);
+            toDate.setDate(fromDate.getDate() + 6);
+            break;
+
+        case 'this_month':
+            fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            toDate = new Date(today);
             break;
 
         case 'last_month':
             fromDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
             toDate = new Date(today.getFullYear(), today.getMonth(), 0);
-            dateFromContainer.style.display = 'none';
-            dateToContainer.style.display = 'none';
             break;
 
-        case 'all_time':
-            fromDate = new Date('2020-01-01'); // Set a reasonable start date
-            toDate = today;
-            dateFromContainer.style.display = 'none';
-            dateToContainer.style.display = 'none';
+        case 'this_year':
+            fromDate = new Date(today.getFullYear(), 0, 1);
+            toDate = new Date(today);
+            break;
+
+        case 'last_year':
+            fromDate = new Date(today.getFullYear() - 1, 0, 1);
+            toDate = new Date(today.getFullYear() - 1, 11, 31);
             break;
 
         case 'custom':
         default:
+            hideCustomDates = false;
             dateFromContainer.style.display = 'block';
             dateToContainer.style.display = 'block';
             return; // Don't auto-set dates for custom range
     }
 
+    // Hide/show custom date inputs
+    if (hideCustomDates) {
+        dateFromContainer.style.display = 'none';
+        dateToContainer.style.display = 'none';
+    }
+
     // Set the date inputs
-    dateFrom.value = fromDate.toISOString().split('T')[0];
-    dateTo.value = toDate.toISOString().split('T')[0];
+    if (fromDate && toDate) {
+        dateFrom.value = fromDate.toISOString().split('T')[0];
+        dateTo.value = toDate.toISOString().split('T')[0];
+    }
 }
 
 // Initialize date range on page load
@@ -1039,6 +1190,7 @@ function exportData(format) {
     const downloadForm = document.createElement('form');
     downloadForm.method = 'POST';
     downloadForm.action = `${APP_URL}/admin/reports/export`;
+    downloadForm.target = '_blank'; // Open in new tab
     downloadForm.style.display = 'none';
 
     // Add CSRF token
@@ -1059,7 +1211,13 @@ function exportData(format) {
 
     document.body.appendChild(downloadForm);
     downloadForm.submit();
-    document.body.removeChild(downloadForm);
+
+    // Keep form for a moment before removing
+    setTimeout(() => {
+        if (downloadForm.parentNode) {
+            document.body.removeChild(downloadForm);
+        }
+    }, 1000);
 }
 
 function viewComplaintDetails(complaintId) {
@@ -1075,20 +1233,7 @@ function viewCustomerDetails(customerId) {
     window.location.href = `${APP_URL}/admin/customers/${customerId}`;
 }
 
-function quickReply(complaintId) {
-    const replyTicketId = document.getElementById('replyTicketId');
-    const quickReplyForm = document.getElementById('quickReplyForm');
-    const quickReplyModal = document.getElementById('quickReplyModal');
-
-    if (!replyTicketId || !quickReplyForm || !quickReplyModal) {
-        console.error('Quick reply modal elements not found');
-        return;
-    }
-
-    replyTicketId.textContent = complaintId;
-    quickReplyForm.dataset.complaintId = complaintId;
-    new bootstrap.Modal(quickReplyModal).show();
-}
+// quickReply function removed - Reports are view-only
 
 function scheduleReport() {
     // Navigate to scheduled report tab
@@ -1109,41 +1254,7 @@ function setupRowClickHandlers() {
     });
 }
 
-function setupQuickReplyModal() {
-    const quickReplyForm = document.getElementById('quickReplyForm');
-    if (!quickReplyForm) {
-        console.warn('Quick reply form not found');
-        return;
-    }
-
-    quickReplyForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const complaintId = this.dataset.complaintId;
-        const formData = new FormData(this);
-        formData.append('csrf_token', CSRF_TOKEN);
-
-        try {
-            const response = await fetch(`${APP_URL}/admin/tickets/${complaintId}/reply`, {
-                method: 'POST',
-                body: formData
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                Swal.fire('Success', result.message, 'success').then(() => {
-                    bootstrap.Modal.getInstance(document.getElementById('quickReplyModal')).hide();
-                    location.reload(); // Refresh to show updated data
-                });
-            } else {
-                Swal.fire('Error', result.message, 'error');
-            }
-        } catch (error) {
-            Swal.fire('Error', 'Failed to send reply', 'error');
-        }
-    });
-}
+// setupQuickReplyModal function removed - Reports are view-only
 
 // Scheduled Report Functions
 function switchToScheduledReports() {
@@ -1370,13 +1481,13 @@ function previewReport() {
 
 /* Column width controls */
 .description-col {
-    width: 200px;
-    max-width: 200px;
+    min-width: 250px;
+    max-width: 400px;
 }
 
 .action-col {
-    width: 200px;
-    max-width: 200px;
+    min-width: 250px;
+    max-width: 400px;
 }
 
 .description-text,
@@ -1384,9 +1495,13 @@ function previewReport() {
 .remarks-text {
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 180px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    max-width: 380px;
 }
+
 
 /* Data view buttons */
 .btn-check:checked + .btn-outline-primary {
@@ -1508,14 +1623,14 @@ function previewReport() {
 
     .description-col,
     .action-col {
-        width: 150px;
-        max-width: 150px;
+        min-width: 200px;
+        max-width: 300px;
     }
 
     .description-text,
     .action-text,
     .remarks-text {
-        max-width: 130px;
+        max-width: 280px;
     }
 }
 

@@ -27,7 +27,7 @@ $customer_registration_stats = $customer_registration_stats ?? [];
 ?>
 
 <section class="py-4">
-    <div class="container-xl">
+    <div class="container-fluid">
 
         <!-- Welcome Header -->
         <div class="row mb-4">
@@ -52,6 +52,48 @@ $customer_registration_stats = $customer_registration_stats ?? [];
                         <a href="<?= Config::getAppUrl() ?>/admin/reports" class="btn btn-apple-primary">
                             <i class="fas fa-chart-line me-2"></i>Detailed Reports
                         </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline Slider -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card-apple timeline-card">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-clock text-apple-blue me-3"></i>
+                                <h6 class="mb-0 me-3">Time Period:</h6>
+                            </div>
+                            <div class="timeline-slider-container flex-grow-1">
+                                <div class="timeline-options">
+                                    <div class="timeline-option" data-period="today" onclick="selectTimeline('today')">
+                                        <i class="fas fa-calendar-day"></i>
+                                        <span>Current Day</span>
+                                    </div>
+                                    <div class="timeline-option" data-period="yesterday" onclick="selectTimeline('yesterday')">
+                                        <i class="fas fa-history"></i>
+                                        <span>Yesterday</span>
+                                    </div>
+                                    <div class="timeline-option active" data-period="week" onclick="selectTimeline('week')">
+                                        <i class="fas fa-calendar-week"></i>
+                                        <span>This Week</span>
+                                    </div>
+                                    <div class="timeline-option" data-period="month" onclick="selectTimeline('month')">
+                                        <i class="fas fa-calendar-alt"></i>
+                                        <span>This Month</span>
+                                    </div>
+                                </div>
+                                <div class="timeline-slider-bar">
+                                    <div class="timeline-slider-indicator" id="timelineIndicator"></div>
+                                </div>
+                            </div>
+                            <div class="ms-3">
+                                <span class="badge bg-apple-blue text-dark" id="selectedPeriodLabel">This Week</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -470,18 +512,57 @@ const dashboardData = {
     customer_registration: <?= json_encode($customer_registration_stats) ?>
 };
 
+// Global variables for timeline
+let currentTimeline = 'week';
+let autoRefreshInterval = null;
+
 document.addEventListener('DOMContentLoaded', function() {
     initializeCharts();
     setupClickableElements();
+    initializeTimeline();
+    initializeDivisionTable();
 
-    // Auto-refresh every 5 minutes
-    setInterval(refreshDashboard, 5 * 60 * 1000);
+    // Start auto-refresh based on timeline
+    startAutoRefresh();
 });
 
 function initializeCharts() {
     initializeTerminalChart();
     initializeTypeChart();
     initializeCustomerRegistrationChart();
+}
+
+function initializeDivisionTable() {
+    // Initialize DataTables for Division Status table
+    const divisionTable = $('#divisionStatusTable');
+
+    if (divisionTable.length && divisionTable.find('tbody tr').length > 0) {
+        try {
+            divisionTable.DataTable({
+                pageLength: 10,
+                lengthMenu: [5, 10, 25, 50],
+                responsive: true,
+                dom: '<"top"lf>rt<"bottom"ip><"clear">',
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search divisions..."
+                },
+                order: [[1, 'desc']], // Sort by pending count descending
+                columnDefs: [
+                    {
+                        targets: [1, 2, 3, 4, 5, 6], // Status columns
+                        orderable: true,
+                        searchable: false
+                    }
+                ],
+                footerCallback: function(row, data, start, end, display) {
+                    // Keep footer totals visible
+                }
+            });
+        } catch (error) {
+            console.error('Error initializing Division table:', error);
+        }
+    }
 }
 
 function initializeTerminalChart() {
@@ -691,6 +772,178 @@ async function refreshDashboard() {
 function exportDivisionReport() {
     window.location.href = `${APP_URL}/admin/reports/export/division-status`;
 }
+
+// Timeline Slider Functions
+function initializeTimeline() {
+    // Load saved timeline preference or default to week
+    const savedTimeline = localStorage.getItem('dashboard_timeline') || 'week';
+    // Don't refresh on initial load (3rd parameter = false)
+    selectTimeline(savedTimeline, false, false);
+}
+
+function selectTimeline(period, animate = true, refresh = true) {
+    currentTimeline = period;
+
+    // Update active state
+    document.querySelectorAll('.timeline-option').forEach(opt => {
+        opt.classList.remove('active');
+    });
+    document.querySelector(`[data-period="${period}"]`).classList.add('active');
+
+    // Update label
+    const labels = {
+        'today': 'Current Day',
+        'yesterday': 'Yesterday',
+        'week': 'This Week',
+        'month': 'This Month'
+    };
+    document.getElementById('selectedPeriodLabel').textContent = labels[period];
+
+    // Animate slider indicator
+    const indicator = document.getElementById('timelineIndicator');
+    const options = document.querySelectorAll('.timeline-option');
+    const activeOption = document.querySelector(`[data-period="${period}"]`);
+    const container = document.querySelector('.timeline-options');
+
+    if (activeOption && container) {
+        const optionRect = activeOption.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const position = optionRect.left - containerRect.left;
+        const width = optionRect.width;
+
+        if (animate) {
+            indicator.style.transition = 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
+        }
+        indicator.style.left = position + 'px';
+        indicator.style.width = width + 'px';
+    }
+
+    // Save preference
+    localStorage.setItem('dashboard_timeline', period);
+
+    // Only refresh dashboard data if explicitly requested (not on initial page load)
+    if (refresh) {
+        refreshDashboardWithTimeline(period);
+    }
+
+    // Restart auto-refresh with new interval
+    startAutoRefresh();
+}
+
+function refreshDashboardWithTimeline(period) {
+    const refreshBtn = document.querySelector('button[onclick="refreshDashboard()"] i');
+    if (refreshBtn) {
+        refreshBtn.classList.add('fa-spin');
+    }
+
+    // Calculate date range based on period
+    const dateRange = getDateRangeForPeriod(period);
+
+    fetch(`${APP_URL}/api/admin/dashboard-refresh`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': CSRF_TOKEN
+        },
+        body: JSON.stringify({
+            period: period,
+            date_from: dateRange.from,
+            date_to: dateRange.to
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data && data.success && data.stats) {
+            // Update dashboard stats without full reload
+            updateDashboardStats(data.stats);
+        } else {
+            console.warn('Dashboard refresh returned no data, skipping update');
+        }
+    })
+    .catch(error => {
+        console.error('Error refreshing dashboard:', error);
+        // Don't reload on error - just log it and continue
+    })
+    .finally(() => {
+        if (refreshBtn) {
+            refreshBtn.classList.remove('fa-spin');
+        }
+    });
+}
+
+function getDateRangeForPeriod(period) {
+    const today = new Date();
+    let from, to;
+
+    switch(period) {
+        case 'today':
+            from = to = today.toISOString().split('T')[0];
+            break;
+        case 'yesterday':
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            from = to = yesterday.toISOString().split('T')[0];
+            break;
+        case 'week':
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay());
+            from = weekStart.toISOString().split('T')[0];
+            to = today.toISOString().split('T')[0];
+            break;
+        case 'month':
+            from = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+            to = today.toISOString().split('T')[0];
+            break;
+    }
+
+    return { from, to };
+}
+
+function updateDashboardStats(stats) {
+    // Update overview cards
+    if (stats.overview) {
+        document.getElementById('totalComplaints').textContent =
+            Number(stats.overview.total_complaints || 0).toLocaleString();
+        document.getElementById('pendingComplaints').textContent =
+            Number(stats.overview.pending_complaints || 0).toLocaleString();
+        document.getElementById('closedComplaints').textContent =
+            Number(stats.overview.closed_complaints || 0).toLocaleString();
+        document.getElementById('registeredCustomers').textContent =
+            Number(stats.overview.registered_customers || 0).toLocaleString();
+    }
+
+    // Animate counter updates
+    document.querySelectorAll('.display-5').forEach(el => {
+        el.classList.add('counter-animate');
+        setTimeout(() => el.classList.remove('counter-animate'), 600);
+    });
+}
+
+function startAutoRefresh() {
+    // Clear existing interval
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+
+    // Set refresh interval based on timeline
+    const intervals = {
+        'today': 1 * 60 * 1000,      // 1 minute for current day
+        'yesterday': 5 * 60 * 1000,   // 5 minutes for yesterday
+        'week': 5 * 60 * 1000,        // 5 minutes for this week
+        'month': 10 * 60 * 1000       // 10 minutes for this month
+    };
+
+    const interval = intervals[currentTimeline] || 5 * 60 * 1000;
+
+    autoRefreshInterval = setInterval(() => {
+        refreshDashboardWithTimeline(currentTimeline);
+    }, interval);
+}
 </script>
 
 <style>
@@ -701,6 +954,118 @@ function exportDivisionReport() {
     border-radius: 12px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
+}
+
+/* Timeline Slider Styles */
+.timeline-card {
+    border: 1px solid rgba(0, 123, 255, 0.1);
+    background: linear-gradient(135deg, rgba(0, 123, 255, 0.02), rgba(0, 123, 255, 0.05));
+}
+
+.timeline-slider-container {
+    position: relative;
+    padding: 0 1rem;
+}
+
+.timeline-options {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    z-index: 2;
+}
+
+.timeline-option {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    position: relative;
+}
+
+.timeline-option i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.timeline-option span {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.timeline-option:hover {
+    background: rgba(0, 123, 255, 0.05);
+}
+
+.timeline-option:hover i,
+.timeline-option:hover span {
+    color: #007bff;
+}
+
+.timeline-option.active {
+    background: transparent;
+}
+
+.timeline-option.active i {
+    color: #007bff;
+    transform: scale(1.1);
+}
+
+.timeline-option.active span {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.timeline-slider-bar {
+    position: absolute;
+    bottom: 0;
+    left: 1rem;
+    right: 1rem;
+    height: 3px;
+    background: rgba(0, 123, 255, 0.1);
+    border-radius: 10px;
+    z-index: 1;
+}
+
+.timeline-slider-indicator {
+    position: absolute;
+    height: 100%;
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    border-radius: 10px;
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+}
+
+.bg-apple-blue {
+    background-color: rgba(0, 123, 255, 0.1) !important;
+    color: #007bff !important;
+    border: 1px solid rgba(0, 123, 255, 0.2);
+}
+
+.text-apple-blue {
+    color: #007bff;
+}
+
+/* Responsive Timeline */
+@media (max-width: 768px) {
+    .timeline-option span {
+        font-size: 0.75rem;
+    }
+
+    .timeline-option i {
+        font-size: 1.2rem;
+    }
+
+    .timeline-option {
+        padding: 0.5rem;
+    }
 }
 
 .card-apple:hover {

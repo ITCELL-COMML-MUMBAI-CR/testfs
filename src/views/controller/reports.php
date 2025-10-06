@@ -39,7 +39,7 @@ $status_legend = [
 ?>
 
 <section class="py-4">
-    <div class="container-xl">
+    <div class="container-fluid">
 
         <!-- Page Header -->
         <div class="row align-items-center mb-4">
@@ -339,7 +339,6 @@ $status_legend = [
                                 <table class="table table-hover align-middle mb-0" id="complaintsTable">
                                     <thead class="table-light">
                                         <tr>
-                                            <th class="border-0">Serial No.</th>
                                             <th class="border-0">Complaint No.</th>
                                             <th class="border-0">Complaint Date</th>
                                             <th class="border-0">Update Date</th>
@@ -358,7 +357,7 @@ $status_legend = [
                                     <tbody>
                                         <?php if (empty($complaints_data)): ?>
                                         <tr>
-                                            <td colspan="14" class="text-center py-5">
+                                            <td colspan="13" class="text-center py-5">
                                                 <div class="text-muted">
                                                     <i class="fas fa-search fa-2x mb-3"></i>
                                                     <h5>No complaints found</h5>
@@ -370,7 +369,6 @@ $status_legend = [
                                             <?php foreach ($complaints_data as $index => $complaint): ?>
                                             <tr class="clickable-row status-<?= $complaint['status'] ?>"
                                                 onclick="viewComplaintDetails('<?= $complaint['complaint_id'] ?>')">
-                                                <td><?= $index + 1 ?></td>
                                                 <td class="fw-semibold text-primary"><?= htmlspecialchars($complaint['complaint_id']) ?></td>
                                                 <td><?= date('M d, Y', strtotime($complaint['date'])) ?></td>
                                                 <td><?= date('M d, Y', strtotime($complaint['updated_at'])) ?></td>
@@ -395,14 +393,12 @@ $status_legend = [
                                                 <td><?= htmlspecialchars($complaint['fnr_number'] ?? 'N/A') ?></td>
                                                 <td class="description-col">
                                                     <div class="description-text">
-                                                        <?= htmlspecialchars(substr($complaint['description'] ?? '', 0, 100)) ?>
-                                                        <?= strlen($complaint['description'] ?? '') > 100 ? '...' : '' ?>
+                                                        <?= htmlspecialchars($complaint['description'] ?? '') ?>
                                                     </div>
                                                 </td>
                                                 <td class="action-col">
                                                     <div class="action-text">
-                                                        <?= htmlspecialchars(substr($complaint['action_taken'] ?? 'No action taken yet', 0, 100)) ?>
-                                                        <?= strlen($complaint['action_taken'] ?? '') > 100 ? '...' : '' ?>
+                                                        <?= htmlspecialchars($complaint['action_taken'] ?? 'No action taken yet') ?>
                                                     </div>
                                                 </td>
                                                 <td>
@@ -430,13 +426,7 @@ $status_legend = [
                                                                 title="View Details">
                                                             <i class="fas fa-eye"></i>
                                                         </button>
-                                                        <?php if ($complaint['status'] !== 'closed'): ?>
-                                                        <button class="btn btn-outline-success btn-sm"
-                                                                onclick="event.stopPropagation(); quickReply('<?= $complaint['complaint_id'] ?>')"
-                                                                title="Quick Reply">
-                                                            <i class="fas fa-reply"></i>
-                                                        </button>
-                                                        <?php endif; ?>
+                                                        <!-- Quick Reply removed - Reports are view-only -->
                                                     </div>
                                                 </td>
                                             </tr>
@@ -593,46 +583,7 @@ $status_legend = [
     </div>
 </section>
 
-<!-- Quick Reply Modal -->
-<div class="modal fade" id="quickReplyModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Quick Reply - Ticket #<span id="replyTicketId"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="quickReplyForm">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label-apple">Reply Message</label>
-                        <textarea class="form-control-apple" name="reply" rows="4" required
-                                  placeholder="Enter your reply to the customer..."></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label-apple">Action Taken</label>
-                        <textarea class="form-control-apple" name="action_taken" rows="3" required
-                                  placeholder="Describe the action taken to resolve this issue..."></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label-apple">Status Update</label>
-                        <select class="form-control-apple" name="new_status" required>
-                            <option value="">Select Status</option>
-                            <option value="awaiting_feedback">Awaiting Customer Feedback</option>
-                            <option value="awaiting_info">Awaiting Additional Information</option>
-                            <option value="closed">Resolve and Close</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-apple-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-apple-primary">
-                        <i class="fas fa-paper-plane me-2"></i>Send Reply & Update
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+<!-- Quick Reply Modal - REMOVED (Reports are view-only) -->
 
 <script>
 // Report data and functionality
@@ -647,7 +598,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeDataTables();
     setupColumnSelector();
     setupRowClickHandlers();
-    setupQuickReplyModal();
+    // setupQuickReplyModal(); // Removed - Reports are view-only
 });
 
 function initializeDataTables() {
@@ -666,13 +617,11 @@ function initializeDataTables() {
             table.DataTable({
                 pageLength: 25,
                 lengthMenu: [10, 25, 50, 100],
-                responsive: true,
-                dom: '<"top"lf>rt<"bottom"ip><"clear">',
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search records..."
                 },
-                order: [[1, 'desc']], // Default order by first sortable column
+                order: [[0, 'desc']], // Default order by complaint number
                 columnDefs: [
                     {
                         targets: 'no-sort',
@@ -848,41 +797,7 @@ function viewCustomerDetails(customerId) {
     window.location.href = `${APP_URL}/controller/customers/${customerId}`;
 }
 
-function quickReply(complaintId) {
-    document.getElementById('replyTicketId').textContent = complaintId;
-    document.getElementById('quickReplyForm').dataset.complaintId = complaintId;
-    new bootstrap.Modal(document.getElementById('quickReplyModal')).show();
-}
-
-function setupQuickReplyModal() {
-    document.getElementById('quickReplyForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-
-        const complaintId = this.dataset.complaintId;
-        const formData = new FormData(this);
-        formData.append('csrf_token', CSRF_TOKEN);
-
-        try {
-            const response = await fetch(`${APP_URL}/controller/tickets/${complaintId}/reply`, {
-                method: 'POST',
-                body: formData
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                Swal.fire('Success', result.message, 'success').then(() => {
-                    bootstrap.Modal.getInstance(document.getElementById('quickReplyModal')).hide();
-                    location.reload(); // Refresh to show updated data
-                });
-            } else {
-                Swal.fire('Error', result.message, 'error');
-            }
-        } catch (error) {
-            Swal.fire('Error', 'Failed to send reply', 'error');
-        }
-    });
-}
+// quickReply and setupQuickReplyModal functions removed - Reports are view-only
 
 function scheduleReport() {
     // Implementation for report scheduling
@@ -948,13 +863,13 @@ function setupRowClickHandlers() {
 
 /* Column width controls */
 .description-col {
-    width: 200px;
-    max-width: 200px;
+    min-width: 250px;
+    max-width: 400px;
 }
 
 .action-col {
-    width: 200px;
-    max-width: 200px;
+    min-width: 250px;
+    max-width: 400px;
 }
 
 .description-text,
@@ -962,9 +877,13 @@ function setupRowClickHandlers() {
 .remarks-text {
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 180px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    max-width: 380px;
 }
+
 
 /* Data view buttons */
 .btn-check:checked + .btn-outline-primary {
@@ -1102,14 +1021,14 @@ function setupRowClickHandlers() {
 
     .description-col,
     .action-col {
-        width: 150px;
-        max-width: 150px;
+        min-width: 200px;
+        max-width: 300px;
     }
 
     .description-text,
     .action-text,
     .remarks-text {
-        max-width: 130px;
+        max-width: 280px;
     }
 
     .btn-group-sm .btn {

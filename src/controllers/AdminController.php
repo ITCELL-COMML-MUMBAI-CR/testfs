@@ -111,9 +111,34 @@ class AdminController extends BaseController
             return;
         }
 
-        // For now, just return success - the frontend will reload the page
-        // In the future, this could return updated dashboard data as JSON
-        $this->json(['success' => true, 'message' => 'Dashboard refreshed']);
+        // Get request data
+        $requestData = json_decode(file_get_contents('php://input'), true);
+        $period = $requestData['period'] ?? 'week';
+        $dateFrom = $requestData['date_from'] ?? null;
+        $dateTo = $requestData['date_to'] ?? null;
+
+        // Get system stats with date filter if provided
+        $systemStats = $this->getSystemStats($dateFrom, $dateTo);
+
+        // Prepare overview stats for dashboard cards
+        $overview_stats = [
+            'total_complaints' => $systemStats['total_tickets'] ?? 0,
+            'pending_complaints' => $systemStats['open_tickets'] ?? 0,
+            'closed_complaints' => $systemStats['closed_tickets'] ?? 0,
+            'registered_customers' => $systemStats['total_customers'] ?? 0
+        ];
+
+        // Return updated statistics
+        $this->json([
+            'success' => true,
+            'message' => 'Dashboard refreshed',
+            'stats' => [
+                'overview' => $overview_stats,
+                'period' => $period,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo
+            ]
+        ]);
     }
 
     public function users()
@@ -2734,23 +2759,53 @@ class AdminController extends BaseController
 
     // Helper methods
 
-    private function getSystemStats()
+    private function getSystemStats($dateFrom = null, $dateTo = null)
     {
         $stats = [];
+
+        // Build date filter
+        $dateFilter = '';
+        $dateParams = [];
+        if ($dateFrom && $dateTo) {
+            $dateFilter = " AND DATE(created_at) BETWEEN ? AND ?";
+            $dateParams = [$dateFrom, $dateTo];
+        }
 
         // Total users
         $stats['total_users'] = $this->db->fetch("SELECT COUNT(*) as count FROM users")['count'];
         $stats['active_users'] = $this->db->fetch("SELECT COUNT(*) as count FROM users WHERE status = 'active'")['count'];
 
-        // Total customers
-        $stats['total_customers'] = $this->db->fetch("SELECT COUNT(*) as count FROM customers")['count'];
+        // Total customers (with optional date filter)
+        if ($dateFrom && $dateTo) {
+            $stats['total_customers'] = $this->db->fetch(
+                "SELECT COUNT(*) as count FROM customers WHERE DATE(created_at) BETWEEN ? AND ?",
+                $dateParams
+            )['count'];
+        } else {
+            $stats['total_customers'] = $this->db->fetch("SELECT COUNT(*) as count FROM customers")['count'];
+        }
         $stats['approved_customers'] = $this->db->fetch("SELECT COUNT(*) as count FROM customers WHERE status = 'approved'")['count'];
         $stats['pending_customers'] = $this->db->fetch("SELECT COUNT(*) as count FROM customers WHERE status = 'pending'")['count'];
 
-        // Total tickets
-        $stats['total_tickets'] = $this->db->fetch("SELECT COUNT(*) as count FROM complaints")['count'];
-        $stats['open_tickets'] = $this->db->fetch("SELECT COUNT(*) as count FROM complaints WHERE status != 'closed'")['count'];
-        $stats['closed_tickets'] = $this->db->fetch("SELECT COUNT(*) as count FROM complaints WHERE status = 'closed'")['count'];
+        // Total tickets (with optional date filter)
+        if ($dateFrom && $dateTo) {
+            $stats['total_tickets'] = $this->db->fetch(
+                "SELECT COUNT(*) as count FROM complaints WHERE DATE(date) BETWEEN ? AND ?",
+                $dateParams
+            )['count'];
+            $stats['open_tickets'] = $this->db->fetch(
+                "SELECT COUNT(*) as count FROM complaints WHERE status != 'closed' AND DATE(date) BETWEEN ? AND ?",
+                $dateParams
+            )['count'];
+            $stats['closed_tickets'] = $this->db->fetch(
+                "SELECT COUNT(*) as count FROM complaints WHERE status = 'closed' AND DATE(date) BETWEEN ? AND ?",
+                $dateParams
+            )['count'];
+        } else {
+            $stats['total_tickets'] = $this->db->fetch("SELECT COUNT(*) as count FROM complaints")['count'];
+            $stats['open_tickets'] = $this->db->fetch("SELECT COUNT(*) as count FROM complaints WHERE status != 'closed'")['count'];
+            $stats['closed_tickets'] = $this->db->fetch("SELECT COUNT(*) as count FROM complaints WHERE status = 'closed'")['count'];
+        }
 
         return $stats;
     }
@@ -4160,12 +4215,24 @@ class AdminController extends BaseController
      */
     public function exportReport()
     {
-        $this->validateCSRF();
+        try {
+            $this->validateCSRF();
+        } catch (Exception $e) {
+            error_log("CSRF validation failed: " . $e->getMessage());
+            $this->json([
+                'success' => false,
+                'message' => 'CSRF validation failed: ' . $e->getMessage()
+            ], 403);
+            return;
+        }
+
         $user = $this->getCurrentUser();
 
         try {
             $format = $_POST['export'] ?? 'csv';
             $view = $_GET['view'] ?? $_POST['view'] ?? 'complaints';
+
+            error_log("Export initiated - Format: $format, View: $view");
 
             // Get current filters
             $filters = [
@@ -4176,6 +4243,8 @@ class AdminController extends BaseController
                 'date_to' => $_GET['date_to'] ?? $_POST['date_to'] ?? date('Y-m-t')
             ];
 
+            error_log("Export filters: " . json_encode($filters));
+
             if ($format === 'csv') {
                 $this->exportCSV($view, $filters);
             } else {
@@ -4183,10 +4252,17 @@ class AdminController extends BaseController
             }
 
         } catch (Exception $e) {
-            Config::logError("Export error: " . $e->getMessage());
+            error_log("Export error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+            error_log("Stack trace: " . $e->getTraceAsString());
             $this->json([
                 'success' => false,
-                'message' => 'Failed to export data. Please try again.'
+                'message' => 'Export failed: ' . $e->getMessage()
+            ], 500);
+        } catch (Error $e) {
+            error_log("Export fatal error: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine());
+            $this->json([
+                'success' => false,
+                'message' => 'Fatal error: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -4209,21 +4285,48 @@ class AdminController extends BaseController
         if ($view === 'complaints') {
             // CSV headers for complaints
             fputcsv($output, [
-                'Complaint ID', 'Date', 'Customer', 'Division', 'Category',
-                'Description', 'Status', 'Priority', 'Duration (Hours)', 'Action Taken'
+                'Complaint ID', 'Date', 'Time', 'Last Updated', 'Duration (Hours)',
+                'Terminal', 'Department', 'Division', 'Zone',
+                'Customer Name', 'Company', 'Mobile',
+                'Category', 'FNR Number', 'E-Indent Number',
+                'Description', 'Action Taken',
+                'Action Taken By Name', 'Action Taken By Role', 'Action Taken By Department', 'Action Taken By Division',
+                'Dept Admin Name', 'Dept Admin Role', 'Dept Admin Department', 'Dept Admin Division',
+                'CML Admin Name', 'CML Admin Role', 'CML Admin Department', 'CML Admin Division',
+                'Status', 'Priority', 'Rating'
             ]);
 
-            // Get complaints data (simplified query for CSV)
-            $sql = "SELECT c.complaint_id, c.created_at, cust.name, c.division,
-                           cat.category, c.description, c.status, c.priority,
-                           TIMESTAMPDIFF(HOUR, c.created_at, COALESCE(c.closed_at, NOW())) as duration,
-                           c.action_taken
+            // Get complaints data (detailed query for CSV)
+            $sql = "SELECT c.complaint_id, c.date, c.time, c.updated_at,
+                           TIMESTAMPDIFF(HOUR, c.created_at,
+                               CASE WHEN c.status = 'closed' THEN c.updated_at ELSE NOW() END
+                           ) as duration_hours,
+                           s.name as shed_name, c.department, c.division, c.zone,
+                           cust.name as customer_name, cust.company_name, cust.mobile as customer_mobile,
+                           cat.category, c.fnr_number, c.e_indent_number,
+                           c.description, c.action_taken, c.status, c.priority, c.rating,
+                           action_user.name as action_taken_by_name,
+                           action_user.role as action_taken_by_role,
+                           action_user.department as action_taken_by_department,
+                           action_user.division as action_taken_by_division,
+                           dept_admin.name as dept_admin_name,
+                           dept_admin.role as dept_admin_role,
+                           dept_admin.department as dept_admin_department,
+                           dept_admin.division as dept_admin_division,
+                           cml_admin.name as cml_admin_name,
+                           cml_admin.role as cml_admin_role,
+                           cml_admin.department as cml_admin_department,
+                           cml_admin.division as cml_admin_division
                     FROM complaints c
                     LEFT JOIN customers cust ON c.customer_id = cust.customer_id
                     LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
-                    WHERE c.created_at BETWEEN ? AND ?";
+                    LEFT JOIN shed s ON c.shed_id = s.shed_id
+                    LEFT JOIN users action_user ON c.action_taken_by = action_user.id
+                    LEFT JOIN users dept_admin ON c.dept_admin_approved_by = dept_admin.id
+                    LEFT JOIN users cml_admin ON c.cml_admin_approved_by = cml_admin.id
+                    WHERE DATE(c.date) BETWEEN ? AND ?";
 
-            $params = [$filters['date_from'] . ' 00:00:00', $filters['date_to'] . ' 23:59:59'];
+            $params = [$filters['date_from'], $filters['date_to']];
 
             // Add additional filters
             if (!empty($filters['status'])) {
@@ -4241,22 +4344,44 @@ class AdminController extends BaseController
                 $params[] = $filters['priority'];
             }
 
-            $sql .= " ORDER BY c.created_at DESC";
+            $sql .= " ORDER BY c.date DESC";
 
             $data = $this->db->fetchAll($sql, $params);
 
             foreach ($data as $row) {
                 fputcsv($output, [
-                    $row['complaint_id'],
-                    $row['created_at'],
-                    $row['name'],
-                    $row['division'],
-                    $row['category'],
-                    substr($row['description'], 0, 100),
-                    $row['status'],
-                    $row['priority'],
-                    $row['duration'],
-                    substr($row['action_taken'] ?? '', 0, 100)
+                    $row['complaint_id'] ?? '',
+                    $row['date'] ?? '',
+                    $row['time'] ?? '',
+                    $row['updated_at'] ?? '',
+                    $row['duration_hours'] ?? 0,
+                    $row['shed_name'] ?? '-',
+                    $row['department'] ?? '-',
+                    $row['division'] ?? '-',
+                    $row['zone'] ?? '-',
+                    $row['customer_name'] ?? '-',
+                    $row['company_name'] ?? '',
+                    $row['customer_mobile'] ?? '',
+                    $row['category'] ?? '-',
+                    $row['fnr_number'] ?? '',
+                    $row['e_indent_number'] ?? '',
+                    $row['description'] ?? '',
+                    $row['action_taken'] ?? '',
+                    $row['action_taken_by_name'] ?? '',
+                    $row['action_taken_by_role'] ?? '',
+                    $row['action_taken_by_department'] ?? '',
+                    $row['action_taken_by_division'] ?? '',
+                    $row['dept_admin_name'] ?? '',
+                    $row['dept_admin_role'] ?? '',
+                    $row['dept_admin_department'] ?? '',
+                    $row['dept_admin_division'] ?? '',
+                    $row['cml_admin_name'] ?? '',
+                    $row['cml_admin_role'] ?? '',
+                    $row['cml_admin_department'] ?? '',
+                    $row['cml_admin_division'] ?? '',
+                    ucfirst(str_replace('_', ' ', $row['status'] ?? '')),
+                    ucfirst($row['priority'] ?? ''),
+                    ucfirst($row['rating'] ?? '')
                 ]);
             }
         }
@@ -4269,14 +4394,162 @@ class AdminController extends BaseController
      */
     private function exportPDF($view, $filters)
     {
-        // Simple PDF generation - in production, use a proper PDF library
         $filename = 'SAMPARK_' . ucfirst($view) . '_' . date('Y-m-d_H-i-s') . '.pdf';
 
-        header('Content-Type: application/pdf');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        // Get data based on view
+        $data = $this->getExportData($view, $filters);
 
-        // Generate basic PDF content
-        echo $this->generateScheduledPDF(['summary' => ['total_complaints' => 0]]);
+        // Generate HTML content for PDF
+        $html = $this->generatePDFHTML($view, $data, $filters);
+
+        // Use HTML-to-PDF with browser print (compatible, no dependencies)
+        header('Content-Type: text/html; charset=utf-8');
+        header('Content-Disposition: inline; filename="' . $filename . '"');
+
+        echo '<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="utf-8">
+            <title>SAMPARK Report</title>
+            <style>
+                body { font-family: Arial, sans-serif; font-size: 11px; margin: 0; padding: 20px; }
+                table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                th, td { border: 1px solid #ddd; padding: 6px; text-align: left; font-size: 10px; }
+                th { background-color: #007bff; color: white; font-weight: bold; }
+                h1 { color: #007bff; margin-bottom: 10px; font-size: 24px; }
+                .header { margin-bottom: 20px; }
+                .header p { margin: 5px 0; }
+                @media print {
+                    .no-print { display: none; }
+                    @page { size: landscape; margin: 1cm; }
+                }
+            </style>
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print();
+                    }, 500);
+                }
+            </script>
+        </head>
+        <body>' . $html . '
+            <div class="no-print" style="margin-top: 20px; padding: 10px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 5px;">
+                <strong>📄 To save as PDF:</strong> Use your browser\'s "Print" dialog (Ctrl+P / Cmd+P) and select "Save as PDF" as the destination.
+                <button onclick="window.print()" style="margin-left: 20px; padding: 8px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Print/Save as PDF</button>
+            </div>
+        </body>
+        </html>';
+    }
+
+    private function getExportData($view, $filters)
+    {
+        if ($view === 'complaints') {
+            $sql = "SELECT c.complaint_id, c.date, c.time, c.updated_at, c.created_at,
+                           TIMESTAMPDIFF(HOUR, c.created_at,
+                               CASE WHEN c.status = 'closed' THEN c.updated_at ELSE NOW() END
+                           ) as duration_hours,
+                           s.name as shed_name, c.division, c.zone, c.department,
+                           cust.name as customer_name, cust.company_name, cust.mobile as customer_mobile,
+                           cat.category, c.fnr_number, c.e_indent_number,
+                           c.description, c.action_taken, c.status, c.priority, c.rating
+                    FROM complaints c
+                    LEFT JOIN customers cust ON c.customer_id = cust.customer_id
+                    LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
+                    LEFT JOIN shed s ON c.shed_id = s.shed_id
+                    WHERE DATE(c.date) BETWEEN ? AND ?";
+
+            $params = [$filters['date_from'], $filters['date_to']];
+
+            if (!empty($filters['status'])) {
+                $sql .= " AND c.status = ?";
+                $params[] = $filters['status'];
+            }
+
+            if (!empty($filters['division'])) {
+                $sql .= " AND c.division = ?";
+                $params[] = $filters['division'];
+            }
+
+            if (!empty($filters['priority'])) {
+                $sql .= " AND c.priority = ?";
+                $params[] = $filters['priority'];
+            }
+
+            $sql .= " ORDER BY c.date DESC LIMIT 1000";
+
+            return $this->db->fetchAll($sql, $params);
+        }
+
+        return [];
+    }
+
+    private function generatePDFHTML($view, $data, $filters)
+    {
+        $html = '<div class="header">';
+        $html .= '<h1>🚂 SAMPARK - ' . ucfirst($view) . ' Report</h1>';
+        $html .= '<p><strong>Date Range:</strong> ' . htmlspecialchars($filters['date_from']) . ' to ' . htmlspecialchars($filters['date_to']) . '</p>';
+        $html .= '<p><strong>Generated:</strong> ' . date('F d, Y H:i:s') . '</p>';
+
+        if (!empty($filters['status'])) {
+            $html .= '<p><strong>Status Filter:</strong> ' . htmlspecialchars(ucfirst($filters['status'])) . '</p>';
+        }
+        if (!empty($filters['division'])) {
+            $html .= '<p><strong>Division Filter:</strong> ' . htmlspecialchars($filters['division']) . '</p>';
+        }
+        if (!empty($filters['priority'])) {
+            $html .= '<p><strong>Priority Filter:</strong> ' . htmlspecialchars(ucfirst($filters['priority'])) . '</p>';
+        }
+
+        $html .= '</div>';
+
+        if ($view === 'complaints') {
+            $html .= '<table>';
+            $html .= '<thead><tr>
+                <th>ID</th>
+                <th>Date</th>
+                <th>Duration</th>
+                <th>Terminal</th>
+                <th>Dept</th>
+                <th>Div</th>
+                <th>Zone</th>
+                <th>Customer</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th>Action</th>
+                <th>Action By</th>
+                <th>Dept Admin</th>
+                <th>CML Admin</th>
+                <th>Status</th>
+                <th>Priority</th>
+            </tr></thead>';
+            $html .= '<tbody>';
+
+            foreach ($data as $row) {
+                $html .= '<tr>';
+                $html .= '<td>' . htmlspecialchars($row['complaint_id']) . '</td>';
+                $html .= '<td>' . date('d-M-y', strtotime($row['date'])) . '</td>';
+                $html .= '<td>' . ($row['duration_hours'] ?? 0) . 'h</td>';
+                $html .= '<td>' . htmlspecialchars($row['shed_name'] ?? '-') . '</td>';
+                $html .= '<td>' . htmlspecialchars($row['department'] ?? '-') . '</td>';
+                $html .= '<td>' . htmlspecialchars($row['division'] ?? '-') . '</td>';
+                $html .= '<td>' . htmlspecialchars($row['zone'] ?? '-') . '</td>';
+                $html .= '<td>' . htmlspecialchars($row['customer_name'] ?? '-') . '</td>';
+                $html .= '<td>' . htmlspecialchars($row['category'] ?? '-') . '</td>';
+                $html .= '<td>' . htmlspecialchars(substr($row['description'] ?? '', 0, 50)) . (strlen($row['description'] ?? '') > 50 ? '...' : '') . '</td>';
+                $html .= '<td>' . htmlspecialchars(substr($row['action_taken'] ?? '', 0, 50)) . (strlen($row['action_taken'] ?? '') > 50 ? '...' : '') . '</td>';
+                $html .= '<td>' . htmlspecialchars($row['action_taken_by_name'] ?? '-') . '<br><small>' . htmlspecialchars($row['action_taken_by_department'] ?? '') . '</small></td>';
+                $html .= '<td>' . htmlspecialchars($row['dept_admin_name'] ?? '-') . '<br><small>' . htmlspecialchars($row['dept_admin_department'] ?? '') . '</small></td>';
+                $html .= '<td>' . htmlspecialchars($row['cml_admin_name'] ?? '-') . '<br><small>' . htmlspecialchars($row['cml_admin_division'] ?? '') . '</small></td>';
+                $html .= '<td>' . htmlspecialchars(ucfirst(str_replace('_', ' ', $row['status']))) . '</td>';
+                $html .= '<td>' . htmlspecialchars(ucfirst($row['priority'])) . '</td>';
+                $html .= '</tr>';
+            }
+
+            $html .= '</tbody></table>';
+            $html .= '<p style="margin-top: 20px; font-weight: bold;">Total Records: ' . count($data) . '</p>';
+        }
+
+        return $html;
     }
 
     // Helper methods for dashboard data
@@ -4452,38 +4725,60 @@ class AdminController extends BaseController
         try {
             $sql = "SELECT
                         c.complaint_id,
-                        c.created_at as date,
+                        c.date,
                         c.updated_at,
-                        TIMESTAMPDIFF(HOUR, c.created_at, COALESCE(c.closed_at, NOW())) as duration_hours,
+                        TIMESTAMPDIFF(HOUR, c.created_at,
+                            CASE WHEN c.status = 'closed' THEN c.updated_at ELSE NOW() END
+                        ) as duration_hours,
                         c.description,
                         c.action_taken,
                         c.status,
                         c.priority,
                         c.division,
+                        c.zone,
+                        c.department,
                         c.fnr_number,
+                        c.e_indent_number,
                         cat.category,
                         cat.type,
                         cust.name as customer_name,
                         cust.company_name,
                         cust.mobile as customer_mobile,
-                        s.name as shed_name
+                        s.name as shed_name,
+                        dept_admin.name as dept_admin_name,
+                        dept_admin.role as dept_admin_role,
+                        dept_admin.department as dept_admin_department,
+                        dept_admin.division as dept_admin_division,
+                        dept_admin.zone as dept_admin_zone,
+                        cml_admin.name as cml_admin_name,
+                        cml_admin.role as cml_admin_role,
+                        cml_admin.department as cml_admin_department,
+                        cml_admin.division as cml_admin_division,
+                        cml_admin.zone as cml_admin_zone,
+                        action_user.name as action_taken_by_name,
+                        action_user.role as action_taken_by_role,
+                        action_user.department as action_taken_by_department,
+                        action_user.division as action_taken_by_division
                     FROM complaints c
                     LEFT JOIN complaint_categories cat ON c.category_id = cat.category_id
                     LEFT JOIN customers cust ON c.customer_id = cust.customer_id
                     LEFT JOIN shed s ON c.shed_id = s.shed_id
+                    LEFT JOIN users dept_admin ON c.dept_admin_approved_by = dept_admin.id
+                    LEFT JOIN users cml_admin ON c.cml_admin_approved_by = cml_admin.id
+                    LEFT JOIN users action_user ON c.action_taken_by = action_user.id
                     WHERE 1=1";
 
             $params = [];
 
             // Apply filters
             if (!empty($filters['date_from'])) {
-                $sql .= " AND c.created_at >= ?";
-                $params[] = $filters['date_from'] . ' 00:00:00';
+                $sql .= " AND DATE(c.date) >= ?";
+                $params[] = $filters['date_from'];
             }
 
             if (!empty($filters['date_to'])) {
-                $sql .= " AND c.created_at <= ?";
-                $params[] = $filters['date_to'] . ' 23:59:59';
+                $sql .= " AND DATE(c.date) <= ?";
+                $params[] = $filters['date_to'];
             }
 
             if (!empty($filters['division'])) {
@@ -4503,9 +4798,9 @@ class AdminController extends BaseController
 
             // Apply sorting
             if ($filters['sort'] === 'oldest') {
-                $sql .= " ORDER BY c.created_at ASC";
+                $sql .= " ORDER BY c.date ASC";
             } else {
-                $sql .= " ORDER BY c.created_at DESC";
+                $sql .= " ORDER BY c.date DESC";
             }
 
             $sql .= " LIMIT 1000"; // Limit for performance
