@@ -436,7 +436,7 @@ class AuthController extends BaseController {
     }
     
     private function updateLastLogin($table, $idColumn, $id) {
-        $sql = "UPDATE {$table} SET updated_at = NOW() WHERE {$idColumn} = ?";
+        $sql = "UPDATE {$table} SET last_login = NOW(), updated_at = NOW() WHERE {$idColumn} = ?";
         $this->db->query($sql, [$id]);
     }
     

@@ -5472,4 +5472,153 @@ class AdminController extends BaseController
                 return $baseUrl . '/controller/tickets/' . $ticketId;
         }
     }
+
+    public function profile() {
+        $user = $this->getCurrentUser();
+
+        $userDetails = $this->db->fetch(
+            "SELECT * FROM users WHERE id = ?",
+            [$user['id']]
+        );
+
+        $data = [
+            'page_title' => 'My Profile - SAMPARK',
+            'user' => $user,
+            'user_details' => $userDetails,
+            'csrf_token' => $this->session->getCSRFToken()
+        ];
+
+        $this->view('admin/profile', $data);
+    }
+
+    public function updateProfile() {
+        try {
+            $this->validateCSRF();
+            $user = $this->getCurrentUser();
+
+            $validator = new Validator();
+            $isValid = $validator->validate($_POST, [
+                'name' => 'required|min:2|max:100',
+                'email' => 'required|email|unique:users,email,' . $user['id'] . ',id',
+                'mobile' => 'phone'
+            ]);
+
+            if (!$isValid) {
+                $this->json([
+                    'success' => false,
+                    'errors' => $validator->getErrors()
+                ], 400);
+                return;
+            }
+
+            $sql = "UPDATE users SET
+                    name = ?,
+                    email = ?,
+                    mobile = ?,
+                    updated_at = NOW()
+                    WHERE id = ?";
+
+            $this->db->query($sql, [
+                trim($_POST['name']),
+                trim($_POST['email']),
+                trim($_POST['mobile']) ?: null,
+                $user['id']
+            ]);
+
+            // Update session data
+            $this->session->set('user_name', $_POST['name']);
+            $this->session->set('user_email', $_POST['email']);
+
+            $this->logActivity('profile_updated', ['user_id' => $user['id']]);
+
+            $this->json([
+                'success' => true,
+                'message' => 'Profile updated successfully'
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Profile update error: " . $e->getMessage());
+
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to update profile. Please try again.'
+            ], 500);
+        }
+    }
+
+    public function changePassword() {
+        $this->validateCSRF();
+        $user = $this->getCurrentUser();
+
+        $validator = new Validator();
+        $isValid = $validator->validate($_POST, [
+            'current_password' => 'required',
+            'new_password' => 'required|min:8',
+            'confirm_password' => 'required'
+        ]);
+
+        if (!$isValid) {
+            $this->json([
+                'success' => false,
+                'errors' => $validator->getErrors()
+            ], 400);
+            return;
+        }
+
+        if ($_POST['new_password'] !== $_POST['confirm_password']) {
+            $this->json([
+                'success' => false,
+                'message' => 'New password and confirmation do not match'
+            ], 400);
+            return;
+        }
+
+        // Get current password hash from database
+        $userData = $this->db->fetch(
+            "SELECT password FROM users WHERE id = ?",
+            [$user['id']]
+        );
+
+        if (!$userData) {
+            $this->json([
+                'success' => false,
+                'message' => 'User account not found'
+            ], 404);
+            return;
+        }
+
+        // Verify current password
+        if (!password_verify($_POST['current_password'], $userData['password'])) {
+            $this->json([
+                'success' => false,
+                'message' => 'Current password is incorrect'
+            ], 400);
+            return;
+        }
+
+        try {
+            // Update password
+            $hashedPassword = password_hash($_POST['new_password'], PASSWORD_DEFAULT);
+
+            $this->db->query(
+                "UPDATE users SET password = ?, updated_at = NOW() WHERE id = ?",
+                [$hashedPassword, $user['id']]
+            );
+
+            $this->logActivity('password_changed', ['user_id' => $user['id']]);
+
+            $this->json([
+                'success' => true,
+                'message' => 'Password changed successfully'
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Password change error: " . $e->getMessage());
+
+            $this->json([
+                'success' => false,
+                'message' => 'Failed to change password. Please try again.'
+            ], 500);
+        }
+    }
 }

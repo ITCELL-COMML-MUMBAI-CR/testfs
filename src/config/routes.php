@@ -60,6 +60,8 @@ $router->get('/controller/tickets/{id}/export', 'Controller@exportTicket', ['aut
 $router->get('/controller/reports', 'Controller@reports', ['auth', 'role:controller,controller_nodal']);
 $router->get('/controller/help', 'Controller@help', ['auth', 'role:controller,controller_nodal']);
 $router->get('/controller/profile', 'Controller@profile', ['auth', 'role:controller,controller_nodal']);
+$router->post('/controller/profile', 'Controller@updateProfile', ['auth', 'role:controller,controller_nodal']);
+$router->post('/controller/change-password', 'Controller@changePassword', ['auth', 'role:controller,controller_nodal']);
 
 // Admin Routes
 $router->get('/admin/dashboard', 'Admin@dashboard', ['auth', 'role:admin,superadmin']);
@@ -137,6 +139,11 @@ $router->post('/admin/approvals/process', 'Admin@processApproval', ['auth', 'rol
 $router->get('/admin/remarks', 'Admin@adminRemarks', ['auth', 'role:admin,superadmin']);
 $router->post('/admin/remarks/add', 'Admin@addAdminRemarks', ['auth', 'role:admin,superadmin']);
 $router->get('/admin/reports/remarks', 'Admin@adminRemarksReport', ['auth', 'role:admin,superadmin']);
+
+// Admin profile routes
+$router->get('/admin/profile', 'Admin@profile', ['auth', 'role:admin,superadmin']);
+$router->post('/admin/profile', 'Admin@updateProfile', ['auth', 'role:admin,superadmin']);
+$router->post('/admin/change-password', 'Admin@changePassword', ['auth', 'role:admin,superadmin']);
 
 // API Routes
 $router->get('/api/sheds/search', 'Api@searchSheds');

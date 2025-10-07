@@ -1,7 +1,7 @@
 <?php
 /**
- * Controller Profile View - SAMPARK
- * User profile management for controller users
+ * Admin Profile View - SAMPARK
+ * User profile management for admin users
  */
 
 // Capture the content
@@ -9,7 +9,7 @@ ob_start();
 
 // Set additional CSS for this view
 $additional_css = [
-    Config::getAppUrl() . '/assets/css/controller-views.css'
+    Config::getAppUrl() . '/assets/css/admin-views.css'
 ];
 
 // Set page title
@@ -54,47 +54,43 @@ $page_title = 'Profile - SAMPARK';
                                        value="<?= htmlspecialchars($user_details['name'] ?? '') ?>" readonly>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label-apple">Designation</label>
-                                <input type="text" class="form-control-apple" name="designation"
-                                       value="<?= htmlspecialchars($user_details['designation'] ?? '') ?>" readonly>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label-apple">Employee ID</label>
-                                <input type="text" class="form-control-apple" name="employee_id"
-                                       value="<?= htmlspecialchars($user_details['employee_id'] ?? '') ?>" readonly>
-                            </div>
-                            <div class="col-md-6">
                                 <label class="form-label-apple">Email Address *</label>
-                                <input type="email" class="form-control-apple" name="email" 
+                                <input type="email" class="form-control-apple" name="email"
                                        value="<?= htmlspecialchars($user_details['email'] ?? '') ?>" readonly>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label-apple">Mobile Number</label>
-                                <input type="tel" class="form-control-apple" name="mobile" 
+                                <input type="tel" class="form-control-apple" name="mobile"
                                        value="<?= htmlspecialchars($user_details['mobile'] ?? '') ?>" readonly>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label-apple">Department</label>
-                                <input type="text" class="form-control-apple" name="department" 
-                                       value="<?= htmlspecialchars($user_details['department'] ?? '') ?>" readonly>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label-apple">Division</label>
-                                <input type="text" class="form-control-apple" name="division" 
-                                       value="<?= htmlspecialchars($user_details['division'] ?? '') ?>" readonly>
-                            </div>
-                            <div class="col-md-6">
                                 <label class="form-label-apple">Role</label>
-                                <input type="text" class="form-control-apple" 
+                                <input type="text" class="form-control-apple"
                                        value="<?= ucwords(str_replace('_', ' ', $user_details['role'] ?? '')) ?>" readonly>
                             </div>
+                            <?php if (isset($user_details['department'])): ?>
+                            <div class="col-md-6">
+                                <label class="form-label-apple">Department</label>
+                                <input type="text" class="form-control-apple" name="department"
+                                       value="<?= htmlspecialchars($user_details['department'] ?? '') ?>" readonly>
+                            </div>
+                            <?php endif; ?>
+                            <?php if (isset($user_details['division'])): ?>
+                            <div class="col-md-6">
+                                <label class="form-label-apple">Division</label>
+                                <input type="text" class="form-control-apple" name="division"
+                                       value="<?= htmlspecialchars($user_details['division'] ?? '') ?>" readonly>
+                            </div>
+                            <?php endif; ?>
+                            <?php if (isset($user_details['zone'])): ?>
                             <div class="col-md-6">
                                 <label class="form-label-apple">Zone</label>
-                                <input type="text" class="form-control-apple" name="zone" 
+                                <input type="text" class="form-control-apple" name="zone"
                                        value="<?= htmlspecialchars($user_details['zone'] ?? '') ?>" readonly>
                             </div>
+                            <?php endif; ?>
                         </div>
-                        
+
                         <div class="row mt-3 d-none" id="editButtons">
                             <div class="col">
                                 <button type="submit" class="btn btn-apple-primary me-2">
@@ -153,30 +149,20 @@ $page_title = 'Profile - SAMPARK';
             <!-- Profile Summary -->
             <div class="card card-apple mb-4">
                 <div class="card-body text-center">
-                    <div class="bg-apple-blue rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                    <div class="bg-apple-blue rounded-circle d-inline-flex align-items-center justify-content-center mb-3"
                          style="width: 80px; height: 80px;">
-                        <i class="fas fa-user text-dark fa-2x"></i>
+                        <i class="fas fa-user-shield text-dark fa-2x"></i>
                     </div>
-                    <h5 class="fw-semibold"><?= htmlspecialchars($user_details['name'] ?? 'User') ?></h5>
+                    <h5 class="fw-semibold"><?= htmlspecialchars($user_details['name'] ?? 'Admin') ?></h5>
                     <div class="text-muted mb-3">
-                        <span class="badge bg-<?= $user_role === 'controller_nodal' ? 'success' : 'primary' ?> fs-6">
+                        <span class="badge bg-<?= $user_role === 'superadmin' ? 'danger' : 'warning' ?> fs-6">
                             <?= ucwords(str_replace('_', ' ', $user_role)) ?>
                         </span>
                     </div>
                     <div class="row text-center">
-                        <div class="col">
-                            <div class="fw-semibold">Department</div>
-                            <small class="text-muted"><?= htmlspecialchars($user_details['department'] ?? 'N/A') ?></small>
-                        </div>
-                    </div>
-                    <div class="row text-center mt-2">
-                        <div class="col-6">
-                            <div class="fw-semibold">Division</div>
-                            <small class="text-muted"><?= htmlspecialchars($user_details['division'] ?? 'N/A') ?></small>
-                        </div>
-                        <div class="col-6">
-                            <div class="fw-semibold">Zone</div>
-                            <small class="text-muted"><?= htmlspecialchars($user_details['zone'] ?? 'N/A') ?></small>
+                        <div class="col-12">
+                            <div class="fw-semibold">Email</div>
+                            <small class="text-muted"><?= htmlspecialchars($user_details['email'] ?? 'N/A') ?></small>
                         </div>
                     </div>
                 </div>
@@ -194,12 +180,6 @@ $page_title = 'Profile - SAMPARK';
                         <span>Account Status</span>
                         <span class="badge bg-<?= ($user_details['status'] ?? 'active') === 'active' ? 'success' : 'danger' ?>">
                             <?= ucfirst($user_details['status'] ?? 'active') ?>
-                        </span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span>Email Verified</span>
-                        <span class="badge bg-<?= ($user_details['email_verified'] ?? false) ? 'success' : 'warning' ?>">
-                            <?= ($user_details['email_verified'] ?? false) ? 'Verified' : 'Pending' ?>
                         </span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -249,21 +229,21 @@ function enableEdit() {
     const form = document.getElementById('profileForm');
     const inputs = form.querySelectorAll('input[readonly]');
     const editButtons = document.getElementById('editButtons');
-    
+
     // Store original data
     originalFormData = new FormData(form);
-    
+
     // Make fields editable (except certain readonly fields)
     inputs.forEach(input => {
-        if (!['employee_id', 'designation', 'department', 'division', 'role', 'zone'].includes(input.name)) {
+        if (!['role', 'department', 'division', 'zone'].includes(input.name)) {
             input.removeAttribute('readonly');
             input.classList.add('form-control-apple-editable');
         }
     });
-    
+
     // Show save/cancel buttons
     editButtons.classList.remove('d-none');
-    
+
     // Update edit button
     const editBtn = document.querySelector('[onclick="enableEdit()"]');
     editBtn.innerHTML = '<i class="fas fa-times me-2"></i>Cancel Edit';
@@ -277,7 +257,7 @@ function cancelEdit() {
     const form = document.getElementById('profileForm');
     const inputs = form.querySelectorAll('input');
     const editButtons = document.getElementById('editButtons');
-    
+
     // Restore original data
     for (let [key, value] of originalFormData.entries()) {
         const input = form.querySelector(`[name="${key}"]`);
@@ -285,18 +265,18 @@ function cancelEdit() {
             input.value = value;
         }
     }
-    
+
     // Make fields readonly again
     inputs.forEach(input => {
-        if (!['employee_id', 'designation', 'department', 'division', 'role', 'zone'].includes(input.name)) {
+        if (!['role', 'department', 'division', 'zone'].includes(input.name)) {
             input.setAttribute('readonly', '');
             input.classList.remove('form-control-apple-editable');
         }
     });
-    
+
     // Hide save/cancel buttons
     editButtons.classList.add('d-none');
-    
+
     // Restore edit button
     const editBtn = document.querySelector('[onclick="cancelEdit()"]');
     editBtn.innerHTML = '<i class="fas fa-edit me-2"></i>Edit Profile';
@@ -307,23 +287,24 @@ function cancelEdit() {
 
 async function updateProfile(event) {
     event.preventDefault();
-    
+
     const formData = new FormData(event.target);
     formData.append('csrf_token', CSRF_TOKEN);
-    
+
     try {
         showLoading();
-        const response = await fetch(`${APP_URL}/controller/profile`, {
+        const response = await fetch(`${APP_URL}/admin/profile`, {
             method: 'POST',
             body: formData
         });
-        
+
         const result = await response.json();
         hideLoading();
-        
+
         if (result.success) {
             Swal.fire('Success', 'Profile updated successfully', 'success');
             cancelEdit(); // Exit edit mode
+            setTimeout(() => location.reload(), 1500);
         } else {
             if (result.errors) {
                 const errors = Object.values(result.errors).join('\n');
@@ -360,7 +341,7 @@ async function changePassword(event) {
 
     try {
         showLoading();
-        const response = await fetch(`${APP_URL}/controller/change-password`, {
+        const response = await fetch(`${APP_URL}/admin/change-password`, {
             method: 'POST',
             body: formData
         });
@@ -399,7 +380,7 @@ function validatePassword(password) {
 document.getElementById('confirmPassword').addEventListener('input', function() {
     const newPassword = document.getElementById('newPassword').value;
     const confirmPassword = this.value;
-    
+
     if (confirmPassword && newPassword !== confirmPassword) {
         this.setCustomValidity('Passwords do not match');
         this.classList.add('is-invalid');
@@ -413,7 +394,7 @@ document.getElementById('confirmPassword').addEventListener('input', function() 
 document.getElementById('newPassword').addEventListener('input', function() {
     const password = this.value;
     const isValid = validatePassword(password);
-    
+
     if (password.length > 0) {
         if (isValid) {
             this.classList.remove('is-invalid');
@@ -456,79 +437,6 @@ window.addEventListener('beforeunload', function(e) {
     box-shadow: 0 0 0 0.2rem rgba(var(--apple-primary-rgb), 0.25);
 }
 
-/* Profile avatar */
-.profile-avatar {
-    transition: all 0.3s ease;
-}
-
-.profile-avatar:hover {
-    transform: scale(1.05);
-}
-
-/* Form sections */
-.form-section {
-    background: rgba(var(--apple-primary-rgb), 0.02);
-    border-radius: var(--apple-radius-medium);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-}
-
-/* Status badges */
-.badge {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.8rem;
-}
-
-/* Security indicators */
-.security-status {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.75rem;
-    background: rgba(var(--bs-light), 0.5);
-    border-radius: var(--apple-radius-small);
-    margin-bottom: 0.75rem;
-}
-
-.security-status:last-child {
-    margin-bottom: 0;
-}
-
-/* Password strength indicator */
-.password-strength {
-    height: 4px;
-    background: #e9ecef;
-    border-radius: 2px;
-    margin-top: 0.5rem;
-    overflow: hidden;
-}
-
-.password-strength-fill {
-    height: 100%;
-    transition: all 0.3s ease;
-    border-radius: 2px;
-}
-
-.password-strength.weak .password-strength-fill {
-    width: 25%;
-    background: #dc3545;
-}
-
-.password-strength.medium .password-strength-fill {
-    width: 50%;
-    background: #ffc107;
-}
-
-.password-strength.good .password-strength-fill {
-    width: 75%;
-    background: #20c997;
-}
-
-.password-strength.strong .password-strength-fill {
-    width: 100%;
-    background: #198754;
-}
-
 /* Form validation states */
 .is-invalid {
     border-color: #dc3545;
@@ -538,72 +446,6 @@ window.addEventListener('beforeunload', function(e) {
 .is-valid {
     border-color: #198754;
     box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
-}
-
-/* Loading states */
-.form-loading {
-    opacity: 0.6;
-    pointer-events: none;
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-    .card-body {
-        padding: 1rem 0.75rem;
-    }
-    
-    .row.g-3 {
-        --bs-gutter-x: 1rem;
-    }
-    
-    .btn-toolbar {
-        flex-direction: column;
-    }
-    
-    .btn-toolbar .btn {
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-    
-    .security-status {
-        flex-direction: column;
-        align-items: flex-start;
-        text-align: left;
-    }
-    
-    .security-status > span:last-child {
-        margin-top: 0.5rem;
-    }
-}
-
-/* Print styles */
-@media print {
-    .btn, .btn-group, .card-header .btn,
-    #editButtons, #passwordForm, #notificationForm {
-        display: none !important;
-    }
-    
-    .card {
-        break-inside: avoid;
-        box-shadow: none !important;
-        border: 1px solid #ddd !important;
-    }
-    
-    .form-control-apple {
-        border: none !important;
-        background: transparent !important;
-        padding: 0 !important;
-    }
-    
-    .form-label-apple {
-        font-weight: bold !important;
-        color: #000 !important;
-    }
-}
-
-/* Animation for edit mode transition */
-.edit-transition {
-    transition: all 0.3s ease;
 }
 
 /* Notification preferences styling */
@@ -623,10 +465,15 @@ window.addEventListener('beforeunload', function(e) {
     border-color: var(--apple-primary);
 }
 
-/* Profile completion indicator */
-.profile-completion {
-    background: linear-gradient(135deg, rgba(var(--apple-primary-rgb), 0.1) 0%, transparent 100%);
-    border-left: 4px solid var(--apple-primary);
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem 0.75rem;
+    }
+
+    .row.g-3 {
+        --bs-gutter-x: 1rem;
+    }
 }
 </style>
 
