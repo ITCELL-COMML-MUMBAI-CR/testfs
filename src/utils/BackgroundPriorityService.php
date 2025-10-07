@@ -118,7 +118,7 @@ class BackgroundPriorityService {
             return 'critical';
         } elseif ($hoursElapsed >= 12) {
             return 'high';
-        } elseif ($hoursElapsed >= 4) {
+        } elseif ($hoursElapsed >= 3) {
             return 'medium';
         } else {
             return 'normal';

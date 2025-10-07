@@ -499,16 +499,21 @@ class WorkflowEngine {
      */
     private function provideInfo($ticket, $additionalInfo, $customerId) {
         // Status changes from awaiting_info back to pending for review
-        $sql = "UPDATE complaints SET 
+        $sql = "UPDATE complaints SET
                 status = 'pending',
                 updated_at = NOW()
                 WHERE complaint_id = ?";
-        
+
         $this->db->query($sql, [$ticket['complaint_id']]);
-        
+
+        // Resume escalation when customer provides info and ticket goes back to pending
+        require_once __DIR__ . '/BackgroundPriorityService.php';
+        $priorityService = new BackgroundPriorityService();
+        $priorityService->resumeEscalation($ticket['complaint_id'], 'pending');
+
         // Send notifications to controllers
         $this->sendInfoProvidedNotifications($ticket, $additionalInfo);
-        
+
         return [
             'success' => true,
             'new_status' => 'pending',

@@ -1195,15 +1195,21 @@ class ControllerController extends BaseController {
                 return;
             }
             
-            // Update ticket status
-            $sql = "UPDATE complaints SET 
+            // Update ticket status and reset priority to normal (per requirements)
+            $sql = "UPDATE complaints SET
                     status = 'awaiting_info',
+                    priority = 'normal',
+                    escalated_at = NULL,
                     closed_at = NULL,
                     updated_at = NOW()
                     WHERE complaint_id = ?";
-            
+
             $this->db->query($sql, [$ticketId]);
-            
+
+            // Stop escalation for tickets awaiting info
+            $priorityService = new BackgroundPriorityService();
+            $priorityService->stopEscalationForStatus($ticketId, 'awaiting_info');
+
             // Create transaction record
             $this->createTransaction($ticketId, 'reverted', trim($_POST['internal_remarks']), $user['id'], null, 'internal_remarks');
             
