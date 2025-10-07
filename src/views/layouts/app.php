@@ -82,7 +82,7 @@
     
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg fixed-top apple-glass-nav" id="mainNavbar">
-        <div class="container-xl">
+        <div class="container-fluid">
             <!-- Logo/Brand -->
             <a class="navbar-brand d-flex align-items-center" href="<?= Config::getAppUrl() ?>/">
                 <div class="railway-dual-logo">
@@ -115,22 +115,15 @@
                                 <i class="fas fa-question-circle me-1"></i>Help
                             </a>
                         </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-user me-1"></i>Account
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?= Config::getAppUrl() ?>/signup">
+                                <i class="fas fa-user-plus me-1"></i>Register
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-apple">
-                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/login">
-                                    <i class="fas fa-sign-in-alt me-2"></i>Login
-                                </a></li>
-                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/signup">
-                                    <i class="fas fa-user-plus me-2"></i>Customer Registration
-                                </a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/login">
-                                    <i class="fas fa-ticket-alt me-2"></i>Raise Ticket
-                                </a></li>
-                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-apple-primary text-white px-3" href="<?= Config::getAppUrl() ?>/login">
+                                <i class="fas fa-sign-in-alt me-1"></i>Login
+                            </a>
                         </li>
                         
                     <?php else: ?>
@@ -186,10 +179,12 @@
                                         <i class="fas fa-share-alt me-2"></i>Forwarded Tickets
                                     </a></li>
                                     <?php endif; ?>
-                                    <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/controller/search-all">
-                                        <i class="fas fa-search me-2"></i>Search All Tickets
-                                    </a></li>
                                 </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="<?= Config::getAppUrl() ?>/controller/search-all">
+                                    <i class="fas fa-search me-1"></i>Search Tickets
+                                </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="<?= Config::getAppUrl() ?>/controller/reports">
@@ -209,6 +204,11 @@
                                 </a>
                             </li>
                             <li class="nav-item">
+                                <a class="nav-link" href="<?= Config::getAppUrl() ?>/admin/tickets/search">
+                                    <i class="fas fa-search me-1"></i>Search Tickets
+                                </a>
+                            </li>
+                            <li class="nav-item">
                                 <a class="nav-link" href="<?= Config::getAppUrl() ?>/admin/reports">
                                     <i class="fas fa-chart-line me-1"></i>Reports
                                 </a>
@@ -219,10 +219,7 @@
                                 </a>
                             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-apple">
                                 <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/tickets">
-                                    <i class="fas fa-ticket-alt me-2"></i>Tickets
-                                </a></li>
-                                <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/tickets/search">
-                                    <i class="fas fa-search me-2"></i>Search Tickets
+                                    <i class="fas fa-ticket-alt me-2"></i>All Tickets
                                 </a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="<?= Config::getAppUrl() ?>/admin/approvals/pending">
@@ -528,6 +525,18 @@
         
         /* Mobile navbar improvements */
         @media (max-width: 991px) {
+            .navbar-collapse {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                max-height: calc(100vh - 80px);
+                overflow-y: auto;
+                overflow-x: hidden;
+                z-index: 1000;
+                padding: 0 15px;
+            }
+
             .navbar-nav {
                 background: rgba(255, 255, 255, 0.95);
                 backdrop-filter: blur(20px);
@@ -536,7 +545,7 @@
                 margin-top: var(--apple-space-2);
                 box-shadow: var(--apple-shadow-soft);
             }
-            
+
             .nav-link {
                 padding: var(--apple-space-2) var(--apple-space-3) !important;
                 border-radius: var(--apple-radius-small);
